@@ -297,7 +297,7 @@
                         </button>
                         <button onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.3.3)
+                            <span>🚀</span> ประวัติอัปเดต (v5.3.4)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -386,12 +386,12 @@
         </section>
 
         <!-- MAIN RESPONSIVE DASHBOARD GRID -->
-        <div class="flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+        <div id="mainDashboardGrid" class="flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 items-start w-full">
 
-            <!-- LEFT COLUMN (5 cols on desktop, contents on mobile) -->
-            <div class="contents lg:flex lg:flex-col lg:col-span-5 lg:gap-5">
+            <!-- PRIMARY / MOBILE COLUMN (Single column on mobile, 5 cols on desktop) -->
+            <div id="colDesktopLeft" class="flex flex-col lg:col-span-5 gap-5 sm:gap-6 w-full min-w-0">
                 <!-- Order 1: TARGET & TODAY'S PROGRESS SUMMARY -->
-                <section class="order-1 bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-5">
+                <section id="card_target" class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-5">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-base sm:text-lg font-bold">🎯 เป้าหมายและสถานะวันนี้</h2>
@@ -528,182 +528,8 @@
                 <div id="deficitAlertBanner" class="p-3.5 rounded-xl border text-xs sm:text-sm space-y-1.5"></div>
             </section>
 
-                <!-- Order 4: WATER INTAKE TRACKER -->
-                <section class="order-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_water')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
-                            💧 เป้าหมายการดื่มน้ำวันนี้
-                        </h3>
-                        <span id="waterCountText" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20">0 / 10 แก้ว</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span id="icon_section_water" class="accordion-chevron text-xs text-slate-400">▼</span>
-                    </div>
-                </div>
-
-                <div id="body_section_water" class="accordion-section p-5 pt-0 space-y-3">
-                    <div class="flex items-center justify-between pt-2">
-                        <p id="waterRecommendationSubtitle" class="text-xs text-slate-500 dark:text-slate-400">
-                            คำนวณตามน้ำหนักตัวและกิจกรรมของคุณ
-                        </p>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="adjustWater(-1)"
-                                class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition">-</button>
-                            <button onclick="adjustWater(1)"
-                                class="w-8 h-8 rounded-xl bg-sky-500 text-white font-bold text-sm hover:bg-sky-600 shadow-sm shadow-sky-500/30 transition">+</button>
-                        </div>
-                    </div>
-
-                    <!-- Water Progress Bar -->
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span id="waterMlStatusText" class="text-sky-600 dark:text-sky-400 font-semibold">ดื่มแล้ว 0 มล.</span>
-                            <span id="waterTargetText" class="text-slate-400">เป้าหมาย 2,500 มล.</span>
-                        </div>
-                        <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div id="barWater"
-                                class="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-300"
-                                style="width:0%"></div>
-                        </div>
-                        <p id="waterDeficitText" class="text-xs text-slate-400 mt-1.5"></p>
-                    </div>
-
-                    <!-- Interactive Glass Icons -->
-                    <div id="waterGlassIcons" class="flex flex-wrap gap-1.5 pt-1"></div>
-                </div>
-            </section>
-
-                <!-- Order 5: DAILY SUPPLEMENTS -->
-                <section class="order-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_supplements')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
-                            💊 วิตามิน & อาหารเสริมประจำวัน
-                        </h3>
-                        <span id="suppProgressBadge"
-                            class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                            0/7 ทานแล้ว
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="event.stopPropagation(); openAddSupplementModal();"
-                            class="text-xs px-3 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold shadow-xs transition flex items-center gap-1">
-                            + เพิ่มวิตามิน
-                        </button>
-                        <span id="icon_section_supplements" class="accordion-chevron text-xs text-slate-400">▼</span>
-                    </div>
-                </div>
-
-                <div id="body_section_supplements" class="accordion-section p-5 pt-0 space-y-3">
-                    <!-- Mini Progress Bar for Supplements -->
-                    <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div id="barSupplements"
-                            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300"
-                            style="width: 0%"></div>
-                    </div>
-
-                    <!-- Interactive Supplement Checklist Grid -->
-                    <div id="supplementListContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
-
-                    <!-- Dedicated Action Button inside card to Add New Supplement -->
-                    <div class="pt-1">
-                        <button type="button" onclick="openAddSupplementModal()"
-                            class="w-full py-3 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/35 border border-indigo-200 dark:border-indigo-700/60 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs active:scale-98">
-                            <span class="text-sm">➕</span> เพิ่มวิตามิน / อาหารเสริมตัวใหม่
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-                <!-- Order 6: WORKOUT & ACTIVITY BURN -->
-                <section class="order-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div onclick="toggleCardSection('section_workout')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
-                            🏃 ชั่งน้ำหนัก & บันทึกการเบิร์น
-                        </h3>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span id="icon_section_workout" class="accordion-chevron text-xs text-slate-400">▼</span>
-                    </div>
-                </div>
-
-                <div id="body_section_workout" class="accordion-section p-4 sm:p-5 pt-0 space-y-3 w-full max-w-full min-w-0 overflow-hidden">
-                    <div class="flex items-center justify-between gap-2 flex-wrap">
-                        <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-700/60 rounded-xl shrink-0">
-                            <button type="button" onclick="switchBodyTab('weight')" id="tabBtnWeight"
-                                class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-emerald-500 text-white shadow-xs">
-                                ⚖️ ชั่งน้ำหนัก
-                            </button>
-                            <button type="button" onclick="switchBodyTab('workout')" id="tabBtnWorkout"
-                                class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-600 dark:text-slate-300 hover:text-emerald-500">
-                                🏃 ออกกำลังกาย
-                            </button>
-                        </div>
-                        <span class="text-[11px] sm:text-xs text-slate-400 font-medium">✨ บันทึกเฉพาะวันที่สะดวก</span>
-                    </div>
-
-                    <!-- Tab 1: Weight Body Tracker -->
-                    <div id="bodyTabWeight" class="space-y-2 w-full min-w-0">
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                                <span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 shrink-0">ชั่งน้ำหนักวันนี้:</span>
-                                <input type="number" id="inDailyWeight" step="0.1" min="30" max="250"
-                                    placeholder="เช่น 70.2"
-                                    class="w-20 sm:w-24 bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold focus:outline-none focus:border-emerald-500 text-center">
-                                <span class="text-xs sm:text-sm font-semibold text-slate-400">กก.</span>
-                                <button type="button" onclick="submitWeightToday()"
-                                    class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs whitespace-nowrap">
-                                    บันทึก
-                                </button>
-                            </div>
-                            <button type="button" onclick="clearWeightToday()" id="btnClearWeightToday"
-                                class="hidden text-xs text-rose-500 hover:underline">
-                                ลบของวันนี้
-                            </button>
-                        </div>
-                        <div id="weightStatusText" class="text-xs text-slate-500 dark:text-slate-400 pt-0.5 break-words"></div>
-                    </div>
-
-                    <!-- Tab 2: Workout Burn Tracker -->
-                    <div id="bodyTabWorkout" class="hidden space-y-2.5 w-full min-w-0 max-w-full overflow-hidden">
-                        <!-- Quick Presets -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 text-xs max-w-full min-w-0 no-scrollbar">
-                            <button onclick="addWorkout('วิ่ง 30 นาที', 250)"
-                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 font-medium transition">🏃 วิ่ง 30m (-250k)</button>
-                            <button onclick="addWorkout('เวทเทรนนิ่ง 45 นาที', 200)"
-                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 font-medium transition">🏋️ เวท 45m (-200k)</button>
-                            <button onclick="addWorkout('เดิน 5,000 ก้าว', 150)"
-                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 font-medium transition">🚶 เดิน 5k (-150k)</button>
-                            <button onclick="addWorkout('ปั่นจักรยาน 30 นาที', 220)"
-                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 font-medium transition">🚴 ปั่น 30m (-220k)</button>
-                        </div>
-                        <!-- Custom Workout Input -->
-                        <div class="flex items-center gap-1.5 w-full min-w-0">
-                            <input type="text" id="inWorkoutName" placeholder="กิจกรรม เช่น วิ่ง, เวท..."
-                                class="bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm flex-1 min-w-0 focus:outline-none focus:border-emerald-500">
-                            <input type="number" id="inWorkoutCal" placeholder="kcal" min="1"
-                                class="w-16 sm:w-20 shrink-0 bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 text-center">
-                            <button onclick="submitCustomWorkout()"
-                                class="px-2.5 sm:px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs sm:text-sm font-semibold transition shrink-0 shadow-xs whitespace-nowrap">
-                                + บันทึก
-                            </button>
-                        </div>
-                        <!-- List of logged workouts for today -->
-                        <div id="workoutListContainer" class="space-y-1.5 max-h-36 overflow-y-auto pr-0.5 w-full min-w-0"></div>
-                    </div>
-                </div>
-            </section>
-            </div>
-
-            <!-- RIGHT COLUMN (7 cols on desktop, contents on mobile) -->
-            <div class="contents lg:flex lg:flex-col lg:col-span-7 lg:gap-5">
                 <!-- Order 2: FOOD SEARCH & SELECTOR (MOVED UP FOR FASTEST ACCESS!) -->
-                <section class="order-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
+                <section id="card_food_search" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
                 <div onclick="toggleCardSection('section_food_search')"
                     class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
@@ -819,7 +645,7 @@
             </section>
 
                 <!-- Order 3: TODAY'S LOGGED MEALS -->
-                <section class="order-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                <section id="card_meals" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_meals')"
                     class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 cursor-pointer select-none">
                     <div class="flex items-center gap-2">
@@ -844,8 +670,179 @@
                 </div>
             </section>
 
+                <!-- Order 4: WATER INTAKE TRACKER -->
+                <section id="card_water" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                <div onclick="toggleCardSection('section_water')"
+                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
+                            💧 เป้าหมายการดื่มน้ำวันนี้
+                        </h3>
+                        <span id="waterCountText" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20">0 / 10 แก้ว</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="icon_section_water" class="accordion-chevron text-xs text-slate-400">▼</span>
+                    </div>
+                </div>
+
+                <div id="body_section_water" class="accordion-section p-5 pt-0 space-y-3">
+                    <div class="flex items-center justify-between pt-2">
+                        <p id="waterRecommendationSubtitle" class="text-xs text-slate-500 dark:text-slate-400">
+                            คำนวณตามน้ำหนักตัวและกิจกรรมของคุณ
+                        </p>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="adjustWater(-1)"
+                                class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition">-</button>
+                            <button onclick="adjustWater(1)"
+                                class="w-8 h-8 rounded-xl bg-sky-500 text-white font-bold text-sm hover:bg-sky-600 shadow-sm shadow-sky-500/30 transition">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Water Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span id="waterMlStatusText" class="text-sky-600 dark:text-sky-400 font-semibold">ดื่มแล้ว 0 มล.</span>
+                            <span id="waterTargetText" class="text-slate-400">เป้าหมาย 2,500 มล.</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div id="barWater"
+                                class="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-300"
+                                style="width:0%"></div>
+                        </div>
+                        <p id="waterDeficitText" class="text-xs text-slate-400 mt-1.5"></p>
+                    </div>
+
+                    <!-- Interactive Glass Icons -->
+                    <div id="waterGlassIcons" class="flex flex-wrap gap-1.5 pt-1"></div>
+                </div>
+            </section>
+
+                <!-- Order 5: DAILY SUPPLEMENTS -->
+                <section id="card_supplements" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                <div onclick="toggleCardSection('section_supplements')"
+                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
+                            💊 วิตามิน & อาหารเสริมประจำวัน
+                        </h3>
+                        <span id="suppProgressBadge"
+                            class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                            0/7 ทานแล้ว
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="event.stopPropagation(); openAddSupplementModal();"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold shadow-xs transition flex items-center gap-1">
+                            + เพิ่มวิตามิน
+                        </button>
+                        <span id="icon_section_supplements" class="accordion-chevron text-xs text-slate-400">▼</span>
+                    </div>
+                </div>
+
+                <div id="body_section_supplements" class="accordion-section p-5 pt-0 space-y-3">
+                    <!-- Mini Progress Bar for Supplements -->
+                    <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div id="barSupplements"
+                            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+
+                    <!-- Interactive Supplement Checklist Grid -->
+                    <div id="supplementListContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
+
+                    <!-- Dedicated Action Button inside card to Add New Supplement -->
+                    <div class="pt-1">
+                        <button type="button" onclick="openAddSupplementModal()"
+                            class="w-full py-3 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/35 border border-indigo-200 dark:border-indigo-700/60 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs active:scale-98">
+                            <span class="text-sm">➕</span> เพิ่มวิตามิน / อาหารเสริมตัวใหม่
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+                <!-- Order 6: WORKOUT & ACTIVITY BURN -->
+                <section id="card_workout" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
+                <div onclick="toggleCardSection('section_workout')"
+                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
+                            🏃 ชั่งน้ำหนัก & บันทึกการเบิร์น
+                        </h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="icon_section_workout" class="accordion-chevron text-xs text-slate-400">▼</span>
+                    </div>
+                </div>
+
+                <div id="body_section_workout" class="accordion-section p-4 sm:p-5 pt-0 space-y-3 w-full max-w-full min-w-0 overflow-hidden">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-700/60 rounded-xl shrink-0">
+                            <button type="button" onclick="switchBodyTab('weight')" id="tabBtnWeight"
+                                class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-emerald-500 text-white shadow-xs">
+                                ⚖️ ชั่งน้ำหนัก
+                            </button>
+                            <button type="button" onclick="switchBodyTab('workout')" id="tabBtnWorkout"
+                                class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-600 dark:text-slate-300 hover:text-emerald-500">
+                                🏃 ออกกำลังกาย
+                            </button>
+                        </div>
+                        <span class="text-[11px] sm:text-xs text-slate-400 font-medium">✨ บันทึกเฉพาะวันที่สะดวก</span>
+                    </div>
+
+                    <!-- Tab 1: Weight Body Tracker -->
+                    <div id="bodyTabWeight" class="space-y-2 w-full min-w-0">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                <span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 shrink-0">ชั่งน้ำหนักวันนี้:</span>
+                                <input type="number" id="inDailyWeight" step="0.1" min="30" max="250"
+                                    placeholder="เช่น 70.2"
+                                    class="w-20 sm:w-24 bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold focus:outline-none focus:border-emerald-500 text-center">
+                                <span class="text-xs sm:text-sm font-semibold text-slate-400">กก.</span>
+                                <button type="button" onclick="submitWeightToday()"
+                                    class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs whitespace-nowrap">
+                                    บันทึก
+                                </button>
+                            </div>
+                            <button type="button" onclick="clearWeightToday()" id="btnClearWeightToday"
+                                class="hidden text-xs text-rose-500 hover:underline">
+                                ลบของวันนี้
+                            </button>
+                        </div>
+                        <div id="weightStatusText" class="text-xs text-slate-500 dark:text-slate-400 pt-0.5 break-words"></div>
+                    </div>
+
+                    <!-- Tab 2: Workout Burn Tracker -->
+                    <div id="bodyTabWorkout" class="hidden space-y-2.5 w-full min-w-0 max-w-full overflow-hidden">
+                        <!-- Quick Presets -->
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 text-xs max-w-full min-w-0 no-scrollbar">
+                            <button onclick="addWorkout('วิ่ง 30 นาที', 250)"
+                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 font-medium transition">🏃 วิ่ง 30m (-250k)</button>
+                            <button onclick="addWorkout('เวทเทรนนิ่ง 45 นาที', 200)"
+                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 font-medium transition">🏋️ เวท 45m (-200k)</button>
+                            <button onclick="addWorkout('เดิน 5,000 ก้าว', 150)"
+                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 font-medium transition">🚶 เดิน 5k (-150k)</button>
+                            <button onclick="addWorkout('ปั่นจักรยาน 30 นาที', 220)"
+                                class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 font-medium transition">🚴 ปั่น 30m (-220k)</button>
+                        </div>
+                        <!-- Custom Workout Input -->
+                        <div class="flex items-center gap-1.5 w-full min-w-0">
+                            <input type="text" id="inWorkoutName" placeholder="กิจกรรม เช่น วิ่ง, เวท..."
+                                class="bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm flex-1 min-w-0 focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="inWorkoutCal" placeholder="kcal" min="1"
+                                class="w-16 sm:w-20 shrink-0 bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 text-center">
+                            <button onclick="submitCustomWorkout()"
+                                class="px-2.5 sm:px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs sm:text-sm font-semibold transition shrink-0 shadow-xs whitespace-nowrap">
+                                + บันทึก
+                            </button>
+                        </div>
+                        <!-- List of logged workouts for today -->
+                        <div id="workoutListContainer" class="space-y-1.5 max-h-36 overflow-y-auto pr-0.5 w-full min-w-0"></div>
+                    </div>
+                </div>
+            </section>
+
                 <!-- Order 7: WEEKLY ANALYTICS & WEIGHT TREND -->
-                <section class="order-7 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                <section id="card_analytics" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_analytics')"
                     class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -896,7 +893,7 @@
             </section>
 
                 <!-- Order 8: SMART RECOMMENDATION ACCORDION -->
-                <section class="order-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                <section id="card_recommendations" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_recommendations')"
                     class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
@@ -920,6 +917,10 @@
                     <div id="smartRecommendationList" class="space-y-2"></div>
                 </div>
             </section>
+            </div>
+
+            <!-- SECONDARY DESKTOP COLUMN (Empty on mobile, 7 cols on desktop) -->
+            <div id="colDesktopRight" class="hidden lg:flex lg:flex-col lg:col-span-7 gap-5 sm:gap-6 w-full min-w-0">
             </div>
 
         </div>
@@ -1619,13 +1620,13 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.3.3"></script>
+    <script src="food-db.js?v=5.3.4"></script>
 
-    <!-- Modularized Core Application Logic (v5.3.3 - High Performance) -->
-    <script src="app.js?v=5.3.3"></script>
+    <!-- Modularized Core Application Logic (v5.3.4 - High Performance) -->
+    <script src="app.js?v=5.3.4"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.3.3"></script>
+    <script type="module" src="firebase-sync.js?v=5.3.4"></script>
 
 </body>
 

@@ -47,18 +47,23 @@ server.listen(PORT, async () => {
         `http://localhost:${PORT}`
     ]);
 
-    await new Promise(r => setTimeout(r, 1500));
+    const httpGet = (url) => new Promise((resolve, reject) => {
+        http.get(url, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(JSON.parse(data)));
+        }).on('error', reject);
+    });
 
     try {
-        const httpGet = (url) => new Promise((resolve, reject) => {
-            http.get(url, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => resolve(JSON.parse(data)));
-            }).on('error', reject);
-        });
-
-        const targets = await httpGet('http://127.0.0.1:9227/json');
+        let targets = null;
+        for (let attempt = 0; attempt < 10; attempt++) {
+            await new Promise(r => setTimeout(r, 400));
+            try {
+                targets = await httpGet('http://127.0.0.1:9227/json');
+                if (targets && targets.length > 0) break;
+            } catch (e) {}
+        }
         const pageTarget = targets.find(t => t.type === 'page' && t.url.includes(PORT.toString()));
         if (!pageTarget || !pageTarget.webSocketDebuggerUrl) {
             throw new Error('No page target found for http://localhost:' + PORT);
@@ -138,7 +143,7 @@ server.listen(PORT, async () => {
         // Test 5: Close Profile Drawer
         console.log('--- Test 5: Close Profile Drawer ---');
         await evalJs('closeProfileSettingsModal()');
-        await evalJs('new Promise(r => setTimeout(r, 350))');
+        await new Promise(r => setTimeout(r, 450));
         const modalHidden = await evalJs('document.getElementById("profileSettingsModal").classList.contains("hidden")');
         console.log('Profile modal hidden after close:', modalHidden);
         if (!modalHidden) throw new Error('Profile modal did not close');
@@ -231,11 +236,31 @@ server.listen(PORT, async () => {
             throw new Error('Mobile collapse stability test failed: sections clipped or overflowed');
         }
 
-        // Re-expand both to verify clean state
-        await evalJs('toggleCardSection("section_workout")');
-        await evalJs('toggleCardSection("section_food_search")');
-        await evalJs('toggleCardSection("section_water")');
-        await new Promise(r => setTimeout(r, 200));
+        // Test 10: Zero-contents Architecture & Responsive Desktop Sync
+        console.log('--- Test 10: Zero-contents Architecture & Responsive Desktop Sync ---');
+        const contentsCount = await evalJs('document.querySelectorAll(".contents").length');
+        console.log('Count of .contents elements in DOM (should be 0):', contentsCount);
+        if (contentsCount !== 0) {
+            throw new Error('Found .contents elements in DOM! Must be 0.');
+        }
+
+        // Test desktop layout sync
+        await evalJs('(() => { Object.defineProperty(window, "innerWidth", { value: 1280, configurable: true }); syncResponsiveLayout(); })()');
+        const desktopLeftCount = await evalJs('document.getElementById("colDesktopLeft").children.length');
+        const desktopRightCount = await evalJs('document.getElementById("colDesktopRight").children.length');
+        console.log('Desktop left column card count:', desktopLeftCount);
+        console.log('Desktop right column card count:', desktopRightCount);
+        if (desktopLeftCount !== 4 || desktopRightCount !== 4) {
+            throw new Error(`Desktop sync failed: Left=${desktopLeftCount}, Right=${desktopRightCount}`);
+        }
+
+        // Restore mobile layout
+        await evalJs('(() => { Object.defineProperty(window, "innerWidth", { value: 390, configurable: true }); syncResponsiveLayout(); })()');
+        const mobileCardCount = await evalJs('document.getElementById("colDesktopLeft").children.length');
+        console.log('Mobile column card count (should be 8):', mobileCardCount);
+        if (mobileCardCount !== 8) {
+            throw new Error(`Mobile restore failed: Count=${mobileCardCount}`);
+        }
 
         ws.close();
         console.log('========================================');

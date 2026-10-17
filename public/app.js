@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.3';
+const APP_VERSION = '5.3.4';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -483,6 +483,43 @@ const APP_VERSION = '5.3.3';
             renderFoodDatabaseExplorer();
             renderSupplements();
             renderAllSectionCollapses();
+            syncResponsiveLayout();
+        }
+
+        function syncResponsiveLayout() {
+            const isDesktop = window.innerWidth >= 1024;
+            const colLeft = document.getElementById('colDesktopLeft');
+            const colRight = document.getElementById('colDesktopRight');
+            if (!colLeft || !colRight) return;
+
+            const cardFood = document.getElementById('card_food_search');
+            const cardMeals = document.getElementById('card_meals');
+            const cardAnalytics = document.getElementById('card_analytics');
+            const cardRec = document.getElementById('card_recommendations');
+            const cardWater = document.getElementById('card_water');
+
+            if (!cardFood || !cardMeals || !cardAnalytics || !cardRec) return;
+
+            if (isDesktop) {
+                if (cardFood.parentElement !== colRight) {
+                    colRight.appendChild(cardFood);
+                    colRight.appendChild(cardMeals);
+                    colRight.appendChild(cardAnalytics);
+                    colRight.appendChild(cardRec);
+                }
+            } else {
+                if (cardFood.parentElement !== colLeft) {
+                    if (cardWater) {
+                        colLeft.insertBefore(cardFood, cardWater);
+                        colLeft.insertBefore(cardMeals, cardWater);
+                    } else {
+                        colLeft.appendChild(cardFood);
+                        colLeft.appendChild(cardMeals);
+                    }
+                    colLeft.appendChild(cardAnalytics);
+                    colLeft.appendChild(cardRec);
+                }
+            }
         }
 
         function setActiveMeal(mealId) {
@@ -3130,8 +3167,12 @@ const APP_VERSION = '5.3.3';
             }
         }
 
-        // Register Service Worker
+        // Register Service Worker & handle instant reload on update
         if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('NovaFit Pro SW updated, reloading page...');
+                window.location.reload();
+            });
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then((reg) => {
                     console.log('NovaFit Pro SW registered:', reg.scope);
@@ -3140,6 +3181,8 @@ const APP_VERSION = '5.3.3';
                 });
             });
         }
+
+        window.addEventListener('resize', syncResponsiveLayout);
 
         loadState();
         renderAll();
@@ -3154,6 +3197,7 @@ const APP_VERSION = '5.3.3';
         window.toggleToolsMenu = toggleToolsMenu;
         window.toggleCardSection = toggleCardSection;
         window.renderAllSectionCollapses = renderAllSectionCollapses;
+        window.syncResponsiveLayout = syncResponsiveLayout;
 
         // Directly updates lexical state and re-renders UI across all components
         window.applyCloudState = function (cloudState) {
