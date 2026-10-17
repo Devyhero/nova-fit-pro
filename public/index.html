@@ -93,29 +93,52 @@
             }
         }
 
-        /* Apple Accordion Fluid Collapsing & Expanding */
+        /* Apple Accordion Fluid Collapsing & Expanding (Zero WebKit Repaint Bug) */
         .accordion-section {
-            transition: max-height 0.35s var(--ios-spring), opacity 0.25s ease;
-            max-height: 2500px;
+            display: block;
             opacity: 1;
-            overflow: hidden;
             max-width: 100%;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
-        .accordion-section.is-collapsed {
+        .accordion-section.is-collapsed,
+        .accordion-section.hidden {
             display: none !important;
-            max-height: 0 !important;
-            opacity: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden !important;
             pointer-events: none !important;
+        }
+        .accordion-section:not(.is-collapsed):not(.hidden) {
+            animation: appleAccordionIn 0.22s var(--ios-spring-snappy);
+        }
+        @keyframes appleAccordionIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .accordion-chevron {
             display: inline-block;
-            transition: transform 0.32s var(--ios-spring);
+            transition: transform 0.26s var(--ios-spring-snappy);
+            will-change: transform;
         }
         .accordion-chevron.icon-collapsed {
             transform: rotate(-90deg);
+        }
+
+        /* Hardware Acceleration Isolation for Mobile Cards */
+        #colDesktopLeft > section,
+        #colDesktopRight > section {
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         @keyframes pop {
@@ -1620,13 +1643,13 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.3.4"></script>
+    <script src="food-db.js?v=5.3.5"></script>
 
-    <!-- Modularized Core Application Logic (v5.3.4 - High Performance) -->
-    <script src="app.js?v=5.3.4"></script>
+    <!-- Modularized Core Application Logic (v5.3.5 - High Performance) -->
+    <script src="app.js?v=5.3.5"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.3.4"></script>
+    <script type="module" src="firebase-sync.js?v=5.3.5"></script>
 
 </body>
 

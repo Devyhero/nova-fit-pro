@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.4';
+const APP_VERSION = '5.3.5';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -246,6 +246,10 @@ const APP_VERSION = '5.3.4';
                 icon.classList.toggle('icon-collapsed', isNowCollapsed);
             }
 
+            // Force WebKit compositing layer flush & reflow
+            const colLeft = document.getElementById('colDesktopLeft');
+            if (colLeft) void colLeft.offsetHeight;
+
             // Debounced non-blocking localStorage save
             clearTimeout(window._collapseSaveTimer);
             window._collapseSaveTimer = setTimeout(() => {
@@ -280,6 +284,8 @@ const APP_VERSION = '5.3.4';
                     icon.classList.toggle('icon-collapsed', isCollapsed);
                 }
             });
+            const colLeft = document.getElementById('colDesktopLeft');
+            if (colLeft) void colLeft.offsetHeight;
         }
 
         function toggleCustomForm() {
@@ -2472,6 +2478,7 @@ const APP_VERSION = '5.3.4';
         }
 
         async function applyAppUpdate() {
+            window._swManualUpdateTriggered = true;
             showToast('🚀 กำลังติดตั้งเวอร์ชันใหม่...');
             try {
                 if ('serviceWorker' in navigator) {
@@ -2515,10 +2522,12 @@ const APP_VERSION = '5.3.4';
             const LAST_SEEN_KEY = 'novafit_last_seen_version';
             const lastSeen = localStorage.getItem(LAST_SEEN_KEY);
             if (lastSeen !== APP_VERSION) {
-                setTimeout(() => {
-                    openChangelogModal(true);
-                    localStorage.setItem(LAST_SEEN_KEY, APP_VERSION);
-                }, 600);
+                localStorage.setItem(LAST_SEEN_KEY, APP_VERSION);
+                if (lastSeen) {
+                    setTimeout(() => {
+                        showToast('🚀 NovaFit Pro อัปเดต v' + APP_VERSION + ' พร้อมใช้งานแล้ว');
+                    }, 500);
+                }
             }
         }
 
@@ -3167,11 +3176,14 @@ const APP_VERSION = '5.3.4';
             }
         }
 
-        // Register Service Worker & handle instant reload on update
+        // Register Service Worker & handle clean update workflow
         if ('serviceWorker' in navigator) {
+            let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                console.log('NovaFit Pro SW updated, reloading page...');
-                window.location.reload();
+                if (!refreshing && window._swManualUpdateTriggered) {
+                    refreshing = true;
+                    window.location.reload();
+                }
             });
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then((reg) => {

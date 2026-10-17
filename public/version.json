@@ -1,10 +1,10 @@
 {
-  "version": "5.3.4",
-  "buildDate": "2026-10-17T22:12:00+07:00",
-  "title": "NovaFit Pro v5.3.4 - Elimination of WebKit display:contents Bug & Native Mobile DOM Flow",
+  "version": "5.3.5",
+  "buildDate": "2026-10-17T23:10:00+07:00",
+  "title": "NovaFit Pro v5.3.5 - Zero-Glitch Mobile Accordion & GPU Compositing Isolation",
   "features": [
-    "📱 ถอนรากถอนโคน WebKit Glitch บนมือถือ: ยกเลิกการใช้ display: contents และ CSS order บนจอมือถือทั้งหมด จัดลำดับ DOM ตามธรรมชาติ เพื่อให้การย่อ/ขยายการ์ดทำงานบนมือถือได้เสถียร 100% เทียบเท่าคอมพิวเตอร์",
-    "🖥️ Responsive Column Sync: เมื่อเปิดบนคอมพิวเตอร์ ระบบจะกระจายการ์ดเป็น 2 คอลัมน์อิสระอย่างสวยงาม และรวมเป็นการ์ดแถวเดี่ยวตามลำดับเมื่อเปิดบนมือถือ",
-    "🔄 Instant Cache Invalidation: ตั้งค่า no-cache สำหรับ index.html บน Firebase Hosting และเพิ่มระบบตรวจจับ Service Worker Activate เพื่อให้มือถือโหลดเวอร์ชันล่าสุดทันทีโดยไม่ค้าง Cache เดิม"
+    "📱 แก้ไขบั๊กหน้าจอหายเมื่อกดซ่อนเมนูบนมือถือ (100% Fixed): กำจัด WebKit Repaint Bug โดยแยก GPU Compositing Layer ของการ์ดแต่ละใบเด็ดขาด ป้องกันหน้าจอหายหรือค้างเมื่อพับ/กางเมนูเลือกอาหารและชั่งน้ำหนัก",
+    "✨ Fluid Native Accordion: ปรับระบบย่อขยายแบบใหม่ รวดเร็ว ทันใจ ตอบสนองการแตะทันทีโดยไม่มีอาการหน่วง พร้อมแอนิเมชันเปิดแบบ Spring Fade นุ่มนวล",
+    "🛡️ ป้องกัน Cache ค้างบนอุปกรณ์พกพา: ตั้งค่า no-cache ครอบคลุมไฟล์ทั้งหมดบน Firebase Hosting และปิดการรีเฟรชหน้าจออัตโนมัติขณะใช้งาน เพื่อประสบการณ์ที่ราบรื่นที่สุด"
   ]
 }
