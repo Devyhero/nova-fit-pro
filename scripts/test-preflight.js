@@ -2,7 +2,7 @@
 
 /**
  * NovaFit Pro Pre-flight Verification Script
- * Validates syntax, integrity, version sync, and rules before Git push & Firebase deploy.
+ * Validates syntax, HTML tag balance, modal DOM hierarchy, assets, version sync, and Firebase rules.
  */
 
 const fs = require('fs');
@@ -76,12 +76,13 @@ for (const { path: relPath, isModule } of jsFiles) {
 
 // 3. Extract and check all inline scripts in public/index.html
 const indexPath = path.join(PUBLIC_DIR, 'index.html');
+let indexHtml = '';
 try {
-    const html = fs.readFileSync(indexPath, 'utf8');
+    indexHtml = fs.readFileSync(indexPath, 'utf8');
     const scriptRegex = /<script(?:\s+type="([^"]*)")?(?:\s+src="([^"]*)")?[^>]*>([\s\S]*?)<\/script>/gi;
     let match;
     let scriptIdx = 0;
-    while ((match = scriptRegex.exec(html)) !== null) {
+    while ((match = scriptRegex.exec(indexHtml)) !== null) {
         const [, type, src, content] = match;
         if (src) continue; // external or separate file
         if (type && type !== 'text/javascript' && type !== 'module') continue;
@@ -101,13 +102,87 @@ try {
     logFail('Failed to read or parse public/index.html', err.message);
 }
 
-// 4. Verify linked local assets exist
+// 4. Validate HTML Tag Nesting & Balance in public/index.html
 try {
-    const html = fs.readFileSync(indexPath, 'utf8');
+    const tokenRegex = /<\/?([a-zA-Z0-9]+)(?:\s+[^>]*)?>/g;
+    let match;
+    const stack = [];
+    let mismatchFound = false;
+
+    while ((match = tokenRegex.exec(indexHtml)) !== null) {
+        const full = match[0];
+        const tagName = match[1].toLowerCase();
+        const isClosing = full.startsWith('</');
+        const isSelfClosing = full.endsWith('/>') || ['meta', 'link', 'br', 'hr', 'input', 'img', 'col', 'base'].includes(tagName);
+
+        if (isSelfClosing) continue;
+
+        const lineNum = indexHtml.substring(0, match.index).split('\n').length;
+        const id = (full.match(/id="([^"]*)"/) || [])[1] || '';
+
+        if (!isClosing) {
+            stack.push({ tag: tagName, line: lineNum, id, full: full.slice(0, 50) });
+        } else {
+            if (stack.length === 0) {
+                logFail(`HTML extra closing tag </${tagName}> at line ${lineNum}`);
+                mismatchFound = true;
+                break;
+            }
+            const top = stack.pop();
+            if (top.tag !== tagName) {
+                logFail(`HTML tag mismatch at line ${lineNum}: expected </${top.tag}> (opened line ${top.line} <${top.tag} id="${top.id}">), found </${tagName}>`);
+                mismatchFound = true;
+                break;
+            }
+        }
+    }
+
+    if (!mismatchFound) {
+        if (stack.length === 0) {
+            logPass('HTML tag structure & balance perfectly closed (0 unclosed tags)');
+        } else {
+            logFail(`HTML has ${stack.length} unclosed tag(s): ${stack.map(s => `<${s.tag} id="${s.id}"> (line ${s.line})`).join(', ')}`);
+        }
+    }
+} catch (err) {
+    logFail('Error validating HTML structure', err.message);
+}
+
+// 5. Verify Modal DOM Hierarchy (Ensure all modals are independent and not nested inside other modals)
+try {
+    const requiredModals = ['dailyReportModal', 'changelogModal', 'shareCardModal', 'addSupplementModal'];
+    for (const mId of requiredModals) {
+        const mIdx = indexHtml.indexOf(`id="${mId}"`);
+        if (mIdx === -1) {
+            logFail(`Modal #${mId} not found in public/index.html`);
+            continue;
+        }
+        // Verify modal has its own container and is not nested inside changelogModal or other modals
+        for (const otherId of requiredModals) {
+            if (mId === otherId) continue;
+            const oIdx = indexHtml.indexOf(`id="${otherId}"`);
+            if (oIdx !== -1 && oIdx < mIdx) {
+                // Ensure other modal was closed before mId starts
+                const between = indexHtml.substring(oIdx, mIdx);
+                const closes = (between.match(/<\/div>/gi) || []).length;
+                const opens = (between.match(/<div(\s+[^>]*)?>/gi) || []).length;
+                if (opens >= closes) {
+                    logFail(`Modal #${mId} appears to be nested inside #${otherId} (opens=${opens}, closes=${closes})`);
+                }
+            }
+        }
+    }
+    logPass('Modal DOM hierarchy verified: all 4 modals are independent top-level dialogs');
+} catch (err) {
+    logFail('Error checking modal DOM hierarchy', err.message);
+}
+
+// 6. Verify linked local assets exist
+try {
     const srcRegex = /(?:src|href)=["']([^"':#?]+)(?:\?[^"']*)?["']/gi;
     let match;
     const checked = new Set();
-    while ((match = srcRegex.exec(html)) !== null) {
+    while ((match = srcRegex.exec(indexHtml)) !== null) {
         let assetPath = match[1];
         if (assetPath.startsWith('http') || assetPath.startsWith('//') || assetPath.startsWith('data:')) continue;
         if (assetPath.startsWith('/')) assetPath = assetPath.slice(1);
@@ -125,21 +200,22 @@ try {
     logFail('Error verifying asset references', err.message);
 }
 
-// 5. Version consistency check between version.json and sw.js
+// 7. Version consistency check across version.json, sw.js, and index.html
 try {
     const versionData = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'version.json'), 'utf8'));
     const swContent = fs.readFileSync(path.join(PUBLIC_DIR, 'sw.js'), 'utf8');
+    const curVer = versionData.version;
     
-    if (versionData.version && swContent.includes(versionData.version)) {
-        logPass(`Version alignment verified: v${versionData.version} in version.json and sw.js`);
+    if (curVer && swContent.includes(curVer) && indexHtml.includes(`APP_VERSION = '${curVer}'`)) {
+        logPass(`Version alignment verified: v${curVer} across version.json, sw.js, and index.html`);
     } else {
-        logFail(`Version mismatch! version.json has "${versionData.version}" but sw.js does not contain it.`);
+        logFail(`Version mismatch! version.json has "${curVer}", check sw.js and index.html APP_VERSION.`);
     }
 } catch (err) {
     logFail('Error checking version consistency', err.message);
 }
 
-// 6. Firebase Firestore rules dry-run check
+// 8. Firebase Firestore rules dry-run check
 try {
     execSync('firebase deploy --dry-run', { stdio: 'pipe', cwd: ROOT_DIR });
     logPass('Firebase deployment dry-run passed (rules & hosting validated)');

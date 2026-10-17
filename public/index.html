@@ -122,7 +122,7 @@
         class="hidden fixed top-0 inset-x-0 z-50 bg-gradient-to-r from-indigo-600 via-cyan-600 to-emerald-600 text-white px-3 sm:px-4 py-2 sm:py-2.5 shadow-xl flex items-center justify-between gap-2 sm:gap-3 text-xs font-medium animate-pop">
         <div class="flex items-center gap-1.5 sm:gap-2 max-w-4xl mx-auto flex-1 min-w-0">
             <span class="text-base shrink-0 animate-bounce">🚀</span>
-            <span class="truncate sm:whitespace-normal"><b>มีอัปเดตใหม่ (<span id="newVersionTag">v5.2.5</span>)!</b> แก้ไขปุ่มและหน้าต่างเพิ่มวิตามิน & อาหารเสริม</span>
+            <span class="truncate sm:whitespace-normal"><b>มีอัปเดตใหม่ (<span id="newVersionTag">v5.2.6</span>)!</b> แก้ไขหน้าต่างเพิ่มวิตามิน & อาหารเสริม และโครงสร้าง Dashboard</span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
             <button onclick="applyAppUpdate()"
@@ -1017,6 +1017,7 @@
                 </div>
             </section>
         </div>
+        </div>
     </main>
 
     <!-- MODAL 1: Daily Summary & Deficit Report -->
@@ -1076,21 +1077,34 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-indigo-500/15 via-cyan-500/10 to-emerald-500/15 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b>ยินดีต้อนรับสู่ NovaFit Pro v5.2.5!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b>ยินดีต้อนรับสู่ NovaFit Pro v5.2.6!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.2.5 -->
+                <!-- Latest Release: v5.2.6 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-indigo-500/15 via-emerald-500/10 to-cyan-500/15 border border-indigo-500/30 space-y-1.5">
                     <div class="flex justify-between font-bold text-indigo-600 dark:text-indigo-400">
-                        <span>🚀 v5.2.5 (Fix Vitamin Modal Opening & Interaction)</span>
+                        <span>🚀 v5.2.6 (Fix Supplement Modal DOM Nesting Bug)</span>
                         <span>17 ต.ค. 2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
-                        <li><b>💊 แก้ไขปุ่มและหน้าต่างเพิ่มวิตามิน 100%:</b> ป้องกันปัญหา Ghost-click บนจอมือถือที่ปิดหน้าต่างทันที, บังคับแสดงผลหน้าต่างด้วย Style Display และขยายการ์ดวิตามินให้อัตโนมัติเมื่อกดเพิ่ม</li>
+                        <li><b>💊 แก้ไขหน้าต่างเพิ่มวิตามิน & อาหารเสริม 100%:</b> แก้ไขโครงสร้าง DOM HTML ที่ซ้อนทับกัน ทำให้หน้าต่างและฟอร์มกรอกข้อมูลเปิดทำงานได้อย่างสมบูรณ์</li>
+                        <li><b>🍱 ปรับปรุงโครงสร้าง Grid หน้าจอหลัก:</b> แก้ไข Tag ปิดใน Dashboard ให้เสถียรและทำงานราบรื่นบนทุกอุปกรณ์</li>
+                    </ul>
+                </div>
+
+                <!-- Previous Release: v5.2.5 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                        <span>v5.2.5 (Fix Vitamin Modal Opening & Interaction)</span>
+                        <span>17 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>💊 ปรับปรุงหน้าต่างเพิ่มวิตามิน:</b> ป้องกันปัญหา Ghost-click บนจอมือถือ และขยายการ์ดวิตามินให้อัตโนมัติเมื่อกดเพิ่ม</li>
                         <li><b>📅 เริ่มต้นที่วันที่ปัจจุบันเสมอ:</b> เปิดแอปทุกครั้งจะตั้งต้นที่วันปัจจุบันของเครื่อง ไม่ค้างวันเก่า</li>
                         <li><b>📱 แก้ไขแจ้งเตือนอัปเดตจากอุปกรณ์อื่น:</b> ใช้รหัสประจำเครื่องแยกแยะอย่างแม่นยำ ไม่แจ้งเตือนหลอกเมื่อเปิดแอปซ้ำ</li>
-                        <li><b>📶 รองรับการทำงานแบบออฟไลน์ 100%:</b> เมื่อไม่มีเน็ตข้อมูลถูกบันทึกในเครื่องปลอดภัย และซิงค์ขึ้น Cloud อัตโนมัติเมื่อต่อเน็ต</li>
+                        <li><b>📶 รองรับการทำงานแบบออฟไลน์ 100%:</b> บันทึกในเครื่องปลอดภัย และซิงค์ขึ้น Cloud อัตโนมัติเมื่อต่อเน็ต</li>
                     </ul>
                 </div>
 
@@ -1163,7 +1177,6 @@
 
                 <div
                     class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-1.5">
-                    <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300">
                     <div class="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                         <span>v5.1.1 (Real-time Live Sync Bridge)</span>
                         <span>15 ต.ค. 2026</span>
@@ -1404,7 +1417,6 @@
 
     <!-- MODAL 4: Add Custom Supplement -->
     <div id="addSupplementModal"
-        style="display: none;"
         class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
         onclick="closeAddSupplementModalOnBackdrop(event)">
         <div onclick="event.stopPropagation()"
@@ -1443,11 +1455,11 @@
         </div>
     </div>
 
-    <!-- Food Database & Nutrition Presets Module (v5.2.5) -->
-    <script src="food-db.js?v=5.2.5"></script>
+    <!-- Food Database & Nutrition Presets Module (v5.2.6) -->
+    <script src="food-db.js?v=5.2.6"></script>
 
     <script>
-        const APP_VERSION = '5.2.5';
+        const APP_VERSION = '5.2.6';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -4632,8 +4644,8 @@
         });
     </script>
 
-    <!-- Firebase Authentication & Cloud Firestore Real-time Multi-Device Sync (v5.2.5) -->
-    <script type="module" src="firebase-sync.js?v=5.2.5"></script>
+    <!-- Firebase Authentication & Cloud Firestore Real-time Multi-Device Sync (v5.2.6) -->
+    <script type="module" src="firebase-sync.js?v=5.2.6"></script>
 </body>
 
 </html>
