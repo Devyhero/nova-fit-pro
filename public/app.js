@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.0';
+const APP_VERSION = '5.3.1';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -204,22 +204,21 @@ const APP_VERSION = '5.3.0';
             const bmi = (p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
             const goalLabel = p.goalDiff < 0 ? `ลดไขมัน (${p.goalDiff}%)` : p.goalDiff > 0 ? `เพิ่มกล้าม (+${p.goalDiff}%)` : 'รักษาน้ำหนัก (0%)';
 
-            document.getElementById('compactProfilePills').innerHTML = `
-                <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">${p.gender === 'male' ? '♂ ชาย' : '♀ หญิง'} ${p.age} ปี</span>
-                <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">นน. ${p.weight} กก. / สูง ${p.height} ซม. (BMI ${bmi})</span>
-                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">${goalLabel}</span>
-                <span class="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold">Macro ${p.macros.p}/${p.macros.c}/${p.macros.f}%</span>
-            `;
-
-            if (state.settingsCollapsed) {
-                body.classList.add('hidden');
-                icon.textContent = '▼';
-                text.textContent = 'แก้ไขข้อมูลร่างกาย / สัดส่วน Macro';
-            } else {
-                body.classList.remove('hidden');
-                icon.textContent = '▲';
-                text.textContent = 'ซ่อนแผงตั้งค่าร่างกาย';
+            const compactPills = document.getElementById('compactProfilePills');
+            if (compactPills) {
+                compactPills.innerHTML = `
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">${p.gender === 'male' ? '♂ ชาย' : '♀ หญิง'} ${p.age} ปี</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">นน. ${p.weight} กก. / สูง ${p.height} ซม. (BMI ${bmi})</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">${goalLabel}</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold">Macro ${p.macros.p}/${p.macros.c}/${p.macros.f}%</span>
+                `;
             }
+
+            if (body) {
+                body.classList.remove('hidden');
+            }
+            if (icon) icon.textContent = '⚙️';
+            if (text) text.textContent = 'ตั้งค่าข้อมูลร่างกาย & สัดส่วน Macro';
         }
 
         function toggleToolsMenu() {
@@ -234,14 +233,25 @@ const APP_VERSION = '5.3.0';
             const isNowCollapsed = !state.collapsedSections[sectionId];
             state.collapsedSections[sectionId] = isNowCollapsed;
 
-            // 1. Instant 0ms Visual Toggle
+            // Fluid Apple-grade Accordion Toggle
             const body = document.getElementById('body_' + sectionId);
             const icon = document.getElementById('icon_' + sectionId);
             if (body) {
-                body.classList.toggle('hidden', isNowCollapsed);
+                body.classList.remove('hidden');
+                body.classList.add('accordion-section');
+                if (isNowCollapsed) {
+                    body.classList.add('is-collapsed');
+                } else {
+                    body.classList.remove('is-collapsed');
+                }
             }
             if (icon) {
-                icon.textContent = isNowCollapsed ? '▼' : '▲';
+                icon.classList.add('accordion-chevron');
+                if (isNowCollapsed) {
+                    icon.classList.add('icon-collapsed');
+                } else {
+                    icon.classList.remove('icon-collapsed');
+                }
             }
 
             // 2. Debounced non-blocking localStorage save
@@ -269,14 +279,21 @@ const APP_VERSION = '5.3.0';
                 const icon = document.getElementById('icon_' + id);
                 const isCollapsed = !!state.collapsedSections[id];
                 if (body) {
+                    body.classList.remove('hidden');
+                    body.classList.add('accordion-section');
                     if (isCollapsed) {
-                        body.classList.add('hidden');
+                        body.classList.add('is-collapsed');
                     } else {
-                        body.classList.remove('hidden');
+                        body.classList.remove('is-collapsed');
                     }
                 }
                 if (icon) {
-                    icon.textContent = isCollapsed ? '▼' : '▲';
+                    icon.classList.add('accordion-chevron');
+                    if (isCollapsed) {
+                        icon.classList.add('icon-collapsed');
+                    } else {
+                        icon.classList.remove('icon-collapsed');
+                    }
                 }
             });
         }
@@ -403,11 +420,11 @@ const APP_VERSION = '5.3.0';
             document.getElementById('macroPresetLowCarb').className = `text-xs py-1.5 px-2 rounded-lg border transition ${isLow ? activeBtn : inactiveBtn}`;
             document.getElementById('macroPreset2g').className = `text-xs py-1.5 px-2 rounded-lg border transition ${(!isBal && !isMus && !isLow) ? activeBtn : inactiveBtn}`;
 
-            document.getElementById('numAge').value = p.age;
+            if (document.activeElement !== document.getElementById('numAge')) document.getElementById('numAge').value = p.age;
             document.getElementById('rangeAge').value = p.age;
-            document.getElementById('numWeight').value = p.weight;
+            if (document.activeElement !== document.getElementById('numWeight')) document.getElementById('numWeight').value = p.weight;
             document.getElementById('rangeWeight').value = p.weight;
-            document.getElementById('numHeight').value = p.height;
+            if (document.activeElement !== document.getElementById('numHeight')) document.getElementById('numHeight').value = p.height;
             document.getElementById('rangeHeight').value = p.height;
             document.getElementById('selActivity').value = p.activity;
 
@@ -1099,11 +1116,41 @@ const APP_VERSION = '5.3.0';
         }
 
         function renderWeeklyAnalytics(targets) {
+            const todayStr = getTodayStr();
             const dStr = state.selectedDate;
-            const dateObj = new Date(dStr + 'T00:00:00');
+            const isViewingPast = dStr !== todayStr;
+
+            // Anchor 7-day window to today so current week (including Today) never disappears
+            const anchorDateObj = (dStr > todayStr) ? new Date(dStr + 'T00:00:00') : new Date(todayStr + 'T00:00:00');
             const weekBar = document.getElementById('weekHistoryBar');
             const badge = document.getElementById('weeklyConsistencyBadge');
             const avgText = document.getElementById('weeklyAvgCalText');
+
+            // Quick Return to Today Banner inside Analytics
+            const returnBanner = document.getElementById('analyticsReturnToTodayBanner');
+            const returnDateText = document.getElementById('analyticsSelectedDateText');
+            if (returnBanner && returnDateText) {
+                if (isViewingPast) {
+                    returnBanner.classList.remove('hidden');
+                    const curDateObj = new Date(dStr + 'T00:00:00');
+                    returnDateText.textContent = curDateObj.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+                } else {
+                    returnBanner.classList.add('hidden');
+                }
+            }
+
+            // Top Date Bar Alert Banner
+            const topPastBanner = document.getElementById('pastDateAlertBanner');
+            const topPastText = document.getElementById('pastDateAlertText');
+            if (topPastBanner && topPastText) {
+                if (isViewingPast) {
+                    topPastBanner.classList.remove('hidden');
+                    const curDateObj = new Date(dStr + 'T00:00:00');
+                    topPastText.textContent = curDateObj.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                } else {
+                    topPastBanner.classList.add('hidden');
+                }
+            }
 
             let totalCal7Days = 0;
             let daysWithLogs = 0;
@@ -1113,7 +1160,7 @@ const APP_VERSION = '5.3.0';
             let maxChartCal = targetCal * 1.25;
 
             for (let i = 6; i >= 0; i--) {
-                const d = new Date(dateObj);
+                const d = new Date(anchorDateObj);
                 d.setDate(d.getDate() - i);
                 const offset = d.getTimezoneOffset() * 60000;
                 const iso = new Date(d.getTime() - offset).toISOString().split('T')[0];
@@ -1136,12 +1183,13 @@ const APP_VERSION = '5.3.0';
 
                 daysData.push({
                     iso,
-                    shortDay: d.toLocaleDateString('th-TH', { weekday: 'short' }),
+                    shortDay: iso === todayStr ? 'วันนี้' : d.toLocaleDateString('th-TH', { weekday: 'short' }),
                     dayNum: d.getDate(),
                     eatenCal,
                     burnedCal,
                     dayWeight,
-                    isSelected: iso === dStr
+                    isSelected: iso === dStr,
+                    isToday: iso === todayStr
                 });
             }
 
@@ -1265,7 +1313,7 @@ const APP_VERSION = '5.3.0';
 
                 const borderClass = d.isSelected
                     ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 shadow-xs'
-                    : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/80 hover:border-emerald-500/50';
+                    : (d.isToday ? 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-500/10 hover:border-emerald-500' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/80 hover:border-emerald-500/50');
 
                 const weightBadge = d.dayWeight
                     ? `<span class="text-[9px] font-bold text-sky-500 block truncate">${d.dayWeight}k</span>`
@@ -1273,7 +1321,7 @@ const APP_VERSION = '5.3.0';
 
                 return `
                     <button type="button" onclick="onDateChange('${d.iso}')"
-                        class="flex flex-col items-center justify-end p-1.5 rounded-xl border transition group h-28 ${borderClass}"
+                        class="flex flex-col items-center justify-end p-1.5 rounded-xl border transition group h-28 ${borderClass} active:scale-95"
                         title="${d.iso}: ${d.eatenCal.toLocaleString()} kcal (เป้าหมาย ${targetCal.toLocaleString()} kcal)${d.burnedCal > 0 ? ` [เบิร์น -${d.burnedCal} kcal]` : ''}">
                         <div class="w-full flex-1 flex items-end justify-center pb-1">
                             <div class="w-full max-w-[20px] rounded-t-md transition-all duration-300 relative ${barColor}" style="height: ${barHeightPx}px;">
@@ -1281,7 +1329,7 @@ const APP_VERSION = '5.3.0';
                             </div>
                         </div>
                         <div class="text-center w-full pt-1 border-t border-slate-100 dark:border-slate-700/50">
-                            <span class="text-[10px] block font-semibold ${d.isSelected ? 'text-emerald-500 font-bold' : 'text-slate-500 dark:text-slate-400'}">${d.shortDay} ${d.dayNum}</span>
+                            <span class="text-[10px] block font-semibold ${d.isSelected ? 'text-emerald-500 font-bold' : (d.isToday ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400')}">${d.shortDay} ${d.isToday ? '📍' : d.dayNum}</span>
                             <span class="text-[9px] block font-bold text-slate-700 dark:text-slate-200 truncate">${d.eatenCal > 0 ? d.eatenCal : '-'}</span>
                             ${weightBadge}
                         </div>
@@ -1800,22 +1848,11 @@ const APP_VERSION = '5.3.0';
             if (inIcon) inIcon.value = '💊';
 
             _modalOpeningCooldown = Date.now();
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-
-            setTimeout(() => {
-                if (inName) inName.focus();
-            }, 100);
+            openModalAnimated('addSupplementModal', () => { if (inName) inName.focus(); });
         }
 
         function closeAddSupplementModal() {
-            const modal = document.getElementById('addSupplementModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
+            closeModalAnimated('addSupplementModal');
         }
 
         function closeAddSupplementModalOnBackdrop(e) {
@@ -2006,6 +2043,7 @@ const APP_VERSION = '5.3.0';
             state.selectedDate = getTodayStr();
             saveState();
             renderAll();
+            showToast('📅 กลับสู่วันปัจจุบัน (วันนี้) เรียบร้อย');
         }
 
         function addFoodItem(name, p, c, f, explicitCal, targetMeal, targetPortion) {
@@ -3183,64 +3221,71 @@ const APP_VERSION = '5.3.0';
         });
 
 // ==========================================
-// NEW v5.3.0: PROFILE SETTINGS DRAWER & QUICK ADD
+// NEW v5.3.1: APPLE-GRADE SMOOTH MODALS & PROFILE DRAWER
 // ==========================================
 
+function openModalAnimated(modalId, onOpened) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            modal.classList.add('modal-open');
+            if (typeof onOpened === 'function') onOpened();
+        });
+    });
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModalAnimated(modalId, onClosed) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('modal-open');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        if (typeof onClosed === 'function') onClosed();
+    }, 280);
+}
+
 function openProfileSettingsModal() {
-    const modal = document.getElementById("profileSettingsModal");
-    if (modal) {
-        modal.classList.remove("hidden");
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-    }
+    openModalAnimated('profileSettingsModal');
 }
 
 function closeProfileSettingsModal() {
-    const modal = document.getElementById("profileSettingsModal");
-    if (modal) {
-        modal.classList.add("hidden");
-        modal.style.display = "none";
-        document.body.style.overflow = "";
-    }
+    closeModalAnimated('profileSettingsModal');
 }
 
 function closeProfileSettingsOnBackdrop(e) {
-    if (e && e.target && e.target.id === "profileSettingsModal") {
+    if (e && e.target && e.target.id === 'profileSettingsModal') {
         closeProfileSettingsModal();
     }
 }
 
 function openQuickAddModal() {
-    const modal = document.getElementById("quickAddModal");
-    if (modal) {
-        const inName = document.getElementById("inQuickName");
-        const inCal = document.getElementById("inQuickCal");
-        const inP = document.getElementById("inQuickP");
-        const inC = document.getElementById("inQuickC");
-        const inF = document.getElementById("inQuickF");
-        if (inName) inName.value = "";
-        if (inCal) inCal.value = "";
-        if (inP) inP.value = "";
-        if (inC) inC.value = "";
-        if (inF) inF.value = "";
-        modal.classList.remove("hidden");
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-        setTimeout(() => inCal && inCal.focus(), 100);
-    }
+    const inName = document.getElementById('inQuickName');
+    const inCal = document.getElementById('inQuickCal');
+    const inP = document.getElementById('inQuickP');
+    const inC = document.getElementById('inQuickC');
+    const inF = document.getElementById('inQuickF');
+    if (inName) inName.value = '';
+    if (inCal) inCal.value = '';
+    if (inP) inP.value = '';
+    if (inC) inC.value = '';
+    if (inF) inF.value = '';
+    openModalAnimated('quickAddModal', () => {
+        if (inCal) inCal.focus();
+    });
 }
 
 function closeQuickAddModal() {
-    const modal = document.getElementById("quickAddModal");
-    if (modal) {
-        modal.classList.add("hidden");
-        modal.style.display = "none";
-        document.body.style.overflow = "";
-    }
+    closeModalAnimated('quickAddModal');
 }
 
 function closeQuickAddOnBackdrop(e) {
-    if (e && e.target && e.target.id === "quickAddModal") {
+    if (e && e.target && e.target.id === 'quickAddModal') {
         closeQuickAddModal();
     }
 }
