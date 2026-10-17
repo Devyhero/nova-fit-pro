@@ -1,0 +1,20 @@
+{
+  "name": "NovaFit Pro - Macro & Calorie Tracker (by BenzNova)",
+  "short_name": "NovaFit Pro",
+  "description": "ระบบคำนวณแคลอรีและโภชนาการอัจฉริยะ ติดตามมื้ออาหาร น้ำหนัก ออกกำลังกาย วิตามิน และการ์ดแชร์",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "64x64 128x128 192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["fitness", "health", "lifestyle"]
+}
