@@ -95,16 +95,18 @@
 
         /* Apple Accordion Fluid Collapsing & Expanding */
         .accordion-section {
-            transition: max-height 0.35s var(--ios-spring), opacity 0.25s ease, padding 0.35s var(--ios-spring);
+            transition: max-height 0.35s var(--ios-spring), opacity 0.25s ease;
             max-height: 2500px;
             opacity: 1;
-            overflow: visible;
+            overflow: hidden;
+            max-width: 100%;
         }
         .accordion-section.is-collapsed {
+            display: none !important;
             max-height: 0 !important;
             opacity: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
             overflow: hidden !important;
             pointer-events: none !important;
         }
@@ -295,7 +297,7 @@
                         </button>
                         <button onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.3.2)
+                            <span>🚀</span> ประวัติอัปเดต (v5.3.3)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -574,7 +576,7 @@
             </section>
 
                 <!-- Order 5: DAILY SUPPLEMENTS -->
-                <section class="order-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden space-y-3">
+                <section class="order-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_supplements')"
                     class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
@@ -617,7 +619,7 @@
             </section>
 
                 <!-- Order 6: WORKOUT & ACTIVITY BURN -->
-                <section class="order-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden space-y-3 w-full max-w-full min-w-0">
+                <section class="order-6 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
                 <div onclick="toggleCardSection('section_workout')"
                     class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
@@ -701,9 +703,9 @@
             <!-- RIGHT COLUMN (7 cols on desktop, contents on mobile) -->
             <div class="contents lg:flex lg:flex-col lg:col-span-7 lg:gap-5">
                 <!-- Order 2: FOOD SEARCH & SELECTOR (MOVED UP FOR FASTEST ACCESS!) -->
-                <section class="order-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden space-y-4 w-full max-w-full min-w-0">
+                <section class="order-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
                 <div onclick="toggleCardSection('section_food_search')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700/80 transition">
+                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
                             🍽️ เลือกและเพิ่มเมนูอาหาร (<span id="totalFoodCountBadge">280</span> เมนู)
@@ -714,7 +716,7 @@
                     </div>
                 </div>
 
-                <div id="body_section_food_search" class="accordion-section p-3.5 sm:p-5 pt-0 space-y-4 max-w-full overflow-hidden">
+                <div id="body_section_food_search" class="accordion-section p-3.5 sm:p-5 pt-3.5 sm:pt-5 space-y-4 max-w-full overflow-hidden border-t border-slate-200/80 dark:border-slate-700/80">
                     <!-- Active Meal & Portion Selector Toolbar -->
                     <div
                         class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-slate-50/50 dark:to-slate-900/40 border border-emerald-500/20 space-y-2.5 shadow-xs">
@@ -819,7 +821,7 @@
                 <!-- Order 3: TODAY'S LOGGED MEALS -->
                 <section class="order-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_meals')"
-                    class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80 cursor-pointer select-none">
+                    class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 cursor-pointer select-none">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
                             🍱 รายการมื้ออาหารวันนี้ (<span id="mealCount">0</span> รายการ)
@@ -837,13 +839,13 @@
                     </div>
                 </div>
 
-                <div id="body_section_meals" class="accordion-section p-4 sm:p-5">
+                <div id="body_section_meals" class="accordion-section p-4 sm:p-5 border-t border-slate-200/80 dark:border-slate-700/80">
                     <div id="mealListContainer" class="space-y-3 max-h-[550px] overflow-y-auto pr-1"></div>
                 </div>
             </section>
 
                 <!-- Order 7: WEEKLY ANALYTICS & WEIGHT TREND -->
-                <section class="order-7 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden space-y-3">
+                <section class="order-7 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_analytics')"
                     class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -894,7 +896,7 @@
             </section>
 
                 <!-- Order 8: SMART RECOMMENDATION ACCORDION -->
-                <section class="order-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden space-y-3">
+                <section class="order-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div onclick="toggleCardSection('section_recommendations')"
                     class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
@@ -1617,13 +1619,13 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.3.2"></script>
+    <script src="food-db.js?v=5.3.3"></script>
 
-    <!-- Modularized Core Application Logic (v5.3.2 - High Performance) -->
-    <script src="app.js?v=5.3.2"></script>
+    <!-- Modularized Core Application Logic (v5.3.3 - High Performance) -->
+    <script src="app.js?v=5.3.3"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.3.2"></script>
+    <script type="module" src="firebase-sync.js?v=5.3.3"></script>
 
 </body>
 

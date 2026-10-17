@@ -186,6 +186,57 @@ server.listen(PORT, async () => {
             throw new Error('Accordion collapsible failed');
         }
 
+        // Test 9: Mobile Viewport Collapse Stability (Workout & Food Search)
+        console.log('--- Test 9: Mobile Viewport Collapse Stability (Workout & Food Search) ---');
+        await evalJs('toggleCardSection("section_workout")');
+        await new Promise(r => setTimeout(r, 200));
+        await evalJs('toggleCardSection("section_food_search")');
+        await new Promise(r => setTimeout(r, 200));
+
+        const collapseStatus = await evalJs(`(() => {
+            const sections = Array.from(document.querySelectorAll('main section'));
+            const rects = sections.map(s => {
+                const r = s.getBoundingClientRect();
+                return {
+                    title: s.querySelector('h2, h3')?.textContent?.trim()?.slice(0, 25) || '',
+                    height: Math.round(r.height),
+                    visible: r.height > 0 && r.width > 0
+                };
+            });
+            const allVisible = rects.every(r => r.visible);
+            const foodBody = document.getElementById('body_section_food_search');
+            const workoutBody = document.getElementById('body_section_workout');
+            const foodCard = foodBody.parentElement;
+            const workoutCard = workoutBody.parentElement;
+
+            return {
+                allVisible,
+                rects,
+                foodBodyHidden: foodBody.classList.contains('hidden'),
+                workoutBodyHidden: workoutBody.classList.contains('hidden'),
+                foodCardHeight: Math.round(foodCard.getBoundingClientRect().height),
+                workoutCardHeight: Math.round(workoutCard.getBoundingClientRect().height),
+                hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
+            };
+        })()`);
+
+        console.log('All sections remain visible after collapse:', collapseStatus.allVisible);
+        console.log('Food search body hidden:', collapseStatus.foodBodyHidden);
+        console.log('Workout body hidden:', collapseStatus.workoutBodyHidden);
+        console.log('Food card collapsed height:', collapseStatus.foodCardHeight);
+        console.log('Workout card collapsed height:', collapseStatus.workoutCardHeight);
+        console.log('Has horizontal overflow:', collapseStatus.hasHorizontalOverflow);
+
+        if (!collapseStatus.allVisible || !collapseStatus.foodBodyHidden || !collapseStatus.workoutBodyHidden || collapseStatus.hasHorizontalOverflow) {
+            throw new Error('Mobile collapse stability test failed: sections clipped or overflowed');
+        }
+
+        // Re-expand both to verify clean state
+        await evalJs('toggleCardSection("section_workout")');
+        await evalJs('toggleCardSection("section_food_search")');
+        await evalJs('toggleCardSection("section_water")');
+        await new Promise(r => setTimeout(r, 200));
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

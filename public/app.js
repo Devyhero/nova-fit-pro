@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.2';
+const APP_VERSION = '5.3.3';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -233,28 +233,20 @@ const APP_VERSION = '5.3.2';
             const isNowCollapsed = !state.collapsedSections[sectionId];
             state.collapsedSections[sectionId] = isNowCollapsed;
 
-            // Fluid Apple-grade Accordion Toggle
+            // Fluid Apple-grade Accordion Toggle with zero layout glitch
             const body = document.getElementById('body_' + sectionId);
             const icon = document.getElementById('icon_' + sectionId);
             if (body) {
-                body.classList.remove('hidden');
                 body.classList.add('accordion-section');
-                if (isNowCollapsed) {
-                    body.classList.add('is-collapsed');
-                } else {
-                    body.classList.remove('is-collapsed');
-                }
+                body.classList.toggle('hidden', isNowCollapsed);
+                body.classList.toggle('is-collapsed', isNowCollapsed);
             }
             if (icon) {
                 icon.classList.add('accordion-chevron');
-                if (isNowCollapsed) {
-                    icon.classList.add('icon-collapsed');
-                } else {
-                    icon.classList.remove('icon-collapsed');
-                }
+                icon.classList.toggle('icon-collapsed', isNowCollapsed);
             }
 
-            // 2. Debounced non-blocking localStorage save
+            // Debounced non-blocking localStorage save
             clearTimeout(window._collapseSaveTimer);
             window._collapseSaveTimer = setTimeout(() => {
                 try {
@@ -279,21 +271,13 @@ const APP_VERSION = '5.3.2';
                 const icon = document.getElementById('icon_' + id);
                 const isCollapsed = !!state.collapsedSections[id];
                 if (body) {
-                    body.classList.remove('hidden');
                     body.classList.add('accordion-section');
-                    if (isCollapsed) {
-                        body.classList.add('is-collapsed');
-                    } else {
-                        body.classList.remove('is-collapsed');
-                    }
+                    body.classList.toggle('hidden', isCollapsed);
+                    body.classList.toggle('is-collapsed', isCollapsed);
                 }
                 if (icon) {
                     icon.classList.add('accordion-chevron');
-                    if (isCollapsed) {
-                        icon.classList.add('icon-collapsed');
-                    } else {
-                        icon.classList.remove('icon-collapsed');
-                    }
+                    icon.classList.toggle('icon-collapsed', isCollapsed);
                 }
             });
         }
