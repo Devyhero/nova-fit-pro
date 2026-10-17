@@ -1,6 +1,7 @@
 # OS Files
 .DS_Store
 Thumbs.db
+backup_*/
 
 # Logs
 logs

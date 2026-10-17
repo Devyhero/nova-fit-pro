@@ -55,6 +55,7 @@ for (const relPath of jsonFiles) {
 // 2. Check JavaScript standalone files
 const jsFiles = [
     { path: 'public/sw.js', isModule: false },
+    { path: 'public/app.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/firebase-sync.js', isModule: true }
 ];
@@ -200,16 +201,17 @@ try {
     logFail('Error verifying asset references', err.message);
 }
 
-// 7. Version consistency check across version.json, sw.js, and index.html
+// 7. Version consistency check across version.json, sw.js, app.js, and index.html
 try {
     const versionData = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'version.json'), 'utf8'));
     const swContent = fs.readFileSync(path.join(PUBLIC_DIR, 'sw.js'), 'utf8');
+    const appContent = fs.readFileSync(path.join(PUBLIC_DIR, 'app.js'), 'utf8');
     const curVer = versionData.version;
     
-    if (curVer && swContent.includes(curVer) && indexHtml.includes(`APP_VERSION = '${curVer}'`)) {
-        logPass(`Version alignment verified: v${curVer} across version.json, sw.js, and index.html`);
+    if (curVer && swContent.includes(curVer) && appContent.includes(`APP_VERSION = '${curVer}'`) && indexHtml.includes(`v=${curVer}`)) {
+        logPass(`Version alignment verified: v${curVer} across version.json, sw.js, app.js, and index.html`);
     } else {
-        logFail(`Version mismatch! version.json has "${curVer}", check sw.js and index.html APP_VERSION.`);
+        logFail(`Version mismatch! version.json has "${curVer}", check sw.js, app.js, and index.html.`);
     }
 } catch (err) {
     logFail('Error checking version consistency', err.message);
