@@ -50,6 +50,13 @@
             transform: scale(0.965);
         }
 
+        /* Mobile-first Header Cleanliness: hide text sync badge on mobile to prevent crowding */
+        @media (max-width: 767px) {
+            #cloudStatusBadge {
+                display: none !important;
+            }
+        }
+
         /* Apple iOS Modal Backdrop Blur & Transitions */
         .modal-backdrop-smooth {
             opacity: 0;
@@ -243,28 +250,35 @@
                     </div>
                 </div>
 
-                <!-- Profile & Macro Settings Drawer Button (Apple iOS Style) -->
-                <button type="button" onclick="openProfileSettingsModal()" id="btnHeaderProfileSettings"
-                    class="text-xs px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95"
-                    title="ตั้งค่าข้อมูลร่างกาย & สัดส่วน Macro">
-                    <span>⚙️</span>
-                    <span class="hidden sm:inline">ข้อมูลร่างกาย</span>
-                </button>
-
-                <!-- Tools & Share Dropdown Menu -->
+                <!-- Tools & Profile Settings Unified Menu -->
                 <div class="relative">
                     <button type="button" onclick="toggleToolsMenu()" id="btnToolsMenu"
-                        class="text-xs px-2 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 font-bold transition flex items-center gap-1 shadow-xs active:scale-95"
-                        title="เครื่องมือ จัดการข้อมูล และแชร์">
-                        <span>🛠️</span>
-                        <span class="hidden sm:inline">เครื่องมือ</span>
+                        class="text-xs px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 font-bold transition flex items-center gap-1 shadow-xs active:scale-95"
+                        title="เมนูตั้งค่าร่างกาย เครื่องมือ และการแชร์">
+                        <span>⚙️</span>
+                        <span class="hidden sm:inline">จัดการ</span>
                         <span class="text-[10px]">▼</span>
                     </button>
 
                     <!-- Tools Dropdown Popover -->
                     <div id="toolsDropdownMenu"
-                        class="hidden absolute right-0 mt-2 w-60 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl p-2.5 z-50 text-xs space-y-1 animate-pop">
-                        <div class="px-2.5 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        class="hidden absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl p-2.5 z-50 text-xs space-y-1.5 animate-pop">
+                        
+                        <!-- 1. Profile & Macro Settings (Prominent Card at the Top) -->
+                        <div class="px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                            <span>ร่างกาย & เป้าหมาย</span>
+                            <span class="text-[9px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">หลัก</span>
+                        </div>
+                        <button type="button" onclick="openProfileSettingsModal(); toggleToolsMenu();" id="btnToolsProfileSettings"
+                            class="w-full text-left p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-2.5 transition active:scale-95 border border-emerald-500/25">
+                            <span class="text-base p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">⚙️</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="leading-tight font-bold text-xs truncate">ตั้งค่าข้อมูลร่างกาย & Macro</div>
+                                <div class="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">น้ำหนัก ส่วนสูง และสัดส่วนอาหาร</div>
+                            </div>
+                        </button>
+
+                        <div class="border-t border-slate-100 dark:border-slate-700/80 my-1 pt-1.5 px-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                             แชร์ & รายงาน
                         </div>
                         <button onclick="openShareCardModal(); toggleToolsMenu();"
@@ -281,7 +295,7 @@
                         </button>
                         <button onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.3.1)
+                            <span>🚀</span> ประวัติอัปเดต (v5.3.2)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -1603,13 +1617,13 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.3.1"></script>
+    <script src="food-db.js?v=5.3.2"></script>
 
-    <!-- Modularized Core Application Logic (v5.3.0 - High Performance) -->
-    <script src="app.js?v=5.3.1"></script>
+    <!-- Modularized Core Application Logic (v5.3.2 - High Performance) -->
+    <script src="app.js?v=5.3.2"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.3.1"></script>
+    <script type="module" src="firebase-sync.js?v=5.3.2"></script>
 
 </body>
 

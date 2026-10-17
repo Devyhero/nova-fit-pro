@@ -85,17 +85,26 @@ server.listen(PORT, async () => {
             ws.send(JSON.stringify({ id, method, params }));
         });
 
-        const evalJs = async (expr) => {
-            const res = await sendCdp('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
-            return res.result ? res.result.value : null;
+        const evalJs = async (expr, retries = 3) => {
+            try {
+                const res = await sendCdp('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+                return res.result ? res.result.value : null;
+            } catch (err) {
+                if (retries > 0 && err && err.message && err.message.includes('Execution context was destroyed')) {
+                    await new Promise(r => setTimeout(r, 400));
+                    return evalJs(expr, retries - 1);
+                }
+                throw err;
+            }
         };
 
         // Wait for page load and initialization
-        await evalJs('new Promise(r => setTimeout(r, 600))');
+        await new Promise(r => setTimeout(r, 1000));
+        await evalJs('new Promise(r => setTimeout(r, 500))');
 
         // Test 1: Check Header Profile Drawer Button
         console.log('--- Test 1: Header Profile Drawer Button ---');
-        const hasHeaderBtn = await evalJs('!!document.getElementById("btnHeaderProfileSettings")');
+        const hasHeaderBtn = await evalJs('!!document.getElementById("btnToolsProfileSettings")');
         console.log('Header profile settings button exists:', hasHeaderBtn);
         if (!hasHeaderBtn) throw new Error('Missing #btnHeaderProfileSettings');
 
