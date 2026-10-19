@@ -149,6 +149,9 @@
                 <button type="button" onclick="switchAdminTab('users')" id="tabBtn_users" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-xs transition shrink-0">
                     👥 รายชื่อผู้ใช้งาน (<span id="userCountBadge">0</span>)
                 </button>
+                <button type="button" onclick="switchAdminTab('analytics')" id="tabBtn_analytics" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
+                    📈 สถิติเชิงลึก & Peak Hours
+                </button>
                 <button type="button" onclick="switchAdminTab('foods')" id="tabBtn_foods" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
                     📊 เมนูฮิต & สถิติรวม
                 </button>
@@ -194,6 +197,197 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: IN-DEPTH ANALYTICS & PEAK HOURS (NEW v5.7.0) -->
+            <div id="tabView_analytics" class="hidden space-y-4">
+                <!-- Top Row: DAU 7-Day Trend & Device Proportion -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- 7-Day DAU Chart Card -->
+                    <div class="lg:col-span-2 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                                    <span>📊</span> ผู้ใช้งานจริงรายวัน (7-Day Active Users Trend)
+                                </h3>
+                                <p class="text-xs text-slate-400">สถิติผู้ใช้ที่เข้ามาบันทึกอาหาร น้ำ หรือออกกำลังกายในแต่ละวัน</p>
+                            </div>
+                            <span id="dau7DayAvgBadge" class="text-xs font-bold px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                                กำลังคำนวณ...
+                            </span>
+                        </div>
+                        <!-- Bar Chart Container -->
+                        <div id="dau7DayBarContainer" class="grid grid-cols-7 gap-2 items-end pt-4 pb-1 h-36"></div>
+                    </div>
+
+                    <!-- Device & Platform Breakdown Card -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-4 shadow-xs">
+                        <div>
+                            <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                                <span>📱</span> สัดส่วนอุปกรณ์ (Mobile vs Desktop)
+                            </h3>
+                            <p class="text-xs text-slate-400">พฤติกรรมการเปิดใช้งานแอป</p>
+                        </div>
+                        <!-- Visual Ratio Bar -->
+                        <div class="space-y-2">
+                            <div class="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                                <div id="barDeviceMobile" class="h-full bg-emerald-500 transition-all duration-300" style="width: 80%"></div>
+                                <div id="barDeviceDesktop" class="h-full bg-blue-500 transition-all duration-300" style="width: 20%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                                    📱 มือถือ: <b id="textPctMobile">0%</b>
+                                </span>
+                                <span class="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                                    💻 คอมพิวเตอร์: <b id="textPctDesktop">0%</b>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Platform Breakdown Pills -->
+                        <div id="platformPillsContainer" class="flex flex-wrap gap-1.5 pt-1 text-[11px]"></div>
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/60 dark:border-slate-600/60 text-[11px] text-slate-500 dark:text-slate-300">
+                            💡 <b>Insight:</b> ออกแบบหน้าจอให้เน้นการใช้งานบนมือถือเป็นหลัก (Mobile-First Experience)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Row: Peak Hours & Strategic Timing -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-4 shadow-xs">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                                <span>⏰</span> ช่วงเวลาที่มีการใช้งานหนาแน่น (Peak Hours & Meal Timing)
+                            </h3>
+                            <p class="text-xs text-slate-400">วิเคราะห์จากเวลาจริงที่มีการบันทึกอาหารเพื่อวางแผนส่งบรอดแคสต์และกำหนดเวลาบำรุงรักษาระบบ</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="badgePeakTime" class="px-3 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/25">
+                                🔥 กำลังคำนวณช่วงคนใช้มากที่สุด...
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 4 Meal Windows Distribution Grid -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400">
+                                <span>🌅 มื้อเช้า</span>
+                                <span>06:00 - 10:59</span>
+                            </div>
+                            <div id="statBreakfastMeals" class="text-xl font-black text-slate-800 dark:text-slate-100">0 รายการ</div>
+                            <div id="pctBreakfastMeals" class="text-[11px] text-amber-600 font-semibold">0% ของมื้อทั้งหมด</div>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                <span>☀️ มื้อเที่ยง</span>
+                                <span>11:00 - 14:59</span>
+                            </div>
+                            <div id="statLunchMeals" class="text-xl font-black text-slate-800 dark:text-slate-100">0 รายการ</div>
+                            <div id="pctLunchMeals" class="text-[11px] text-emerald-600 font-semibold">0% ของมื้อทั้งหมด</div>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/20 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                <span>🌆 มื้อเย็น</span>
+                                <span>15:00 - 20:59</span>
+                            </div>
+                            <div id="statDinnerMeals" class="text-xl font-black text-slate-800 dark:text-slate-100">0 รายการ</div>
+                            <div id="pctDinnerMeals" class="text-[11px] text-indigo-600 font-semibold">0% ของมื้อทั้งหมด</div>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-purple-500/5 border border-purple-500/20 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold text-purple-600 dark:text-purple-400">
+                                <span>🌙 ดึก / ของว่าง</span>
+                                <span>21:00 - 05:59</span>
+                            </div>
+                            <div id="statSnackMeals" class="text-xl font-black text-slate-800 dark:text-slate-100">0 รายการ</div>
+                            <div id="pctSnackMeals" class="text-[11px] text-purple-600 font-semibold">0% ของมื้อทั้งหมด</div>
+                        </div>
+                    </div>
+
+                    <!-- Strategic Decision Insights Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div class="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-start gap-2.5">
+                            <span class="text-xl">📢</span>
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-purple-700 dark:text-purple-300 block">ช่วงเวลาแนะนำส่งข้อความบรอดแคสต์</span>
+                                <p id="broadcastRecommendationText" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    แนะนำส่งช่วงมื้อเที่ยง (12:00 - 13:00 น.) หรือมื้อเย็น (18:30 - 19:30 น.) ซึ่งมีอัตราการเปิดอ่านและบันทึกอาหารสูงที่สุด
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 flex items-start gap-2.5">
+                            <span class="text-xl">🛡️</span>
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-700 dark:text-slate-200 block">ช่วงเวลาปลอดภัยสำหรับบำรุงรักษา/อัปเดตระบบ</span>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    ช่วง <b>01:00 - 05:00 น.</b> เป็นช่วงที่มีการเข้าใช้งานน้อยที่สุด ช่วยหลีกเลี่ยงผลกระทบต่อผู้ใช้งานขณะใช้งานจริง
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Feature Adoption Matrix -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                    <div>
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <span>⚡</span> ความนิยมการใช้งานฟีเจอร์ต่างๆ (Feature Adoption)
+                        </h3>
+                        <p class="text-xs text-slate-400">สถิติการใช้งานฟังก์ชันสำคัญใน NovaFit Pro</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                        <!-- IF Fasting Stats Card -->
+                        <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-bold text-purple-600 dark:text-purple-400">
+                                <span>⏱️ ตัวจับเวลา IF</span>
+                                <span id="statFastingUsers" class="px-2 py-0.5 rounded-full bg-purple-500/15">0 คน</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                แผนยอดนิยม: <b id="statPopularFastingPlan" class="text-slate-700 dark:text-slate-200">16:8</b>
+                            </div>
+                            <div id="fastingPlansBreakdown" class="text-[10px] text-slate-400 flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- Water Tracking Card -->
+                        <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-bold text-sky-600 dark:text-sky-400">
+                                <span>💧 ดื่มน้ำตามเป้า (8+ แก้ว)</span>
+                                <span id="statWaterAchievedUsers" class="px-2 py-0.5 rounded-full bg-sky-500/15">0 คน</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                เฉลี่ยต่อน้ำดื่ม: <b id="statAvgWaterPerUser" class="text-slate-700 dark:text-slate-200">0 แก้ว/คน</b>
+                            </div>
+                        </div>
+
+                        <!-- Workout Logging Card -->
+                        <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                <span>🏃 บันทึกออกกำลังกาย</span>
+                                <span id="statWorkoutUsers" class="px-2 py-0.5 rounded-full bg-emerald-500/15">0 คน</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                ออกกำลังกายวันนี้: <b id="statTotalWorkoutToday" class="text-slate-700 dark:text-slate-200">0 รายการ</b>
+                            </div>
+                        </div>
+
+                        <!-- Body Weight Tracking Card -->
+                        <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400">
+                                <span>⚖️ ติดตามน้ำหนัก</span>
+                                <span id="statWeightLogUsers" class="px-2 py-0.5 rounded-full bg-amber-500/15">0 คน</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                บันทึกน้ำหนักวันนี้: <b id="statWeightLoggedToday" class="text-slate-700 dark:text-slate-200">0 คน</b>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

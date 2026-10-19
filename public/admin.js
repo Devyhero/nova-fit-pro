@@ -216,6 +216,291 @@ function renderAdminOverview() {
 
     // Render Custom Presets
     renderCustomPresets(customPresetsPool);
+
+    // Render In-Depth Analytics & Peak Hours (v5.7.0)
+    renderInDepthAnalytics(allUsersData);
+}
+
+function renderInDepthAnalytics(users) {
+    if (!users) users = [];
+    const todayStr = getTodayStr();
+
+    // 1. 7-Day DAU Trend
+    const dayDates = [];
+    const todayObj = new Date();
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(todayObj);
+        d.setDate(d.getDate() - i);
+        dayDates.push(d.toISOString().split('T')[0]);
+    }
+
+    const dauMap = {};
+    dayDates.forEach(d => { dauMap[d] = 0; });
+
+    users.forEach(u => {
+        const state = u.state || {};
+        const logs = state.logsByDate || {};
+        const water = state.waterByDate || {};
+        const workouts = state.workoutsByDate || {};
+        const updatedDate = u.updatedAt ? u.updatedAt.split('T')[0] : null;
+
+        dayDates.forEach(dStr => {
+            const hasMeals = logs[dStr] && logs[dStr].length > 0;
+            const hasWater = water[dStr] && water[dStr] > 0;
+            const hasWorkouts = workouts[dStr] && workouts[dStr].length > 0;
+            const isUpdated = updatedDate === dStr;
+            if (hasMeals || hasWater || hasWorkouts || isUpdated) {
+                dauMap[dStr]++;
+            }
+        });
+    });
+
+    const maxDau = Math.max(...Object.values(dauMap), 1);
+    const totalDau7Days = Object.values(dauMap).reduce((s, v) => s + v, 0);
+    const avgDau = (totalDau7Days / 7).toFixed(1);
+
+    const dauBadge = document.getElementById('dau7DayAvgBadge');
+    if (dauBadge) dauBadge.textContent = `เฉลี่ย ${avgDau} คน/วัน`;
+
+    const barContainer = document.getElementById('dau7DayBarContainer');
+    if (barContainer) {
+        barContainer.innerHTML = dayDates.map(dStr => {
+            const count = dauMap[dStr] || 0;
+            const heightPct = Math.max(14, Math.round((count / maxDau) * 100));
+            const isToday = dStr === todayStr;
+            const dateObj = new Date(dStr);
+            const dayLabel = isToday ? 'วันนี้' : dateObj.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric' });
+
+            return `
+                <div class="flex flex-col items-center h-full justify-end group">
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 group-hover:text-purple-500 mb-1">
+                        ${count}
+                    </span>
+                    <div class="w-full max-w-[28px] sm:max-w-[36px] rounded-t-xl transition-all duration-300 ${isToday
+                        ? 'bg-gradient-to-t from-purple-600 to-indigo-500 shadow-md shadow-purple-500/20'
+                        : 'bg-slate-200 dark:bg-slate-700 hover:bg-purple-500/40'}"
+                        style="height: ${heightPct}%;">
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-400 truncate mt-1 text-center w-full">
+                        ${dayLabel}
+                    </span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 2. Device & Platform Distribution
+    let mobileCount = 0;
+    let desktopCount = 0;
+    const platformCountMap = {};
+
+    users.forEach(u => {
+        const cat = u.deviceCategory || (u.platform === 'iOS' || u.platform === 'Android' ? 'Mobile' : null);
+        if (cat === 'Mobile') {
+            mobileCount++;
+        } else if (cat === 'Desktop') {
+            desktopCount++;
+        } else {
+            // Default split if not set: majority of web users are mobile
+            mobileCount++;
+        }
+
+        const plat = u.platform || 'iOS / Web';
+        platformCountMap[plat] = (platformCountMap[plat] || 0) + 1;
+    });
+
+    const totalDevices = mobileCount + desktopCount || 1;
+    const pctMobile = Math.round((mobileCount / totalDevices) * 100);
+    const pctDesktop = 100 - pctMobile;
+
+    const barMobile = document.getElementById('barDeviceMobile');
+    const barDesktop = document.getElementById('barDeviceDesktop');
+    const textMobile = document.getElementById('textPctMobile');
+    const textDesktop = document.getElementById('textPctDesktop');
+
+    if (barMobile) barMobile.style.width = `${pctMobile}%`;
+    if (barDesktop) barDesktop.style.width = `${pctDesktop}%`;
+    if (textMobile) textMobile.textContent = `${pctMobile}% (${mobileCount} คน)`;
+    if (textDesktop) textDesktop.textContent = `${pctDesktop}% (${desktopCount} คน)`;
+
+    const platformContainer = document.getElementById('platformPillsContainer');
+    if (platformContainer) {
+        platformContainer.innerHTML = Object.entries(platformCountMap).map(([plat, count]) => {
+            return `
+                <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">
+                    ${plat}: <b>${count}</b>
+                </span>
+            `;
+        }).join('');
+    }
+
+    // 3. Peak Hours & Meal Timing Distribution
+    let breakfastMeals = 0; // 06:00 - 10:59
+    let lunchMeals = 0;     // 11:00 - 14:59
+    let dinnerMeals = 0;    // 15:00 - 20:59
+    let snackMeals = 0;     // 21:00 - 05:59
+    const hourlyMealMap = {};
+    for (let h = 0; h < 24; h++) hourlyMealMap[h] = 0;
+
+    users.forEach(u => {
+        const state = u.state || {};
+        const logs = state.logsByDate || {};
+        Object.values(logs).forEach(mealList => {
+            if (Array.isArray(mealList)) {
+                mealList.forEach(m => {
+                    let hour = 12; // default
+                    if (m.time && m.time.includes(':')) {
+                        const parsedH = parseInt(m.time.split(':')[0], 10);
+                        if (!isNaN(parsedH) && parsedH >= 0 && parsedH <= 23) {
+                            hour = parsedH;
+                        }
+                    } else if (m.meal === 'breakfast') {
+                        hour = 8;
+                    } else if (m.meal === 'lunch') {
+                        hour = 12;
+                    } else if (m.meal === 'dinner') {
+                        hour = 19;
+                    }
+
+                    hourlyMealMap[hour]++;
+
+                    if (hour >= 6 && hour < 11) {
+                        breakfastMeals++;
+                    } else if (hour >= 11 && hour < 15) {
+                        lunchMeals++;
+                    } else if (hour >= 15 && hour < 21) {
+                        dinnerMeals++;
+                    } else {
+                        snackMeals++;
+                    }
+                });
+            }
+        });
+    });
+
+    const totalCategorizedMeals = breakfastMeals + lunchMeals + dinnerMeals + snackMeals || 1;
+    const pctB = Math.round((breakfastMeals / totalCategorizedMeals) * 100);
+    const pctL = Math.round((lunchMeals / totalCategorizedMeals) * 100);
+    const pctD = Math.round((dinnerMeals / totalCategorizedMeals) * 100);
+    const pctS = Math.round((snackMeals / totalCategorizedMeals) * 100);
+
+    const elB = document.getElementById('statBreakfastMeals');
+    const elBPct = document.getElementById('pctBreakfastMeals');
+    const elL = document.getElementById('statLunchMeals');
+    const elLPct = document.getElementById('pctLunchMeals');
+    const elD = document.getElementById('statDinnerMeals');
+    const elDPct = document.getElementById('pctDinnerMeals');
+    const elS = document.getElementById('statSnackMeals');
+    const elSPct = document.getElementById('pctSnackMeals');
+
+    if (elB) elB.textContent = `${breakfastMeals.toLocaleString()} รายการ`;
+    if (elBPct) elBPct.textContent = `${pctB}% ของมื้อทั้งหมด`;
+    if (elL) elL.textContent = `${lunchMeals.toLocaleString()} รายการ`;
+    if (elLPct) elLPct.textContent = `${pctL}% ของมื้อทั้งหมด`;
+    if (elD) elD.textContent = `${dinnerMeals.toLocaleString()} รายการ`;
+    if (elDPct) elDPct.textContent = `${pctD}% ของมื้อทั้งหมด`;
+    if (elS) elS.textContent = `${snackMeals.toLocaleString()} รายการ`;
+    if (elSPct) elSPct.textContent = `${pctS}% ของมื้อทั้งหมด`;
+
+    // Find peak hour
+    let peakHour = 12;
+    let maxHourlyCount = -1;
+    for (let h = 0; h < 24; h++) {
+        if (hourlyMealMap[h] > maxHourlyCount) {
+            maxHourlyCount = hourlyMealMap[h];
+            peakHour = h;
+        }
+    }
+
+    const peakStart = String(peakHour).padStart(2, '0') + ':00';
+    const peakEnd = String((peakHour + 1) % 24).padStart(2, '0') + ':00';
+    const peakBadge = document.getElementById('badgePeakTime');
+    if (peakBadge) {
+        peakBadge.textContent = `🔥 ช่วงคนใช้มากที่สุด: ${peakStart} - ${peakEnd} น. (${maxHourlyCount > 0 ? maxHourlyCount : 0} รายการ)`;
+    }
+
+    const recText = document.getElementById('broadcastRecommendationText');
+    if (recText) {
+        recText.textContent = `แนะนำส่งข้อความช่วง ${peakStart} - ${peakEnd} น. หรือช่วงมื้อเย็น 18:30 - 19:30 น. ซึ่งมีผู้ใช้เข้ามาบันทึกมื้ออาหารหนาแน่นที่สุด เพื่อให้เห็นแจ้งเตือนทันใจ`;
+    }
+
+    // 4. Feature Adoption
+    let fastingUsersCount = 0;
+    const planCounts = {};
+    let waterAchievedCount = 0;
+    let totalWaterAllUsers = 0;
+    let workoutUsersCount = 0;
+    let totalWorkoutItemsToday = 0;
+    let weightUsersCount = 0;
+
+    users.forEach(u => {
+        const state = u.state || {};
+        // IF
+        if (state.fasting && (state.fasting.isFasting || (state.fasting.history && state.fasting.history.length > 0) || state.fasting.startTime)) {
+            fastingUsersCount++;
+            const plan = state.fasting.plan || '16:8';
+            planCounts[plan] = (planCounts[plan] || 0) + 1;
+        }
+
+        // Water
+        const wToday = (state.waterByDate && state.waterByDate[todayStr]) || 0;
+        totalWaterAllUsers += wToday;
+        if (wToday >= 8) waterAchievedCount++;
+
+        // Workout
+        const wList = (state.workoutsByDate && state.workoutsByDate[todayStr]) || [];
+        if (wList.length > 0) {
+            workoutUsersCount++;
+            totalWorkoutItemsToday += wList.length;
+        }
+
+        // Weight
+        if (state.weightsByDate && state.weightsByDate[todayStr]) {
+            weightUsersCount++;
+        }
+    });
+
+    const statFasting = document.getElementById('statFastingUsers');
+    if (statFasting) statFasting.textContent = `${fastingUsersCount} คน`;
+
+    // Most popular fasting plan
+    let popularPlan = '16:8';
+    let maxPlanCount = -1;
+    Object.entries(planCounts).forEach(([p, count]) => {
+        if (count > maxPlanCount) {
+            maxPlanCount = count;
+            popularPlan = p;
+        }
+    });
+
+    const statPopPlan = document.getElementById('statPopularFastingPlan');
+    if (statPopPlan) statPopPlan.textContent = popularPlan;
+
+    const breakdownEl = document.getElementById('fastingPlansBreakdown');
+    if (breakdownEl) {
+        breakdownEl.innerHTML = Object.entries(planCounts).map(([p, c]) => `<span>${p}: <b>${c}</b></span>`).join('');
+    }
+
+    const statWaterAch = document.getElementById('statWaterAchievedUsers');
+    if (statWaterAch) statWaterAch.textContent = `${waterAchievedCount} คน`;
+
+    const statAvgWater = document.getElementById('statAvgWaterPerUser');
+    if (statAvgWater) {
+        const avgW = users.length > 0 ? (totalWaterAllUsers / users.length).toFixed(1) : 0;
+        statAvgWater.textContent = `${avgW} แก้ว/คน`;
+    }
+
+    const statWorkouts = document.getElementById('statWorkoutUsers');
+    if (statWorkouts) statWorkouts.textContent = `${workoutUsersCount} คน`;
+
+    const statWorkoutsToday = document.getElementById('statTotalWorkoutToday');
+    if (statWorkoutsToday) statWorkoutsToday.textContent = `${totalWorkoutItemsToday} รายการ`;
+
+    const statWeightUsers = document.getElementById('statWeightLogUsers');
+    if (statWeightUsers) statWeightUsers.textContent = `${weightUsersCount} คน`;
+
+    const statWeightToday = document.getElementById('statWeightLoggedToday');
+    if (statWeightToday) statWeightToday.textContent = `${weightUsersCount} คน`;
 }
 
 function renderUsersTable(users) {
@@ -376,7 +661,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'foods', 'custom_presets', 'message_logs'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {

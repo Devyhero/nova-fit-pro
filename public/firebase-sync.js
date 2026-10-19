@@ -49,6 +49,12 @@ if (!myDeviceId) {
 // Unique ID for this specific browser tab/session
 const mySessionId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
 
+// Device Category & Platform Detection for Admin Analytics
+const ua = navigator.userAgent || '';
+const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+const platformName = /iPhone|iPad|iPod/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : /Macintosh|Mac OS/i.test(ua) ? 'macOS' : /Windows/i.test(ua) ? 'Windows' : 'Other';
+const deviceCategory = isMobileDevice ? 'Mobile' : 'Desktop';
+
 let currentUser = null;
 let cloudSyncTimer = null;
 let unsubscribeSnapshot = null;
@@ -172,6 +178,8 @@ function setupRealtimeCloudListener(user) {
                 updatedAt: new Date().toISOString(),
                 lastUpdatedBy: mySessionId,
                 lastUpdatedByDevice: myDeviceId,
+                deviceCategory: deviceCategory,
+                platform: platformName,
                 profileConfigured: false,
                 state: window.state
             }).catch(err => console.warn('Init firestore doc failed:', err));
@@ -283,6 +291,8 @@ window.triggerCloudSync = function (showSuccessToast = false) {
                 updatedAt: new Date().toISOString(),
                 lastUpdatedBy: mySessionId,
                 lastUpdatedByDevice: myDeviceId,
+                deviceCategory: deviceCategory,
+                platform: platformName,
                 profileConfigured: !!window.state?.profileConfigured,
                 state: window.state
             }, { merge: true });
