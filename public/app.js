@@ -1,4 +1,4 @@
-const APP_VERSION = '5.6.2';
+const APP_VERSION = '5.6.3';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -270,6 +270,9 @@ const APP_VERSION = '5.6.2';
 
         let _lastCardToggleTimes = {};
         function toggleCardSection(sectionId) {
+            // Food search is permanently open for instant access & zero-freeze on mobile
+            if (sectionId === 'section_food_search') return;
+
             const now = Date.now();
             if (_lastCardToggleTimes[sectionId] && now - _lastCardToggleTimes[sectionId] < 150) return;
             _lastCardToggleTimes[sectionId] = now;
@@ -304,7 +307,7 @@ const APP_VERSION = '5.6.2';
             }
 
             // Mobile iOS Safari Viewport & Overscroll Clamping Protection
-            // When collapsing large sections (e.g. food search), document height shrinks rapidly.
+            // When collapsing large sections, document height shrinks rapidly.
             // Clamping scroll prevents WebKit touch deadlock & overscroll bounce freeze.
             if (willBeCollapsed && card) {
                 const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
@@ -326,10 +329,18 @@ const APP_VERSION = '5.6.2';
 
         function renderAllSectionCollapses() {
             if (!state.collapsedSections) state.collapsedSections = {};
+            // Food search is permanently open and non-collapsible for maximum stability & zero-freeze on mobile
+            if (state.collapsedSections['section_food_search']) {
+                delete state.collapsedSections['section_food_search'];
+            }
+            const foodBody = document.getElementById('body_section_food_search');
+            if (foodBody) {
+                foodBody.classList.remove('hidden', 'is-collapsed');
+            }
+
             const sections = [
                 'section_water',
                 'section_meals',
-                'section_food_search',
                 'section_supplements',
                 'section_workout',
                 'section_analytics',

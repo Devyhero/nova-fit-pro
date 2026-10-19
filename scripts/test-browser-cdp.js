@@ -192,11 +192,9 @@ server.listen(PORT, async () => {
             throw new Error('Accordion collapsible failed');
         }
 
-        // Test 9: Mobile Viewport Collapse Stability (Workout & Food Search)
-        console.log('--- Test 9: Mobile Viewport Collapse Stability (Workout & Food Search) ---');
+        // Test 9: Mobile Viewport Stability (Workout Collapsed & Food Search Permanently Open)
+        console.log('--- Test 9: Mobile Viewport Stability (Workout Collapsed & Food Search Permanently Open) ---');
         await evalJs('toggleCardSection("section_workout")');
-        await new Promise(r => setTimeout(r, 200));
-        await evalJs('toggleCardSection("section_food_search")');
         await new Promise(r => setTimeout(r, 200));
 
         const collapseStatus = await evalJs(`(() => {
@@ -227,13 +225,13 @@ server.listen(PORT, async () => {
         })()`);
 
         console.log('All sections remain visible after collapse:', collapseStatus.allVisible);
-        console.log('Food search body hidden:', collapseStatus.foodBodyHidden);
-        console.log('Workout body hidden:', collapseStatus.workoutBodyHidden);
-        console.log('Food card collapsed height:', collapseStatus.foodCardHeight);
+        console.log('Food search body hidden (should be false - permanently open):', collapseStatus.foodBodyHidden);
+        console.log('Workout body hidden (should be true):', collapseStatus.workoutBodyHidden);
+        console.log('Food card height:', collapseStatus.foodCardHeight);
         console.log('Workout card collapsed height:', collapseStatus.workoutCardHeight);
         console.log('Has horizontal overflow:', collapseStatus.hasHorizontalOverflow);
 
-        if (!collapseStatus.allVisible || !collapseStatus.foodBodyHidden || !collapseStatus.workoutBodyHidden || collapseStatus.hasHorizontalOverflow) {
+        if (!collapseStatus.allVisible || collapseStatus.foodBodyHidden || !collapseStatus.workoutBodyHidden || collapseStatus.hasHorizontalOverflow) {
             throw new Error('Mobile collapse stability test failed: sections clipped or overflowed');
         }
 
@@ -365,7 +363,7 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.2') || !toolsBadgeText.includes('v5.6.2')) {
+        if (!headerBadgeText.includes('v5.6.3') || !toolsBadgeText.includes('v5.6.3')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 
@@ -407,28 +405,31 @@ server.listen(PORT, async () => {
             throw new Error('Clicking fastingTimerHeader failed to re-expand');
         }
 
-        // Test Food Menu Accordion Collapse & Expand with scroll simulation while IF timer is ticking
-        const wasFoodHidden = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        // Ensure expanded first
-        if (wasFoodHidden) {
-            await evalJs('toggleCardSection("section_food_search")');
+        // Test Food Menu Permanently Open & Safe on Click (Zero Freeze Architecture)
+        const isFoodHidden = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
+        console.log('Food menu is permanently open (hidden === false):', !isFoodHidden);
+        if (isFoodHidden) {
+            throw new Error('Food search menu should remain permanently open');
         }
 
-        // Simulate mobile viewport scrolled into food search
-        await evalJs('window.scrollTo(0, 500)');
-        const scrollBefore = await evalJs('window.scrollY');
-        console.log('Simulated mobile scroll position before collapse:', scrollBefore);
-
-        // Click food search header to collapse
-        await new Promise(r => setTimeout(r, 200));
+        // Clicking food search card header must safely remain open without freezing or collapsing
         await evalJs('document.querySelector("#card_food_search > div").click()');
-        let toggledFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        console.log('Food menu collapsed via click:', toggledFoodState);
-        if (!toggledFoodState) {
-            throw new Error('Clicking food search header failed to collapse');
+        let foodStillOpen = await evalJs('!document.getElementById("body_section_food_search").classList.contains("hidden")');
+        console.log('Food menu remains safely open on header click:', foodStillOpen);
+        if (!foodStillOpen) {
+            throw new Error('Food menu collapsed unexpectedly');
         }
 
-        // Verify scroll clamping on iPhone mobile viewport
+        // Test Meals section accordion collapse & expand with scroll simulation while IF timer is ticking
+        await evalJs('window.scrollTo(0, 300)');
+        await evalJs('toggleCardSection("section_meals")');
+        let mealsHidden = await evalJs('document.getElementById("body_section_meals").classList.contains("hidden")');
+        console.log('Meals section collapsed successfully:', mealsHidden);
+        if (!mealsHidden) {
+            throw new Error('Meals section failed to collapse');
+        }
+
+        // Verify scroll clamping on mobile viewport
         const scrollAfter = await evalJs('window.scrollY');
         const maxScrollY = await evalJs('Math.max(0, document.documentElement.scrollHeight - window.innerHeight)');
         console.log('Scroll position after collapse (should be <= maxScrollY):', scrollAfter, 'maxScrollY:', maxScrollY);
@@ -436,13 +437,13 @@ server.listen(PORT, async () => {
             throw new Error(`Scroll position ${scrollAfter} exceeds maxScrollY ${maxScrollY} (deadlock risk)`);
         }
 
-        // Click food search header again to re-expand immediately (Zero Lag)
+        // Re-expand meals section
         await new Promise(r => setTimeout(r, 200));
-        await evalJs('document.querySelector("#card_food_search > div").click()');
-        let restoredFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        console.log('Food menu restored back to visible (should be false):', restoredFoodState);
-        if (restoredFoodState !== false) {
-            throw new Error('Clicking food search header failed to restore');
+        await evalJs('toggleCardSection("section_meals")');
+        let mealsRestored = await evalJs('!document.getElementById("body_section_meals").classList.contains("hidden")');
+        console.log('Meals section restored successfully:', mealsRestored);
+        if (!mealsRestored) {
+            throw new Error('Meals section failed to restore');
         }
 
         // Test 18: Daily Health Tip Widget & User Notification Bell
