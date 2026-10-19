@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaFit Pro - Admin Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <!-- Google Fonts: Inter & Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased font-sans flex flex-col">
+
+    <!-- Top Admin Header -->
+    <header class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 ring-1 ring-white/20 text-xl font-bold">
+                    🛡️
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold flex items-center gap-2 leading-tight">
+                        <span>NovaFit Pro</span>
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 font-extrabold uppercase">ADMIN</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400">ระบบบริหารจัดการและติดตามสถิติผู้ใช้งาน</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold text-slate-600 dark:text-slate-300 transition flex items-center gap-1.5 shadow-xs">
+                    <span>📱</span> <span class="hidden sm:inline">กลับหน้าผู้ใช้</span>
+                </a>
+                <button type="button" id="btnAdminLogout" onclick="handleAdminSignOut()" class="hidden px-3 py-1.5 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold hover:bg-rose-500/25 transition">
+                    ออกจากระบบ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-5 flex-1 w-full space-y-5">
+
+        <!-- AUTH GATE: When not logged in or not admin -->
+        <div id="adminAuthGate" class="max-w-md mx-auto my-12 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-center space-y-4">
+            <div class="w-16 h-16 rounded-3xl bg-purple-500/15 text-purple-600 dark:text-purple-400 mx-auto flex items-center justify-center text-3xl">
+                🛡️
+            </div>
+            <div>
+                <h2 class="text-lg font-bold">เข้าสู่ระบบผู้ดูแลระบบ (Admin)</h2>
+                <p class="text-xs text-slate-400 mt-1">สงวนสิทธิ์เฉพาะบัญชีผู้ดูแล: <b class="text-purple-500">benznova01@gmail.com</b></p>
+            </div>
+            <div id="adminLoginError" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium text-left"></div>
+            <button type="button" onclick="handleAdminGoogleLogin()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
+                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5.1 3.7-8.8z" />
+                    <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z" />
+                    <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" />
+                </svg>
+                <span>เข้าสู่ระบบด้วย Google</span>
+            </button>
+        </div>
+
+        <!-- ADMIN DASHBOARD PANEL (Shown when authorized) -->
+        <div id="adminPanel" class="hidden space-y-5">
+
+            <!-- Admin Welcome Banner -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <img id="adminPhoto" src="icon.svg" class="w-10 h-10 rounded-full border-2 border-purple-400 shadow-sm" alt="Admin">
+                    <div>
+                        <div class="text-xs text-purple-500 dark:text-purple-400 font-bold uppercase tracking-wider">ยินดีต้อนรับผู้ดูแลระบบ</div>
+                        <div id="adminName" class="text-base font-bold text-slate-800 dark:text-slate-100">Benz Nova</div>
+                        <div id="adminEmail" class="text-xs text-slate-400">benznova01@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="loadAllUserData()" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
+                        <span id="refreshIcon">🔄</span> <span>รีเฟรชข้อมูลล่าสุด</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span>👥 ผู้ใช้ทั้งหมด</span>
+                        <span class="text-base">👤</span>
+                    </div>
+                    <div id="statTotalUsers" class="text-2xl font-black text-slate-800 dark:text-slate-100">0</div>
+                    <div class="text-[11px] text-emerald-500 font-medium">ลงทะเบียนใน Cloud Firestore</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span>⚡ ใช้งานวันนี้ (Active)</span>
+                        <span class="text-base">🔥</span>
+                    </div>
+                    <div id="statActiveToday" class="text-2xl font-black text-purple-600 dark:text-purple-400">0</div>
+                    <div class="text-[11px] text-purple-500 font-medium">บันทึกข้อมูลในวันนี้</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span>🍽️ มื้อบันทึกวันนี้</span>
+                        <span class="text-base">🍱</span>
+                    </div>
+                    <div id="statTotalMeals" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">0</div>
+                    <div class="text-[11px] text-emerald-500 font-medium">รายการอาหารรวมทุกผู้ใช้</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span>💧 น้ำดื่มรวมวันนี้</span>
+                        <span class="text-base">💧</span>
+                    </div>
+                    <div id="statTotalWater" class="text-2xl font-black text-sky-600 dark:text-sky-400">0</div>
+                    <div class="text-[11px] text-sky-500 font-medium">แก้ว (คูณ 250 มล.)</div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation Bar -->
+            <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2 overflow-x-auto no-scrollbar">
+                <button type="button" onclick="switchAdminTab('users')" id="tabBtn_users" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-xs transition shrink-0">
+                    👥 รายชื่อผู้ใช้งาน (<span id="userCountBadge">0</span>)
+                </button>
+                <button type="button" onclick="switchAdminTab('foods')" id="tabBtn_foods" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
+                    📊 เมนูฮิต & สถิติรวม
+                </button>
+                <button type="button" onclick="switchAdminTab('custom_presets')" id="tabBtn_custom_presets" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
+                    📝 คลังเมนูส่วนตัวที่ผู้ใช้เพิ่ม
+                </button>
+            </div>
+
+            <!-- VIEW 1: USERS DIRECTORY -->
+            <div id="tabView_users" class="space-y-4">
+                <!-- Search & Filters -->
+                <div class="flex flex-wrap items-center justify-between gap-2.5">
+                    <div class="relative w-full sm:w-80">
+                        <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" placeholder="🔍 ค้นหาชื่อ หรือ อีเมลผู้ใช้..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
+                        <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                    </div>
+                    <div class="text-xs text-slate-400">
+                        แสดงข้อมูลผู้ใช้เรียงตามการใช้งานล่าสุด
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 overflow-hidden shadow-xs">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase font-bold text-[11px]">
+                                <tr>
+                                    <th class="py-3 px-4">ผู้ใช้งาน</th>
+                                    <th class="py-3 px-3">น้ำหนัก / เป้าหมาย</th>
+                                    <th class="py-3 px-3">ความคืบหน้าวันนี้</th>
+                                    <th class="py-3 px-3">ใช้งานล่าสุด</th>
+                                    <th class="py-3 px-4 text-right">เครื่องมือ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-slate-400">กำลังโหลดข้อมูลผู้ใช้...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: FOODS & MACROS POPULARITY -->
+            <div id="tabView_foods" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                        <h3 class="font-bold text-sm flex items-center gap-2">
+                            <span>🏆</span> 10 เมนูอาหารที่มีคนบันทึกกินบ่อยที่สุด
+                        </h3>
+                        <div id="topFoodsList" class="space-y-2 text-xs">
+                            <div class="text-slate-400">กำลังประมวลผล...</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                        <h3 class="font-bold text-sm flex items-center gap-2">
+                            <span>🏋️</span> การออกกำลังกายที่ผู้ใช้นิยมบันทึก
+                        </h3>
+                        <div id="topWorkoutsList" class="space-y-2 text-xs">
+                            <div class="text-slate-400">กำลังประมวลผล...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: CUSTOM FOOD PRESETS POOL -->
+            <div id="tabView_custom_presets" class="hidden space-y-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                            <h3 class="font-bold text-sm flex items-center gap-2">
+                                <span>📝</span> รายการเมนูส่วนตัวที่ผู้ใช้สร้างเองในระบบ
+                            </h3>
+                            <p class="text-xs text-slate-400">แอดมินสามารถนำข้อมูลนี้ไปพัฒนาเป็นเมนูแนะนำในคลังอาหารหลักได้</p>
+                        </div>
+                        <span id="customPresetsCountBadge" class="text-xs px-2.5 py-1 rounded-full font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400">0 รายการ</span>
+                    </div>
+
+                    <div id="customPresetsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2">
+                        <div class="col-span-full py-6 text-center text-slate-400 text-xs">กำลังรวบรวมข้อมูล...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- USER DETAIL INSPECTOR MODAL -->
+    <div id="userInspectModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <img id="inspectUserPhoto" src="icon.svg" class="w-10 h-10 rounded-full border border-purple-400">
+                    <div>
+                        <h3 id="inspectUserName" class="font-bold text-base leading-tight">ชื่อผู้ใช้</h3>
+                        <p id="inspectUserEmail" class="text-xs text-slate-400">email@example.com</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeUserInspectModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+
+            <div id="inspectUserBody" class="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Logic Script -->
+    <script type="module" src="admin.js"></script>
+
+</body>
+
+</html>

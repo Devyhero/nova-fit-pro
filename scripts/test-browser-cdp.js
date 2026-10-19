@@ -336,6 +336,38 @@ server.listen(PORT, async () => {
             throw new Error('Quick meal picker failed to add item to selected meal (dinner)');
         }
 
+        // Test 15: Intermittent Fasting (IF) Timer Engine
+        console.log('--- Test 15: Intermittent Fasting (IF) Timer Engine ---');
+        // Set plan to 18:6
+        await evalJs('setFastingPlan("18:6")');
+        let fastingPlan = await evalJs('state.fasting.plan');
+        let fastingHours = await evalJs('state.fasting.targetHours');
+        console.log('Fasting plan set to 18:6:', fastingPlan === '18:6');
+        console.log('Fasting target hours is 18:', fastingHours === 18);
+        if (fastingPlan !== '18:6' || fastingHours !== 18) {
+            throw new Error(`Fasting plan switch failed: plan=${fastingPlan}, hours=${fastingHours}`);
+        }
+
+        // Toggle start fasting
+        await evalJs('toggleFastingTimer()');
+        let isFastingActive = await evalJs('state.fasting.isFasting');
+        let fastingClockText = await evalJs('document.getElementById("fastingTimerClock").textContent');
+        console.log('Fasting is active:', isFastingActive);
+        console.log('Fasting clock text:', fastingClockText);
+        if (!isFastingActive || !fastingClockText) {
+            throw new Error('Fasting timer start failed');
+        }
+
+        // Test 16: Dynamic Version Badges & Admin Access
+        console.log('--- Test 16: Dynamic Version Badges & Admin Access ---');
+        const headerBadgeText = await evalJs('document.getElementById("headerVersionBadge").textContent');
+        const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
+        console.log('Header version badge text:', headerBadgeText);
+        console.log('Tools version badge text:', toolsBadgeText);
+        if (!headerBadgeText.includes('v5.4.0') || !toolsBadgeText.includes('v5.4.0')) {
+            throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

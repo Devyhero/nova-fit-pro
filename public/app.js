@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.7';
+const APP_VERSION = '5.4.0';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -49,6 +49,14 @@ const APP_VERSION = '5.3.7';
             mealCombos: DEFAULT_MEAL_COMBOS,
             supplementList: DEFAULT_SUPPLEMENTS,
             supplementsByDate: {},
+            fasting: {
+                isFasting: false,
+                plan: '16:8',
+                targetHours: 16,
+                startTime: null,
+                endTime: null,
+                history: []
+            },
             profile: {
                 gender: 'male',
                 age: 33,
@@ -93,6 +101,21 @@ const APP_VERSION = '5.3.7';
                         mealCombos: (Array.isArray(parsed.mealCombos) && parsed.mealCombos.length > 0) ? parsed.mealCombos : DEFAULT_MEAL_COMBOS,
                         supplementList: (Array.isArray(parsed.supplementList) && parsed.supplementList.length > 0) ? parsed.supplementList : DEFAULT_SUPPLEMENTS,
                         supplementsByDate: (parsed.supplementsByDate && typeof parsed.supplementsByDate === 'object') ? parsed.supplementsByDate : {},
+                        fasting: (parsed.fasting && typeof parsed.fasting === 'object') ? {
+                            isFasting: !!parsed.fasting.isFasting,
+                            plan: parsed.fasting.plan || '16:8',
+                            targetHours: parsed.fasting.targetHours || 16,
+                            startTime: parsed.fasting.startTime || null,
+                            endTime: parsed.fasting.endTime || null,
+                            history: Array.isArray(parsed.fasting.history) ? parsed.fasting.history : []
+                        } : {
+                            isFasting: false,
+                            plan: '16:8',
+                            targetHours: 16,
+                            startTime: null,
+                            endTime: null,
+                            history: []
+                        },
                         profile: { ...state.profile, ...(parsed.profile || {}) },
                         profileConfigured: parsed.profileConfigured !== undefined ? !!parsed.profileConfigured : true,
                         logsByDate: parsed.logsByDate || {},
@@ -505,6 +528,8 @@ const APP_VERSION = '5.3.7';
             renderDateTrackerAndRecommendations(t, false);
             renderFoodDatabaseExplorer();
             renderSupplements();
+            renderFastingSection();
+            updateVersionBadges();
             renderAllSectionCollapses();
             syncResponsiveLayout();
         }
@@ -2647,16 +2672,199 @@ const APP_VERSION = '5.3.7';
             }
         }
 
+        // ==========================================
+        // Intermittent Fasting (IF) Timer Engine (v5.4.0)
+        // ==========================================
+        function getFastingPlanTargetHours(plan) {
+            if (plan === '18:6') return 18;
+            if (plan === '14:10') return 14;
+            if (plan === '20:4') return 20;
+            return 16; // default 16:8
+        }
+
+        function setFastingPlan(plan) {
+            if (!state.fasting) state.fasting = {};
+            state.fasting.plan = plan;
+            state.fasting.targetHours = getFastingPlanTargetHours(plan);
+            saveState();
+            renderFastingSection();
+            showToast(`⏱️ สลับแผนอดอาหารเป็น IF ${plan} (${state.fasting.targetHours} ชม.)`);
+        }
+
+        function toggleFastingTimer() {
+            if (!state.fasting) state.fasting = { isFasting: false, plan: '16:8', targetHours: 16 };
+
+            if (!state.fasting.isFasting) {
+                state.fasting.isFasting = true;
+                state.fasting.startTime = Date.now();
+                state.fasting.endTime = null;
+                saveState();
+                renderFastingSection();
+                showToast(`🔥 เริ่มนับเวลาอดอาหาร IF ${state.fasting.plan} แล้ว!`);
+            } else {
+                const elapsedMs = Date.now() - (state.fasting.startTime || Date.now());
+                const elapsedHours = Math.round((elapsedMs / (3600 * 1000)) * 10) / 10;
+                if (!confirm(`ต้องการสิ้นสุดการอดอาหาร (ทำได้ ${elapsedHours} ชม.) ใช่หรือไม่?`)) return;
+
+                state.fasting.isFasting = false;
+                state.fasting.endTime = Date.now();
+                if (!state.fasting.history) state.fasting.history = [];
+                state.fasting.history.unshift({
+                    plan: state.fasting.plan,
+                    startTime: state.fasting.startTime,
+                    endTime: state.fasting.endTime,
+                    elapsedHours
+                });
+                if (state.fasting.history.length > 20) state.fasting.history.pop();
+                saveState();
+                renderFastingSection();
+                showToast(`🎉 สิ้นสุดการอดอาหาร! บันทึกประวัติสำเร็จ (${elapsedHours} ชม.)`);
+            }
+        }
+
+        function promptEditFastingStartTime() {
+            if (!state.fasting || !state.fasting.isFasting || !state.fasting.startTime) return;
+            const currentStart = new Date(state.fasting.startTime);
+            const defaultTimeStr = currentStart.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const newTime = prompt('กรุณาระบุเวลาที่เริ่มอดอาหารจริง (เช่น 20:00 หรือ 21:30):', defaultTimeStr);
+            if (!newTime || !newTime.includes(':')) return;
+
+            const [hh, mm] = newTime.split(':').map(x => parseInt(x, 10));
+            if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) {
+                alert('รูปแบบเวลาไม่ถูกต้อง กรุณาระบุ เช่น 20:30');
+                return;
+            }
+
+            const now = new Date();
+            const targetDate = new Date();
+            targetDate.setHours(hh, mm, 0, 0);
+            if (targetDate.getTime() > now.getTime()) {
+                targetDate.setDate(targetDate.getDate() - 1);
+            }
+            state.fasting.startTime = targetDate.getTime();
+            saveState();
+            renderFastingSection();
+            showToast(`✏️ อัปเดตเวลาเริ่มอดอาหารเป็น ${targetDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} เรียบร้อย`);
+        }
+
+        function renderFastingSection() {
+            const fasting = state.fasting || { isFasting: false, plan: '16:8', targetHours: 16 };
+            const plan = fasting.plan || '16:8';
+            const targetHours = fasting.targetHours || getFastingPlanTargetHours(plan);
+
+            // Update plan buttons
+            ['16:8', '18:6', '14:10', '20:4'].forEach(pKey => {
+                const btn = document.getElementById('btnFastingPlan_' + pKey.replace(':', '_'));
+                if (btn) {
+                    const isActive = plan === pKey;
+                    btn.className = `px-2 py-1 rounded-xl text-xs font-bold transition ${isActive 
+                        ? 'bg-purple-600 text-white shadow-xs' 
+                        : 'bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50'}`;
+                }
+            });
+
+            const statusBadge = document.getElementById('fastingStatusBadge');
+            const clockEl = document.getElementById('fastingTimerClock');
+            const progressEl = document.getElementById('fastingProgressBar');
+            const remainingEl = document.getElementById('fastingRemainingText');
+            const rangeEl = document.getElementById('fastingTimeRangeText');
+            const toggleBtn = document.getElementById('btnToggleFasting');
+            const editBtn = document.getElementById('btnEditFastingStart');
+
+            if (!fasting.isFasting) {
+                if (statusBadge) {
+                    statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+                    statusBadge.textContent = '🍽️ ช่วงทานอาหาร';
+                }
+                if (clockEl) clockEl.textContent = '00:00:00';
+                if (progressEl) progressEl.style.width = '0%';
+                if (remainingEl) remainingEl.textContent = `แตะ "เริ่มอดอาหาร" เพื่อเริ่มนับเวลาเป้าหมาย ${targetHours} ชม.`;
+                if (rangeEl) rangeEl.textContent = '';
+                if (toggleBtn) {
+                    toggleBtn.className = 'px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5';
+                    toggleBtn.innerHTML = '<span>⏱️ เริ่มอดอาหาร (Start Fast)</span>';
+                }
+                if (editBtn) editBtn.classList.add('hidden');
+                return;
+            }
+
+            // Is Fasting
+            const startMs = fasting.startTime || Date.now();
+            const elapsedMs = Math.max(0, Date.now() - startMs);
+            const targetMs = targetHours * 3600 * 1000;
+            const remainingMs = targetMs - elapsedMs;
+            const pct = Math.min(100, Math.round((elapsedMs / targetMs) * 100));
+
+            const elapsedSecs = Math.floor(elapsedMs / 1000);
+            const eh = Math.floor(elapsedSecs / 3600);
+            const em = Math.floor((elapsedSecs % 3600) / 60);
+            const es = elapsedSecs % 60;
+            const clockStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:${String(es).padStart(2, '0')}`;
+
+            const startDate = new Date(startMs);
+            const targetDate = new Date(startMs + targetMs);
+            const startStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const targetStr = targetDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+            if (clockEl) clockEl.textContent = clockStr;
+            if (progressEl) progressEl.style.width = `${pct}%`;
+            if (rangeEl) rangeEl.textContent = `เริ่ม ${startStr} น. → เป้าหมาย ${targetStr} น.`;
+
+            if (remainingMs > 0) {
+                const remSecs = Math.ceil(remainingMs / 1000);
+                const rh = Math.floor(remSecs / 3600);
+                const rm = Math.floor((remSecs % 3600) / 60);
+                if (statusBadge) {
+                    statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 animate-pulse';
+                    statusBadge.textContent = `🔥 กำลังอดอาหาร (${pct}%)`;
+                }
+                if (remainingEl) remainingEl.textContent = `เหลืออีก ${rh} ชม. ${rm} นาที จะครบ ${targetHours} ชม.`;
+            } else {
+                const overSecs = Math.floor(Math.abs(remainingMs) / 1000);
+                const oh = Math.floor(overSecs / 3600);
+                const om = Math.floor((overSecs % 3600) / 60);
+                if (statusBadge) {
+                    statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+                    statusBadge.textContent = '🎉 ครบเป้าหมายอดอาหารแล้ว!';
+                }
+                if (remainingEl) remainingEl.textContent = `ครบ ${targetHours} ชม. แล้ว (เกินมา ${oh} ชม. ${om} นาที) พร้อมเริ่มมื้อแรกได้เลยครับ`;
+            }
+
+            if (toggleBtn) {
+                toggleBtn.className = 'px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-600 hover:to-amber-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5';
+                toggleBtn.innerHTML = '<span>🏁 สิ้นสุดการอดอาหาร (End Fast)</span>';
+            }
+            if (editBtn) editBtn.classList.remove('hidden');
+        }
+
+        // Fasting Timer Ticker (Tick every second)
+        setInterval(() => {
+            if (state.fasting && state.fasting.isFasting) {
+                renderFastingSection();
+            }
+        }, 1000);
+
+        function updateVersionBadges() {
+            const hBadge = document.getElementById('headerVersionBadge');
+            if (hBadge) hBadge.textContent = `🚀 v${APP_VERSION}`;
+            const tBadge = document.getElementById('toolsVersionBadge');
+            if (tBadge) tBadge.innerHTML = `<span>🚀</span> ประวัติอัปเดต (v${APP_VERSION})`;
+            const alertText = document.getElementById('whatsNewAlertText');
+            if (alertText) alertText.textContent = `ยินดีต้อนรับสู่ NovaFit Pro v${APP_VERSION}!`;
+        }
+
         function checkFirstVisitVersionNotes() {
             const LAST_SEEN_KEY = 'novafit_last_seen_version';
             const lastSeen = localStorage.getItem(LAST_SEEN_KEY);
+            updateVersionBadges();
             if (lastSeen !== APP_VERSION) {
                 localStorage.setItem(LAST_SEEN_KEY, APP_VERSION);
-                if (lastSeen) {
-                    setTimeout(() => {
-                        showToast('🚀 NovaFit Pro อัปเดต v' + APP_VERSION + ' พร้อมใช้งานแล้ว');
-                    }, 500);
-                }
+                setTimeout(() => {
+                    showToast(`🚀 อัปเดตสู่ NovaFit Pro v${APP_VERSION} เรียบร้อย!`, 4000);
+                    if (lastSeen) {
+                        openChangelogModal(true);
+                    }
+                }, 800);
             }
         }
 
@@ -3560,3 +3768,9 @@ window.closeFoodMealPickerModal = closeFoodMealPickerModal;
 window.closeFoodMealPickerOnBackdrop = closeFoodMealPickerOnBackdrop;
 window.setFoodPickerPortion = setFoodPickerPortion;
 window.submitFoodMealPicker = submitFoodMealPicker;
+window.getFastingPlanTargetHours = getFastingPlanTargetHours;
+window.setFastingPlan = setFastingPlan;
+window.toggleFastingTimer = toggleFastingTimer;
+window.promptEditFastingStartTime = promptEditFastingStartTime;
+window.renderFastingSection = renderFastingSection;
+window.updateVersionBadges = updateVersionBadges;

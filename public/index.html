@@ -201,10 +201,10 @@
                             <span class="hidden sm:inline text-xs text-slate-400 dark:text-slate-400 font-medium">by BenzNova</span>
                         </h1>
                         <!-- Version Badge - hidden on mobile header to save space -->
-                        <button onclick="openChangelogModal()"
+                        <button id="headerVersionBadge" onclick="openChangelogModal()"
                             class="hidden sm:inline-flex text-xs bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 px-2.5 py-0.5 rounded-full font-bold hover:bg-indigo-500/25 transition shadow-xs"
                             title="คลิกเพื่อดูประวัติการอัปเดตเวอร์ชัน">
-                            🚀 v5.3.0
+                            🚀 v5.4.0
                         </button>
                         <span id="saveBadge"
                             class="hidden md:inline-block text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">
@@ -318,10 +318,14 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
                             <span>🔔</span> เช็กสรุปเป้าวันนี้
                         </button>
-                        <button onclick="openChangelogModal(); toggleToolsMenu();"
+                        <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.3.4)
+                            <span>🚀</span> ประวัติอัปเดต (v5.4.0)
                         </button>
+                        <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
+                            class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
+                            <span>🛡️</span> แดชบอร์ดผู้ดูแล (Admin)
+                        </a>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
                             <span>📱</span> ติดตั้งแอปลงมือถือ (PWA)
@@ -549,6 +553,76 @@
 
                 <!-- Dynamic Nutrient & Water Deficit Alert Banner -->
                 <div id="deficitAlertBanner" class="p-3.5 rounded-xl border text-xs sm:text-sm space-y-1.5"></div>
+
+                <!-- Intermittent Fasting (IF) Timer Panel (NEW v5.4.0) -->
+                <div id="fastingTimerPanel" class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 space-y-3 shadow-xs">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base sm:text-lg">⏱️</span>
+                            <div>
+                                <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block leading-tight">ตัวจับเวลาอดอาหาร (IF)</span>
+                                <span id="fastingTimeRangeText" class="text-[10px] text-slate-400 block"></span>
+                            </div>
+                        </div>
+                        <span id="fastingStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            🍽️ ช่วงทานอาหาร
+                        </span>
+                    </div>
+
+                    <!-- Fasting Plan Switcher -->
+                    <div class="flex items-center justify-between gap-1.5 pt-0.5">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">เลือกแผน:</span>
+                        <div class="grid grid-cols-4 gap-1 w-full max-w-xs">
+                            <button type="button" id="btnFastingPlan_16_8" onclick="setFastingPlan('16:8')"
+                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow-xs">
+                                16:8
+                            </button>
+                            <button type="button" id="btnFastingPlan_18_6" onclick="setFastingPlan('18:6')"
+                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                18:6
+                            </button>
+                            <button type="button" id="btnFastingPlan_14_10" onclick="setFastingPlan('14:10')"
+                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                14:10
+                            </button>
+                            <button type="button" id="btnFastingPlan_20_4" onclick="setFastingPlan('20:4')"
+                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                20:4
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Fasting Clock & Progress -->
+                    <div class="p-3 rounded-xl bg-white/70 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">เวลาที่อดมาแล้ว:</span>
+                            <div id="fastingTimerClock" class="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight font-mono leading-none my-1">
+                                00:00:00
+                            </div>
+                            <span id="fastingRemainingText" class="text-xs text-slate-500 dark:text-slate-400 block">
+                                แตะ "เริ่มอดอาหาร" เพื่อเริ่มนับเวลาเป้าหมาย 16 ชม.
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+                            <button type="button" id="btnEditFastingStart" onclick="promptEditFastingStartTime()"
+                                class="hidden px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-600 transition"
+                                title="ปรับเวลาเริ่มต้น (เช่น ลืมกดเริ่มตั้งแต่เมื่อคืน)">
+                                ✏️ ปรับเวลา
+                            </button>
+                            <button type="button" id="btnToggleFasting" onclick="toggleFastingTimer()"
+                                class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                                <span>⏱️ เริ่มอดอาหาร (Start Fast)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-slate-200 dark:bg-slate-600/70 rounded-full overflow-hidden">
+                        <div id="fastingProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
             </section>
 
                 <!-- Order 2: FOOD SEARCH & SELECTOR (MOVED UP FOR FASTEST ACCESS!) -->
@@ -1011,21 +1085,48 @@
             <div class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
                 <!-- What's New Automatic Banner on First Visit -->
                 <div id="whatsNewAlert"
-                    class="hidden p-3 rounded-xl bg-gradient-to-r from-indigo-500/15 via-cyan-500/10 to-emerald-500/15 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-semibold text-xs flex items-center gap-2">
+                    class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b>ยินดีต้อนรับสู่ NovaFit Pro v5.3.0!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.4.0!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.3.0 -->
+                <!-- Latest Release: v5.4.0 -->
                 <div
-                    class="p-3.5 rounded-xl bg-gradient-to-r from-indigo-500/15 via-emerald-500/10 to-cyan-500/15 border border-indigo-500/30 space-y-1.5">
-                    <div class="flex justify-between font-bold text-indigo-600 dark:text-indigo-400">
-                        <span>🚀 v5.3.0 (Fix Supplement Modal DOM Nesting Bug)</span>
-                        <span>17 ต.ค. 2026</span>
+                    class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.4.0 (IF Fasting Timer & Admin Dashboard)</span>
+                        <span>19 ต.ค. 2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
-                        <li><b>💊 แก้ไขหน้าต่างเพิ่มวิตามิน & อาหารเสริม 100%:</b> แก้ไขโครงสร้าง DOM HTML ที่ซ้อนทับกัน ทำให้หน้าต่างและฟอร์มกรอกข้อมูลเปิดทำงานได้อย่างสมบูรณ์</li>
-                        <li><b>🍱 ปรับปรุงโครงสร้าง Grid หน้าจอหลัก:</b> แก้ไข Tag ปิดใน Dashboard ให้เสถียรและทำงานราบรื่นบนทุกอุปกรณ์</li>
+                        <li><b>⏱️ ตัวจับเวลาอดอาหาร (Intermittent Fasting):</b> รองรับแผนยอดนิยม 16:8, 18:6, 14:10, 20:4 พร้อมเกจวัดความคืบหน้าแบบเรียลไทม์ ตัวนับเวลาถอยหลัง และปรับเวลาเริ่มต้นได้</li>
+                        <li><b>🛡️ หน้าแดชบอร์ดผู้ดูแลระบบ (Admin Dashboard):</b> ระบบแดชบอร์ดเฉพาะแอดมิน (benznova01@gmail.com) ติดตามสถิติผู้ใช้งานรายวัน, มื้ออาหารยอดนิยม, คลังเมนูส่วนตัวที่ผู้ใช้เพิ่ม และระบบส่องสมุดบันทึกรายคน</li>
+                        <li><b>🚀 ซิงค์เลขเวอร์ชันและระบบแจ้งเตือนอัปเดต:</b> ปรับปรุงให้เลขเวอร์ชันแสดงผลถูกต้องตรงกันทุกจุดทั้งหน้าเว็บ และแจ้งเตือน 'มีอะไรใหม่' อัตโนมัติเมื่อมีการอัปเดต</li>
+                    </ul>
+                </div>
+
+                <!-- Previous Release: v5.3.7 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <div class="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                        <span>v5.3.7 (Universal Search & Quick Meal Picker)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>🔍 ค้นหาเมนูอาหารทะลุทุกหมวดหมู่ (Universal Search):</b> พิมพ์ค้นหาอาหารปุ๊บ ระบบค้นหาครอบคลุมทุกหมวดหมู่ทั่วทั้งคลัง 280+ รายการทันที ไม่ต้องกดสลับหมวดก่อน</li>
+                        <li><b>🍱 ปุ่มลัดเลือกมื้ออาหารทันที ([+มื้อ]):</b> แตะปุ่ม [+มื้อ] บนการ์ดอาหารเพื่อเลือกลงมื้อเช้า, เที่ยง, เย็น หรือของว่าง และปรับขนาดเสิร์ฟได้ทันที</li>
+                    </ul>
+                </div>
+
+                <!-- Previous Release: v5.3.6 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                        <span>v5.3.6 (First-time Onboarding & Auto-Breakfast)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>👤 เด้งตั้งค่าร่างกายเมื่อเข้าครั้งแรก / Login ครั้งแรก:</b> เปิดแผงตั้งค่าข้อมูลร่างกายให้อัตโนมัติในครั้งแรก และไม่เด้งซ้ำในครั้งถัดไป</li>
+                        <li><b>🌅 สลับเลือก 'มื้อเช้า' อัตโนมัติเมื่อขึ้นวันใหม่:</b> เมื่อข้ามวันใหม่หรือสลับวัน ระบบจะรีเซ็ตแท็บอาหารกลับมาที่มื้อเช้าให้อัตโนมัติ</li>
                     </ul>
                 </div>
 
@@ -1733,13 +1834,13 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.3.7"></script>
+    <script src="food-db.js?v=5.4.0"></script>
 
-    <!-- Modularized Core Application Logic (v5.3.7 - High Performance) -->
-    <script src="app.js?v=5.3.7"></script>
+    <!-- Modularized Core Application Logic (v5.4.0 - High Performance) -->
+    <script src="app.js?v=5.4.0"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.3.7"></script>
+    <script type="module" src="firebase-sync.js?v=5.4.0"></script>
 
 </body>
 

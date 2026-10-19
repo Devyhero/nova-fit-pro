@@ -137,6 +137,12 @@ function updateAuthUI(user) {
             cloudBadge.classList.remove('flex');
         }
     }
+
+    const adminLink = document.getElementById('btnAdminDashboard');
+    const isAdmin = user && user.email && ['benznova01@gmail.com', 'parinya6969@gmail.com'].includes(user.email.toLowerCase());
+    if (adminLink) {
+        adminLink.classList.toggle('hidden', !isAdmin);
+    }
 }
 
 // Live Real-Time Multi-Device Listener (Phone <-> Computer instant sync)
