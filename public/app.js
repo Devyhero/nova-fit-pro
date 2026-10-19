@@ -1,4 +1,4 @@
-const APP_VERSION = '5.6.0';
+const APP_VERSION = '5.6.1';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -286,10 +286,6 @@ const APP_VERSION = '5.6.0';
                 icon.classList.toggle('icon-collapsed', isNowCollapsed);
             }
 
-            // Force WebKit compositing layer flush & reflow
-            const colLeft = document.getElementById('colDesktopLeft');
-            if (colLeft) void colLeft.offsetHeight;
-
             // Debounced non-blocking localStorage save
             clearTimeout(window._collapseSaveTimer);
             window._collapseSaveTimer = setTimeout(() => {
@@ -324,8 +320,6 @@ const APP_VERSION = '5.6.0';
                     icon.classList.toggle('icon-collapsed', isCollapsed);
                 }
             });
-            const colLeft = document.getElementById('colDesktopLeft');
-            if (colLeft) void colLeft.offsetHeight;
         }
 
         function toggleCustomForm() {
@@ -2855,6 +2849,8 @@ const APP_VERSION = '5.6.0';
             const label = document.getElementById('fastingCollapseLabel');
             if (!body) return;
 
+            if (!state.collapsedSections) state.collapsedSections = {};
+
             let isCollapsed;
             if (typeof forceState === 'boolean') {
                 isCollapsed = forceState;
@@ -2862,19 +2858,83 @@ const APP_VERSION = '5.6.0';
                 isCollapsed = !body.classList.contains('hidden');
             }
 
+            state.collapsedSections['fasting'] = isCollapsed;
+
             if (isCollapsed) {
                 body.classList.add('hidden');
                 if (chevron) chevron.textContent = '▼';
                 if (label) label.textContent = 'แสดง';
-                localStorage.setItem('novafit_fasting_collapsed', 'true');
+                try { localStorage.setItem('novafit_fasting_collapsed', 'true'); } catch (e) {}
             } else {
                 body.classList.remove('hidden');
                 if (chevron) chevron.textContent = '▲';
                 if (label) label.textContent = 'ซ่อน';
-                localStorage.setItem('novafit_fasting_collapsed', 'false');
+                try { localStorage.setItem('novafit_fasting_collapsed', 'false'); } catch (e) {}
             }
+
+            // Immediately update status badge text if fasting is active
+            if (state.fasting && state.fasting.isFasting) {
+                updateFastingTimerClock();
+            }
+
+            clearTimeout(window._collapseSaveTimer);
+            window._collapseSaveTimer = setTimeout(() => {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {}
+            }, 100);
         }
         window.toggleFastingCollapse = toggleFastingCollapse;
+
+        function updateFastingTimerClock() {
+            if (!state.fasting || !state.fasting.isFasting) return;
+
+            const fasting = state.fasting;
+            const plan = fasting.plan || '16:8';
+            const targetHours = fasting.targetHours || getFastingPlanTargetHours(plan);
+            const startMs = fasting.startTime || Date.now();
+            const elapsedMs = Math.max(0, Date.now() - startMs);
+            const targetMs = targetHours * 3600 * 1000;
+            const remainingMs = targetMs - elapsedMs;
+            const pct = Math.min(100, Math.round((elapsedMs / targetMs) * 100));
+
+            const elapsedSecs = Math.floor(elapsedMs / 1000);
+            const eh = Math.floor(elapsedSecs / 3600);
+            const em = Math.floor((elapsedSecs % 3600) / 60);
+            const es = elapsedSecs % 60;
+            const clockStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:${String(es).padStart(2, '0')}`;
+
+            const clockEl = document.getElementById('fastingTimerClock');
+            const progressEl = document.getElementById('fastingProgressBar');
+            const remainingEl = document.getElementById('fastingRemainingText');
+            const statusBadge = document.getElementById('fastingStatusBadge');
+
+            if (clockEl) clockEl.textContent = clockStr;
+            if (progressEl) progressEl.style.width = `${pct}%`;
+
+            const isCollapsed = state.collapsedSections && state.collapsedSections['fasting'] !== undefined
+                ? !!state.collapsedSections['fasting']
+                : (localStorage.getItem('novafit_fasting_collapsed') === 'true');
+
+            if (remainingMs > 0) {
+                const remSecs = Math.ceil(remainingMs / 1000);
+                const rh = Math.floor(remSecs / 3600);
+                const rm = Math.floor((remSecs % 3600) / 60);
+                if (statusBadge) {
+                    statusBadge.textContent = isCollapsed ? `🔥 ${clockStr} (${pct}%)` : `🔥 กำลังอดอาหาร (${pct}%)`;
+                }
+                if (remainingEl) remainingEl.textContent = `เหลืออีก ${rh} ชม. ${rm} นาที จะครบ ${targetHours} ชม.`;
+            } else {
+                const overSecs = Math.floor(Math.abs(remainingMs) / 1000);
+                const oh = Math.floor(overSecs / 3600);
+                const om = Math.floor((overSecs % 3600) / 60);
+                if (statusBadge) {
+                    statusBadge.textContent = '🎉 ครบเป้าหมายแล้ว!';
+                }
+                if (remainingEl) remainingEl.textContent = `ครบ ${targetHours} ชม. แล้ว (เกินมา ${oh} ชม. ${om} นาที) พร้อมเริ่มมื้อแรกได้เลยครับ`;
+            }
+        }
+        window.updateFastingTimerClock = updateFastingTimerClock;
 
         function renderFastingSection() {
             const fasting = state.fasting || { isFasting: false, plan: '16:8', targetHours: 16 };
@@ -2885,8 +2945,13 @@ const APP_VERSION = '5.6.0';
             const planBadge = document.getElementById('fastingPlanBadge');
             if (planBadge) planBadge.textContent = plan;
 
-            // Sync Collapsible State from LocalStorage
-            const isCollapsed = localStorage.getItem('novafit_fasting_collapsed') === 'true';
+            // Sync Collapsible State
+            if (!state.collapsedSections) state.collapsedSections = {};
+            const isCollapsed = state.collapsedSections['fasting'] !== undefined
+                ? !!state.collapsedSections['fasting']
+                : (localStorage.getItem('novafit_fasting_collapsed') === 'true');
+            state.collapsedSections['fasting'] = isCollapsed;
+
             const bodyEl = document.getElementById('fastingPanelBody');
             const chevronEl = document.getElementById('fastingChevron');
             const labelEl = document.getElementById('fastingCollapseLabel');
@@ -2938,57 +3003,29 @@ const APP_VERSION = '5.6.0';
 
             // Is Fasting
             const startMs = fasting.startTime || Date.now();
-            const elapsedMs = Math.max(0, Date.now() - startMs);
             const targetMs = targetHours * 3600 * 1000;
-            const remainingMs = targetMs - elapsedMs;
-            const pct = Math.min(100, Math.round((elapsedMs / targetMs) * 100));
-
-            const elapsedSecs = Math.floor(elapsedMs / 1000);
-            const eh = Math.floor(elapsedSecs / 3600);
-            const em = Math.floor((elapsedSecs % 3600) / 60);
-            const es = elapsedSecs % 60;
-            const clockStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:${String(es).padStart(2, '0')}`;
-
             const startDate = new Date(startMs);
             const targetDate = new Date(startMs + targetMs);
             const startStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             const targetStr = targetDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-            if (clockEl) clockEl.textContent = clockStr;
-            if (progressEl) progressEl.style.width = `${pct}%`;
             if (rangeEl) rangeEl.textContent = `เริ่ม ${startStr} น. → เป้าหมาย ${targetStr} น.`;
-
-            if (remainingMs > 0) {
-                const remSecs = Math.ceil(remainingMs / 1000);
-                const rh = Math.floor(remSecs / 3600);
-                const rm = Math.floor((remSecs % 3600) / 60);
-                if (statusBadge) {
-                    statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 animate-pulse';
-                    statusBadge.textContent = isCollapsed ? `🔥 ${clockStr} (${pct}%)` : `🔥 กำลังอดอาหาร (${pct}%)`;
-                }
-                if (remainingEl) remainingEl.textContent = `เหลืออีก ${rh} ชม. ${rm} นาที จะครบ ${targetHours} ชม.`;
-            } else {
-                const overSecs = Math.floor(Math.abs(remainingMs) / 1000);
-                const oh = Math.floor(overSecs / 3600);
-                const om = Math.floor((overSecs % 3600) / 60);
-                if (statusBadge) {
-                    statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
-                    statusBadge.textContent = '🎉 ครบเป้าหมายแล้ว!';
-                }
-                if (remainingEl) remainingEl.textContent = `ครบ ${targetHours} ชม. แล้ว (เกินมา ${oh} ชม. ${om} นาที) พร้อมเริ่มมื้อแรกได้เลยครับ`;
+            if (statusBadge) {
+                statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 animate-pulse';
             }
-
             if (toggleBtn) {
                 toggleBtn.className = 'px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-600 hover:to-amber-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5';
                 toggleBtn.innerHTML = '<span>🏁 สิ้นสุดการอดอาหาร (End Fast)</span>';
             }
             if (editBtn) editBtn.classList.remove('hidden');
+
+            updateFastingTimerClock();
         }
 
-        // Fasting Timer Ticker (Tick every second)
+        // Fasting Timer Ticker (Tick every second ONLY clock and progress, no DOM churn)
         setInterval(() => {
             if (state.fasting && state.fasting.isFasting) {
-                renderFastingSection();
+                updateFastingTimerClock();
             }
         }, 1000);
 

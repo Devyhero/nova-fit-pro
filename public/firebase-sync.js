@@ -176,45 +176,47 @@ function setupRealtimeCloudListener(user) {
                 state: window.state
             }).catch(err => console.warn('Init firestore doc failed:', err));
 
-            // ALWAYS pop up body profile configuration modal on first-time login!
-            setTimeout(() => {
-                if (window.openProfileSettingsModal) {
-                    window.openProfileSettingsModal();
-                }
-                if (window.showToast) {
-                    window.showToast(`🎉 ยินดีต้อนรับคุณ ${user.displayName || ''}! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน`);
-                }
-            }, 400);
+            const promptKey = 'novafit_profile_prompted_' + user.uid;
+            if (!localStorage.getItem(promptKey)) {
+                localStorage.setItem(promptKey, 'true');
+                setTimeout(() => {
+                    if (window.openProfileSettingsModal) {
+                        window.openProfileSettingsModal();
+                    }
+                    if (window.showToast) {
+                        window.showToast(`🎉 ยินดีต้อนรับคุณ ${user.displayName || ''}! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน`);
+                    }
+                }, 400);
+            }
             return;
         }
 
         const cloudData = snap.data();
-
-        // If this user has never configured their body profile in cloud, prompt them!
-        if (cloudData && !cloudData.profileConfigured) {
-            setTimeout(() => {
-                if (window.openProfileSettingsModal) {
-                    window.openProfileSettingsModal();
-                }
-                if (window.showToast) {
-                    window.showToast(`👋 ยินดีต้อนรับคุณ ${user.displayName || ''}! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน`);
-                }
-            }, 400);
-        }
 
         // If this update was saved by THIS exact browser session, ignore to prevent local redraw loops
         if (cloudData.lastUpdatedBy === mySessionId) {
             return;
         }
 
-        // If this device still has pending local writes in flight, let local state lead
-        if (snap.metadata && snap.metadata.hasPendingWrites) {
-            return;
-        }
-
         // On first snapshot upon entering the app, silently adopt newer cloud data without confusing toasts
         if (isFirstSnapshot) {
             isFirstSnapshot = false;
+            const promptKey = 'novafit_profile_prompted_' + user.uid;
+            const alreadyPrompted = localStorage.getItem(promptKey);
+            const hasExistingWeight = window.state?.profile?.weight && Number(window.state.profile.weight) > 0 && !window._isFirstTimeVisitor;
+
+            if (cloudData && !cloudData.profileConfigured && !alreadyPrompted && !hasExistingWeight) {
+                localStorage.setItem(promptKey, 'true');
+                setTimeout(() => {
+                    if (window.openProfileSettingsModal) {
+                        window.openProfileSettingsModal();
+                    }
+                    if (window.showToast) {
+                        window.showToast(`👋 ยินดีต้อนรับคุณ ${user.displayName || ''}! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน`);
+                    }
+                }, 400);
+            }
+
             if (cloudData && cloudData.state && cloudData.lastUpdatedByDevice !== myDeviceId) {
                 if (window.applyCloudState) {
                     window.applyCloudState(cloudData.state);
@@ -299,6 +301,19 @@ window.triggerCloudSync = function (showSuccessToast = false) {
             }
         }
     }, 250);
+};
+
+window.saveProfileConfiguredToCloud = async function () {
+    if (!currentUser) return;
+    try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userDocRef, {
+            profileConfigured: true,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    } catch (e) {
+        console.warn('saveProfileConfiguredToCloud failed:', e);
+    }
 };
 
 window.handleGoogleLogin = async function () {

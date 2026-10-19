@@ -364,7 +364,7 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.0') || !toolsBadgeText.includes('v5.6.0')) {
+        if (!headerBadgeText.includes('v5.6.1') || !toolsBadgeText.includes('v5.6.1')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 
@@ -387,6 +387,37 @@ server.listen(PORT, async () => {
         console.log('Fasting body expanded on toggle:', isBodyVisible);
         if (!isBodyVisible) {
             throw new Error('Fasting expand test failed');
+        }
+
+        // Test Real Header Click Collapse & Expand on IF panel
+        await evalJs('document.getElementById("fastingTimerHeader").click()');
+        let clickCollapsed = await evalJs('document.getElementById("fastingPanelBody").classList.contains("hidden")');
+        console.log('Fasting header click collapsed:', clickCollapsed);
+        if (!clickCollapsed) {
+            throw new Error('Clicking fastingTimerHeader failed to collapse');
+        }
+
+        await evalJs('document.getElementById("fastingTimerHeader").click()');
+        let clickExpanded = await evalJs('!document.getElementById("fastingPanelBody").classList.contains("hidden")');
+        console.log('Fasting header click re-expanded:', clickExpanded);
+        if (!clickExpanded) {
+            throw new Error('Clicking fastingTimerHeader failed to re-expand');
+        }
+
+        // Test Food Menu Accordion Collapse & Expand while IF timer is ticking
+        const wasFoodHidden = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
+        await evalJs('document.querySelector("#card_food_search > div").click()');
+        let toggledFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
+        console.log('Food menu toggled while fasting from', wasFoodHidden, 'to', toggledFoodState);
+        if (toggledFoodState === wasFoodHidden) {
+            throw new Error('Clicking food search header failed to toggle');
+        }
+
+        await evalJs('document.querySelector("#card_food_search > div").click()');
+        let restoredFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
+        console.log('Food menu restored back to', restoredFoodState);
+        if (restoredFoodState !== wasFoodHidden) {
+            throw new Error('Clicking food search header failed to restore');
         }
 
         // Test 18: Daily Health Tip Widget & User Notification Bell
