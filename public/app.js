@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.5';
+const APP_VERSION = '5.3.6';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -34,10 +34,12 @@ const APP_VERSION = '5.3.5';
             collapsedSections: {},
             customFormOpen: false,
             selectedDate: getTodayStr(),
+            lastActiveDate: getTodayStr(),
             selectedCategory: 'all',
             searchQuery: '',
             lastAddedFoodName: '',
-            activeMeal: getDefaultMealByTime(),
+            activeMeal: 'breakfast',
+            profileConfigured: false,
             selectedPortion: 1,
             favorites: [],
             bodyTab: 'weight',
@@ -66,18 +68,22 @@ const APP_VERSION = '5.3.5';
         let lastRecCacheKey = '';
 
         function loadState() {
+            const todayStr = getTodayStr();
             try {
                 const raw = localStorage.getItem(STORAGE_KEY)
                     || localStorage.getItem('fitmacro_pro_v3_state')
                     || localStorage.getItem('fitmacro_pro_v2_state');
                 if (raw) {
                     const parsed = JSON.parse(raw);
+                    const lastDate = parsed.lastActiveDate || parsed.selectedDate;
+                    const isNewDay = lastDate && lastDate !== todayStr;
+
                     state = {
                         ...state,
                         ...parsed,
                         version: APP_VERSION,
                         collapsedSections: (parsed.collapsedSections && typeof parsed.collapsedSections === 'object') ? parsed.collapsedSections : {},
-                        activeMeal: parsed.activeMeal || getDefaultMealByTime(),
+                        activeMeal: isNewDay ? 'breakfast' : (parsed.activeMeal || 'breakfast'),
                         selectedPortion: Number(parsed.selectedPortion) || 1,
                         favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
                         bodyTab: parsed.bodyTab || 'weight',
@@ -88,10 +94,18 @@ const APP_VERSION = '5.3.5';
                         supplementList: (Array.isArray(parsed.supplementList) && parsed.supplementList.length > 0) ? parsed.supplementList : DEFAULT_SUPPLEMENTS,
                         supplementsByDate: (parsed.supplementsByDate && typeof parsed.supplementsByDate === 'object') ? parsed.supplementsByDate : {},
                         profile: { ...state.profile, ...(parsed.profile || {}) },
+                        profileConfigured: parsed.profileConfigured !== undefined ? !!parsed.profileConfigured : true,
                         logsByDate: parsed.logsByDate || {},
                         waterByDate: parsed.waterByDate || {},
-                        customPresets: parsed.customPresets || []
+                        customPresets: parsed.customPresets || [],
+                        lastActiveDate: todayStr,
+                        selectedDate: todayStr
                     };
+
+                    // For existing users with saved state, ensure they are not interrupted with first-time onboarding
+                    if (!localStorage.getItem('novafit_profile_prompted')) {
+                        localStorage.setItem('novafit_profile_prompted', 'true');
+                    }
 
                     // Data migration: ensure all logs have meal and base macros
                     if (state.logsByDate) {
@@ -120,26 +134,29 @@ const APP_VERSION = '5.3.5';
                         });
                     }
                 } else {
+                    // Brand new visitor!
+                    window._isFirstTimeVisitor = true;
                     state.settingsCollapsed = false;
+                    state.lastActiveDate = todayStr;
+                    state.selectedDate = todayStr;
+                    state.activeMeal = 'breakfast';
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
             }
-            // Always set selectedDate to TODAY when launching/reloading the app
-            state.selectedDate = getTodayStr();
+            // Always set selectedDate and lastActiveDate to TODAY when launching/reloading the app
+            state.selectedDate = todayStr;
+            state.lastActiveDate = todayStr;
             state.searchQuery = ''; // Always clean search on load to prevent phantom query bugs
             const validCatIds = new Set(['all', 'favorites', 'custom', 'combos', ...(FOOD_DATABASE.categories ? FOOD_DATABASE.categories.map(c => c.id) : [])]);
             if (!validCatIds.has(state.selectedCategory)) state.selectedCategory = 'all';
-            if (!state.activeMeal) state.activeMeal = getDefaultMealByTime();
+            if (!state.activeMeal) state.activeMeal = 'breakfast';
             if (!state.selectedPortion) state.selectedPortion = 1;
             if (!Array.isArray(state.favorites)) state.favorites = [];
             if (!Array.isArray(state.mealCombos) || state.mealCombos.length === 0) state.mealCombos = DEFAULT_MEAL_COMBOS;
             if (!Array.isArray(state.supplementList) || state.supplementList.length === 0) state.supplementList = DEFAULT_SUPPLEMENTS;
             if (!state.dayTypeByDate || typeof state.dayTypeByDate !== 'object') state.dayTypeByDate = {};
             if (!state.supplementsByDate || typeof state.supplementsByDate !== 'object') state.supplementsByDate = {};
-            if (!state.activeMeal) state.activeMeal = getDefaultMealByTime();
-            if (!state.selectedPortion) state.selectedPortion = 1;
-            if (!Array.isArray(state.favorites)) state.favorites = [];
             if (!state.bodyTab) state.bodyTab = 'weight';
             if (!state.weightsByDate || typeof state.weightsByDate !== 'object') state.weightsByDate = {};
             if (!state.workoutsByDate || typeof state.workoutsByDate !== 'object') state.workoutsByDate = {};
@@ -2052,7 +2069,11 @@ const APP_VERSION = '5.3.5';
 
         function onDateChange(val) {
             if (!val) return;
+            const changed = state.selectedDate !== val;
             state.selectedDate = val;
+            if (changed) {
+                state.activeMeal = 'breakfast';
+            }
             saveState();
             renderAll();
         }
@@ -2061,16 +2082,21 @@ const APP_VERSION = '5.3.5';
             const d = new Date(state.selectedDate + 'T00:00:00');
             d.setDate(d.getDate() + days);
             const offset = d.getTimezoneOffset() * 60000;
-            state.selectedDate = new Date(d.getTime() - offset).toISOString().split('T')[0];
-            saveState();
-            renderAll();
+            const newDateStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
+            if (state.selectedDate !== newDateStr) {
+                state.selectedDate = newDateStr;
+                state.activeMeal = 'breakfast';
+                saveState();
+                renderAll();
+            }
         }
 
         function goToToday() {
             state.selectedDate = getTodayStr();
+            state.activeMeal = 'breakfast';
             saveState();
             renderAll();
-            showToast('📅 กลับสู่วันปัจจุบัน (วันนี้) เรียบร้อย');
+            showToast('📅 กลับสู่วันปัจจุบัน (มื้อเช้า) เรียบร้อย');
         }
 
         function addFoodItem(name, p, c, f, explicitCal, targetMeal, targetPortion) {
@@ -3198,6 +3224,7 @@ const APP_VERSION = '5.3.5';
 
         loadState();
         renderAll();
+        checkFirstVisitProfilePrompt();
         checkFirstVisitVersionNotes();
         // Expose globals for Firebase Module integration
         window.state = state;
@@ -3210,15 +3237,19 @@ const APP_VERSION = '5.3.5';
         window.toggleCardSection = toggleCardSection;
         window.renderAllSectionCollapses = renderAllSectionCollapses;
         window.syncResponsiveLayout = syncResponsiveLayout;
+        window.checkDayRollover = checkDayRollover;
+        window.checkFirstVisitProfilePrompt = checkFirstVisitProfilePrompt;
 
         // Directly updates lexical state and re-renders UI across all components
         window.applyCloudState = function (cloudState) {
             if (!cloudState || typeof cloudState !== 'object') return;
             const currentSelectedDate = state.selectedDate;
+            const currentActiveMeal = state.activeMeal;
             state = {
                 ...state,
                 ...cloudState,
                 selectedDate: currentSelectedDate,
+                activeMeal: currentActiveMeal,
                 version: APP_VERSION
             };
             window.state = state;
@@ -3228,11 +3259,16 @@ const APP_VERSION = '5.3.5';
             renderAll();
         };
 
-        // Check for updates initially and periodically
+        // Check for updates and new day rollover initially and periodically
         setTimeout(checkForAppUpdates, 2500);
         setInterval(checkForAppUpdates, 180000); // Check every 3 mins
+        setInterval(checkDayRollover, 30000); // Check for new day every 30s
+        window.addEventListener('focus', checkDayRollover);
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) checkForAppUpdates();
+            if (!document.hidden) {
+                checkForAppUpdates();
+                checkDayRollover();
+            }
         });
 
         // Close Dropdown Menus when clicking outside
@@ -3296,6 +3332,37 @@ function openProfileSettingsModal() {
 
 function closeProfileSettingsModal() {
     closeModalAnimated('profileSettingsModal');
+    state.profileConfigured = true;
+    localStorage.setItem('novafit_profile_prompted', 'true');
+    if (window.currentUser) {
+        localStorage.setItem('novafit_profile_prompted_' + window.currentUser.uid, 'true');
+        if (window.triggerCloudSync) window.triggerCloudSync();
+    }
+    saveState();
+}
+
+function checkFirstVisitProfilePrompt() {
+    const hasPrompted = localStorage.getItem('novafit_profile_prompted');
+    if (!hasPrompted && window._isFirstTimeVisitor) {
+        localStorage.setItem('novafit_profile_prompted', 'true');
+        setTimeout(() => {
+            openProfileSettingsModal();
+            showToast('👋 ยินดีต้อนรับสู่ NovaFit Pro! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน');
+        }, 500);
+    }
+}
+
+function checkDayRollover() {
+    const todayStr = getTodayStr();
+    if (state.lastActiveDate && state.lastActiveDate !== todayStr) {
+        console.log('🌅 New day detected! Auto-switching to:', todayStr, 'with breakfast active');
+        state.lastActiveDate = todayStr;
+        state.selectedDate = todayStr;
+        state.activeMeal = 'breakfast';
+        saveState();
+        renderAll();
+        showToast('🌅 อรุณสวัสดิ์วันใหม่! สลับไปมื้อเช้าให้อัตโนมัติแล้ว');
+    }
 }
 
 function closeProfileSettingsOnBackdrop(e) {

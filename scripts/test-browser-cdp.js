@@ -262,6 +262,33 @@ server.listen(PORT, async () => {
             throw new Error(`Mobile restore failed: Count=${mobileCardCount}`);
         }
 
+        // Test 11: Automatic Breakfast Rollover on Date Change & New Day
+        console.log('--- Test 11: Automatic Breakfast Rollover on Date Change & New Day ---');
+        // Set meal to dinner first
+        await evalJs('setActiveMeal("dinner")');
+        let currentMeal = await evalJs('state.activeMeal');
+        console.log('Active meal set to dinner:', currentMeal === 'dinner');
+        if (currentMeal !== 'dinner') throw new Error('Failed to set active meal to dinner');
+
+        // Change date to past day - should automatically revert to breakfast
+        await evalJs('onDateChange("2026-10-15")');
+        currentMeal = await evalJs('state.activeMeal');
+        console.log('Active meal after date change to 2026-10-15 (should be breakfast):', currentMeal);
+        if (currentMeal !== 'breakfast') throw new Error('Active meal did not reset to breakfast on date change');
+
+        // Set meal to snack, then trigger day rollover
+        await evalJs('setActiveMeal("snack")');
+        await evalJs('(() => { state.lastActiveDate = "2026-10-18"; checkDayRollover(); })()');
+        currentMeal = await evalJs('state.activeMeal');
+        console.log('Active meal after simulated day rollover (should be breakfast):', currentMeal);
+        if (currentMeal !== 'breakfast') throw new Error('Active meal did not reset to breakfast on day rollover');
+
+        // Test 12: First-time Visitor Profile Modal Auto-Prompt Logic
+        console.log('--- Test 12: First-time Visitor Onboarding Prompt Logic ---');
+        const profilePrompted = await evalJs('localStorage.getItem("novafit_profile_prompted")');
+        console.log('novafit_profile_prompted is recorded:', !!profilePrompted);
+        if (!profilePrompted) throw new Error('novafit_profile_prompted was not set');
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');
