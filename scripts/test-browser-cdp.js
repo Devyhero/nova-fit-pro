@@ -37,6 +37,7 @@ server.listen(PORT, async () => {
     console.log(`Test server running at http://localhost:${PORT}`);
 
     const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    try { fs.rmSync('/tmp/novafit-chrome-test', { recursive: true, force: true }); } catch (e) {}
     const chrome = spawn(chromePath, [
         '--headless=new',
         '--disable-gpu',
@@ -390,6 +391,7 @@ server.listen(PORT, async () => {
         }
 
         // Test Real Header Click Collapse & Expand on IF panel
+        await new Promise(r => setTimeout(r, 250));
         await evalJs('document.getElementById("fastingTimerHeader").click()');
         let clickCollapsed = await evalJs('document.getElementById("fastingPanelBody").classList.contains("hidden")');
         console.log('Fasting header click collapsed:', clickCollapsed);
@@ -397,6 +399,7 @@ server.listen(PORT, async () => {
             throw new Error('Clicking fastingTimerHeader failed to collapse');
         }
 
+        await new Promise(r => setTimeout(r, 250));
         await evalJs('document.getElementById("fastingTimerHeader").click()');
         let clickExpanded = await evalJs('!document.getElementById("fastingPanelBody").classList.contains("hidden")');
         console.log('Fasting header click re-expanded:', clickExpanded);
@@ -413,6 +416,7 @@ server.listen(PORT, async () => {
             throw new Error('Clicking food search header failed to toggle');
         }
 
+        await new Promise(r => setTimeout(r, 250));
         await evalJs('document.querySelector("#card_food_search > div").click()');
         let restoredFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
         console.log('Food menu restored back to', restoredFoodState);

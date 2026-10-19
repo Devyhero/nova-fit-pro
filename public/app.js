@@ -268,7 +268,12 @@ const APP_VERSION = '5.6.1';
             if (menu) menu.classList.toggle('hidden');
         }
 
+        let _lastCardToggleTimes = {};
         function toggleCardSection(sectionId) {
+            const now = Date.now();
+            if (_lastCardToggleTimes[sectionId] && now - _lastCardToggleTimes[sectionId] < 180) return;
+            _lastCardToggleTimes[sectionId] = now;
+
             if (!state.collapsedSections) state.collapsedSections = {};
             const isNowCollapsed = !state.collapsedSections[sectionId];
             state.collapsedSections[sectionId] = isNowCollapsed;
@@ -2843,7 +2848,12 @@ const APP_VERSION = '5.6.1';
             showToast(`✏️ อัปเดตเวลาเริ่มอดอาหารเป็น ${targetDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} เรียบร้อย`);
         }
 
+        let _lastFastingToggleTime = 0;
         function toggleFastingCollapse(forceState) {
+            const now = Date.now();
+            if (typeof forceState !== 'boolean' && now - _lastFastingToggleTime < 180) return;
+            _lastFastingToggleTime = now;
+
             const body = document.getElementById('fastingPanelBody');
             const chevron = document.getElementById('fastingChevron');
             const label = document.getElementById('fastingCollapseLabel');

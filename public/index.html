@@ -135,13 +135,17 @@
             transform: rotate(-90deg);
         }
 
-        /* Hardware Acceleration Isolation for Mobile Cards */
-        #colDesktopLeft > section,
-        #colDesktopRight > section {
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+        /* iOS Safari Mobile Touch & Accordion Optimization */
+        .touch-action-manipulation {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .accordion-header {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
         }
 
         @keyframes pop {
@@ -605,8 +609,8 @@
                 <!-- Intermittent Fasting (IF) Timer Panel (Collapsible Tab v5.5.0) -->
                 <div id="fastingTimerPanel" class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 shadow-xs transition-all duration-200">
                     <!-- Collapsible Header -->
-                    <div id="fastingTimerHeader" onclick="toggleFastingCollapse()" class="flex items-center justify-between cursor-pointer select-none gap-2">
-                        <div class="flex items-center gap-2 min-w-0">
+                    <div id="fastingTimerHeader" role="button" tabindex="0" onclick="toggleFastingCollapse(event)" class="accordion-header flex items-center justify-between gap-2 select-none">
+                        <div class="flex items-center gap-2 min-w-0 pointer-events-none">
                             <span class="text-base sm:text-lg shrink-0">⏱️</span>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -617,13 +621,13 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <span id="fastingStatusBadge" class="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            <span id="fastingStatusBadge" class="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 pointer-events-none">
                                 🍽️ ช่วงทานอาหาร
                             </span>
-                            <span id="fastingCollapseBtn" class="text-xs px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold transition flex items-center gap-1">
+                            <button type="button" id="fastingCollapseBtn" onclick="toggleFastingCollapse(event); event.stopPropagation();" class="text-xs px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold transition flex items-center gap-1 active:scale-95 touch-action-manipulation">
                                 <span id="fastingCollapseLabel">ซ่อน</span>
                                 <span id="fastingChevron" class="text-[10px] transition-transform duration-200">▲</span>
-                            </span>
+                            </button>
                         </div>
                     </div>
 
@@ -688,8 +692,8 @@
 
                 <!-- Order 2: FOOD SEARCH & SELECTOR (MOVED UP FOR FASTEST ACCESS!) -->
                 <section id="card_food_search" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div onclick="toggleCardSection('section_food_search')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_food_search')"
+                    class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
                             🍽️ เลือกและเพิ่มเมนูอาหาร (<span id="totalFoodCountBadge">280</span> เมนู)
@@ -804,8 +808,8 @@
 
                 <!-- Order 3: TODAY'S LOGGED MEALS -->
                 <section id="card_meals" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_meals')"
-                    class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 cursor-pointer select-none">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_meals')"
+                    class="accordion-header p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 select-none">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
                             🍱 รายการมื้ออาหารวันนี้ (<span id="mealCount">0</span> รายการ)
@@ -830,8 +834,8 @@
 
                 <!-- Order 4: WATER INTAKE TRACKER -->
                 <section id="card_water" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_water')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_water')"
+                    class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
                             💧 เป้าหมายการดื่มน้ำวันนี้
@@ -877,8 +881,8 @@
 
                 <!-- Order 5: DAILY SUPPLEMENTS -->
                 <section id="card_supplements" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_supplements')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_supplements')"
+                    class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
                             💊 วิตามิน & อาหารเสริมประจำวัน
@@ -920,8 +924,8 @@
 
                 <!-- Order 6: WORKOUT & ACTIVITY BURN -->
                 <section id="card_workout" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div onclick="toggleCardSection('section_workout')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_workout')"
+                    class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
                             🏃 ชั่งน้ำหนัก & บันทึกการเบิร์น
@@ -1001,8 +1005,8 @@
 
                 <!-- Order 7: WEEKLY ANALYTICS & WEIGHT TREND -->
                 <section id="card_analytics" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_analytics')"
-                    class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_analytics')"
+                    class="accordion-header p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5">
                             📊 สถิติ 7 วันล่าสุด (คลิกสลับวัน)
@@ -1052,8 +1056,8 @@
 
                 <!-- Order 8: SMART RECOMMENDATION ACCORDION -->
                 <section id="card_recommendations" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div onclick="toggleCardSection('section_recommendations')"
-                    class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_recommendations')"
+                    class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5">
                             💡 แนะนำเมนูเติมสารอาหารที่ยังขาด
