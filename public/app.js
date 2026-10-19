@@ -1,4 +1,4 @@
-const APP_VERSION = '5.5.0';
+const APP_VERSION = '5.6.0';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -2704,23 +2704,123 @@ const APP_VERSION = '5.5.0';
                 renderFastingSection();
                 showToast(`🔥 เริ่มนับเวลาอดอาหาร IF ${state.fasting.plan} แล้ว!`);
             } else {
-                const elapsedMs = Date.now() - (state.fasting.startTime || Date.now());
-                const elapsedHours = Math.round((elapsedMs / (3600 * 1000)) * 10) / 10;
-                if (!confirm(`ต้องการสิ้นสุดการอดอาหาร (ทำได้ ${elapsedHours} ชม.) ใช่หรือไม่?`)) return;
+                openFastingCompleteModal();
+            }
+        }
 
-                state.fasting.isFasting = false;
-                state.fasting.endTime = Date.now();
-                if (!state.fasting.history) state.fasting.history = [];
-                state.fasting.history.unshift({
-                    plan: state.fasting.plan,
-                    startTime: state.fasting.startTime,
-                    endTime: state.fasting.endTime,
-                    elapsedHours
-                });
-                if (state.fasting.history.length > 20) state.fasting.history.pop();
-                saveState();
-                renderFastingSection();
-                showToast(`🎉 สิ้นสุดการอดอาหาร! บันทึกประวัติสำเร็จ (${elapsedHours} ชม.)`);
+        function openFastingCompleteModal() {
+            const modal = document.getElementById('fastingCompleteModal');
+            if (!modal) return;
+            if (!state.fasting || !state.fasting.startTime) return;
+
+            const fasting = state.fasting;
+            const plan = fasting.plan || '16:8';
+            const targetHours = fasting.targetHours || getFastingPlanTargetHours(plan);
+            const startMs = fasting.startTime;
+            const nowMs = Date.now();
+            const elapsedMs = Math.max(0, nowMs - startMs);
+            const targetMs = targetHours * 3600 * 1000;
+            const pct = Math.min(100, Math.round((elapsedMs / targetMs) * 100));
+
+            const elapsedSecs = Math.floor(elapsedMs / 1000);
+            const eh = Math.floor(elapsedSecs / 3600);
+            const em = Math.floor((elapsedSecs % 3600) / 60);
+
+            const startDate = new Date(startMs);
+            const now = new Date(nowMs);
+            const startStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const endStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+            const planBadge = document.getElementById('fastingModalPlanBadge');
+            if (planBadge) planBadge.textContent = `แผน IF ${plan} (เป้าหมาย ${targetHours} ชม.)`;
+
+            const durationEl = document.getElementById('fastingModalDuration');
+            if (durationEl) durationEl.textContent = `${eh} ชม. ${em} นาที`;
+
+            const progressEl = document.getElementById('fastingModalProgressBar');
+            if (progressEl) progressEl.style.width = `${pct}%`;
+
+            const progressText = document.getElementById('fastingModalProgressText');
+            if (progressText) progressText.textContent = `${pct}% ของเป้าหมาย`;
+
+            const rangeEl = document.getElementById('fastingModalTimeRange');
+            if (rangeEl) rangeEl.textContent = `เริ่ม ${startStr} น. → สิ้นสุด ${endStr} น.`;
+
+            const statusBadge = document.getElementById('fastingModalStatusBadge');
+            const headerTitle = document.getElementById('fastingModalTitle');
+            const headerSub = document.getElementById('fastingModalSubtitle');
+
+            if (elapsedMs >= targetMs) {
+                const overMs = elapsedMs - targetMs;
+                const oh = Math.floor(overMs / (3600 * 1000));
+                const om = Math.floor((overMs % (3600 * 1000)) / (60 * 1000));
+                if (statusBadge) {
+                    statusBadge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25';
+                    statusBadge.textContent = '🏆 บรรลุเป้าหมายครบถ้วน!';
+                }
+                if (headerTitle) headerTitle.textContent = '🎉 ยินดีด้วย! ทำตามเป้าหมายสำเร็จ';
+                if (headerSub) headerSub.textContent = `คุณอดอาหารครบ ${targetHours} ชม. ตามแผนเรียบร้อย${oh > 0 || om > 0 ? ` (เกินเป้าหมายมา ${oh} ชม. ${om} นาที)` : ''} ร่างกายได้รับประโยชน์จากการทำ IF เต็มที่ครับ!`;
+            } else {
+                const remHours = Math.ceil((targetMs - elapsedMs) / (3600 * 1000) * 10) / 10;
+                if (statusBadge) {
+                    statusBadge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25';
+                    statusBadge.textContent = '⏱️ สรุปเวลาก่อนสิ้นสุด';
+                }
+                if (headerTitle) headerTitle.textContent = 'ต้องการสิ้นสุดการอดอาหารตอนนี้ใช่หรือไม่?';
+                if (headerSub) headerSub.textContent = `ทำเวลาได้ ${eh} ชม. ${em} นาที (ขาดอีกประมาณ ${remHours} ชม. จะครบตามเป้าหมาย ${plan})`;
+            }
+
+            // Milestone indicators based on hours completed
+            const m1 = document.getElementById('fastingMilestone_1');
+            const m2 = document.getElementById('fastingMilestone_2');
+            const m3 = document.getElementById('fastingMilestone_3');
+            const m4 = document.getElementById('fastingMilestone_4');
+
+            if (m1) m1.className = eh >= 1 ? 'flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-400';
+            if (m2) m2.className = eh >= 4 ? 'flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-400';
+            if (m3) m3.className = eh >= 12 ? 'flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-400';
+            if (m4) m4.className = eh >= 16 ? 'flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 text-slate-400';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeFastingCompleteModal() {
+            const modal = document.getElementById('fastingCompleteModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function confirmFinishFasting(goToMeal = false) {
+            if (!state.fasting || !state.fasting.isFasting) {
+                closeFastingCompleteModal();
+                return;
+            }
+            const elapsedMs = Date.now() - (state.fasting.startTime || Date.now());
+            const elapsedHours = Math.round((elapsedMs / (3600 * 1000)) * 10) / 10;
+
+            state.fasting.isFasting = false;
+            state.fasting.endTime = Date.now();
+            if (!state.fasting.history) state.fasting.history = [];
+            state.fasting.history.unshift({
+                plan: state.fasting.plan || '16:8',
+                startTime: state.fasting.startTime,
+                endTime: state.fasting.endTime,
+                elapsedHours
+            });
+            if (state.fasting.history.length > 20) state.fasting.history.pop();
+            saveState();
+            renderFastingSection();
+            closeFastingCompleteModal();
+
+            showToast(`🎉 สิ้นสุดการอดอาหาร! บันทึกประวัติสำเร็จ (${elapsedHours} ชม.)`);
+
+            if (goToMeal) {
+                if (typeof selectMealTab === 'function') {
+                    selectMealTab('breakfast');
+                }
+                const foodSec = document.getElementById('foodSection');
+                if (foodSec) {
+                    foodSec.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         }
 
@@ -3823,6 +3923,9 @@ window.submitFoodMealPicker = submitFoodMealPicker;
 window.getFastingPlanTargetHours = getFastingPlanTargetHours;
 window.setFastingPlan = setFastingPlan;
 window.toggleFastingTimer = toggleFastingTimer;
+window.openFastingCompleteModal = openFastingCompleteModal;
+window.closeFastingCompleteModal = closeFastingCompleteModal;
+window.confirmFinishFasting = confirmFinishFasting;
 window.promptEditFastingStartTime = promptEditFastingStartTime;
 window.renderFastingSection = renderFastingSection;
 window.updateVersionBadges = updateVersionBadges;

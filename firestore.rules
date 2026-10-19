@@ -20,5 +20,10 @@ service cloud.firestore {
         allow update, delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
       }
     }
+
+    // Admin message logs collection: only verified Admin can read & write
+    match /admin_messages_log/{logId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

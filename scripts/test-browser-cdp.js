@@ -364,7 +364,7 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.5.0') || !toolsBadgeText.includes('v5.5.0')) {
+        if (!headerBadgeText.includes('v5.6.0') || !toolsBadgeText.includes('v5.6.0')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 
@@ -421,6 +421,34 @@ server.listen(PORT, async () => {
             throw new Error('User notifications modal open failed');
         }
         await evalJs('closeUserNotificationsModal()');
+
+        // Test 19: Fasting Complete & Celebration Modal
+        console.log('--- Test 19: Fasting Complete & Celebration Modal ---');
+        const hasFastingModal = await evalJs('!!document.getElementById("fastingCompleteModal")');
+        console.log('Fasting Complete Modal exists in DOM:', hasFastingModal);
+        if (!hasFastingModal) {
+            throw new Error('Fasting Complete Modal element is missing in DOM');
+        }
+
+        // Open fasting modal
+        await evalJs('openFastingCompleteModal()');
+        const isFastingModalOpen = await evalJs('!document.getElementById("fastingCompleteModal").classList.contains("hidden")');
+        const durationText = await evalJs('document.getElementById("fastingModalDuration").textContent');
+        const modalPlanText = await evalJs('document.getElementById("fastingModalPlanBadge").textContent');
+        console.log('Fasting complete modal is visible:', isFastingModalOpen);
+        console.log('Fasting duration displayed:', durationText);
+        console.log('Fasting plan displayed:', modalPlanText);
+        if (!isFastingModalOpen || !durationText || !modalPlanText) {
+            throw new Error('Fasting Complete Modal failed to open or populate data');
+        }
+
+        // Close fasting complete modal
+        await evalJs('closeFastingCompleteModal()');
+        const isFastingModalClosed = await evalJs('document.getElementById("fastingCompleteModal").classList.contains("hidden")');
+        console.log('Fasting complete modal closed:', isFastingModalClosed);
+        if (!isFastingModalClosed) {
+            throw new Error('Fasting Complete Modal failed to close');
+        }
 
         ws.close();
         console.log('========================================');

@@ -12,10 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NovaFit Pro">
     <link rel="apple-touch-icon" href="icon.svg">
-    <!-- Google Fonts: Inter & Prompt -->
+    <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tailwind CSS (CDN for rapid styling) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -24,13 +24,16 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                        sans: ['Prompt', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     <style>
+        * {
+            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -331,11 +334,11 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.5.0)
+                            <span>🚀</span> ประวัติอัปเดต (v5.6.0)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
-                            <span class="flex items-center gap-2"><span>📨</span> ข้อความจากแอดมิน</span>
+                            <span class="flex items-center gap-2"><span>📨</span> ข้อความโดย BenzNova</span>
                             <span id="toolsUnreadNotifBadge" class="hidden text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-500 text-white">0</span>
                         </button>
                         <button onclick="openHealthTipsModal(); toggleToolsMenu();"
@@ -1145,12 +1148,26 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.5.0!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.0!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.5.0 -->
+                <!-- Latest Release: v5.6.0 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.6.0 (Fasting Celebration Modal, Prompt Fonts & Admin Logs)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>🏁 สรุปผลการอดอาหาร (Fasting Complete Modal):</b> หน้าต่างแจ้งเตือนสรุปผลการทำ IF แบบสวยงาม พร้อมสรุปเวลาที่ทำได้ ระดับประโยชน์ที่ร่างกายได้รับ (Autophagy & Fat Burn) และคำแนะนำโภชนาการเปิดมื้อแรกอย่างปลอดภัย</li>
+                        <li><b>✨ ปรับ Font ทั้งเว็บเป็น Google Fonts 'Prompt':</b> รองรับทั้งภาษาไทยและอังกฤษ สวยงาม อ่านง่าย สบายตาทุกอุปกรณ์</li>
+                        <li><b>📨 ปรับข้อความแจ้งเตือนจากแอดมิน:</b> เปลี่ยนเป็น 'โดย BenzNova' พร้อมเพิ่มแท็บระบบดูประวัติการส่งข้อความ (Message Logs) ในหน้าแดชบอร์ดแอดมิน</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.5.0 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.5.0 (IF Collapsible, Daily Health Tips & Admin Messaging)</span>
                         <span>19 ต.ค. 2026</span>
@@ -1905,7 +1922,106 @@
         </div>
     </div>
 
-    <!-- ADMIN MESSAGE POPUP MODAL (NEW v5.5.0) -->
+    <!-- FASTING COMPLETE & CELEBRATION MODAL (NEW v5.6.0) -->
+    <div id="fastingCompleteModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border-2 border-emerald-500/40 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto flex flex-col animate-pop">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700/60 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-purple-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-amber-500/25 shrink-0 animate-bounce">
+                        🏆
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="fastingModalPlanBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400">แผน IF 16:8</span>
+                            <span id="fastingModalStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">🎉 บรรลุเป้าหมายครบถ้วน!</span>
+                        </div>
+                        <h3 id="fastingModalTitle" class="font-bold text-base text-slate-800 dark:text-slate-100 leading-tight mt-1">สรุปผลการอดอาหาร (Fasting Complete)</h3>
+                    </div>
+                </div>
+                <button type="button" onclick="closeFastingCompleteModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+
+            <!-- Subtitle description -->
+            <p id="fastingModalSubtitle" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                ยินดีด้วยครับ! คุณอดอาหารครบตามแผนที่กำหนดไว้เรียบร้อย ร่างกายได้รับประโยชน์จากการทำ IF อย่างเต็มที่
+            </p>
+
+            <!-- Big Stat Showcase Card -->
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/25 text-center space-y-2">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">⏱️ เวลาอดอาหารสะสม</span>
+                <div id="fastingModalDuration" class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 font-sans">
+                    16 ชม. 00 นาที
+                </div>
+                <!-- Progress bar -->
+                <div class="space-y-1 pt-1">
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                        <div id="fastingModalProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium px-0.5">
+                        <span id="fastingModalProgressText">100% ของเป้าหมาย</span>
+                        <span id="fastingModalTimeRange">เริ่ม 20:00 น. → สิ้นสุด 12:00 น.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body Milestones / What happened in your body -->
+            <div class="space-y-1.5">
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <span>🧬</span> การเปลี่ยนแปลงของร่างกายระหว่างอดอาหาร:
+                </h4>
+                <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div id="fastingMilestone_1" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span class="text-sm">🩸</span>
+                        <div class="leading-tight"><b>0-4 ชม.</b><br><span class="text-[10px] font-normal">น้ำตาล/อินซูลินลดลง</span></div>
+                    </div>
+                    <div id="fastingMilestone_2" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span class="text-sm">⚡</span>
+                        <div class="leading-tight"><b>4-12 ชม.</b><br><span class="text-[10px] font-normal">เริ่มเผาผลาญไขมัน</span></div>
+                    </div>
+                    <div id="fastingMilestone_3" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span class="text-sm">🔥</span>
+                        <div class="leading-tight"><b>12-16 ชม.</b><br><span class="text-[10px] font-normal">คีโตซิส & เร่งเบิร์น</span></div>
+                    </div>
+                    <div id="fastingMilestone_4" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span class="text-sm">✨</span>
+                        <div class="leading-tight"><b>16+ ชม.</b><br><span class="text-[10px] font-normal">Autophagy ซ่อมเซลล์</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Break-fast nutrition guidance -->
+            <div class="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 space-y-1.5 text-xs text-amber-800 dark:text-amber-200">
+                <div class="font-bold flex items-center gap-1.5">
+                    <span>💡</span> ข้อแนะนำในการเปิดมื้อแรก (Break-Fast):
+                </div>
+                <ul class="text-[11px] space-y-1 list-disc list-inside text-amber-900/80 dark:text-amber-200/90 font-medium">
+                    <li>ดื่มน้ำเปล่าอุณหภูมิห้อง 1 แก้ว เพื่อปลุกระบบย่อยอาหาร</li>
+                    <li>เริ่มด้วยอาหารที่มีโปรตีนย่อยง่าย (เช่น ไข่ต้ม อกไก่ เต้าหู้ ซุปอุ่น)</li>
+                    <li>เลี่ยงขนมหวาน ของทอด และคาร์โบไฮเดรตปริมาณมากในคำแรก</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 space-y-2 shrink-0">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="button" onclick="confirmFinishFasting(false)" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
+                        <span>🏁 บันทึกและสิ้นสุดการอดอาหาร</span>
+                    </button>
+                    <button type="button" onclick="confirmFinishFasting(true)" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
+                        <span>🍽️ สิ้นสุดแล้วไปบันทึกอาหาร</span>
+                    </button>
+                </div>
+                <button type="button" onclick="closeFastingCompleteModal()" class="w-full py-2 text-center rounded-xl bg-slate-100 dark:bg-slate-700/70 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-semibold text-xs transition">
+                    ⏳ อดอาหารต่ออีกหน่อย (ยังไม่สิ้นสุด)
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ADMIN MESSAGE POPUP MODAL (NEW v5.6.0) -->
     <div id="adminMessagePopupModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 border-2 border-purple-500/40 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-pop">
             <div class="flex items-center gap-3">
@@ -1913,10 +2029,10 @@
                     📬
                 </div>
                 <div>
-                    <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">ข้อความใหม่จากผู้ดูแลระบบ</span>
-                    <h3 id="adminPopupTitle" class="font-bold text-base text-slate-800 dark:text-slate-100 leading-tight">ข้อความจากผู้ดูแลระบบ</h3>
+                    <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">ข้อความใหม่</span>
+                    <h3 id="adminPopupTitle" class="font-bold text-base text-slate-800 dark:text-slate-100 leading-tight">โดย BenzNova</h3>
                     <div class="text-[11px] text-slate-400 mt-0.5">
-                        <span id="adminPopupSender">แอดมิน Benz Nova</span> • <span id="adminPopupTime">วันนี้</span>
+                        <span id="adminPopupSender">โดย BenzNova</span> • <span id="adminPopupTime">วันนี้</span>
                     </div>
                 </div>
             </div>
@@ -1936,7 +2052,7 @@
         </div>
     </div>
 
-    <!-- USER NOTIFICATIONS INBOX MODAL (NEW v5.5.0) -->
+    <!-- USER NOTIFICATIONS INBOX MODAL (NEW v5.6.0) -->
     <div id="userNotificationsModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col animate-pop">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
@@ -1945,7 +2061,7 @@
                         🔔
                     </div>
                     <div>
-                        <h3 class="font-bold text-base leading-tight">กล่องข้อความจากผู้ดูแลระบบ</h3>
+                        <h3 class="font-bold text-base leading-tight">กล่องข้อความโดย BenzNova</h3>
                         <p class="text-xs text-slate-400">ข้อความและการแจ้งเตือนเฉพาะสำหรับคุณ</p>
                     </div>
                 </div>
@@ -1992,16 +2108,16 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.5.0"></script>
+    <script src="food-db.js?v=5.6.0"></script>
 
-    <!-- Daily Health & Nutrition Tips Engine (NEW v5.5.0) -->
-    <script src="health-tips.js?v=5.5.0"></script>
+    <!-- Daily Health & Nutrition Tips Engine (NEW v5.6.0) -->
+    <script src="health-tips.js?v=5.6.0"></script>
 
-    <!-- Modularized Core Application Logic (v5.5.0 - High Performance) -->
-    <script src="app.js?v=5.5.0"></script>
+    <!-- Modularized Core Application Logic (v5.6.0 - High Performance) -->
+    <script src="app.js?v=5.6.0"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.5.0"></script>
+    <script type="module" src="firebase-sync.js?v=5.6.0"></script>
 
 </body>
 

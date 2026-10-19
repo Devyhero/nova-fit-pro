@@ -523,9 +523,9 @@ function showAdminMessagePopup(notif) {
     const timeEl = document.getElementById('adminPopupTime');
     const btnAck = document.getElementById('btnAckAdminMessage');
 
-    if (titleEl) titleEl.textContent = notif.title || 'ข้อความจากผู้ดูแลระบบ';
+    if (titleEl) titleEl.textContent = notif.title || 'โดย BenzNova';
     if (msgEl) msgEl.textContent = notif.message || '';
-    if (senderEl) senderEl.textContent = notif.senderName ? `โดย ${notif.senderName}` : 'ทีมงาน NovaFit Pro';
+    if (senderEl) senderEl.textContent = 'โดย BenzNova';
     if (timeEl) {
         const d = notif.createdAt ? new Date(notif.createdAt) : new Date();
         timeEl.textContent = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
@@ -566,7 +566,7 @@ function renderNotificationsModalList() {
         container.innerHTML = `
             <div class="py-10 text-center text-slate-400 space-y-2">
                 <span class="text-3xl block">🔐</span>
-                <p>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับการแจ้งเตือนจากผู้ดูแลระบบ</p>
+                <p>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับการแจ้งเตือน</p>
             </div>
         `;
         return;
@@ -594,10 +594,10 @@ function renderNotificationsModalList() {
                         <span class="text-lg">📢</span>
                         <div>
                             <h4 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                <span>${n.title || 'ข้อความจากผู้ดูแลระบบ'}</span>
+                                <span>${n.title || 'โดย BenzNova'}</span>
                                 ${isUnread ? '<span class="text-[9px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full">ใหม่</span>' : ''}
                             </h4>
-                            <span class="text-[10px] text-slate-400">${dateStr} • ${n.senderName || 'แอดมิน'}</span>
+                            <span class="text-[10px] text-slate-400">${dateStr} • โดย BenzNova</span>
                         </div>
                     </div>
                     ${isUnread ? `

@@ -376,7 +376,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'foods', 'custom_presets'].forEach(t => {
+    ['users', 'foods', 'custom_presets', 'message_logs'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {
@@ -388,6 +388,10 @@ window.switchAdminTab = function (tabId) {
             view.classList.toggle('hidden', t !== tabId);
         }
     });
+
+    if (tabId === 'message_logs' && window.loadAdminMessageLogs) {
+        window.loadAdminMessageLogs();
+    }
 };
 
 window.inspectUser = function (uid) {
@@ -522,7 +526,7 @@ window.openSendMessageModal = function (uid, name, email) {
         recipientText.textContent = `ถึง: ${name} (${email || uid})`;
     }
     if (titleInput) {
-        titleInput.value = 'ข้อความจากผู้ดูแลระบบ NovaFit Pro';
+        titleInput.value = 'โดย BenzNova';
     }
     if (bodyInput) {
         bodyInput.value = '';
@@ -553,7 +557,7 @@ window.openBroadcastMessageModal = function () {
         recipientText.textContent = `📢 ส่งประกาศถึงผู้ใช้งานทุกคนในระบบ (${allUsersData.length} บัญชี)`;
     }
     if (titleInput) {
-        titleInput.value = '📢 ประกาศจากผู้ดูแลระบบ NovaFit Pro';
+        titleInput.value = 'โดย BenzNova';
     }
     if (bodyInput) {
         bodyInput.value = '';
@@ -605,15 +609,16 @@ window.submitSendAdminMessage = async function () {
 
     try {
         const notifPayload = {
-            title: title || 'ข้อความจากผู้ดูแลระบบ',
+            title: title || 'โดย BenzNova',
             message: body,
-            senderName: currentUser.displayName || 'Admin Benz Nova',
+            senderName: 'BenzNova',
             senderEmail: currentUser.email || 'benznova01@gmail.com',
             createdAt: new Date().toISOString(),
             read: false,
             type: isBroadcastMode ? 'broadcast' : 'admin_direct'
         };
 
+        let recipientCount = 0;
         if (isBroadcastMode) {
             let sentCount = 0;
             for (const u of allUsersData) {
@@ -626,20 +631,41 @@ window.submitSendAdminMessage = async function () {
                     }
                 }
             }
+            recipientCount = sentCount;
             if (statusBox) {
                 statusBox.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold block';
                 statusBox.textContent = `✅ ส่งข้อความประกาศถึงผู้ใช้สำเร็จ ${sentCount} คนเรียบร้อยแล้ว!`;
             }
         } else if (targetUserForMsg && targetUserForMsg.uid) {
             await addDoc(collection(db, 'users', targetUserForMsg.uid, 'notifications'), notifPayload);
+            recipientCount = 1;
             if (statusBox) {
                 statusBox.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold block';
                 statusBox.textContent = `✅ ส่งข้อความถึง ${targetUserForMsg.name} เรียบร้อยแล้ว! ผู้ใช้จะเห็นการแจ้งเตือนทันที`;
             }
         }
 
+        // Record into admin audit log collection
+        try {
+            await addDoc(collection(db, 'admin_messages_log'), {
+                title: title || 'โดย BenzNova',
+                message: body,
+                type: isBroadcastMode ? 'broadcast' : 'direct',
+                recipientName: isBroadcastMode ? 'ทุกคนในระบบ (Broadcast)' : (targetUserForMsg?.name || 'ผู้ใช้'),
+                recipientEmail: isBroadcastMode ? 'ทุกคน' : (targetUserForMsg?.email || '-'),
+                recipientUid: isBroadcastMode ? 'all' : (targetUserForMsg?.uid || '-'),
+                recipientCount: isBroadcastMode ? (recipientCount || allUsersData?.length || 0) : 1,
+                sentBy: 'โดย BenzNova',
+                sentByEmail: currentUser.email || 'benznova01@gmail.com',
+                createdAt: new Date().toISOString()
+            });
+        } catch (logErr) {
+            console.warn('Failed to record admin message log:', logErr);
+        }
+
         setTimeout(() => {
             window.closeSendMessageModal();
+            if (window.loadAdminMessageLogs) window.loadAdminMessageLogs();
         }, 1500);
     } catch (err) {
         console.error('Failed to send admin message:', err);
@@ -651,5 +677,89 @@ window.submitSendAdminMessage = async function () {
             btnSend.disabled = false;
             btnSend.innerHTML = '<span>ลองใหม่อีกครั้ง</span>';
         }
+    }
+};
+
+window.loadAdminMessageLogs = async function () {
+    const tableBody = document.getElementById('messageLogsTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="py-8 text-center text-slate-400">
+                <span class="inline-block animate-spin mr-2">🔄</span> กำลังโหลดประวัติข้อความ...
+            </td>
+        </tr>
+    `;
+
+    try {
+        const snap = await getDocs(collection(db, 'admin_messages_log'));
+        const logs = [];
+        snap.forEach(doc => {
+            logs.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort descending by createdAt
+        logs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        if (logs.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-slate-400">
+                        📭 ยังไม่มีประวัติการส่งข้อความจากแอดมิน
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = logs.map(log => {
+            const d = log.createdAt ? new Date(log.createdAt) : new Date();
+            const dateStr = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+            const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
+
+            return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-nowrap">
+                        ${dateStr}
+                    </td>
+                    <td class="py-3 px-3">
+                        ${isBroadcast ? `
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                                📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                            </span>
+                        ` : `
+                            <div>
+                                <div class="font-bold text-slate-800 dark:text-slate-100">${log.recipientName || 'ผู้ใช้'}</div>
+                                <div class="text-[10px] text-slate-400">${log.recipientEmail || '-'}</div>
+                            </div>
+                        `}
+                    </td>
+                    <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                        ${log.title || 'โดย BenzNova'}
+                    </td>
+                    <td class="py-3 px-3 max-w-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                        ${log.message || '-'}
+                    </td>
+                    <td class="py-3 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium text-[11px]">
+                        ${log.sentBy || 'โดย BenzNova'}
+                    </td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                            ✓ ส่งสำเร็จ
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Failed to load message logs:', err);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-8 text-center text-rose-500">
+                    ❌ โหลดประวัติข้อความไม่สำเร็จ: ${err.message}
+                </td>
+            </tr>
+        `;
     }
 };

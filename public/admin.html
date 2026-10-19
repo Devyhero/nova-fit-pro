@@ -9,7 +9,7 @@
     <!-- Google Fonts: Inter & Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -18,13 +18,18 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                        sans: ['Prompt', 'sans-serif'],
                         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
                     }
                 }
             }
         };
     </script>
+    <style>
+        * {
+            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased font-sans flex flex-col">
@@ -150,6 +155,9 @@
                 <button type="button" onclick="switchAdminTab('custom_presets')" id="tabBtn_custom_presets" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
                     📝 คลังเมนูส่วนตัวที่ผู้ใช้เพิ่ม
                 </button>
+                <button type="button" onclick="switchAdminTab('message_logs')" id="tabBtn_message_logs" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
+                    📨 ประวัติการส่งข้อความ (Logs)
+                </button>
             </div>
 
             <!-- VIEW 1: USERS DIRECTORY -->
@@ -232,6 +240,46 @@
                 </div>
             </div>
 
+            <!-- VIEW 4: ADMIN MESSAGE LOGS -->
+            <div id="tabView_message_logs" class="hidden space-y-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-3 shadow-xs">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                            <h3 class="font-bold text-sm flex items-center gap-2">
+                                <span>📨</span> ประวัติการส่งข้อความแจ้งเตือนทั้งหมด
+                            </h3>
+                            <p class="text-xs text-slate-400">ตรวจสอบย้อนหลังว่าส่งข้อความอะไรไปหาใครบ้าง วันเวลาไหน โดย BenzNova</p>
+                        </div>
+                        <button type="button" onclick="loadAdminMessageLogs()" class="px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 text-xs font-bold transition flex items-center gap-1">
+                            <span>🔄</span> รีเฟรชประวัติ
+                        </button>
+                    </div>
+
+                    <!-- Logs Table -->
+                    <div class="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase font-bold text-[11px]">
+                                    <tr>
+                                        <th class="py-3 px-3">วันและเวลาที่ส่ง</th>
+                                        <th class="py-3 px-3">ผู้รับ (ส่งถึง)</th>
+                                        <th class="py-3 px-3">หัวข้อ</th>
+                                        <th class="py-3 px-3">เนื้อหาข้อความ</th>
+                                        <th class="py-3 px-3">ผู้ส่ง</th>
+                                        <th class="py-3 px-3 text-center">สถานะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="messageLogsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-slate-400">กำลังโหลดประวัติการส่งข้อความ...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -275,7 +323,7 @@
             <div class="space-y-3.5 text-xs overflow-y-auto pr-1 flex-1">
                 <div>
                     <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">หัวข้อข้อความ (Title):</label>
-                    <input type="text" id="adminMsgTitle" value="ข้อความจากผู้ดูแลระบบ NovaFit Pro" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500 font-medium">
+                    <input type="text" id="adminMsgTitle" value="โดย BenzNova" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500 font-medium">
                 </div>
 
                 <div>
