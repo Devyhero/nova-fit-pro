@@ -1,4 +1,4 @@
-const APP_VERSION = '5.3.6';
+const APP_VERSION = '5.3.7';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -683,6 +683,15 @@ const APP_VERSION = '5.3.6';
 
         function selectCategory(catId) {
             state.selectedCategory = catId;
+            // If user explicitly clicks a category tab while a search query was active, clear search so they view that category normally
+            if (state.searchQuery && catId !== 'all') {
+                state.searchQuery = '';
+                state._prevCategoryBeforeSearch = null;
+                const input = document.getElementById('foodSearchInput');
+                if (input) input.value = '';
+                const btnClear = document.getElementById('btnClearSearch');
+                if (btnClear) btnClear.classList.add('hidden');
+            }
             renderFoodDatabaseExplorer();
         }
 
@@ -690,9 +699,15 @@ const APP_VERSION = '5.3.6';
             state.searchQuery = (q || '').trim().toLowerCase();
             const btnClear = document.getElementById('btnClearSearch');
             if (btnClear) btnClear.classList.toggle('hidden', !state.searchQuery);
-            // If user is searching and currently in a specific category (except favorites), auto-switch to 'all' so they search the whole database
-            if (state.searchQuery && state.selectedCategory !== 'all' && state.selectedCategory !== 'favorites') {
+            // Universal Search: When user starts searching, automatically expand view across ALL categories
+            if (state.searchQuery) {
+                if (!state._prevCategoryBeforeSearch) {
+                    state._prevCategoryBeforeSearch = state.selectedCategory || 'all';
+                }
                 state.selectedCategory = 'all';
+            } else if (state._prevCategoryBeforeSearch) {
+                state.selectedCategory = state._prevCategoryBeforeSearch;
+                state._prevCategoryBeforeSearch = null;
             }
             renderFoodDatabaseExplorer();
         }
@@ -703,6 +718,10 @@ const APP_VERSION = '5.3.6';
             if (input) input.value = '';
             const btnClear = document.getElementById('btnClearSearch');
             if (btnClear) btnClear.classList.add('hidden');
+            if (state._prevCategoryBeforeSearch) {
+                state.selectedCategory = state._prevCategoryBeforeSearch;
+                state._prevCategoryBeforeSearch = null;
+            }
             renderFoodDatabaseExplorer();
         }
 
@@ -852,14 +871,23 @@ const APP_VERSION = '5.3.6';
             }
 
             let items = [];
-            if (state.selectedCategory === 'favorites') {
+            if (state.searchQuery) {
+                // UNIVERSAL SEARCH: Always search across ALL categories + custom presets simultaneously!
+                const seen = new Set();
+                categories.forEach(cat => {
+                    cat.foods.forEach(f => {
+                        if (!seen.has(f.name) && matchesQuery(f.name, cat.name)) {
+                            seen.add(f.name);
+                            items.push({ ...f, catName: cat.name });
+                        }
+                    });
+                });
+            } else if (state.selectedCategory === 'favorites') {
                 const favSet = new Set(state.favorites || []);
                 categories.forEach(cat => {
                     cat.foods.forEach(f => {
                         if (favSet.has(f.name)) {
-                            if (matchesQuery(f.name, cat.name)) {
-                                items.push({ ...f, catName: cat.name });
-                            }
+                            items.push({ ...f, catName: cat.name });
                         }
                     });
                 });
@@ -867,28 +895,18 @@ const APP_VERSION = '5.3.6';
                 categories.forEach(cat => {
                     if (state.selectedCategory === 'all' || state.selectedCategory === cat.id) {
                         cat.foods.forEach(f => {
-                            if (matchesQuery(f.name, cat.name)) {
-                                items.push({ ...f, catName: cat.name });
-                            }
+                            items.push({ ...f, catName: cat.name });
                         });
                     }
                 });
-                // Smart fallback: if searching and 0 results found in current category, search across all categories automatically!
-                if (items.length === 0 && state.searchQuery && state.selectedCategory !== 'all') {
-                    categories.forEach(cat => {
-                        cat.foods.forEach(f => {
-                            if (matchesQuery(f.name, cat.name)) {
-                                items.push({ ...f, catName: cat.name });
-                            }
-                        });
-                    });
-                }
             }
 
             if (items.length === 0) {
-                const emptyMsg = state.selectedCategory === 'favorites'
-                    ? 'ยังไม่มีเมนูโปรด กดไอคอน ⭐ ที่มุมของเมนูอาหารเพื่อบันทึกเป็นเมนูโปรดได้เลยครับ'
-                    : 'ไม่พบเมนูที่ค้นหา สามารถเปิดฟอร์มกรอกเพิ่มเองด้านล่างได้เลยครับ';
+                const emptyMsg = state.searchQuery
+                    ? `🔍 ไม่พบเมนู "${state.searchQuery}" ในคลังอาหารทั้งหมด (ลองพิมพ์คำค้นสั้นลง หรือเปิดฟอร์มกรอกเพิ่มเองด้านล่างได้ครับ)`
+                    : (state.selectedCategory === 'favorites'
+                        ? 'ยังไม่มีเมนูโปรด กดไอคอน ⭐ ที่มุมของเมนูอาหารเพื่อบันทึกเป็นเมนูโปรดได้เลยครับ'
+                        : 'ไม่พบเมนูในหมวดนี้ สามารถเปิดฟอร์มกรอกเพิ่มเองด้านล่างได้เลยครับ');
                 listContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-sm text-slate-400">${emptyMsg}</div>`;
                 return;
             }
@@ -925,6 +943,16 @@ const APP_VERSION = '5.3.6';
                     </button>`
                     : '';
 
+                // Quick Meal Picker Button (+มื้อ)
+                const mealPickerBtn = `
+                    <button type="button" onclick="openFoodMealPicker('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${cal}, event)"
+                        class="p-1.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-700/80 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 text-slate-600 dark:text-slate-300 transition text-xs font-bold flex items-center gap-1 border border-slate-200/80 dark:border-slate-600 shadow-xs active:scale-95 shrink-0"
+                        title="เลือกว่าจะหยอดเมนูนี้ลงมื้อไหน (เช้า/เที่ยง/เย็น/ของว่าง)">
+                        <span>🍱</span>
+                        <span class="text-[11px] font-semibold">+มื้อ</span>
+                    </button>
+                `;
+
                 return `
                     <div onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${cal})"
                         class="cursor-pointer text-left p-3 rounded-2xl transition flex items-center justify-between gap-2.5 group ${cardClass}">
@@ -942,10 +970,11 @@ const APP_VERSION = '5.3.6';
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 shrink-0">
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <span class="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1.5 rounded-xl">
                                 ${cal} kcal
                             </span>
+                            ${mealPickerBtn}
                             ${deleteBtn}
                         </div>
                     </div>
@@ -2137,6 +2166,80 @@ const APP_VERSION = '5.3.6';
             const mealName = MEAL_CONFIG[meal]?.name || 'มื้ออาหาร';
             const portionStr = portion !== 1 ? ` (x${portion})` : '';
             showToast(`✅ เพิ่ม "${name}"${portionStr} ลงใน ${mealName} (${finalCal} kcal) แล้ว`);
+        }
+
+        // ==========================================
+        // Quick Food Meal Picker Modal (v5.3.7)
+        // ==========================================
+        window._pendingFoodPickerItem = null;
+        window._pendingFoodPickerPortion = 1;
+
+        function openFoodMealPicker(name, p, c, f, explicitCal, event) {
+            if (event) event.stopPropagation();
+            window._pendingFoodPickerItem = { name, p, c, f, explicitCal };
+            window._pendingFoodPickerPortion = Number(state.selectedPortion) || 1;
+
+            const titleEl = document.getElementById('foodPickerTitle');
+            const subEl = document.getElementById('foodPickerSubtitle');
+            if (titleEl) titleEl.textContent = name;
+            if (subEl) subEl.textContent = `${explicitCal} kcal | P:${p}g C:${c}g F:${f}g`;
+
+            setFoodPickerPortion(window._pendingFoodPickerPortion);
+
+            // Highlight current active meal with a small badge
+            ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+                const badge = document.getElementById(`foodPickerBadge_${m}`);
+                if (badge) {
+                    badge.classList.toggle('hidden', state.activeMeal !== m);
+                }
+            });
+
+            const modal = document.getElementById('foodMealPickerModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                requestAnimationFrame(() => modal.classList.add('modal-open'));
+            }
+        }
+
+        function setFoodPickerPortion(portion) {
+            window._pendingFoodPickerPortion = portion;
+            const label = document.getElementById('foodPickerPortionLabel');
+            if (label) {
+                label.textContent = portion === 1 ? '1x (ปกติ)' : `${portion}x`;
+            }
+            const btns = document.querySelectorAll('.food-picker-portion-btn');
+            btns.forEach(b => {
+                const p = parseFloat(b.getAttribute('data-portion'));
+                if (p === portion) {
+                    b.className = 'food-picker-portion-btn py-1.5 rounded-xl border border-emerald-500 bg-emerald-500 text-white text-xs font-bold shadow-xs';
+                } else {
+                    b.className = 'food-picker-portion-btn py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-xs font-semibold hover:border-emerald-500';
+                }
+            });
+        }
+
+        function submitFoodMealPicker(targetMeal) {
+            if (!window._pendingFoodPickerItem) return;
+            const { name, p, c, f, explicitCal } = window._pendingFoodPickerItem;
+            const portion = window._pendingFoodPickerPortion || 1;
+            addFoodItem(name, p, c, f, explicitCal, targetMeal, portion);
+            closeFoodMealPickerModal();
+        }
+
+        function closeFoodMealPickerModal() {
+            const modal = document.getElementById('foodMealPickerModal');
+            if (!modal) return;
+            modal.classList.remove('modal-open');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                window._pendingFoodPickerItem = null;
+            }, 250);
+        }
+
+        function closeFoodMealPickerOnBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                closeFoodMealPickerModal();
+            }
         }
 
         function updateMealItemPortion(id, delta) {
@@ -3452,3 +3555,8 @@ window.closeQuickAddModal = closeQuickAddModal;
 window.closeQuickAddOnBackdrop = closeQuickAddOnBackdrop;
 window.submitQuickAddMeal = submitQuickAddMeal;
 window.copyYesterdayActiveMeal = copyYesterdayActiveMeal;
+window.openFoodMealPicker = openFoodMealPicker;
+window.closeFoodMealPickerModal = closeFoodMealPickerModal;
+window.closeFoodMealPickerOnBackdrop = closeFoodMealPickerOnBackdrop;
+window.setFoodPickerPortion = setFoodPickerPortion;
+window.submitFoodMealPicker = submitFoodMealPicker;

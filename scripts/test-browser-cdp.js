@@ -289,6 +289,53 @@ server.listen(PORT, async () => {
         console.log('novafit_profile_prompted is recorded:', !!profilePrompted);
         if (!profilePrompted) throw new Error('novafit_profile_prompted was not set');
 
+        // Test 13: Universal Food Search across all categories
+        console.log('--- Test 13: Universal Food Search Across All Categories ---');
+        // First select a specific category
+        await evalJs('selectCategory("cat_dessert")');
+        let selectedCat = await evalJs('state.selectedCategory');
+        console.log('Selected category set to cat_dessert:', selectedCat);
+
+        // Search for "ไข่" (which has items in protein/dishes/street categories, not just dessert)
+        await evalJs('onSearchFood("ไข่")');
+        const searchResultsCount = await evalJs('document.querySelectorAll("#quickFoodList > div").length');
+        const activeSearchCat = await evalJs('state.selectedCategory');
+        console.log('Search results count for "ไข่":', searchResultsCount);
+        console.log('Category auto-expanded to all:', activeSearchCat === 'all');
+        if (searchResultsCount === 0 || activeSearchCat !== 'all') {
+            throw new Error(`Universal search failed: count=${searchResultsCount}, cat=${activeSearchCat}`);
+        }
+
+        // Clear search
+        await evalJs('clearFoodSearch()');
+        const restoredCat = await evalJs('state.selectedCategory');
+        console.log('Restored category after search clear:', restoredCat);
+        if (restoredCat !== 'cat_dessert') {
+            throw new Error('Category was not restored after search clear');
+        }
+
+        // Test 14: Quick Meal Picker Modal & Direct Meal Selection
+        console.log('--- Test 14: Quick Food Meal Picker Modal ---');
+        await evalJs('openFoodMealPicker("ไข่ต้ม", 7, 0.5, 5, 75)');
+        await new Promise(r => setTimeout(r, 200));
+        const pickerModalVisible = await evalJs('!document.getElementById("foodMealPickerModal").classList.contains("hidden")');
+        const pickerTitle = await evalJs('document.getElementById("foodPickerTitle").textContent');
+        console.log('Quick meal picker modal visible:', pickerModalVisible);
+        console.log('Quick meal picker title:', pickerTitle);
+        if (!pickerModalVisible || pickerTitle !== 'ไข่ต้ม') {
+            throw new Error('Quick meal picker modal failed to open correctly');
+        }
+
+        // Add to dinner via picker
+        await evalJs('submitFoodMealPicker("dinner")');
+        await new Promise(r => setTimeout(r, 200));
+        const lastLog = await evalJs('(() => { const logs = state.logsByDate[state.selectedDate] || []; return logs[logs.length - 1]; })()');
+        console.log('Added log meal via picker:', lastLog ? lastLog.meal : null);
+        console.log('Added log name via picker:', lastLog ? lastLog.name : null);
+        if (!lastLog || lastLog.name !== 'ไข่ต้ม' || lastLog.meal !== 'dinner') {
+            throw new Error('Quick meal picker failed to add item to selected meal (dinner)');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');
