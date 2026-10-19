@@ -363,7 +363,7 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.3') || !toolsBadgeText.includes('v5.6.3')) {
+        if (!headerBadgeText.includes('v5.6.4') || !toolsBadgeText.includes('v5.6.4')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 

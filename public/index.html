@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.6.3)
+                            <span>🚀</span> ประวัติอัปเดต (v5.6.4)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -670,15 +670,14 @@
 
                 <!-- Order 2: FOOD SEARCH & SELECTOR (PERMANENTLY EXPANDED FOR INSTANT ACCESS & ZERO FREEZE) -->
                 <section id="card_food_search" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div class="p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
-                            🍽️ เลือกและเพิ่มเมนูอาหาร (<span id="totalFoodCountBadge">280</span> เมนู)
+                <div class="p-3.5 sm:p-4 bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+                            <span>🍽️</span>
+                            <span>เลือกและเพิ่มเมนูอาหาร</span>
                         </h2>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 flex items-center gap-1">
-                            <span>✨</span> พร้อมใช้งาน
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 shrink-0">
+                            <span id="totalFoodCountBadge">280</span> เมนู
                         </span>
                     </div>
                 </div>
@@ -1131,19 +1130,32 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.3!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.4!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.6.3 -->
+                <!-- Latest Release: v5.6.4 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.6.4 (ปรับปรุงแถบหัวข้อเมนูอาหาร พอดีจอมือถือ)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>📱 ปรับปรุงแถบหัวข้อเมนูอาหาร:</b> แสดงผลแถวเดียวสวยงามพอดีจอ ไม่ล้น ไม่ตกบรรทัดบนมือถือทุกรุ่น</li>
+                        <li><b>👆 สัมผัสและเลื่อนหน้าจอได้อย่างลื่นไหล:</b> ปลดล็อกการสัมผัสและการเลื่อนหน้าจอผ่านหัวข้อเมนูอาหาร ไม่มีอาการกระตุกหรือจอล็อก</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.6.3 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.6.3 (ปลดล็อกเมนูอาหารพร้อมใช้งาน 100%)</span>
                         <span>19 ต.ค. 2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
-                        <li><b>🍽️ ปลดล็อกเมนูอาหารพร้อมใช้งานตลอดเวลา:</b> เอาตัวพับซ่อนออกเพื่อความเสถียรสูงสุด แก้ไขอาการหน้าจอมือถือค้าง 100% เปิดแอปมาเลือกมื้อและค้นหาอาหารได้ทันที</li>
-                        <li><b>⚡ ตอบสนองฉับไว ลื่นไหล ไร้กังวล:</b> ใช้งานร่วมกับตัวจับเวลา IF และการบันทึกอาหารต่อเนื่องได้อย่างลื่นไหล ไม่ต้องกังวลเรื่องการแตะโดนแถบพับซ่อน</li>
+                        <li><b>🍽️ ปลดล็อกเมนูอาหารพร้อมใช้งานตลอดเวลา:</b> เอาตัวพับซ่อนออกเพื่อความเสถียรสูงสุด เปิดแอปมาเลือกมื้อและค้นหาอาหารได้ทันที</li>
+                        <li><b>⚡ ตอบสนองฉับไว ลื่นไหล ไร้กังวล:</b> ใช้งานร่วมกับตัวจับเวลา IF และการบันทึกอาหารต่อเนื่องได้อย่างลื่นไหล</li>
                     </ul>
                 </div>
 
@@ -2131,16 +2143,16 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.6.3"></script>
+    <script src="food-db.js?v=5.6.4"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (NEW v5.6.0) -->
-    <script src="health-tips.js?v=5.6.3"></script>
+    <script src="health-tips.js?v=5.6.4"></script>
 
-    <!-- Modularized Core Application Logic (v5.6.3 - High Performance) -->
-    <script src="app.js?v=5.6.3"></script>
+    <!-- Modularized Core Application Logic (v5.6.4 - High Performance) -->
+    <script src="app.js?v=5.6.4"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.6.3"></script>
+    <script type="module" src="firebase-sync.js?v=5.6.4"></script>
 
 </body>
 
