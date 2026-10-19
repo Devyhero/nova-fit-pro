@@ -96,40 +96,18 @@
             }
         }
 
-        /* Apple Accordion Fluid Collapsing & Expanding (Zero WebKit Repaint Bug) */
+        /* Ultra-fast Native Mobile Accordion (Zero Compositor Lag on iOS) */
         .accordion-section {
             display: block;
-            opacity: 1;
             max-width: 100%;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
         }
         .accordion-section.is-collapsed,
         .accordion-section.hidden {
             display: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            pointer-events: none !important;
-        }
-        .accordion-section:not(.is-collapsed):not(.hidden) {
-            animation: appleAccordionIn 0.22s var(--ios-spring-snappy);
-        }
-        @keyframes appleAccordionIn {
-            from {
-                opacity: 0;
-                transform: translateY(-4px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         .accordion-chevron {
             display: inline-block;
-            transition: transform 0.26s var(--ios-spring-snappy);
-            will-change: transform;
+            transition: transform 0.2s ease-out;
         }
         .accordion-chevron.icon-collapsed {
             transform: rotate(-90deg);
@@ -338,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.6.1)
+                            <span>🚀</span> ประวัติอัปเดต (v5.6.2)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -607,9 +585,9 @@
                 </div>
 
                 <!-- Intermittent Fasting (IF) Timer Panel (Collapsible Tab v5.5.0) -->
-                <div id="fastingTimerPanel" class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 shadow-xs transition-all duration-200">
+                <div id="fastingTimerPanel" class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 shadow-xs">
                     <!-- Collapsible Header -->
-                    <div id="fastingTimerHeader" role="button" tabindex="0" onclick="toggleFastingCollapse(event)" class="accordion-header flex items-center justify-between gap-2 select-none">
+                    <div id="fastingTimerHeader" role="button" tabindex="0" onclick="toggleFastingCollapse(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFastingCollapse(event);}" class="accordion-header flex items-center justify-between gap-2 select-none">
                         <div class="flex items-center gap-2 min-w-0 pointer-events-none">
                             <span class="text-base sm:text-lg shrink-0">⏱️</span>
                             <div class="min-w-0">
@@ -692,7 +670,7 @@
 
                 <!-- Order 2: FOOD SEARCH & SELECTOR (MOVED UP FOR FASTEST ACCESS!) -->
                 <section id="card_food_search" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_food_search')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_food_search')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_food_search');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
@@ -808,7 +786,7 @@
 
                 <!-- Order 3: TODAY'S LOGGED MEALS -->
                 <section id="card_meals" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_meals')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_meals')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_meals');}"
                     class="accordion-header p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-800/80 select-none">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
@@ -834,7 +812,7 @@
 
                 <!-- Order 4: WATER INTAKE TRACKER -->
                 <section id="card_water" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_water')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_water')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_water');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
@@ -881,7 +859,7 @@
 
                 <!-- Order 5: DAILY SUPPLEMENTS -->
                 <section id="card_supplements" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_supplements')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_supplements')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_supplements');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
@@ -924,7 +902,7 @@
 
                 <!-- Order 6: WORKOUT & ACTIVITY BURN -->
                 <section id="card_workout" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden w-full max-w-full min-w-0">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_workout')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_workout')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_workout');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5">
@@ -1005,7 +983,7 @@
 
                 <!-- Order 7: WEEKLY ANALYTICS & WEIGHT TREND -->
                 <section id="card_analytics" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_analytics')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_analytics')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_analytics');}"
                     class="accordion-header p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2 select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5">
@@ -1056,7 +1034,7 @@
 
                 <!-- Order 8: SMART RECOMMENDATION ACCORDION -->
                 <section id="card_recommendations" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-                <div role="button" tabindex="0" onclick="toggleCardSection('section_recommendations')"
+                <div role="button" tabindex="0" onclick="toggleCardSection('section_recommendations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_recommendations');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5">
@@ -1152,12 +1130,25 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.1!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.2!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.6.1 -->
+                <!-- Latest Release: v5.6.2 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.6.2 (Mobile Accordion & Touch Stability)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>📱 แก้ไขอาการค้าง/กระตุกเวลากดซ่อนหรือขยายเมนูบน iPhone:</b> ปรับปรุงประสิทธิภาพการพับ/ขยายการ์ดให้ตอบสนองทันทีแบบ Zero-Lag ขจัดปัญหา GPU Layer Composite Stall บน Mobile Safari</li>
+                        <li><b>🛡️ ระบบ Viewport Scroll Clamping:</b> ป้องกันหน้าจอล็อกเมื่อพับการ์ดขนาดใหญ่ (เช่น เมนูอาหาร 280 รายการ) ขณะเลื่อนหน้าจอ สามารถแตะขยายหรือเลื่อนดูต่อได้อย่างราบรื่น 100%</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.6.1 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.6.1 (Fasting Collapse Stability & Smooth Navigation)</span>
                         <span>19 ต.ค. 2026</span>
@@ -2125,16 +2116,16 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.6.1"></script>
+    <script src="food-db.js?v=5.6.2"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (NEW v5.6.0) -->
-    <script src="health-tips.js?v=5.6.1"></script>
+    <script src="health-tips.js?v=5.6.2"></script>
 
-    <!-- Modularized Core Application Logic (v5.6.1 - High Performance) -->
-    <script src="app.js?v=5.6.1"></script>
+    <!-- Modularized Core Application Logic (v5.6.2 - High Performance) -->
+    <script src="app.js?v=5.6.2"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.6.1"></script>
+    <script type="module" src="firebase-sync.js?v=5.6.2"></script>
 
 </body>
 

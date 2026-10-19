@@ -365,12 +365,12 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.1') || !toolsBadgeText.includes('v5.6.1')) {
+        if (!headerBadgeText.includes('v5.6.2') || !toolsBadgeText.includes('v5.6.2')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 
-        // Test 17: IF Collapsible Tab Accordion
-        console.log('--- Test 17: IF Collapsible Tab Accordion ---');
+        // Test 17: IF Collapsible Tab Accordion & Mobile Scroll Clamping
+        console.log('--- Test 17: IF Collapsible Tab Accordion & Mobile Scroll Clamping ---');
         await evalJs('toggleFastingCollapse(true)');
         let isBodyHidden = await evalJs('document.getElementById("fastingPanelBody").classList.contains("hidden")');
         let chevronText = await evalJs('document.getElementById("fastingChevron").textContent');
@@ -391,7 +391,7 @@ server.listen(PORT, async () => {
         }
 
         // Test Real Header Click Collapse & Expand on IF panel
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 200));
         await evalJs('document.getElementById("fastingTimerHeader").click()');
         let clickCollapsed = await evalJs('document.getElementById("fastingPanelBody").classList.contains("hidden")');
         console.log('Fasting header click collapsed:', clickCollapsed);
@@ -399,7 +399,7 @@ server.listen(PORT, async () => {
             throw new Error('Clicking fastingTimerHeader failed to collapse');
         }
 
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 200));
         await evalJs('document.getElementById("fastingTimerHeader").click()');
         let clickExpanded = await evalJs('!document.getElementById("fastingPanelBody").classList.contains("hidden")');
         console.log('Fasting header click re-expanded:', clickExpanded);
@@ -407,20 +407,41 @@ server.listen(PORT, async () => {
             throw new Error('Clicking fastingTimerHeader failed to re-expand');
         }
 
-        // Test Food Menu Accordion Collapse & Expand while IF timer is ticking
+        // Test Food Menu Accordion Collapse & Expand with scroll simulation while IF timer is ticking
         const wasFoodHidden = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        await evalJs('document.querySelector("#card_food_search > div").click()');
-        let toggledFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        console.log('Food menu toggled while fasting from', wasFoodHidden, 'to', toggledFoodState);
-        if (toggledFoodState === wasFoodHidden) {
-            throw new Error('Clicking food search header failed to toggle');
+        // Ensure expanded first
+        if (wasFoodHidden) {
+            await evalJs('toggleCardSection("section_food_search")');
         }
 
-        await new Promise(r => setTimeout(r, 250));
+        // Simulate mobile viewport scrolled into food search
+        await evalJs('window.scrollTo(0, 500)');
+        const scrollBefore = await evalJs('window.scrollY');
+        console.log('Simulated mobile scroll position before collapse:', scrollBefore);
+
+        // Click food search header to collapse
+        await new Promise(r => setTimeout(r, 200));
+        await evalJs('document.querySelector("#card_food_search > div").click()');
+        let toggledFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
+        console.log('Food menu collapsed via click:', toggledFoodState);
+        if (!toggledFoodState) {
+            throw new Error('Clicking food search header failed to collapse');
+        }
+
+        // Verify scroll clamping on iPhone mobile viewport
+        const scrollAfter = await evalJs('window.scrollY');
+        const maxScrollY = await evalJs('Math.max(0, document.documentElement.scrollHeight - window.innerHeight)');
+        console.log('Scroll position after collapse (should be <= maxScrollY):', scrollAfter, 'maxScrollY:', maxScrollY);
+        if (scrollAfter > maxScrollY) {
+            throw new Error(`Scroll position ${scrollAfter} exceeds maxScrollY ${maxScrollY} (deadlock risk)`);
+        }
+
+        // Click food search header again to re-expand immediately (Zero Lag)
+        await new Promise(r => setTimeout(r, 200));
         await evalJs('document.querySelector("#card_food_search > div").click()');
         let restoredFoodState = await evalJs('document.getElementById("body_section_food_search").classList.contains("hidden")');
-        console.log('Food menu restored back to', restoredFoodState);
-        if (restoredFoodState !== wasFoodHidden) {
+        console.log('Food menu restored back to visible (should be false):', restoredFoodState);
+        if (restoredFoodState !== false) {
             throw new Error('Clicking food search header failed to restore');
         }
 

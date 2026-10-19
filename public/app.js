@@ -1,4 +1,4 @@
-const APP_VERSION = '5.6.1';
+const APP_VERSION = '5.6.2';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -271,24 +271,48 @@ const APP_VERSION = '5.6.1';
         let _lastCardToggleTimes = {};
         function toggleCardSection(sectionId) {
             const now = Date.now();
-            if (_lastCardToggleTimes[sectionId] && now - _lastCardToggleTimes[sectionId] < 180) return;
+            if (_lastCardToggleTimes[sectionId] && now - _lastCardToggleTimes[sectionId] < 150) return;
             _lastCardToggleTimes[sectionId] = now;
 
-            if (!state.collapsedSections) state.collapsedSections = {};
-            const isNowCollapsed = !state.collapsedSections[sectionId];
-            state.collapsedSections[sectionId] = isNowCollapsed;
-
-            // Fluid Apple-grade Accordion Toggle with zero layout glitch
             const body = document.getElementById('body_' + sectionId);
             const icon = document.getElementById('icon_' + sectionId);
-            if (body) {
-                body.classList.add('accordion-section');
-                body.classList.toggle('hidden', isNowCollapsed);
-                body.classList.toggle('is-collapsed', isNowCollapsed);
+            if (!body) return;
+
+            // Determine visibility directly from DOM to prevent state/DOM desync
+            const isCurrentlyHidden = body.classList.contains('hidden') || body.classList.contains('is-collapsed');
+            const willBeCollapsed = !isCurrentlyHidden;
+
+            if (!state.collapsedSections) state.collapsedSections = {};
+            state.collapsedSections[sectionId] = willBeCollapsed;
+
+            // Target card container for viewport position preservation
+            const cardId = sectionId.startsWith('section_') ? 'card_' + sectionId.replace('section_', '') : sectionId;
+            const card = document.getElementById(cardId) || body.parentElement;
+
+            let cardRectBefore = null;
+            if (card) {
+                cardRectBefore = card.getBoundingClientRect();
             }
+
+            body.classList.add('accordion-section');
+            body.classList.toggle('hidden', willBeCollapsed);
+            body.classList.toggle('is-collapsed', willBeCollapsed);
+
             if (icon) {
                 icon.classList.add('accordion-chevron');
-                icon.classList.toggle('icon-collapsed', isNowCollapsed);
+                icon.classList.toggle('icon-collapsed', willBeCollapsed);
+            }
+
+            // Mobile iOS Safari Viewport & Overscroll Clamping Protection
+            // When collapsing large sections (e.g. food search), document height shrinks rapidly.
+            // Clamping scroll prevents WebKit touch deadlock & overscroll bounce freeze.
+            if (willBeCollapsed && card) {
+                const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+                if (cardRectBefore && cardRectBefore.top < 0) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else if (window.scrollY > maxScrollY) {
+                    window.scrollTo({ top: maxScrollY, behavior: 'instant' });
+                }
             }
 
             // Debounced non-blocking localStorage save
@@ -2851,7 +2875,7 @@ const APP_VERSION = '5.6.1';
         let _lastFastingToggleTime = 0;
         function toggleFastingCollapse(forceState) {
             const now = Date.now();
-            if (typeof forceState !== 'boolean' && now - _lastFastingToggleTime < 180) return;
+            if (typeof forceState !== 'boolean' && now - _lastFastingToggleTime < 150) return;
             _lastFastingToggleTime = now;
 
             const body = document.getElementById('fastingPanelBody');
@@ -2870,6 +2894,12 @@ const APP_VERSION = '5.6.1';
 
             state.collapsedSections['fasting'] = isCollapsed;
 
+            const panel = document.getElementById('fastingTimerPanel');
+            let panelRectBefore = null;
+            if (panel) {
+                panelRectBefore = panel.getBoundingClientRect();
+            }
+
             if (isCollapsed) {
                 body.classList.add('hidden');
                 if (chevron) chevron.textContent = '▼';
@@ -2880,6 +2910,16 @@ const APP_VERSION = '5.6.1';
                 if (chevron) chevron.textContent = '▲';
                 if (label) label.textContent = 'ซ่อน';
                 try { localStorage.setItem('novafit_fasting_collapsed', 'false'); } catch (e) {}
+            }
+
+            // Mobile iOS Safari Viewport & Overscroll Clamping Protection
+            if (isCollapsed && panel) {
+                const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+                if (panelRectBefore && panelRectBefore.top < 0) {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else if (window.scrollY > maxScrollY) {
+                    window.scrollTo({ top: maxScrollY, behavior: 'instant' });
+                }
             }
 
             // Immediately update status badge text if fasting is active
