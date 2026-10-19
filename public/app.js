@@ -117,7 +117,7 @@ const APP_VERSION = '5.5.0';
                             history: []
                         },
                         profile: { ...state.profile, ...(parsed.profile || {}) },
-                        profileConfigured: parsed.profileConfigured !== undefined ? !!parsed.profileConfigured : true,
+                        profileConfigured: parsed.profileConfigured === true,
                         logsByDate: parsed.logsByDate || {},
                         waterByDate: parsed.waterByDate || {},
                         customPresets: parsed.customPresets || [],
@@ -125,8 +125,8 @@ const APP_VERSION = '5.5.0';
                         selectedDate: todayStr
                     };
 
-                    // For existing users with saved state, ensure they are not interrupted with first-time onboarding
-                    if (!localStorage.getItem('novafit_profile_prompted')) {
+                    // For existing users who already configured their profile, avoid re-prompting
+                    if (parsed.profileConfigured === true) {
                         localStorage.setItem('novafit_profile_prompted', 'true');
                     }
 
@@ -3695,7 +3695,11 @@ function closeProfileSettingsModal() {
     localStorage.setItem('novafit_profile_prompted', 'true');
     if (window.currentUser) {
         localStorage.setItem('novafit_profile_prompted_' + window.currentUser.uid, 'true');
-        if (window.triggerCloudSync) window.triggerCloudSync();
+        if (window.saveProfileConfiguredToCloud) {
+            window.saveProfileConfiguredToCloud();
+        } else if (window.triggerCloudSync) {
+            window.triggerCloudSync(true);
+        }
     }
     saveState();
 }
