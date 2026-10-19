@@ -1,11 +1,15 @@
-// NovaFit Pro Service Worker (v5.4.0)
-const CACHE_NAME = 'novafit-pro-v5.4.0-cache';
+// NovaFit Pro Service Worker (v5.5.0)
+const CACHE_NAME = 'novafit-pro-v5.5.0-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
     './app.js',
     './food-db.js',
+    './health-tips.js',
+    './health-tips.json',
     './firebase-sync.js',
+    './admin.html',
+    './admin.js',
     './manifest.json',
     './icon.svg',
     './version.json'

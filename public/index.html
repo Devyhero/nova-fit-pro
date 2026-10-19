@@ -275,6 +275,17 @@
                     </div>
                 </div>
 
+                <!-- User Notifications Bell Button (NEW v5.5.0) -->
+                <button type="button" id="btnUserNotifications" onclick="openUserNotificationsModal()"
+                    class="relative p-2 rounded-xl bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 font-bold transition flex items-center justify-center shadow-xs active:scale-95"
+                    title="ข้อความแจ้งเตือนจากผู้ดูแลระบบ">
+                    <span class="text-sm">🔔</span>
+                    <span id="unreadNotifBadge"
+                        class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-black rounded-full px-1 flex items-center justify-center animate-pulse border-2 border-white dark:border-slate-800">
+                        0
+                    </span>
+                </button>
+
                 <!-- Tools & Profile Settings Unified Menu -->
                 <div class="relative">
                     <button type="button" onclick="toggleToolsMenu()" id="btnToolsMenu"
@@ -320,7 +331,16 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.4.0)
+                            <span>🚀</span> ประวัติอัปเดต (v5.5.0)
+                        </button>
+                        <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
+                            <span class="flex items-center gap-2"><span>📨</span> ข้อความจากแอดมิน</span>
+                            <span id="toolsUnreadNotifBadge" class="hidden text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-500 text-white">0</span>
+                        </button>
+                        <button onclick="openHealthTipsModal(); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
+                            <span>💡</span> คลังเกร็ดความรู้สุขภาพ
                         </button>
                         <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
                             class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
@@ -554,73 +574,111 @@
                 <!-- Dynamic Nutrient & Water Deficit Alert Banner -->
                 <div id="deficitAlertBanner" class="p-3.5 rounded-xl border text-xs sm:text-sm space-y-1.5"></div>
 
-                <!-- Intermittent Fasting (IF) Timer Panel (NEW v5.4.0) -->
-                <div id="fastingTimerPanel" class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 space-y-3 shadow-xs">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
+                <!-- Daily Health & Nutrition Tip Widget (NEW v5.5.0) -->
+                <div id="dailyHealthTipWidget" class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-slate-50/60 dark:to-slate-700/30 border border-amber-500/25 space-y-2 shadow-xs transition">
+                    <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
-                            <span class="text-base sm:text-lg">⏱️</span>
+                            <span id="healthTipIcon" class="text-base sm:text-lg select-none">💡</span>
                             <div>
-                                <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block leading-tight">ตัวจับเวลาอดอาหาร (IF)</span>
-                                <span id="fastingTimeRangeText" class="text-[10px] text-slate-400 block"></span>
+                                <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block leading-tight">เกร็ดความรู้สุขภาพประจำวัน</span>
+                                <span id="healthTipCategory" class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold block">โภชนาการ & สุขภาพ</span>
                             </div>
                         </div>
-                        <span id="fastingStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                            🍽️ ช่วงทานอาหาร
-                        </span>
-                    </div>
-
-                    <!-- Fasting Plan Switcher -->
-                    <div class="flex items-center justify-between gap-1.5 pt-0.5">
-                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">เลือกแผน:</span>
-                        <div class="grid grid-cols-4 gap-1 w-full max-w-xs">
-                            <button type="button" id="btnFastingPlan_16_8" onclick="setFastingPlan('16:8')"
-                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow-xs">
-                                16:8
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="shuffleHealthTip()" class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-xs transition active:scale-95 flex items-center gap-1" title="สุ่มเกร็ดความรู้เรื่องอื่นๆ">
+                                <span>🎲</span> <span class="hidden sm:inline">สุ่มเรื่องใหม่</span>
                             </button>
-                            <button type="button" id="btnFastingPlan_18_6" onclick="setFastingPlan('18:6')"
-                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
-                                18:6
-                            </button>
-                            <button type="button" id="btnFastingPlan_14_10" onclick="setFastingPlan('14:10')"
-                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
-                                14:10
-                            </button>
-                            <button type="button" id="btnFastingPlan_20_4" onclick="setFastingPlan('20:4')"
-                                class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
-                                20:4
+                            <button type="button" onclick="openHealthTipsModal()" class="px-2 py-1 rounded-xl bg-white/80 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-600 transition" title="ดูคลังเกร็ดความรู้ทั้งหมด">
+                                <span>📖</span>
                             </button>
                         </div>
                     </div>
+                    <div id="healthTipBody" class="p-2.5 rounded-xl bg-white/70 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                        <b id="healthTipTitle" class="text-amber-700 dark:text-amber-400 block mb-1">🍅 มะเขือเทศกับสารไลโคปีน (Lycopene)</b>
+                        <span id="healthTipDesc">มะเขือเทศมีสารต้านอนุมูลอิสระ 'ไลโคปีน' สูงมาก ช่วยชะลอวัย ปกป้องเซลล์ และลดความเสี่ยงมะเร็งต่อมลูกหมาก...</span>
+                    </div>
+                </div>
 
-                    <!-- Fasting Clock & Progress -->
-                    <div class="p-3 rounded-xl bg-white/70 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3 flex-wrap">
-                        <div>
-                            <span class="text-[10px] text-slate-400 block font-medium">เวลาที่อดมาแล้ว:</span>
-                            <div id="fastingTimerClock" class="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight font-mono leading-none my-1">
-                                00:00:00
+                <!-- Intermittent Fasting (IF) Timer Panel (Collapsible Tab v5.5.0) -->
+                <div id="fastingTimerPanel" class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-slate-50/60 dark:to-slate-700/30 border border-purple-500/25 shadow-xs transition-all duration-200">
+                    <!-- Collapsible Header -->
+                    <div id="fastingTimerHeader" onclick="toggleFastingCollapse()" class="flex items-center justify-between cursor-pointer select-none gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-base sm:text-lg shrink-0">⏱️</span>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-tight">ตัวจับเวลาอดอาหาร (IF)</span>
+                                    <span id="fastingPlanBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400">16:8</span>
+                                </div>
+                                <span id="fastingTimeRangeText" class="text-[10px] text-slate-400 block truncate">แตะที่นี่เพื่อซ่อน/ขยาย</span>
                             </div>
-                            <span id="fastingRemainingText" class="text-xs text-slate-500 dark:text-slate-400 block">
-                                แตะ "เริ่มอดอาหาร" เพื่อเริ่มนับเวลาเป้าหมาย 16 ชม.
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span id="fastingStatusBadge" class="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                🍽️ ช่วงทานอาหาร
+                            </span>
+                            <span id="fastingCollapseBtn" class="text-xs px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold transition flex items-center gap-1">
+                                <span id="fastingCollapseLabel">ซ่อน</span>
+                                <span id="fastingChevron" class="text-[10px] transition-transform duration-200">▲</span>
                             </span>
                         </div>
-
-                        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
-                            <button type="button" id="btnEditFastingStart" onclick="promptEditFastingStartTime()"
-                                class="hidden px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-600 transition"
-                                title="ปรับเวลาเริ่มต้น (เช่น ลืมกดเริ่มตั้งแต่เมื่อคืน)">
-                                ✏️ ปรับเวลา
-                            </button>
-                            <button type="button" id="btnToggleFasting" onclick="toggleFastingTimer()"
-                                class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5">
-                                <span>⏱️ เริ่มอดอาหาร (Start Fast)</span>
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- Progress Bar -->
-                    <div class="w-full h-2 bg-slate-200 dark:bg-slate-600/70 rounded-full overflow-hidden">
-                        <div id="fastingProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
-                            style="width: 0%"></div>
+                    <!-- Collapsible Body -->
+                    <div id="fastingPanelBody" class="space-y-3 pt-3">
+                        <!-- Fasting Plan Switcher -->
+                        <div class="flex items-center justify-between gap-1.5 pt-0.5">
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">เลือกแผน:</span>
+                            <div class="grid grid-cols-4 gap-1 w-full max-w-xs">
+                                <button type="button" id="btnFastingPlan_16_8" onclick="setFastingPlan('16:8')"
+                                    class="px-2 py-1 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow-xs">
+                                    16:8
+                                </button>
+                                <button type="button" id="btnFastingPlan_18_6" onclick="setFastingPlan('18:6')"
+                                    class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                    18:6
+                                </button>
+                                <button type="button" id="btnFastingPlan_14_10" onclick="setFastingPlan('14:10')"
+                                    class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                    14:10
+                                </button>
+                                <button type="button" id="btnFastingPlan_20_4" onclick="setFastingPlan('20:4')"
+                                    class="px-2 py-1 rounded-xl text-xs font-bold transition bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:border-purple-500/50">
+                                    20:4
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Fasting Clock & Progress -->
+                        <div class="p-3 rounded-xl bg-white/70 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-medium">เวลาที่อดมาแล้ว:</span>
+                                <div id="fastingTimerClock" class="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight font-mono leading-none my-1">
+                                    00:00:00
+                                </div>
+                                <span id="fastingRemainingText" class="text-xs text-slate-500 dark:text-slate-400 block">
+                                    แตะ "เริ่มอดอาหาร" เพื่อเริ่มนับเวลาเป้าหมาย 16 ชม.
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+                                <button type="button" id="btnEditFastingStart" onclick="promptEditFastingStartTime()"
+                                    class="hidden px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-600 transition"
+                                    title="ปรับเวลาเริ่มต้น (เช่น ลืมกดเริ่มตั้งแต่เมื่อคืน)">
+                                    ✏️ ปรับเวลา
+                                </button>
+                                <button type="button" id="btnToggleFasting" onclick="toggleFastingTimer()"
+                                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                                    <span>⏱️ เริ่มอดอาหาร (Start Fast)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full h-2 bg-slate-200 dark:bg-slate-600/70 rounded-full overflow-hidden">
+                            <div id="fastingProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1087,12 +1145,26 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.4.0!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.5.0!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.4.0 -->
+                <!-- Latest Release: v5.5.0 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.5.0 (IF Collapsible, Daily Health Tips & Admin Messaging)</span>
+                        <span>19 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>⏱️ เพิ่มการพับซ่อน/แสดง แท็บตัวจับเวลาอดอาหาร (IF):</b> สามารถกดพับเก็บแท็บ IF Timer ให้กะทัดรัด ประหยัดพื้นที่หน้าจอ พร้อมแสดงสถานะการอดอาหารแบบย่อบนแถบหัวข้อ</li>
+                        <li><b>💡 คลังเกร็ดความรู้สุขภาพและโภชนาการ (Daily Health Tips):</b> สาระความรู้สั้นๆ 60+ เรื่อง (เช่น ประโยชน์ของมะเขือเทศกับไลโคปีน, กล้วยหอมกับโพแทสเซียม, การดื่มน้ำก่อนอาหาร) สุ่มแจ้งเตือนรายวัน พร้อมปุ่มสุ่มอ่านเรื่องใหม่และรองรับการดึงข้อมูลออนไลน์</li>
+                        <li><b>📬 ส่งข้อความแจ้งเตือนจากแอดมินถึงผู้ใช้:</b> แอดมินสามารถพิมพ์ส่งข้อความแจ้งเตือนถึงผู้ใช้รายคนหรือบรอดแคสต์ถึงทุกคนจากหน้าแดชบอร์ด โดยมีหน้าต่างป๊อปอัปแจ้งเตือนและกล่องจดหมายในแอปแบบเรียลไทม์</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.4.0 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.4.0 (IF Fasting Timer & Admin Dashboard)</span>
                         <span>19 ต.ค. 2026</span>
@@ -1833,14 +1905,103 @@
         </div>
     </div>
 
-    <!-- Core Food Database -->
-    <script src="food-db.js?v=5.4.0"></script>
+    <!-- ADMIN MESSAGE POPUP MODAL (NEW v5.5.0) -->
+    <div id="adminMessagePopupModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 border-2 border-purple-500/40 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-pop">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-purple-500/25 shrink-0">
+                    📬
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">ข้อความใหม่จากผู้ดูแลระบบ</span>
+                    <h3 id="adminPopupTitle" class="font-bold text-base text-slate-800 dark:text-slate-100 leading-tight">ข้อความจากผู้ดูแลระบบ</h3>
+                    <div class="text-[11px] text-slate-400 mt-0.5">
+                        <span id="adminPopupSender">แอดมิน Benz Nova</span> • <span id="adminPopupTime">วันนี้</span>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Modularized Core Application Logic (v5.4.0 - High Performance) -->
-    <script src="app.js?v=5.4.0"></script>
+            <div class="p-4 rounded-2xl bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/20 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-medium">
+                <p id="adminPopupMessage"></p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button type="button" onclick="closeAdminMessagePopup()" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-300 font-semibold text-xs transition">
+                    ปิดไว้ก่อน
+                </button>
+                <button type="button" id="btnAckAdminMessage" class="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
+                    <span>✓ รับทราบแล้ว</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER NOTIFICATIONS INBOX MODAL (NEW v5.5.0) -->
+    <div id="userNotificationsModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col animate-pop">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg">
+                        🔔
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base leading-tight">กล่องข้อความจากผู้ดูแลระบบ</h3>
+                        <p class="text-xs text-slate-400">ข้อความและการแจ้งเตือนเฉพาะสำหรับคุณ</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="markAllNotificationsAsRead()" class="text-xs text-purple-600 dark:text-purple-400 hover:underline font-semibold">
+                        อ่านทั้งหมด
+                    </button>
+                    <button type="button" onclick="closeUserNotificationsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+                </div>
+            </div>
+
+            <div id="userNotificationsListContainer" class="space-y-3 overflow-y-auto pr-1 flex-1 text-xs">
+                <!-- Notifications injected dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- HEALTH TIPS KNOWLEDGE BASE MODAL (NEW v5.5.0) -->
+    <div id="healthTipsModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col animate-pop">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg">
+                        💡
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base leading-tight">คลังเกร็ดความรู้สุขภาพ & โภชนาการ</h3>
+                        <p class="text-xs text-slate-400">สาระสุขภาพสั้นๆ กระชับ ปรับใช้ได้จริงในชีวิตประจำวัน</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeHealthTipsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+
+            <!-- Search input -->
+            <div class="relative shrink-0">
+                <input type="text" id="healthTipsSearchInput" oninput="renderHealthTipsModalList(this.value)" placeholder="🔍 ค้นหา เช่น มะเขือเทศ, โปรตีน, นอนหลับ, น้ำดื่ม..." class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-xs focus:outline-none focus:border-amber-500 shadow-xs font-medium">
+                <button type="button" onclick="document.getElementById('healthTipsSearchInput').value=''; renderHealthTipsModalList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+
+            <div id="healthTipsListContainer" class="space-y-3 overflow-y-auto pr-1 flex-1 text-xs">
+                <!-- Health tips cards injected dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Food Database -->
+    <script src="food-db.js?v=5.5.0"></script>
+
+    <!-- Daily Health & Nutrition Tips Engine (NEW v5.5.0) -->
+    <script src="health-tips.js?v=5.5.0"></script>
+
+    <!-- Modularized Core Application Logic (v5.5.0 - High Performance) -->
+    <script src="app.js?v=5.5.0"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.4.0"></script>
+    <script type="module" src="firebase-sync.js?v=5.5.0"></script>
 
 </body>
 

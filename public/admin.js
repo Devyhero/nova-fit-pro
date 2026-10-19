@@ -13,7 +13,8 @@ import {
 import {
     getFirestore,
     collection,
-    getDocs
+    getDocs,
+    addDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -271,9 +272,14 @@ function renderUsersTable(users) {
                     ${updatedStr}
                 </td>
                 <td class="py-3 px-4 text-right">
-                    <button type="button" onclick="inspectUser('${u.uid}')" class="px-3 py-1.5 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition shadow-xs text-xs">
-                        👁️ ส่องไดอารี่
-                    </button>
+                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                        <button type="button" onclick="openSendMessageModal('${u.uid}', '${(name || '').replace(/'/g, "\\'")}', '${(email || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 font-bold transition shadow-xs text-xs flex items-center gap-1">
+                            💬 ส่งข้อความ
+                        </button>
+                        <button type="button" onclick="inspectUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition shadow-xs text-xs">
+                            👁️ ส่องไดอารี่
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -405,7 +411,16 @@ window.inspectUser = function (uid) {
     const sumCal = Math.round(mealsToday.reduce((s, m) => s + (m.cal || 0), 0));
 
     const bodyEl = document.getElementById('inspectUserBody');
+    const safeName = (user.displayName || 'ผู้ใช้').replace(/'/g, "\\'");
+    const safeEmail = (user.email || '').replace(/'/g, "\\'");
+
     bodyEl.innerHTML = `
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="openSendMessageModal('${user.uid}', '${safeName}', '${safeEmail}')" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95">
+                <span>💬</span> <span>ส่งข้อความแจ้งเตือนถึงผู้ใช้นี้</span>
+            </button>
+        </div>
+
         <div class="grid grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/40">
             <div>
                 <span class="text-slate-400 block text-[11px]">น้ำหนัก</span>
@@ -484,3 +499,157 @@ function formatTimeAgo(date) {
     if (days < 7) return `${days} วันที่แล้ว`;
     return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 }
+
+// ==========================================
+// Admin Direct Messaging & Broadcast Engine (v5.5.0)
+// ==========================================
+
+let targetUserForMsg = null;
+let isBroadcastMode = false;
+
+window.openSendMessageModal = function (uid, name, email) {
+    targetUserForMsg = { uid, name, email };
+    isBroadcastMode = false;
+
+    const modal = document.getElementById('adminSendMessageModal');
+    const recipientText = document.getElementById('sendMsgRecipientText');
+    const titleInput = document.getElementById('adminMsgTitle');
+    const bodyInput = document.getElementById('adminMsgBody');
+    const statusBox = document.getElementById('adminSendStatus');
+    const btnSend = document.getElementById('btnConfirmSendMsg');
+
+    if (recipientText) {
+        recipientText.textContent = `ถึง: ${name} (${email || uid})`;
+    }
+    if (titleInput) {
+        titleInput.value = 'ข้อความจากผู้ดูแลระบบ NovaFit Pro';
+    }
+    if (bodyInput) {
+        bodyInput.value = '';
+    }
+    if (statusBox) {
+        statusBox.classList.add('hidden');
+    }
+    if (btnSend) {
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<span>🚀 ส่งข้อความทันที</span>';
+    }
+
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.openBroadcastMessageModal = function () {
+    targetUserForMsg = null;
+    isBroadcastMode = true;
+
+    const modal = document.getElementById('adminSendMessageModal');
+    const recipientText = document.getElementById('sendMsgRecipientText');
+    const titleInput = document.getElementById('adminMsgTitle');
+    const bodyInput = document.getElementById('adminMsgBody');
+    const statusBox = document.getElementById('adminSendStatus');
+    const btnSend = document.getElementById('btnConfirmSendMsg');
+
+    if (recipientText) {
+        recipientText.textContent = `📢 ส่งประกาศถึงผู้ใช้งานทุกคนในระบบ (${allUsersData.length} บัญชี)`;
+    }
+    if (titleInput) {
+        titleInput.value = '📢 ประกาศจากผู้ดูแลระบบ NovaFit Pro';
+    }
+    if (bodyInput) {
+        bodyInput.value = '';
+    }
+    if (statusBox) {
+        statusBox.classList.add('hidden');
+    }
+    if (btnSend) {
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<span>📢 ส่งประกาศถึงทุกคน</span>';
+    }
+
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeSendMessageModal = function () {
+    const modal = document.getElementById('adminSendMessageModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.fillQuickMessage = function (text) {
+    const bodyInput = document.getElementById('adminMsgBody');
+    if (bodyInput) {
+        bodyInput.value = text;
+        bodyInput.focus();
+    }
+};
+
+window.submitSendAdminMessage = async function () {
+    const title = (document.getElementById('adminMsgTitle')?.value || '').trim();
+    const body = (document.getElementById('adminMsgBody')?.value || '').trim();
+    const statusBox = document.getElementById('adminSendStatus');
+    const btnSend = document.getElementById('btnConfirmSendMsg');
+
+    if (!body) {
+        alert('กรุณากรอกข้อความก่อนกดส่งครับ');
+        return;
+    }
+
+    if (!currentUser) {
+        alert('กรุณาเข้าสู่ระบบก่อนดำเนินการ');
+        return;
+    }
+
+    if (btnSend) {
+        btnSend.disabled = true;
+        btnSend.innerHTML = '<span class="animate-spin mr-1">🔄</span> กำลังส่งข้อความ...';
+    }
+
+    try {
+        const notifPayload = {
+            title: title || 'ข้อความจากผู้ดูแลระบบ',
+            message: body,
+            senderName: currentUser.displayName || 'Admin Benz Nova',
+            senderEmail: currentUser.email || 'benznova01@gmail.com',
+            createdAt: new Date().toISOString(),
+            read: false,
+            type: isBroadcastMode ? 'broadcast' : 'admin_direct'
+        };
+
+        if (isBroadcastMode) {
+            let sentCount = 0;
+            for (const u of allUsersData) {
+                if (u.uid) {
+                    try {
+                        await addDoc(collection(db, 'users', u.uid, 'notifications'), notifPayload);
+                        sentCount++;
+                    } catch (e) {
+                        console.warn(`Failed to notify user ${u.uid}:`, e);
+                    }
+                }
+            }
+            if (statusBox) {
+                statusBox.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold block';
+                statusBox.textContent = `✅ ส่งข้อความประกาศถึงผู้ใช้สำเร็จ ${sentCount} คนเรียบร้อยแล้ว!`;
+            }
+        } else if (targetUserForMsg && targetUserForMsg.uid) {
+            await addDoc(collection(db, 'users', targetUserForMsg.uid, 'notifications'), notifPayload);
+            if (statusBox) {
+                statusBox.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold block';
+                statusBox.textContent = `✅ ส่งข้อความถึง ${targetUserForMsg.name} เรียบร้อยแล้ว! ผู้ใช้จะเห็นการแจ้งเตือนทันที`;
+            }
+        }
+
+        setTimeout(() => {
+            window.closeSendMessageModal();
+        }, 1500);
+    } catch (err) {
+        console.error('Failed to send admin message:', err);
+        if (statusBox) {
+            statusBox.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold block';
+            statusBox.textContent = '❌ เกิดข้อผิดพลาดในการส่งข้อความ: ' + err.message;
+        }
+        if (btnSend) {
+            btnSend.disabled = false;
+            btnSend.innerHTML = '<span>ลองใหม่อีกครั้ง</span>';
+        }
+    }
+};

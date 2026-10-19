@@ -1,4 +1,4 @@
-const APP_VERSION = '5.4.0';
+const APP_VERSION = '5.5.0';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -529,6 +529,8 @@ const APP_VERSION = '5.4.0';
             renderFoodDatabaseExplorer();
             renderSupplements();
             renderFastingSection();
+            if (window.renderDailyHealthTip) window.renderDailyHealthTip();
+            if (window.checkDailyTipNotification) window.checkDailyTipNotification();
             updateVersionBadges();
             renderAllSectionCollapses();
             syncResponsiveLayout();
@@ -2747,10 +2749,56 @@ const APP_VERSION = '5.4.0';
             showToast(`✏️ อัปเดตเวลาเริ่มอดอาหารเป็น ${targetDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} เรียบร้อย`);
         }
 
+        function toggleFastingCollapse(forceState) {
+            const body = document.getElementById('fastingPanelBody');
+            const chevron = document.getElementById('fastingChevron');
+            const label = document.getElementById('fastingCollapseLabel');
+            if (!body) return;
+
+            let isCollapsed;
+            if (typeof forceState === 'boolean') {
+                isCollapsed = forceState;
+            } else {
+                isCollapsed = !body.classList.contains('hidden');
+            }
+
+            if (isCollapsed) {
+                body.classList.add('hidden');
+                if (chevron) chevron.textContent = '▼';
+                if (label) label.textContent = 'แสดง';
+                localStorage.setItem('novafit_fasting_collapsed', 'true');
+            } else {
+                body.classList.remove('hidden');
+                if (chevron) chevron.textContent = '▲';
+                if (label) label.textContent = 'ซ่อน';
+                localStorage.setItem('novafit_fasting_collapsed', 'false');
+            }
+        }
+        window.toggleFastingCollapse = toggleFastingCollapse;
+
         function renderFastingSection() {
             const fasting = state.fasting || { isFasting: false, plan: '16:8', targetHours: 16 };
             const plan = fasting.plan || '16:8';
             const targetHours = fasting.targetHours || getFastingPlanTargetHours(plan);
+
+            // Sync Plan Badge
+            const planBadge = document.getElementById('fastingPlanBadge');
+            if (planBadge) planBadge.textContent = plan;
+
+            // Sync Collapsible State from LocalStorage
+            const isCollapsed = localStorage.getItem('novafit_fasting_collapsed') === 'true';
+            const bodyEl = document.getElementById('fastingPanelBody');
+            const chevronEl = document.getElementById('fastingChevron');
+            const labelEl = document.getElementById('fastingCollapseLabel');
+            if (bodyEl) {
+                bodyEl.classList.toggle('hidden', isCollapsed);
+            }
+            if (chevronEl) {
+                chevronEl.textContent = isCollapsed ? '▼' : '▲';
+            }
+            if (labelEl) {
+                labelEl.textContent = isCollapsed ? 'แสดง' : 'ซ่อน';
+            }
 
             // Update plan buttons
             ['16:8', '18:6', '14:10', '20:4'].forEach(pKey => {
@@ -2779,7 +2827,7 @@ const APP_VERSION = '5.4.0';
                 if (clockEl) clockEl.textContent = '00:00:00';
                 if (progressEl) progressEl.style.width = '0%';
                 if (remainingEl) remainingEl.textContent = `แตะ "เริ่มอดอาหาร" เพื่อเริ่มนับเวลาเป้าหมาย ${targetHours} ชม.`;
-                if (rangeEl) rangeEl.textContent = '';
+                if (rangeEl) rangeEl.textContent = 'แตะที่นี่เพื่อซ่อน/ขยาย';
                 if (toggleBtn) {
                     toggleBtn.className = 'px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5';
                     toggleBtn.innerHTML = '<span>⏱️ เริ่มอดอาหาร (Start Fast)</span>';
@@ -2816,7 +2864,7 @@ const APP_VERSION = '5.4.0';
                 const rm = Math.floor((remSecs % 3600) / 60);
                 if (statusBadge) {
                     statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 animate-pulse';
-                    statusBadge.textContent = `🔥 กำลังอดอาหาร (${pct}%)`;
+                    statusBadge.textContent = isCollapsed ? `🔥 ${clockStr} (${pct}%)` : `🔥 กำลังอดอาหาร (${pct}%)`;
                 }
                 if (remainingEl) remainingEl.textContent = `เหลืออีก ${rh} ชม. ${rm} นาที จะครบ ${targetHours} ชม.`;
             } else {
@@ -2825,7 +2873,7 @@ const APP_VERSION = '5.4.0';
                 const om = Math.floor((overSecs % 3600) / 60);
                 if (statusBadge) {
                     statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
-                    statusBadge.textContent = '🎉 ครบเป้าหมายอดอาหารแล้ว!';
+                    statusBadge.textContent = '🎉 ครบเป้าหมายแล้ว!';
                 }
                 if (remainingEl) remainingEl.textContent = `ครบ ${targetHours} ชม. แล้ว (เกินมา ${oh} ชม. ${om} นาที) พร้อมเริ่มมื้อแรกได้เลยครับ`;
             }

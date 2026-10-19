@@ -160,8 +160,10 @@
                         <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" placeholder="🔍 ค้นหาชื่อ หรือ อีเมลผู้ใช้..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
                         <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
                     </div>
-                    <div class="text-xs text-slate-400">
-                        แสดงข้อมูลผู้ใช้เรียงตามการใช้งานล่าสุด
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="openBroadcastMessageModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                            <span>📢</span> <span>บรอดแคสต์ส่งถึงทุกคน</span>
+                        </button>
                     </div>
                 </div>
 
@@ -250,6 +252,65 @@
 
             <div id="inspectUserBody" class="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
                 <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SEND MESSAGE TO USER MODAL (NEW v5.5.0) -->
+    <div id="adminSendMessageModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        💬
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base leading-tight">ส่งข้อความแจ้งเตือนถึงผู้ใช้</h3>
+                        <p id="sendMsgRecipientText" class="text-xs text-purple-600 dark:text-purple-400 font-medium">ถึง: คุณผู้ใช้</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSendMessageModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+
+            <div class="space-y-3.5 text-xs overflow-y-auto pr-1 flex-1">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">หัวข้อข้อความ (Title):</label>
+                    <input type="text" id="adminMsgTitle" value="ข้อความจากผู้ดูแลระบบ NovaFit Pro" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500 font-medium">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">ข้อความด่วนแนะนำ (แตะเพื่อใส่):</label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="fillQuickMessage('🎉 สู้ๆ ครับ บันทึกอาหารและเป้าหมายต่อเนื่องยอดเยี่ยมมาก! มีวินัยแบบนี้ผลลัพธ์ชัดเจนแน่นอนครับ')" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium text-[11px] transition">
+                            💪 ให้กำลังใจต่อเนื่อง
+                        </button>
+                        <button type="button" onclick="fillQuickMessage('💧 อย่าลืมดื่มน้ำให้เพียงพอนะครับ แนะนำจิบน้ำให้ครบ 8 แก้ว (2,000 มล.) วันนี้เพื่อช่วยระบบเผาผลาญครับ')" class="px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 font-medium text-[11px] transition">
+                            💧 เตือนดื่มน้ำ
+                        </button>
+                        <button type="button" onclick="fillQuickMessage('🔥 วันนี้คุณบันทึกอาหารใกล้ถึงเป้าหมายแล้ว เก่งมากครับ อย่าลืมพักผ่อนให้เพียงพอ 7-8 ชั่วโมงคืนนี้นะครับ')" class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 font-medium text-[11px] transition">
+                            🔥 ใกล้ถึงเป้าหมาย
+                        </button>
+                        <button type="button" onclick="fillQuickMessage('🚀 NovaFit Pro อัปเดตฟีเจอร์ใหม่แล้ว! แวะมาบันทึกอาหารและเช็กเป้าหมายสุขภาพกันนะครับ')" class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 font-medium text-[11px] transition">
+                            🚀 แจ้งอัปเดตระบบ
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">เนื้อหาข้อความ (Message):</label>
+                    <textarea id="adminMsgBody" rows="4" placeholder="พิมพ์ข้อความที่ต้องการแจ้งเตือนผู้ใช้ที่นี่..." class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-xs focus:outline-none focus:border-purple-500 leading-relaxed"></textarea>
+                </div>
+
+                <div id="adminSendStatus" class="hidden p-2.5 rounded-xl text-xs font-semibold"></div>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-slate-700 pt-3 flex items-center justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeSendMessageModal()" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                    ยกเลิก
+                </button>
+                <button type="button" id="btnConfirmSendMsg" onclick="submitSendAdminMessage()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
+                    <span>🚀 ส่งข้อความทันที</span>
+                </button>
             </div>
         </div>
     </div>

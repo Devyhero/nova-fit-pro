@@ -15,7 +15,11 @@ import {
     doc,
     getDoc,
     setDoc,
-    onSnapshot
+    onSnapshot,
+    collection,
+    query,
+    orderBy,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -102,9 +106,17 @@ onAuthStateChanged(auth, async (user) => {
         unsubscribeSnapshot();
         unsubscribeSnapshot = null;
     }
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+        unsubscribeNotifications = null;
+    }
 
     if (user) {
         setupRealtimeCloudListener(user);
+        setupRealtimeNotificationsListener(user);
+    } else {
+        userNotifications = [];
+        updateNotificationBadge(0);
     }
 });
 
@@ -422,3 +434,213 @@ document.addEventListener('click', (e) => {
         dropdown.classList.add('hidden');
     }
 });
+
+// ==========================================
+// Admin Direct Notifications & Messaging Engine (v5.5.0)
+// ==========================================
+
+let unsubscribeNotifications = null;
+let userNotifications = [];
+const seenNotificationIds = new Set();
+
+function setupRealtimeNotificationsListener(user) {
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+        unsubscribeNotifications = null;
+    }
+    try {
+        const notifColRef = collection(db, 'users', user.uid, 'notifications');
+        const q = query(notifColRef, orderBy('createdAt', 'desc'));
+
+        unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+            userNotifications = [];
+            let unreadCount = 0;
+            let latestNewUnread = null;
+
+            snapshot.forEach((docSnap) => {
+                const notif = {
+                    id: docSnap.id,
+                    ...docSnap.data()
+                };
+                userNotifications.push(notif);
+                if (!notif.read) {
+                    unreadCount++;
+                    if (!seenNotificationIds.has(notif.id)) {
+                        seenNotificationIds.add(notif.id);
+                        if (!latestNewUnread) {
+                            latestNewUnread = notif;
+                        }
+                    }
+                }
+            });
+
+            updateNotificationBadge(unreadCount);
+            renderNotificationsModalList();
+
+            // Pop up if a new unread admin message arrives
+            if (latestNewUnread) {
+                showAdminMessagePopup(latestNewUnread);
+            }
+        }, (err) => {
+            console.warn('Notifications snapshot error:', err);
+        });
+    } catch (err) {
+        console.warn('Could not setup notifications listener:', err);
+    }
+}
+
+function updateNotificationBadge(unreadCount) {
+    const badge = document.getElementById('unreadNotifBadge');
+    if (badge) {
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+    const toolsBadge = document.getElementById('toolsUnreadNotifBadge');
+    if (toolsBadge) {
+        if (unreadCount > 0) {
+            toolsBadge.textContent = `${unreadCount} ใหม่`;
+            toolsBadge.classList.remove('hidden');
+        } else {
+            toolsBadge.classList.add('hidden');
+        }
+    }
+}
+
+function showAdminMessagePopup(notif) {
+    const modal = document.getElementById('adminMessagePopupModal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('adminPopupTitle');
+    const msgEl = document.getElementById('adminPopupMessage');
+    const senderEl = document.getElementById('adminPopupSender');
+    const timeEl = document.getElementById('adminPopupTime');
+    const btnAck = document.getElementById('btnAckAdminMessage');
+
+    if (titleEl) titleEl.textContent = notif.title || 'ข้อความจากผู้ดูแลระบบ';
+    if (msgEl) msgEl.textContent = notif.message || '';
+    if (senderEl) senderEl.textContent = notif.senderName ? `โดย ${notif.senderName}` : 'ทีมงาน NovaFit Pro';
+    if (timeEl) {
+        const d = notif.createdAt ? new Date(notif.createdAt) : new Date();
+        timeEl.textContent = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+    }
+    if (btnAck) {
+        btnAck.onclick = () => {
+            window.markNotificationAsRead(notif.id);
+            window.closeAdminMessagePopup();
+        };
+    }
+
+    modal.classList.remove('hidden');
+}
+
+window.closeAdminMessagePopup = function () {
+    const modal = document.getElementById('adminMessagePopupModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.openUserNotificationsModal = function () {
+    const modal = document.getElementById('userNotificationsModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    renderNotificationsModalList();
+};
+
+window.closeUserNotificationsModal = function () {
+    const modal = document.getElementById('userNotificationsModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+};
+
+function renderNotificationsModalList() {
+    const container = document.getElementById('userNotificationsListContainer');
+    if (!container) return;
+
+    if (!currentUser) {
+        container.innerHTML = `
+            <div class="py-10 text-center text-slate-400 space-y-2">
+                <span class="text-3xl block">🔐</span>
+                <p>กรุณาเข้าสู่ระบบด้วย Google เพื่อรับการแจ้งเตือนจากผู้ดูแลระบบ</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (userNotifications.length === 0) {
+        container.innerHTML = `
+            <div class="py-10 text-center text-slate-400 space-y-2">
+                <span class="text-3xl block">📭</span>
+                <p>ยังไม่มีข้อความหรือการแจ้งเตือนในขณะนี้</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = userNotifications.map(n => {
+        const d = n.createdAt ? new Date(n.createdAt) : new Date();
+        const dateStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+        const isUnread = !n.read;
+
+        return `
+            <div class="p-3.5 rounded-2xl ${isUnread ? 'bg-purple-500/10 border-purple-500/30 dark:bg-purple-500/15' : 'bg-slate-50 dark:bg-slate-700/40 border-slate-200/80 dark:border-slate-700'} border space-y-2 transition">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">📢</span>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                <span>${n.title || 'ข้อความจากผู้ดูแลระบบ'}</span>
+                                ${isUnread ? '<span class="text-[9px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full">ใหม่</span>' : ''}
+                            </h4>
+                            <span class="text-[10px] text-slate-400">${dateStr} • ${n.senderName || 'แอดมิน'}</span>
+                        </div>
+                    </div>
+                    ${isUnread ? `
+                        <button type="button" onclick="markNotificationAsRead('${n.id}')" class="px-2.5 py-1 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-xs">
+                            ✓ รับทราบ
+                        </button>
+                    ` : `
+                        <span class="text-[10px] text-slate-400">อ่านแล้ว</span>
+                    `}
+                </div>
+                <p class="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">${n.message || ''}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+window.renderNotificationsModalList = renderNotificationsModalList;
+
+window.markNotificationAsRead = async function (notifId) {
+    if (!currentUser || !notifId) return;
+    try {
+        const notifDocRef = doc(db, 'users', currentUser.uid, 'notifications', notifId);
+        await updateDoc(notifDocRef, { read: true });
+        const target = userNotifications.find(n => n.id === notifId);
+        if (target) target.read = true;
+        const unreadCount = userNotifications.filter(n => !n.read).length;
+        updateNotificationBadge(unreadCount);
+        renderNotificationsModalList();
+    } catch (err) {
+        console.error('Failed to mark notification as read:', err);
+    }
+};
+
+window.markAllNotificationsAsRead = async function () {
+    if (!currentUser) return;
+    const unread = userNotifications.filter(n => !n.read);
+    for (const n of unread) {
+        try {
+            const notifDocRef = doc(db, 'users', currentUser.uid, 'notifications', n.id);
+            await updateDoc(notifDocRef, { read: true });
+            n.read = true;
+        } catch (err) {
+            console.error('Failed to mark notif read:', err);
+        }
+    }
+    updateNotificationBadge(0);
+    renderNotificationsModalList();
+};
+

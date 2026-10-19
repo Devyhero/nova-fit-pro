@@ -364,9 +364,63 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.4.0') || !toolsBadgeText.includes('v5.4.0')) {
+        if (!headerBadgeText.includes('v5.5.0') || !toolsBadgeText.includes('v5.5.0')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
+
+        // Test 17: IF Collapsible Tab Accordion
+        console.log('--- Test 17: IF Collapsible Tab Accordion ---');
+        await evalJs('toggleFastingCollapse(true)');
+        let isBodyHidden = await evalJs('document.getElementById("fastingPanelBody").classList.contains("hidden")');
+        let chevronText = await evalJs('document.getElementById("fastingChevron").textContent');
+        let collapsedStorage = await evalJs('localStorage.getItem("novafit_fasting_collapsed")');
+        console.log('Fasting body hidden on collapse:', isBodyHidden);
+        console.log('Fasting chevron text:', chevronText);
+        console.log('Fasting collapsed in storage:', collapsedStorage);
+        if (!isBodyHidden || chevronText !== '▼' || collapsedStorage !== 'true') {
+            throw new Error('Fasting collapse test failed');
+        }
+
+        // Expand back
+        await evalJs('toggleFastingCollapse(false)');
+        let isBodyVisible = await evalJs('!document.getElementById("fastingPanelBody").classList.contains("hidden")');
+        console.log('Fasting body expanded on toggle:', isBodyVisible);
+        if (!isBodyVisible) {
+            throw new Error('Fasting expand test failed');
+        }
+
+        // Test 18: Daily Health Tip Widget & User Notification Bell
+        console.log('--- Test 18: Daily Health Tip Widget & User Notification Bell ---');
+        const hasTipWidget = await evalJs('!!document.getElementById("dailyHealthTipWidget")');
+        const tipTitle = await evalJs('document.getElementById("healthTipTitle").textContent');
+        console.log('Health tip widget exists:', hasTipWidget);
+        console.log('Current health tip title:', tipTitle);
+        if (!hasTipWidget || !tipTitle) {
+            throw new Error('Health tip widget missing or empty');
+        }
+
+        // Test shuffling health tip
+        await evalJs('shuffleHealthTip()');
+        const shuffledTitle = await evalJs('document.getElementById("healthTipTitle").textContent');
+        console.log('Shuffled health tip title:', shuffledTitle);
+        if (!shuffledTitle) {
+            throw new Error('Shuffling health tip failed');
+        }
+
+        // Test Notification Bell & Inbox Modal
+        const hasNotifBtn = await evalJs('!!document.getElementById("btnUserNotifications")');
+        console.log('Notification bell button exists in header:', hasNotifBtn);
+        if (!hasNotifBtn) {
+            throw new Error('Notification bell button missing in header');
+        }
+
+        await evalJs('openUserNotificationsModal()');
+        const isNotifModalOpen = await evalJs('!document.getElementById("userNotificationsModal").classList.contains("hidden")');
+        console.log('Notifications modal open after click:', isNotifModalOpen);
+        if (!isNotifModalOpen) {
+            throw new Error('User notifications modal open failed');
+        }
+        await evalJs('closeUserNotificationsModal()');
 
         ws.close();
         console.log('========================================');

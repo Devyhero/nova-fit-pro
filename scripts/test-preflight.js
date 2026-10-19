@@ -37,6 +37,7 @@ console.log('========================================');
 const jsonFiles = [
     'public/version.json',
     'public/manifest.json',
+    'public/health-tips.json',
     'firebase.json',
     '.firebaserc'
 ];
@@ -57,6 +58,7 @@ const jsFiles = [
     { path: 'public/sw.js', isModule: false },
     { path: 'public/app.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
+    { path: 'public/health-tips.js', isModule: false },
     { path: 'public/firebase-sync.js', isModule: true },
     { path: 'public/admin.js', isModule: true }
 ];
