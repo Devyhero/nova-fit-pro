@@ -20,6 +20,30 @@ function isUatEnvironment() {
     return host.includes('uat') || host === 'localhost' || host === '127.0.0.1';
 }
 
+// Control AI Snap visibility: Hidden on PROD as requested, only active on UAT / Local
+function isAiSnapEnabled() {
+    return isUatEnvironment();
+}
+
+function applyAiSnapEnvironmentGate() {
+    const enabled = isAiSnapEnabled();
+    const btnMain = document.getElementById('btnAiSnapMain');
+    const btnTools = document.getElementById('btnAiSnapTools');
+    if (!enabled) {
+        if (btnMain) btnMain.classList.add('hidden');
+        if (btnTools) btnTools.classList.add('hidden');
+    } else {
+        if (btnMain) btnMain.classList.remove('hidden');
+        if (btnTools) btnTools.classList.remove('hidden');
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAiSnapEnvironmentGate);
+} else {
+    applyAiSnapEnvironmentGate();
+}
+window.addEventListener('load', applyAiSnapEnvironmentGate);
+
 // Helper: Check if current logged-in user is an administrator
 function isUserAdmin() {
     const email = (window.currentUser && window.currentUser.email) || '';
@@ -75,6 +99,17 @@ function isAiQuotaExceeded() {
 // Demo Food Knowledge Base for instant testing when no API key is provided
 const DEMO_AI_FOODS = [
     {
+        foodName: "ข้าวหมูกระเทียม + แตงกวา",
+        servingSize: "1 จาน (ประมาณ 350 กรัม)",
+        cal: 540,
+        p: 28,
+        c: 62,
+        f: 20,
+        confidence: "high",
+        ingredients: ["ข้าวสวย 1.5 ทัพพี", "เนื้อหมูผัดกระเทียมพริกไทย 120g", "แตงกวาสดหั่นแว่น", "ผักชีโรยหน้า"],
+        healthyTip: "💡 แนะนำ: หมูกระเทียมโปรตีนเน้นๆ มีแตงกวาเพิ่มใยอาหาร หากเลือกหมูเนื้อแดงไม่ติดมันจะช่วยลดไขมันได้อีกครับ"
+    },
+    {
         foodName: "ข้าวกะเพราหมูสับไข่ดาว",
         servingSize: "1 จาน (ประมาณ 350 กรัม)",
         cal: 620,
@@ -113,13 +148,22 @@ let _currentAiImageBase64 = null;
 let _currentAiImageMime = 'image/jpeg';
 let _currentAiAnalyzedData = null;
 
+// Validate if Gemini API Key is in correct Google AI Studio format (AIzaSy...)
+function isValidGeminiApiKey(key) {
+    return typeof key === 'string' && key.trim().startsWith('AIzaSy') && key.trim().length >= 35;
+}
+
 // API Key Management
 function getGeminiApiKey() {
-    return localStorage.getItem(AI_SNAP_STORAGE_KEY) ||
+    const raw = localStorage.getItem(AI_SNAP_STORAGE_KEY) ||
            window._systemGeminiApiKey ||
            sessionStorage.getItem(SYSTEM_AI_KEY_STORAGE) ||
            localStorage.getItem(SYSTEM_AI_KEY_STORAGE) ||
            '';
+    if (isValidGeminiApiKey(raw)) {
+        return raw.trim();
+    }
+    return '';
 }
 
 function setGeminiApiKey(key) {
@@ -165,8 +209,8 @@ function updateAiSnapQuotaDisplay() {
     }
 }
 
-// Compress Image client-side before sending to Gemini (Saves bandwidth & memory)
-function compressImageToDataUrl(file, maxDimension = 1024, quality = 0.8) {
+// Compress Image client-side before sending to Gemini (640px @ 0.70 quality for 10x faster network upload)
+function compressImageToDataUrl(file, maxDimension = 640, quality = 0.70) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -264,7 +308,7 @@ async function handleAiPhotoSelected(event) {
     if (!file) return;
 
     try {
-        const compressedDataUrl = await compressImageToDataUrl(file, 1024, 0.82);
+        const compressedDataUrl = await compressImageToDataUrl(file, 640, 0.70);
         const parts = compressedDataUrl.split(',');
         _currentAiImageMime = 'image/jpeg';
         _currentAiImageBase64 = parts[1];
@@ -337,14 +381,18 @@ async function analyzeAiPhoto() {
     // If NO API key is entered, use realistic Demo Simulation
     if (!apiKey) {
         setTimeout(() => {
-            const randomDemo = DEMO_AI_FOODS[Math.floor(Math.random() * DEMO_AI_FOODS.length)];
+            let matched = DEMO_AI_FOODS[0];
+            if (note) {
+                const found = DEMO_AI_FOODS.find(f => f.foodName.includes(note) || f.ingredients.some(i => i.includes(note)));
+                if (found) matched = found;
+            }
             incrementAiScanUsage();
-            renderAiAnalysisResult(randomDemo, true);
-        }, 1500);
+            renderAiAnalysisResult(matched, true);
+        }, 1200);
         return;
     }
 
-    // Call Real Gemini 1.5 Flash Vision API
+    // Call Real Gemini 1.5 Flash Vision API (Speed-optimized with 12s Timeout)
     try {
         const promptText = `
 คุณคือนักกำหนดอาหารและผู้เชี่ยวชาญด้านโภชนาการไทย โปรดวิเคราะห์รูปภาพอาหารนี้อย่างละเอียด และตอบกลับเป็น JSON เท่านั้น โดยมีโครงสร้างดังนี้:
@@ -362,8 +410,12 @@ async function analyzeAiPhoto() {
 คำแนะนำเพิ่มเติมจากผู้ใช้: ${note || "ไม่มี"}
 `;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
+            signal: controller.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [
@@ -385,6 +437,7 @@ async function analyzeAiPhoto() {
                 }
             })
         });
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errData = await response.json();
@@ -400,7 +453,8 @@ async function analyzeAiPhoto() {
         renderAiAnalysisResult(parsedResult, false);
     } catch (err) {
         console.error('Gemini Vision analysis failed:', err);
-        alert('⚠️ เกิดข้อผิดพลาดในการวิเคราะห์ด้วย Gemini: ' + err.message + '\n\nระบบจะแสดงผลการประเมินแบบจำลองแทนให้ชั่วคราว');
+        const errMsg = err.name === 'AbortError' ? 'คำขอหมดเวลา (Timeout 12 วินาที)' : (err.message || 'เกิดข้อผิดพลาด');
+        alert('⚠️ การเชื่อมต่อ Gemini: ' + errMsg + '\n\nระบบจะประเมินสารอาหารจากคลังจำลองให้ทันทีครับ');
         const fallback = DEMO_AI_FOODS[0];
         incrementAiScanUsage();
         renderAiAnalysisResult(fallback, true);
@@ -502,12 +556,17 @@ function saveAiAnalyzedMeal() {
 function promptEditGeminiApiKey() {
     const current = getGeminiApiKey();
     const input = prompt(
-        "🔑 กรุณากรอก Google Gemini API Key ของคุณ:\n(รับคีย์ฟรีได้ทันทีที่ https://aistudio.google.com/app/apikey)\n\n* หากเว้นว่างไว้ ระบบจะใช้โหมดตัวอย่าง (Demo Simulation) ให้ทดสอบฟรี:",
+        "🔑 กรุณากรอก Google Gemini API Key ของคุณ:\n(รับคีย์ฟรีได้ทันทีที่ https://aistudio.google.com/app/apikey)\n\n* คีย์ที่ถูกต้องจะขึ้นต้นด้วย 'AIzaSy...'\n* หากเว้นว่างไว้ ระบบจะใช้โหมดตัวอย่าง (Demo Simulation) ให้ทดสอบฟรี:",
         current
     );
 
     if (input !== null) {
-        setGeminiApiKey(input.trim());
+        const trimmed = input.trim();
+        if (trimmed && !isValidGeminiApiKey(trimmed)) {
+            alert("⚠️ รูปแบบ API Key ไม่ถูกต้อง!\n\nGoogle Gemini API Key ต้องขึ้นต้นด้วย 'AIzaSy...' (รับได้ฟรีที่ https://aistudio.google.com/app/apikey) ครับ");
+            return;
+        }
+        setGeminiApiKey(trimmed);
         const key = getGeminiApiKey();
         const keyBadge = document.getElementById('aiSnapApiKeyBadge');
         if (keyBadge) {

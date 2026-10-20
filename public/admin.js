@@ -1175,6 +1175,11 @@ window.saveAdminGeminiApiKey = async function () {
     const input = document.getElementById('adminGeminiApiKeyInput');
     const key = (input ? input.value : '').trim();
 
+    if (key && (!key.startsWith('AIzaSy') || key.length < 35)) {
+        alert("⚠️ รูปแบบ API Key ไม่ถูกต้อง!\n\nGoogle Gemini API Key ต้องขึ้นต้นด้วย 'AIzaSy...' (รับคีย์ฟรีได้ที่ https://aistudio.google.com/app/apikey)\n\nกรุณาตรวจสอบคีย์อีกครั้งก่อนบันทึกครับ");
+        return;
+    }
+
     if (!confirm(key ? 'ต้องการบันทึก Gemini API Key นี้ลงระบบ Firestore ใช่หรือไม่?' : 'ต้องการล้าง Gemini API Key และเปลี่ยนเป็น Demo ใช่หรือไม่?')) {
         return;
     }

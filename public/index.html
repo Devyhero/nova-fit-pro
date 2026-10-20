@@ -327,7 +327,7 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
                             <span>💡</span> คลังเกร็ดความรู้สุขภาพ
                         </button>
-                        <button onclick="openAiSnapModal(); toggleToolsMenu();"
+                        <button id="btnAiSnapTools" onclick="openAiSnapModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition">
                             <span>📸</span> สแกนอาหารด้วย AI (AI Snap & Log)
                         </button>
@@ -735,7 +735,7 @@
                                 <span class="text-xs text-emerald-500 block">✨ เมนูที่กินวันนี้จะมีกรอบเขียว และกด ⭐ เพื่อติดดาว</span>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <button type="button" onclick="openAiSnapModal()"
+                                <button id="btnAiSnapMain" type="button" onclick="openAiSnapModal()"
                                     class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
                                     <span>📸</span>
                                     <span>ถ่ายรูปให้ AI กะแคล</span>
