@@ -117,6 +117,11 @@ server.listen(PORT, async () => {
             }
         };
 
+        // Enable Page & Runtime and navigate to ensure fresh lifecycle
+        await sendCdp('Page.enable');
+        await sendCdp('Runtime.enable');
+        await sendCdp('Page.navigate', { url: `http://localhost:${PORT}/` });
+
         // Wait for page load and initialization
         for (let i = 0; i < 50; i++) {
             try {
@@ -862,6 +867,40 @@ server.listen(PORT, async () => {
         })()`);
         console.log('Pagination control rendered correct slice text:', paginationRenderTest);
         if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
+
+        // Test 27: Admin AI Scan Logs Table Data Mapping Test (v5.8.4)
+        console.log('--- Test 27: Admin AI Scan Logs Table Data Mapping ---');
+        const aiScanTableTest = await evalJs(`(() => {
+            window._currentAiScanLogs = [
+                {
+                    id: 'test_doc_1',
+                    timestamp: 1729400000000,
+                    userPhoto: 'icon.svg',
+                    userName: 'สมชาย รักสุขภาพ',
+                    userEmail: 'somchai@gmail.com',
+                    foodName: 'ข้าวกะเพราไก่ไข่ดาว',
+                    cal: 550,
+                    p: 35,
+                    c: 50,
+                    f: 18,
+                    environment: 'uat'
+                }
+            ];
+            window._aiLogsCurrentPage = 1;
+            window._aiLogsPageSize = 10;
+            window.renderAiScanLogsSlice();
+            const rowHtml = document.getElementById('adminAiScanLogsTableBody').innerHTML;
+            const hasFood = rowHtml.includes('ข้าวกะเพราไก่ไข่ดาว');
+            const hasUser = rowHtml.includes('สมชาย รักสุขภาพ');
+            const hasCal = rowHtml.includes('550 kcal');
+            const hasMacros = rowHtml.includes('P:35g C:50g F:18g');
+            const hasUat = rowHtml.includes('UAT');
+            return { hasFood, hasUser, hasCal, hasMacros, hasUat };
+        })()`);
+        console.log('AI Scan table rendered properly with real data:', aiScanTableTest);
+        if (!aiScanTableTest.hasFood || !aiScanTableTest.hasUser || !aiScanTableTest.hasCal || !aiScanTableTest.hasMacros || !aiScanTableTest.hasUat) {
+            throw new Error('AI scan logs table rendering failed to display mapped data!');
+        }
 
         ws.close();
         console.log('========================================');

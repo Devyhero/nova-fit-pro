@@ -1555,12 +1555,14 @@ function changeAiScanLogsPageSize(newSize) {
     renderAiScanLogsSlice();
 }
 window.changeAiScanLogsPageSize = changeAiScanLogsPageSize;
+window.renderAiScanLogsSlice = renderAiScanLogsSlice;
 
 function renderAiScanLogsSlice() {
     const tbody = document.getElementById('adminAiScanLogsTableBody');
     if (!tbody) return;
 
-    if (!_currentAiScanLogs || _currentAiScanLogs.length === 0) {
+    const logs = window._currentAiScanLogs || _currentAiScanLogs;
+    if (!logs || logs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">ยังไม่มีประวัติการสแกนอาหารในระบบ</td></tr>';
         renderPaginationControls({
             containerId: 'aiScanLogsPagination',
@@ -1573,27 +1575,42 @@ function renderAiScanLogsSlice() {
         return;
     }
 
-    const totalPages = Math.max(1, Math.ceil(_currentAiScanLogs.length / _aiLogsPageSize));
+    const totalPages = Math.max(1, Math.ceil(logs.length / _aiLogsPageSize));
     if (_aiLogsCurrentPage > totalPages) _aiLogsCurrentPage = totalPages;
     if (_aiLogsCurrentPage < 1) _aiLogsCurrentPage = 1;
 
     const startIdx = (_aiLogsCurrentPage - 1) * _aiLogsPageSize;
-    const pageItems = _currentAiScanLogs.slice(startIdx, startIdx + _aiLogsPageSize);
+    const pageItems = logs.slice(startIdx, startIdx + _aiLogsPageSize);
 
     tbody.innerHTML = pageItems.map(d => {
-        const timeFormatted = d.timestamp
-            ? new Date(d.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+        let tsMs = null;
+        if (typeof d.timestamp === 'number') {
+            tsMs = d.timestamp;
+        } else if (d.timestamp && typeof d.timestamp.toMillis === 'function') {
+            tsMs = d.timestamp.toMillis();
+        } else if (d.timestamp && d.timestamp.seconds) {
+            tsMs = d.timestamp.seconds * 1000;
+        } else if (typeof d.timestamp === 'string') {
+            const parsed = Date.parse(d.timestamp);
+            if (!isNaN(parsed)) tsMs = parsed;
+        }
+
+        const timeFormatted = tsMs
+            ? new Date(tsMs).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
             : '-';
-        const dateFormatted = d.timestamp
-            ? new Date(d.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+        const dateFormatted = tsMs
+            ? new Date(tsMs).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
             : '';
 
         const userPhoto = d.userPhoto || 'icon.svg';
         const userName = d.userName || 'ผู้ใช้งาน';
         const userEmail = d.userEmail || '';
         const foodName = d.foodName || 'เมนูอาหาร';
-        const cal = d.cal || 0;
-        const env = d.environment === 'uat' ? 'UAT' : 'PROD';
+        const cal = Number(d.cal) || 0;
+        const p = Number(d.p) || 0;
+        const c = Number(d.c) || 0;
+        const f = Number(d.f) || 0;
+        const env = (d.environment || '').toLowerCase() === 'uat' ? 'UAT' : 'PROD';
         const envBadge = env === 'UAT'
             ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400">UAT</span>'
             : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">PROD</span>';
@@ -1615,7 +1632,7 @@ function renderAiScanLogsSlice() {
                 </td>
                 <td class="py-2.5 px-3">
                     <span class="font-semibold text-slate-800 dark:text-slate-200">${foodName}</span>
-                    <div class="text-[10px] text-slate-400">P:${d.p || 0}g C:${d.c || 0}g F:${d.f || 0}g</div>
+                    <div class="text-[10px] text-slate-400">P:${p}g C:${c}g F:${f}g</div>
                 </td>
                 <td class="py-2.5 px-3 text-right font-black text-purple-600 dark:text-purple-400 whitespace-nowrap">
                     ${cal} kcal
@@ -1629,7 +1646,7 @@ function renderAiScanLogsSlice() {
 
     renderPaginationControls({
         containerId: 'aiScanLogsPagination',
-        totalItems: _currentAiScanLogs.length,
+        totalItems: logs.length,
         currentPage: _aiLogsCurrentPage,
         pageSize: _aiLogsPageSize,
         onPageChange: 'changeAiScanLogsPage',
@@ -1651,7 +1668,9 @@ window.loadAdminAiScanLogs = async function () {
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">ยังไม่มีประวัติการสแกนอาหารในระบบ</td></tr>';
+            _currentAiScanLogs = [];
+            _aiLogsCurrentPage = 1;
+            renderAiScanLogsSlice();
             if (statScans) statScans.textContent = '0';
             if (statUsers) statUsers.textContent = '0';
             return;
@@ -1661,62 +1680,31 @@ window.loadAdminAiScanLogs = async function () {
         let scansTodayCount = 0;
         const uniqueUsersToday = new Set();
 
-        const rows = [];
+        const logItems = [];
         snap.forEach(docSnap => {
             const d = docSnap.data();
-            const dateStr = d.dateStr || (d.timestamp ? new Date(d.timestamp).toISOString().split('T')[0] : '');
+            let tsMs = null;
+            if (typeof d.timestamp === 'number') {
+                tsMs = d.timestamp;
+            } else if (d.timestamp && typeof d.timestamp.toMillis === 'function') {
+                tsMs = d.timestamp.toMillis();
+            } else if (d.timestamp && d.timestamp.seconds) {
+                tsMs = d.timestamp.seconds * 1000;
+            } else if (typeof d.timestamp === 'string') {
+                const parsed = Date.parse(d.timestamp);
+                if (!isNaN(parsed)) tsMs = parsed;
+            }
+
+            const dateStr = d.dateStr || (tsMs ? new Date(tsMs).toISOString().split('T')[0] : '');
             if (dateStr === todayIso) {
                 scansTodayCount++;
                 if (d.userId || d.userEmail) uniqueUsersToday.add(d.userId || d.userEmail);
             }
 
-            const timeFormatted = d.timestamp
-                ? new Date(d.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-                : '-';
-            const dateFormatted = d.timestamp
-                ? new Date(d.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-                : '';
-
-            const userPhoto = d.userPhoto || 'icon.svg';
-            const userName = d.userName || 'ผู้ใช้งาน';
-            const userEmail = d.userEmail || '';
-            const foodName = d.foodName || 'เมนูอาหาร';
-            const cal = d.cal || 0;
-            const env = d.environment === 'uat' ? 'UAT' : 'PROD';
-            const envBadge = env === 'UAT'
-                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400">UAT</span>'
-                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">PROD</span>';
-
-            rows.push(`
-                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition">
-                    <td class="py-2.5 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 text-[11px]">
-                        <div>${timeFormatted} น.</div>
-                        <div class="text-[10px] text-slate-400">${dateFormatted}</div>
-                    </td>
-                    <td class="py-2.5 px-3">
-                        <div class="flex items-center gap-2">
-                            <img src="${userPhoto}" class="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 object-cover" onerror="this.src='icon.svg'">
-                            <div class="min-w-0">
-                                <div class="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px] sm:max-w-[180px]">${userName}</div>
-                                <div class="text-[10px] text-slate-400 truncate max-w-[130px] sm:max-w-[180px]">${userEmail}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-2.5 px-3">
-                        <span class="font-semibold text-slate-800 dark:text-slate-200">${foodName}</span>
-                        <div class="text-[10px] text-slate-400">P:${d.p || 0}g C:${d.c || 0}g F:${d.f || 0}g</div>
-                    </td>
-                    <td class="py-2.5 px-3 text-right font-black text-purple-600 dark:text-purple-400 whitespace-nowrap">
-                        ${cal} kcal
-                    </td>
-                    <td class="py-2.5 px-3 text-center whitespace-nowrap">
-                        ${envBadge}
-                    </td>
-                </tr>
-            `);
+            logItems.push({ id: docSnap.id, ...d });
         });
 
-        _currentAiScanLogs = rows;
+        _currentAiScanLogs = logItems;
         _aiLogsCurrentPage = 1;
         renderAiScanLogsSlice();
         if (statScans) statScans.textContent = scansTodayCount;
