@@ -4,6 +4,27 @@
 
 > [!IMPORTANT]
 > เนื่องจากผู้ใช้พัฒนาโปรเจกต์สลับกันระหว่างคอมพิวเตอร์ 2 เครื่อง (เช่น Mac เครื่องหลัก และ Windows เครื่องทำงาน) **ก่อนเริ่มแตะต้องหรือแก้ไขโค้ดทุกครั้ง ต้องดึงโค้ดล่าสุดจาก GitHub เสมอ** เพื่อป้องกันบั๊กโค้ดย้อนกลับ (Code Overwrite / Regression) หรือ Git Conflict
+> 
+> * **Official GitHub Repository**: `https://github.com/Devyhero/nova-fit-pro.git`
+> * **Git Committer**: Name: `Devyhero` | Email: `benznova01@gmail.com`
+> * **Production URL**: `https://fitmacro-pro-benz.web.app`
+> * **UAT Channel URL**: `https://fitmacro-pro-benz--uat-ywpcsdbf.web.app`
+
+### การตั้งค่าเมื่อสลับไปทำงานบนคอมพิวเตอร์เครื่องอื่น (Second Device Sync Checklist)
+เมื่อเปิดโปรเจกต์บนเครื่องอื่น (เช่น คอมพิวเตอร์ Windows เครื่องทำงาน):
+1. ตรวจสอบ Remote URL ให้ชี้มาที่บัญชีใหม่:
+   ```bash
+   git remote set-url origin https://github.com/Devyhero/nova-fit-pro.git
+   ```
+2. ตั้งค่าชื่อและอีเมล Committer ให้ตรงกัน:
+   ```bash
+   git config user.name "Devyhero"
+   git config user.email "benznova01@gmail.com"
+   ```
+3. ดึงโค้ดล่าสุดจากสาขา `main` ก่อนเริ่มงานทุกครั้ง:
+   ```bash
+   git checkout main && git pull origin main
+   ```
 
 ## กฎเหล็กการพัฒนาฟีเจอร์ใหม่ & ระบบ Branching (Mandatory Feature Branch & UAT Workflow)
 
