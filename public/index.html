@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.0)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.1)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1067,7 +1067,7 @@
                     <div id="aiCoachMacroPills" class="flex flex-wrap gap-1.5 text-[11px]"></div>
 
                     <!-- AI Coach Speech Card -->
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/25 space-y-2.5 relative overflow-hidden">
+                    <div class="p-4 rounded-2xl bg-purple-500/10 dark:bg-slate-900/80 border border-purple-500/25 dark:border-purple-500/40 space-y-2.5 relative overflow-hidden">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
@@ -1086,7 +1086,7 @@
                                 ✓ พร้อมให้คำแนะนำ
                             </span>
                         </div>
-                        <p id="recSubtitle" class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 font-medium">
+                        <p id="recSubtitle" class="text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-100 font-medium">
                             กำลังเตรียมคำแนะนำส่วนบุคคล...
                         </p>
                     </div>
@@ -1176,7 +1176,21 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.0!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.1!</b> สรุปการอัปเดตล่าสุด:</span>
+                </div>
+
+                <!-- Latest Release: v5.8.1 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        <span>🛡️ v5.8.1 (Safe Cloud Sync Architecture & Dark Mode Fix)</span>
+                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
+                        <li><b>🛡️ Safe Cloud Sync Architecture:</b> เพิ่มระบบ Sync Lock ล็อกการอัปโหลดขณะล็อกอิน ป้องกันข้อมูลบนเครื่องว่างเปล่าเขียนทับ Cloud โดยเด็ดขาด</li>
+                        <li><b>🔄 Smart Non-Destructive Merge:</b> รวมข้อมูล Cloud และ Local แบบ Union ประวัติมื้ออาหารเดิมใน Cloud จะไม่สูญหาย 100%</li>
+                        <li><b>🌓 แก้ไขธีม Dark Mode สำหรับ AI Macro Coach:</b> แก้ไขสีพื้นหลังและการ์ดเมนูให้อ่านชัดเจนสวยงาม ไม่กลืนกับพื้นหลังสีขาว</li>
+                        <li><b>💾 สำรองและกู้คืนข้อมูล (Backup & Restore):</b> เพิ่มปุ่ม Export / Import ไฟล์ JSON สำรองข้อมูลได้เองในเมนูเครื่องมือ</li>
+                    </ul>
                 </div>
 
                 <!-- Latest Release: v5.8.0 -->
@@ -2554,20 +2568,21 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.0"></script>
+    <script src="food-db.js?v=5.8.1"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.0"></script>
+    <script src="health-tips.js?v=5.8.1"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.0"></script>
+    <script src="ai-snap.js?v=5.8.1"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.0"></script>
+    <script src="app.js?v=5.8.1"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.0"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.1"></script>
 
+    <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
 
 </html>

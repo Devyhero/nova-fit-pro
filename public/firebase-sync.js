@@ -61,6 +61,7 @@ let cloudSyncTimer = null;
 let unsubscribeSnapshot = null;
 let isFirstSnapshot = true;
 let hasPendingCloudSync = false;
+let isCloudSyncLocked = true; // Lock writes until initial cloud download/merge completes
 
 // Offline status handling
 window.addEventListener('offline', () => {
@@ -202,10 +203,14 @@ function updateAuthUI(user) {
 // Live Real-Time Multi-Device Listener (Phone <-> Computer instant sync)
 function setupRealtimeCloudListener(user) {
     isFirstSnapshot = true;
+    isCloudSyncLocked = true;
     const userDocRef = doc(db, 'users', user.uid);
+
     unsubscribeSnapshot = onSnapshot(userDocRef, (snap) => {
         if (!snap.exists()) {
-            // First time login for this Google account!
+            // First time login for this Google account! (No existing cloud doc)
+            isFirstSnapshot = false;
+            isCloudSyncLocked = false;
             setDoc(userDocRef, {
                 email: user.email,
                 displayName: user.displayName,
@@ -216,7 +221,7 @@ function setupRealtimeCloudListener(user) {
                 lastUpdatedByDevice: myDeviceId,
                 deviceCategory: deviceCategory,
                 platform: platformName,
-                profileConfigured: false,
+                profileConfigured: !!window.state?.profileConfigured,
                 state: window.state
             }).catch(err => console.warn('Init firestore doc failed:', err));
 
@@ -236,15 +241,29 @@ function setupRealtimeCloudListener(user) {
         }
 
         const cloudData = snap.data();
-
-        // If this update was saved by THIS exact browser session, ignore to prevent local redraw loops
-        if (cloudData.lastUpdatedBy === mySessionId) {
+        if (!cloudData) {
+            isCloudSyncLocked = false;
             return;
         }
 
-        // On first snapshot upon entering the app, silently adopt newer cloud data without confusing toasts
+        // Always save local safety backup of whatever cloud has
+        if (cloudData.state) {
+            try {
+                localStorage.setItem('novafit_cloud_backup_latest', JSON.stringify(cloudData.state));
+                localStorage.setItem('novafit_cloud_backup_time', new Date().toISOString());
+            } catch (e) { }
+        }
+
+        // If this update was saved by THIS exact active session, ignore to prevent redraw loops
+        if (cloudData.lastUpdatedBy === mySessionId) {
+            isCloudSyncLocked = false;
+            return;
+        }
+
+        // On first snapshot upon entering the app / logging in:
         if (isFirstSnapshot) {
             isFirstSnapshot = false;
+
             const promptKey = 'novafit_profile_prompted_' + user.uid;
             const alreadyPrompted = localStorage.getItem(promptKey);
             const hasExistingWeight = window.state?.profile?.weight && Number(window.state.profile.weight) > 0 && !window._isFirstTimeVisitor;
@@ -261,11 +280,15 @@ function setupRealtimeCloudListener(user) {
                 }, 400);
             }
 
-            if (cloudData && cloudData.state && cloudData.lastUpdatedByDevice !== myDeviceId) {
-                if (window.applyCloudState) {
-                    window.applyCloudState(cloudData.state);
-                }
+            // CRITICAL FIX: ALWAYS apply and merge cloud data into local state!
+            // Never skip based on myDeviceId, because a computer that opens without login has empty state.
+            if (cloudData.state && window.applyCloudState) {
+                window.applyCloudState(cloudData.state);
             }
+
+            // Unlock uploads only AFTER cloud state has been applied and merged into local state
+            isCloudSyncLocked = false;
+
             const badge = document.getElementById('cloudStatusBadge');
             if (badge) {
                 badge.classList.remove('hidden');
@@ -276,11 +299,8 @@ function setupRealtimeCloudListener(user) {
         }
 
         // Live real-time update arriving from another active device while running
-        if (cloudData && cloudData.state) {
-            if (window.applyCloudState) {
-                window.applyCloudState(cloudData.state);
-            }
-
+        if (cloudData.state && window.applyCloudState) {
+            window.applyCloudState(cloudData.state);
             const badge = document.getElementById('cloudStatusBadge');
             if (badge) {
                 badge.classList.remove('hidden');
@@ -300,8 +320,13 @@ function setupRealtimeCloudListener(user) {
 
 window.triggerCloudSync = function (showSuccessToast = false) {
     if (!currentUser) return;
+    if (isCloudSyncLocked) {
+        console.warn('triggerCloudSync paused: Waiting for initial cloud snapshot to merge.');
+        return;
+    }
     clearTimeout(cloudSyncTimer);
     cloudSyncTimer = setTimeout(async () => {
+        if (!currentUser || isCloudSyncLocked) return;
         const badge = document.getElementById('cloudStatusBadge');
         if (!navigator.onLine) {
             hasPendingCloudSync = true;
@@ -713,3 +738,39 @@ window.firebaseDb = db;
 window.firestoreCollection = collection;
 window.firestoreAddDoc = addDoc;
 
+
+
+// ==========================================
+// Safe Backup & Recovery Engine (v5.8.1)
+// ==========================================
+window.exportUserDataBackup = function () {
+    try {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.state || {}, null, 2));
+        const dlAnchorElem = document.createElement('a');
+        const todayStr = (window.getTodayStr && window.getTodayStr()) || new Date().toISOString().split('T')[0];
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", `novafit_backup_${todayStr}.json`);
+        dlAnchorElem.click();
+        if (window.showToast) window.showToast('💾 ส่งออกไฟล์สำรองข้อมูลเรียบร้อย');
+    } catch (e) {
+        alert('ส่งออกข้อมูลไม่สำเร็จ: ' + e.message);
+    }
+};
+
+window.restoreUserDataBackup = function (jsonString) {
+    try {
+        const parsed = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+        if (!parsed || typeof parsed !== 'object') throw new Error('ไฟล์ข้อมูลไม่ถูกต้อง');
+        if (window.applyCloudState) {
+            window.applyCloudState(parsed);
+        }
+        if (window.triggerCloudSync) {
+            window.triggerCloudSync(true);
+        }
+        if (window.showToast) window.showToast('✅ กู้คืนข้อมูลสำเร็จเรียบร้อย');
+        return true;
+    } catch (e) {
+        alert('กู้คืนข้อมูลไม่สำเร็จ: ' + e.message);
+        return false;
+    }
+};

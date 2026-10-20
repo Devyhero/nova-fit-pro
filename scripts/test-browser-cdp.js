@@ -772,6 +772,26 @@ server.listen(PORT, async () => {
         console.log('Coach status badge active:', !!statusAfterReshuffle);
         if (!statusAfterReshuffle) throw new Error('AI Coach status badge not active after reshuffle');
 
+        // Test 24: Safe Cloud Sync & Data Merge Integrity (v5.8.1)
+        console.log('--- Test 24: Safe Cloud Sync & Non-Destructive Data Merge ---');
+        const hasExportFn = await evalJs('typeof window.exportUserDataBackup === "function"');
+        console.log('exportUserDataBackup function exists:', hasExportFn);
+        if (!hasExportFn) throw new Error('Missing window.exportUserDataBackup');
+
+        const mergeResult = await evalJs(`(() => {
+            const mockCloud = {
+                logsByDate: {
+                    '2026-10-01': [{ id: 'cloud_item_1', name: 'สลัดอกไก่ (Cloud Past)', cal: 250, p: 30, c: 5, f: 5 }]
+                },
+                profile: { weight: 72, height: 175 }
+            };
+            window.applyCloudState(mockCloud);
+            const pastItemExists = !!(state.logsByDate['2026-10-01'] && state.logsByDate['2026-10-01'].length > 0);
+            return pastItemExists;
+        })()`);
+        console.log('Cloud past data retained via non-destructive merge:', mergeResult);
+        if (!mergeResult) throw new Error('applyCloudState must retain past cloud logs');
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

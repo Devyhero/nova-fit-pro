@@ -1,4 +1,4 @@
-const APP_VERSION = '5.8.0';
+const APP_VERSION = '5.8.1';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -2228,31 +2228,31 @@ const APP_VERSION = '5.8.0';
                 container.innerHTML = foodItems.map(item => {
                     const safeName = item.name.replace(/'/g, "\\'");
                     const whyHtml = item.why
-                        ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium border border-purple-500/20">${item.why}</span>`
+                        ? `<span class="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/15 dark:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-medium border border-purple-500/30 dark:border-purple-500/40">${item.why}</span>`
                         : '';
                     return `
-                        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200/80 dark:border-slate-700/80 gap-2.5 transition hover:border-purple-500/40">
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/80 gap-3 transition shadow-2xs hover:border-purple-500/40">
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
-                                    <span class="text-[11px] text-slate-400 font-normal">(${item.servingSize || '1 เสิร์ฟ'})</span>
+                                    <span class="text-[11px] text-slate-400 dark:text-slate-400 font-normal">(${item.servingSize || '1 เสิร์ฟ'})</span>
                                     ${whyHtml}
                                 </div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-2">
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-2.5">
                                     <span class="text-emerald-600 dark:text-emerald-400 font-bold">${item.calories} kcal</span>
-                                    <span class="text-blue-500 dark:text-blue-400 font-semibold">โปรตีน ${item.protein}g</span>
-                                    <span class="text-amber-500 dark:text-amber-400 font-medium">คาร์บ ${item.carbs}g</span>
-                                    <span class="text-rose-500 dark:text-rose-400 font-medium">ไขมัน ${item.fat}g</span>
+                                    <span class="text-blue-600 dark:text-blue-400 font-semibold">โปรตีน ${item.protein}g</span>
+                                    <span class="text-amber-600 dark:text-amber-400 font-medium">คาร์บ ${item.carbs}g</span>
+                                    <span class="text-rose-600 dark:text-rose-400 font-medium">ไขมัน ${item.fat}g</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1 shrink-0">
+                            <div class="flex items-center gap-1.5 shrink-0">
                                 <button type="button" onclick="openFoodMealPicker('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories}, event)"
                                     title="เลือกมื้ออาหารที่จะบันทึก"
-                                    class="p-2 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 shadow-2xs">
+                                    class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 border border-slate-200 dark:border-slate-600">
                                     📋
                                 </button>
                                 <button type="button" onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories})"
-                                    class="text-xs px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold transition shadow-xs flex items-center gap-1">
+                                    class="text-xs px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold transition shadow-xs flex items-center gap-1">
                                     <span>+</span> <span>กินเมนูนี้</span>
                                 </button>
                             </div>
@@ -3999,17 +3999,91 @@ const APP_VERSION = '5.8.0';
             if (!cloudState || typeof cloudState !== 'object') return;
             const currentSelectedDate = state.selectedDate;
             const currentActiveMeal = state.activeMeal;
+
+            // Smart Non-Destructive Bidirectional Merge:
+            // 1. Logs: Union of cloud logs and local logs. Never wipe cloud history.
+            const mergedLogs = { ...(cloudState.logsByDate || {}) };
+            const localLogs = state.logsByDate || {};
+
+            Object.keys(localLogs).forEach(date => {
+                const localList = localLogs[date];
+                if (!Array.isArray(localList) || localList.length === 0) return;
+
+                if (!mergedLogs[date] || !Array.isArray(mergedLogs[date]) || mergedLogs[date].length === 0) {
+                    mergedLogs[date] = [...localList];
+                } else {
+                    const cloudList = [...mergedLogs[date]];
+                    const cloudIds = new Set(cloudList.map(m => m.id).filter(Boolean));
+                    const cloudSignatures = new Set(cloudList.map(m => `${m.name}_${m.cal}_${m.time || ''}`));
+
+                    localList.forEach(item => {
+                        const hasId = item.id && cloudIds.has(item.id);
+                        const hasSig = cloudSignatures.has(`${item.name}_${item.cal}_${item.time || ''}`);
+                        if (!hasId && !hasSig) {
+                            cloudList.push(item);
+                        }
+                    });
+                    mergedLogs[date] = cloudList;
+                }
+            });
+
+            // 2. Profile: Cloud profile wins if it has configured weight > 0
+            const cloudWeight = Number(cloudState.profile?.weight) || 0;
+            const localWeight = Number(state.profile?.weight) || 0;
+            const finalProfile = (cloudWeight > 0)
+                ? { ...state.profile, ...cloudState.profile }
+                : (localWeight > 0 ? state.profile : (cloudState.profile || state.profile));
+
+            // 3. Water: Math.max per date
+            const mergedWater = { ...(cloudState.waterByDate || {}) };
+            const localWater = state.waterByDate || {};
+            Object.keys(localWater).forEach(date => {
+                mergedWater[date] = Math.max(mergedWater[date] || 0, localWater[date] || 0);
+            });
+
+            // 4. Weight History: Union by date
+            const weightMap = new Map();
+            (Array.isArray(cloudState.weightHistory) ? cloudState.weightHistory : []).forEach(w => {
+                if (w && w.date) weightMap.set(w.date, w);
+            });
+            (Array.isArray(state.weightHistory) ? state.weightHistory : []).forEach(w => {
+                if (w && w.date && !weightMap.has(w.date)) weightMap.set(w.date, w);
+            });
+            const mergedWeightHistory = Array.from(weightMap.values()).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+            // 5. Supplements: Cloud wins if non-empty, otherwise local
+            const cloudSupps = Array.isArray(cloudState.supplementList) ? cloudState.supplementList : [];
+            const localSupps = Array.isArray(state.supplementList) ? state.supplementList : [];
+            const finalSupps = cloudSupps.length > 0 ? cloudSupps : localSupps;
+
+            // 6. Custom Foods: Union by name
+            const mergedCustomFoods = [
+                ...(Array.isArray(cloudState.customFoods) ? cloudState.customFoods : [])
+            ];
+            const cloudCustomNames = new Set(mergedCustomFoods.map(f => f.name));
+            (Array.isArray(state.customFoods) ? state.customFoods : []).forEach(f => {
+                if (f && f.name && !cloudCustomNames.has(f.name)) mergedCustomFoods.push(f);
+            });
+
             state = {
                 ...state,
                 ...cloudState,
+                logsByDate: mergedLogs,
+                profile: finalProfile,
+                waterByDate: mergedWater,
+                weightHistory: mergedWeightHistory,
+                supplementList: finalSupps,
+                customFoods: mergedCustomFoods,
                 selectedDate: currentSelectedDate,
                 activeMeal: currentActiveMeal,
                 version: APP_VERSION
             };
+
             window.state = state;
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch (e) { }
+
             renderAll();
         };
 
