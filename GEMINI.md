@@ -195,6 +195,14 @@
   - ต้องเพิ่มหรืออัปเดต Test Case ใน [`scripts/test-browser-cdp.js`](file:///Users/benznova/Desktop/fitmacro-web/scripts/test-browser-cdp.js) ควบคู่กันทันที
   - ก่อนส่งมอบงานและ Deploy ขึ้น UAT ต้องรัน `node scripts/test-preflight.js` และ `node scripts/test-browser-cdp.js` ให้ผ่าน 100% เสมอ
 
+### 5. 📱 ออกแบบและพัฒนาโดยยึดการใช้งานบนมือถือเป็นหลัก (Mobile-First Usability Protocol)
+- **ผู้ใช้งาน NovaFit Pro ใช้งานผ่านสมาร์ตโฟน (iOS / Android) เป็นหลักเสมอ**:
+  - **ขนาดปุ่มกด (Touch Targets)**: ปุ่มกด ลิงก์ และจุดแตะสัมผัสทุกตัวต้องมีขนาดพื้นที่แตะอย่างน้อย `44x44px` เพื่อง่ายต่อการใช้นิ้วกดสัมผัสบนมือถือ ไม่เล็กจนกดพลาด
+  - **Zero Horizontal Overflow**: ห้ามมีเนื้อหา การ์ด หรือตารางล้นขอบจอแนวนอนเด็ดขาด โครงสร้างต้องรองรับ Viewport กว้าง 360px - 430px ได้สมบูรณ์ 100%
+  - **Safe Area Insets**: แถบปุ่มหรือบับเบิ้ลที่ลอยอยู่ด้านล่างหน้าจอ (Floating/Fixed Elements) ต้องรองรับขอบจอด้านล่างของ iPhone (`env(safe-area-inset-bottom)`) เสมอเพื่อไม่ให้ถูกแถบ Home Bar บดบัง
+  - **Virtual Keyboard & Modal Scrolling**: Modal และกล่องกรอกข้อมูลต้องไม่ถูกแป้นพิมพ์เสมือนของมือถือบัง เลื่อน Scroll เนื้อหาได้ลื่นไหล มีปุ่มปิดชัดเจน
+  - **คำนึงถึงข้อจำกัดของ iOS / Safari เสมอ**: API ที่เกี่ยวข้องกับฮาร์ดแวร์และเบราว์เซอร์ (เช่น Web Speech API, Web Share API, Clipboard, กล้อง) ต้องตรวจสอบความพร้อมใช้งาน (Feature Detection) และมี Graceful Fallback รองรับผู้ใช้ iPhone เสมอ ห้ามเกิด Unhandled Exception หรือหน้าจอค้าง
+
 ---
 
 ## ดัชนีแผนผังโค้ดประหยัด Token (Token-Saving Architecture Reference)
