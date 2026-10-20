@@ -924,9 +924,67 @@ server.listen(PORT, async () => {
             throw new Error('saveAiVoiceAnalyzedMeals failed to log meals to state or close modal');
         }
 
-        // Test 27: Admin Table Pagination Engine
+        // Test 27: Ghost Duplicate Meal Logs Automatic Cleanup (e.g. 2261 -> 4311 kcal bug fix)
+        console.log('--- Test 27: Ghost Duplicate Meal Logs Automatic Cleanup ---');
+        const dedupResult = await evalJs(`(() => {
+            const today = state.selectedDate;
+            // Inject simulated ghost duplicates from sync
+            const testList = [
+                { id: 'item_1', name: 'ข้าวกะเพราหมูสับ', meal: 'lunch', cal: 620, p: 26, c: 65, f: 28, portion: 1 },
+                { id: 'item_2', name: 'ข้าวกะเพราหมูสับ', meal: 'lunch', cal: 620, p: 26, c: 65, f: 28, portion: 1 }, // duplicate!
+                { id: 'item_3', name: 'ไข่ต้ม', meal: 'breakfast', cal: 75, p: 6, c: 1, f: 5, portion: 1 },
+                { id: 'item_4', name: 'ไข่ต้ม', meal: 'breakfast', cal: 75, p: 6, c: 1, f: 5, portion: 1 } // duplicate!
+            ];
+            const cleaned = window.cleanDuplicateMealLogs(testList);
+            const initialCal = testList.reduce((s, m) => s + m.cal, 0);
+            const cleanedCal = cleaned.reduce((s, m) => s + m.cal, 0);
+            return {
+                initialCount: testList.length,
+                cleanedCount: cleaned.length,
+                initialCal,
+                cleanedCal
+            };
+        })()`);
+        console.log('Ghost duplicate cleanup results:', dedupResult);
+        if (dedupResult.initialCount !== 4 || dedupResult.cleanedCount !== 2 || dedupResult.cleanedCal !== 695) {
+            throw new Error(`cleanDuplicateMealLogs failed! Expected 2 items / 695 kcal, got ${dedupResult.cleanedCount} items / ${dedupResult.cleanedCal} kcal`);
+        }
 
-        console.log('--- Test 27: Admin Table Pagination Engine ---');
+        // Test 28: AI Voice Repeated Recording & Clear Cycle
+        console.log('--- Test 28: AI Voice Repeated Recording & Clear Cycle ---');
+        const voiceClearTest = await evalJs(`(() => {
+            // 1. Set text into textarea
+            const input = document.getElementById('aiVoiceTextInput');
+            input.value = 'ข้าวหมูแดง 1 จาน';
+            
+            // 2. Call clearAiVoiceText
+            window.clearAiVoiceText();
+            const valAfterClear = input.value;
+            const isRecAfterClear = typeof window.isSpeechRecording === 'function' ? window.isSpeechRecording() : false;
+
+            // 3. Test starting second recording cycle after clearing
+            let canStartAfterClear = true;
+            try {
+                window.startAiVoiceRecording();
+            } catch (err) {
+                canStartAfterClear = false;
+            }
+            window.stopAiVoiceRecording();
+
+            return {
+                valAfterClear,
+                isRecAfterClear,
+                canStartAfterClear
+            };
+        })()`);
+        console.log('AI Voice clear and second recording cycle test:', voiceClearTest);
+        if (voiceClearTest.valAfterClear !== '' || voiceClearTest.isRecAfterClear !== false || !voiceClearTest.canStartAfterClear) {
+            throw new Error('AI Voice repeated recording cycle after clear failed');
+        }
+
+        // Test 29: Admin Table Pagination Engine
+
+        console.log('--- Test 29: Admin Table Pagination Engine ---');
         await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
         
         let isReady = false;
@@ -964,8 +1022,8 @@ server.listen(PORT, async () => {
         console.log('Pagination control rendered correct slice text:', paginationRenderTest);
         if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
 
-        // Test 28: Admin AI Scan Logs Table Data Mapping Test
-        console.log('--- Test 28: Admin AI Scan Logs Table Data Mapping ---');
+        // Test 30: Admin AI Scan Logs Table Data Mapping Test
+        console.log('--- Test 30: Admin AI Scan Logs Table Data Mapping ---');
         const aiScanTableTest = await evalJs(`(() => {
             window._currentAiScanLogs = [
                 {

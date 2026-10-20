@@ -73,6 +73,40 @@ const APP_VERSION = '5.8.3';
 
         // Cache for recommendations so clicking water or theme doesn't reshuffle
         let cachedRecommendations = [];
+
+        // Deduplicate meal logs to resolve multi-device sync ghost duplication (e.g. 2261 -> 4311 kcal)
+        function cleanDuplicateMealLogs(mealList) {
+            if (!Array.isArray(mealList) || mealList.length <= 1) return mealList || [];
+            const seenIds = new Set();
+            const seenSem = new Set();
+            const cleaned = [];
+
+            mealList.forEach(m => {
+                if (!m) return;
+                // Check exact ID duplicate
+                if (m.id && seenIds.has(m.id)) {
+                    return;
+                }
+
+                // Check semantic duplicate from sync clone (same meal + normalized name + cal + portion)
+                const normName = (m.name || '').replace(/เพียว/g, '').trim().toLowerCase();
+                const mealKey = m.meal || inferMealFromTime(m.time) || 'breakfast';
+                const portion = m.portion || 1;
+                const cal = Math.round(Number(m.cal) || 0);
+                const semSig = `${mealKey}_${normName}_${cal}_${portion}`;
+
+                if (seenSem.has(semSig)) {
+                    return; // Skip sync ghost duplicate!
+                }
+
+                if (m.id) seenIds.add(m.id);
+                seenSem.add(semSig);
+                cleaned.push(m);
+            });
+
+            return cleaned;
+        }
+        window.cleanDuplicateMealLogs = cleanDuplicateMealLogs;
         let lastRecCacheKey = '';
 
         function loadState() {
@@ -130,10 +164,16 @@ const APP_VERSION = '5.8.3';
                         localStorage.setItem('novafit_profile_prompted', 'true');
                     }
 
-                    // Data migration: ensure all logs have meal and base macros
+                    // Data migration: ensure all logs have meal and base macros & deduplicate ghost clones
                     if (state.logsByDate) {
+                        let hadGhostDuplicates = false;
                         Object.keys(state.logsByDate).forEach(date => {
-                            state.logsByDate[date] = (state.logsByDate[date] || []).map(m => {
+                            const rawList = state.logsByDate[date] || [];
+                            const cleanedList = cleanDuplicateMealLogs(rawList);
+                            if (cleanedList.length !== rawList.length) {
+                                hadGhostDuplicates = true;
+                            }
+                            state.logsByDate[date] = cleanedList.map(m => {
                                 const id = m.id || ('log_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7));
                                 const portion = m.portion || 1;
                                 const baseCal = m.baseCal !== undefined ? m.baseCal : Math.round(m.cal / portion);
@@ -157,6 +197,11 @@ const APP_VERSION = '5.8.3';
                                 };
                             });
                         });
+                        if (hadGhostDuplicates) {
+                            console.log('Cleaned up ghost duplicate meal logs from multi-device sync');
+                            saveState();
+                            if (window.triggerCloudSync) window.triggerCloudSync(false);
+                        }
                     }
                 } else {
                     // Brand new visitor!
@@ -4250,6 +4295,13 @@ const APP_VERSION = '5.8.3';
                 // Live real-time update from another active device: Cloud is authoritative.
                 // Ensures deletions and edits on another device immediately apply without resurrecting!
                 mergedLogs = { ...(cloudState.logsByDate || {}) };
+            }
+
+            // Sanitize & deduplicate merged logs across all dates to prevent ghost clones
+            if (typeof window.cleanDuplicateMealLogs === 'function') {
+                Object.keys(mergedLogs).forEach(date => {
+                    mergedLogs[date] = window.cleanDuplicateMealLogs(mergedLogs[date]);
+                });
             }
 
             // 2. Profile: Cloud profile wins if it has configured weight > 0

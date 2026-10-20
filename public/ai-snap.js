@@ -42,6 +42,18 @@ function applyAiSnapEnvironmentGate() {
         if (btnVoiceMain) btnVoiceMain.classList.remove('hidden');
         if (btnVoiceTools) btnVoiceTools.classList.remove('hidden');
     }
+
+    const voiceInput = document.getElementById('aiVoiceTextInput');
+    if (voiceInput && !voiceInput._hasAiSyncListener) {
+        voiceInput._hasAiSyncListener = true;
+        voiceInput.addEventListener('input', () => {
+            if (!_isSpeechRecording) {
+                _speechBaseText = voiceInput.value.trim();
+            } else if (voiceInput.value === '') {
+                _speechBaseText = '';
+            }
+        });
+    }
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applyAiSnapEnvironmentGate);
@@ -903,15 +915,24 @@ function switchAiModalTab(tab = 'photo') {
 
 // Clear voice/text textarea
 function clearAiVoiceText() {
+    stopAiVoiceRecording();
+    _speechBaseText = '';
     const input = document.getElementById('aiVoiceTextInput');
     if (input) {
         input.value = '';
         input.focus();
     }
+    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+    if (liveTranscript) {
+        liveTranscript.textContent = '';
+        liveTranscript.classList.add('hidden');
+    }
 }
 
 // Quick Sample setter
 function setAiVoiceSample(text) {
+    stopAiVoiceRecording();
+    _speechBaseText = '';
     const input = document.getElementById('aiVoiceTextInput');
     if (input) {
         input.value = text;
@@ -930,6 +951,7 @@ function getSuggestedMealByHour() {
 
 // Web Speech Recognition Controller (th-TH)
 let _speechBaseText = '';
+let _speechStartTimer = null;
 
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -940,6 +962,47 @@ function initSpeechRecognition() {
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     return recognition;
+}
+
+function resetAiVoiceMicUI() {
+    const micIcon = document.getElementById('aiVoiceMicIcon');
+    const recordText = document.getElementById('aiVoiceRecordText');
+    const micPulse = document.getElementById('aiVoiceMicPulse');
+    const liveStatus = document.getElementById('aiVoiceLiveStatus');
+    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+    const btnRecord = document.getElementById('btnAiVoiceRecord');
+
+    if (micIcon) micIcon.textContent = '🎙️';
+    if (recordText) recordText.textContent = 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
+    if (micPulse) micPulse.classList.add('hidden');
+    if (liveStatus) liveStatus.classList.add('hidden');
+    if (liveTranscript) liveTranscript.classList.add('hidden');
+    if (btnRecord) {
+        btnRecord.classList.remove('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
+        btnRecord.classList.add('from-purple-600', 'via-indigo-600', 'to-pink-500');
+    }
+}
+
+function setAiVoiceMicActiveUI() {
+    const micIcon = document.getElementById('aiVoiceMicIcon');
+    const recordText = document.getElementById('aiVoiceRecordText');
+    const micPulse = document.getElementById('aiVoiceMicPulse');
+    const liveStatus = document.getElementById('aiVoiceLiveStatus');
+    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+    const btnRecord = document.getElementById('btnAiVoiceRecord');
+
+    if (micIcon) micIcon.textContent = '⏹️';
+    if (recordText) recordText.textContent = 'กำลังฟังเสียง... แตะเพื่อหยุด';
+    if (micPulse) micPulse.classList.remove('hidden');
+    if (liveStatus) liveStatus.classList.remove('hidden');
+    if (liveTranscript) {
+        liveTranscript.textContent = '';
+        liveTranscript.classList.add('hidden');
+    }
+    if (btnRecord) {
+        btnRecord.classList.remove('from-purple-600', 'via-indigo-600', 'to-pink-500');
+        btnRecord.classList.add('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
+    }
 }
 
 function toggleAiVoiceRecording() {
@@ -957,6 +1020,27 @@ function toggleAiVoiceRecording() {
     }
 }
 
+function stopAiVoiceRecording() {
+    clearTimeout(_speechStartTimer);
+    _isSpeechRecording = false;
+
+    if (_speechRecognitionInstance) {
+        const inst = _speechRecognitionInstance;
+        _speechRecognitionInstance = null;
+        try {
+            inst.onstart = null;
+            inst.onresult = null;
+            inst.onend = null;
+            inst.onerror = null;
+            inst.stop();
+        } catch (e) {
+            try { inst.abort(); } catch (err) {}
+        }
+    }
+
+    resetAiVoiceMicUI();
+}
+
 function startAiVoiceRecording() {
     // Auth & Quota check
     if (!window.currentUser && !isUatEnvironment()) {
@@ -968,46 +1052,32 @@ function startAiVoiceRecording() {
         return;
     }
 
-    // Safely abort and clear any previous instance
-    if (_speechRecognitionInstance) {
-        try {
-            _speechRecognitionInstance.onstart = null;
-            _speechRecognitionInstance.onresult = null;
-            _speechRecognitionInstance.onend = null;
-            _speechRecognitionInstance.onerror = null;
-            _speechRecognitionInstance.abort();
-        } catch (e) {}
-        _speechRecognitionInstance = null;
+    // Clean teardown if previous instance is still running
+    if (_speechRecognitionInstance || _isSpeechRecording) {
+        stopAiVoiceRecording();
+        clearTimeout(_speechStartTimer);
+        _speechStartTimer = setTimeout(() => {
+            _executeStartSpeech();
+        }, 120);
+        return;
     }
+
+    _executeStartSpeech();
+}
+
+function _executeStartSpeech() {
+    const textInput = document.getElementById('aiVoiceTextInput');
+    _speechBaseText = (textInput?.value || '').trim();
 
     try {
         _speechRecognitionInstance = initSpeechRecognition();
         if (!_speechRecognitionInstance) return;
 
-        const textInput = document.getElementById('aiVoiceTextInput');
-        _speechBaseText = (textInput?.value || '').trim();
-
-        const micIcon = document.getElementById('aiVoiceMicIcon');
-        const recordText = document.getElementById('aiVoiceRecordText');
-        const micPulse = document.getElementById('aiVoiceMicPulse');
-        const liveStatus = document.getElementById('aiVoiceLiveStatus');
         const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
-        const btnRecord = document.getElementById('btnAiVoiceRecord');
 
         _speechRecognitionInstance.onstart = () => {
             _isSpeechRecording = true;
-            if (micIcon) micIcon.textContent = '⏹️';
-            if (recordText) recordText.textContent = 'กำลังฟังเสียง... แตะเพื่อหยุด';
-            if (micPulse) micPulse.classList.remove('hidden');
-            if (liveStatus) liveStatus.classList.remove('hidden');
-            if (liveTranscript) {
-                liveTranscript.textContent = '';
-                liveTranscript.classList.add('hidden');
-            }
-            if (btnRecord) {
-                btnRecord.classList.remove('from-purple-600', 'via-indigo-600', 'to-pink-500');
-                btnRecord.classList.add('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
-            }
+            setAiVoiceMicActiveUI();
         };
 
         _speechRecognitionInstance.onresult = (event) => {
@@ -1041,50 +1111,28 @@ function startAiVoiceRecording() {
         _speechRecognitionInstance.onerror = (event) => {
             console.warn('Speech recognition error:', event.error);
             if (event.error === 'not-allowed') {
-                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนหรือพิมพ์ข้อความแทนได้ครับ');
+                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนในเบราว์เซอร์ของคุณ หรือพิมพ์ข้อความแทนได้ครับ');
             }
             stopAiVoiceRecording();
         };
 
         _speechRecognitionInstance.start();
     } catch (err) {
-        console.warn('Could not start speech recognition:', err);
-        stopAiVoiceRecording();
-    }
-}
-
-function stopAiVoiceRecording() {
-    _isSpeechRecording = false;
-
-    if (_speechRecognitionInstance) {
-        const inst = _speechRecognitionInstance;
-        _speechRecognitionInstance = null;
-        try {
-            inst.onstart = null;
-            inst.onresult = null;
-            inst.onend = null;
-            inst.onerror = null;
-            inst.stop();
-        } catch (e) {
-            try { inst.abort(); } catch (err) {}
-        }
-    }
-
-    const micIcon = document.getElementById('aiVoiceMicIcon');
-    const recordText = document.getElementById('aiVoiceRecordText');
-    const micPulse = document.getElementById('aiVoiceMicPulse');
-    const liveStatus = document.getElementById('aiVoiceLiveStatus');
-    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
-    const btnRecord = document.getElementById('btnAiVoiceRecord');
-
-    if (micIcon) micIcon.textContent = '🎙️';
-    if (recordText) recordText.textContent = 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
-    if (micPulse) micPulse.classList.add('hidden');
-    if (liveStatus) liveStatus.classList.add('hidden');
-    if (liveTranscript) liveTranscript.classList.add('hidden');
-    if (btnRecord) {
-        btnRecord.classList.remove('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
-        btnRecord.classList.add('from-purple-600', 'via-indigo-600', 'to-pink-500');
+        console.warn('Could not start speech recognition, retrying:', err);
+        clearTimeout(_speechStartTimer);
+        _speechStartTimer = setTimeout(() => {
+            try {
+                if (!_speechRecognitionInstance) {
+                    _speechRecognitionInstance = initSpeechRecognition();
+                }
+                if (_speechRecognitionInstance) {
+                    _speechRecognitionInstance.start();
+                }
+            } catch (retryErr) {
+                console.error('Speech recognition recovery start failed:', retryErr);
+                stopAiVoiceRecording();
+            }
+        }, 200);
     }
 }
 
@@ -1606,6 +1654,9 @@ window.requestGeminiCoachAdvice = requestGeminiCoachAdvice;
 window.openAiVoiceModal = () => openAiSnapModal('voice');
 window.switchAiModalTab = switchAiModalTab;
 window.toggleAiVoiceRecording = toggleAiVoiceRecording;
+window.startAiVoiceRecording = startAiVoiceRecording;
+window.stopAiVoiceRecording = stopAiVoiceRecording;
+window.isSpeechRecording = () => _isSpeechRecording;
 window.clearAiVoiceText = clearAiVoiceText;
 window.setAiVoiceSample = setAiVoiceSample;
 window.analyzeAiVoiceText = analyzeAiVoiceText;
