@@ -283,7 +283,7 @@ function setupRealtimeCloudListener(user) {
             // CRITICAL FIX: ALWAYS apply and merge cloud data into local state!
             // Never skip based on myDeviceId, because a computer that opens without login has empty state.
             if (cloudData.state && window.applyCloudState) {
-                window.applyCloudState(cloudData.state);
+                window.applyCloudState(cloudData.state, true);
             }
 
             // Unlock uploads only AFTER cloud state has been applied and merged into local state
@@ -300,7 +300,7 @@ function setupRealtimeCloudListener(user) {
 
         // Live real-time update arriving from another active device while running
         if (cloudData.state && window.applyCloudState) {
-            window.applyCloudState(cloudData.state);
+            window.applyCloudState(cloudData.state, false);
             const badge = document.getElementById('cloudStatusBadge');
             if (badge) {
                 badge.classList.remove('hidden');
@@ -508,7 +508,7 @@ document.addEventListener('visibilitychange', () => {
                     const data = snap.data();
                     if (data && data.state && data.lastUpdatedByDevice !== myDeviceId) {
                         if (window.applyCloudState) {
-                            window.applyCloudState(data.state);
+                            window.applyCloudState(data.state, false);
                         }
                     }
                 }

@@ -4203,37 +4203,54 @@ const APP_VERSION = '5.8.3';
         window.changeMealCategory = changeMealCategory;
 
         // Directly updates lexical state and re-renders UI across all components
-        window.applyCloudState = function (cloudState) {
+        window.applyCloudState = function (cloudState, isInitialOrRestore = true) {
             if (!cloudState || typeof cloudState !== 'object') return;
             const currentSelectedDate = state.selectedDate;
             const currentActiveMeal = state.activeMeal;
 
             // Smart Non-Destructive Bidirectional Merge:
-            // 1. Logs: Union of cloud logs and local logs. Never wipe cloud history.
-            const mergedLogs = { ...(cloudState.logsByDate || {}) };
+            // 1. Logs:
+            let mergedLogs = { ...(cloudState.logsByDate || {}) };
             const localLogs = state.logsByDate || {};
 
-            Object.keys(localLogs).forEach(date => {
-                const localList = localLogs[date];
-                if (!Array.isArray(localList) || localList.length === 0) return;
+            if (isInitialOrRestore) {
+                // Initial load / offline restore: preserve past dates missing from cloud, and merge unique items
+                const normalizeMealItem = n => (n || '').replace(/เพียว/g, '').trim().toLowerCase();
 
-                if (!mergedLogs[date] || !Array.isArray(mergedLogs[date]) || mergedLogs[date].length === 0) {
-                    mergedLogs[date] = [...localList];
-                } else {
-                    const cloudList = [...mergedLogs[date]];
-                    const cloudIds = new Set(cloudList.map(m => m.id).filter(Boolean));
-                    const cloudSignatures = new Set(cloudList.map(m => `${m.name}_${m.cal}_${m.time || ''}`));
+                Object.keys(localLogs).forEach(date => {
+                    const localList = localLogs[date];
+                    if (!Array.isArray(localList) || localList.length === 0) return;
 
-                    localList.forEach(item => {
-                        const hasId = item.id && cloudIds.has(item.id);
-                        const hasSig = cloudSignatures.has(`${item.name}_${item.cal}_${item.time || ''}`);
-                        if (!hasId && !hasSig) {
-                            cloudList.push(item);
-                        }
-                    });
-                    mergedLogs[date] = cloudList;
-                }
-            });
+                    if (!mergedLogs[date] || !Array.isArray(mergedLogs[date]) || mergedLogs[date].length === 0) {
+                        mergedLogs[date] = [...localList];
+                    } else {
+                        const cloudList = [...mergedLogs[date]];
+                        const cloudIds = new Set(cloudList.map(m => m.id).filter(Boolean));
+                        
+                        // Count occurrences of normalized (meal + name) in cloud
+                        const cloudSigCounts = {};
+                        cloudList.forEach(m => {
+                            const sig = `${m.meal || 'breakfast'}_${normalizeMealItem(m.name)}`;
+                            cloudSigCounts[sig] = (cloudSigCounts[sig] || 0) + 1;
+                        });
+
+                        localList.forEach(item => {
+                            const sig = `${item.meal || 'breakfast'}_${normalizeMealItem(item.name)}`;
+                            const hasId = item.id && cloudIds.has(item.id);
+                            // Avoid duplicates: only add if this food isn't already present in cloud for this meal
+                            if (!hasId && (!cloudSigCounts[sig] || cloudSigCounts[sig] === 0)) {
+                                cloudList.push(item);
+                                cloudSigCounts[sig] = 1;
+                            }
+                        });
+                        mergedLogs[date] = cloudList;
+                    }
+                });
+            } else {
+                // Live real-time update from another active device: Cloud is authoritative.
+                // Ensures deletions and edits on another device immediately apply without resurrecting!
+                mergedLogs = { ...(cloudState.logsByDate || {}) };
+            }
 
             // 2. Profile: Cloud profile wins if it has configured weight > 0
             const cloudWeight = Number(cloudState.profile?.weight) || 0;
