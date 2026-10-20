@@ -949,16 +949,23 @@ function getSuggestedMealByHour() {
     return 'snack';
 }
 
-// Web Speech Recognition Controller (th-TH)
+// Web Speech Recognition Controller (th-TH) - Mobile-First Lifecycle v2
 let _speechBaseText = '';
 let _speechStartTimer = null;
+let _isTearingDown = false; // Guard flag: prevents re-entry during async teardown on mobile
+
+// Detect iOS/iPadOS for specific workaround needs
+const _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     const recognition = new SpeechRecognition();
     recognition.lang = 'th-TH';
-    recognition.continuous = true;
+    // iOS Safari does NOT reliably support continuous=true.
+    // Use continuous=false on mobile — each press = one session, then auto-stops gracefully.
+    recognition.continuous = !_isIOS;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     return recognition;
@@ -980,6 +987,7 @@ function resetAiVoiceMicUI() {
     if (btnRecord) {
         btnRecord.classList.remove('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
         btnRecord.classList.add('from-purple-600', 'via-indigo-600', 'to-pink-500');
+        btnRecord.disabled = false;
     }
 }
 
@@ -1002,6 +1010,7 @@ function setAiVoiceMicActiveUI() {
     if (btnRecord) {
         btnRecord.classList.remove('from-purple-600', 'via-indigo-600', 'to-pink-500');
         btnRecord.classList.add('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
+        btnRecord.disabled = false;
     }
 }
 
@@ -1013,10 +1022,24 @@ function toggleAiVoiceRecording() {
         return;
     }
 
+    // Block tap during teardown to prevent double-fire on mobile
+    if (_isTearingDown) return;
+
     if (_isSpeechRecording) {
         stopAiVoiceRecording();
     } else {
         startAiVoiceRecording();
+    }
+}
+
+function _destroySpeechInstance(inst) {
+    // Nullify all callbacks first so onend doesn't call stopAiVoiceRecording again
+    try { inst.onstart = null; } catch(e) {}
+    try { inst.onresult = null; } catch(e) {}
+    try { inst.onend = null; } catch(e) {}
+    try { inst.onerror = null; } catch(e) {}
+    try { inst.stop(); } catch(e) {
+        try { inst.abort(); } catch(err) {}
     }
 }
 
@@ -1027,15 +1050,7 @@ function stopAiVoiceRecording() {
     if (_speechRecognitionInstance) {
         const inst = _speechRecognitionInstance;
         _speechRecognitionInstance = null;
-        try {
-            inst.onstart = null;
-            inst.onresult = null;
-            inst.onend = null;
-            inst.onerror = null;
-            inst.stop();
-        } catch (e) {
-            try { inst.abort(); } catch (err) {}
-        }
+        _destroySpeechInstance(inst);
     }
 
     resetAiVoiceMicUI();
@@ -1052,13 +1067,17 @@ function startAiVoiceRecording() {
         return;
     }
 
-    // Clean teardown if previous instance is still running
+    // If an old instance/session is still lingering, tear it down first
     if (_speechRecognitionInstance || _isSpeechRecording) {
+        _isTearingDown = true;
         stopAiVoiceRecording();
         clearTimeout(_speechStartTimer);
+        // iOS needs longer delay (~350ms) for audio session to fully release
+        const teardownDelay = _isIOS ? 350 : 150;
         _speechStartTimer = setTimeout(() => {
+            _isTearingDown = false;
             _executeStartSpeech();
-        }, 120);
+        }, teardownDelay);
         return;
     }
 
@@ -1066,6 +1085,7 @@ function startAiVoiceRecording() {
 }
 
 function _executeStartSpeech() {
+    _isTearingDown = false;
     const textInput = document.getElementById('aiVoiceTextInput');
     _speechBaseText = (textInput?.value || '').trim();
 
@@ -1105,11 +1125,18 @@ function _executeStartSpeech() {
         };
 
         _speechRecognitionInstance.onend = () => {
-            stopAiVoiceRecording();
+            // onend fires normally on mobile after speech stops —
+            // just reset state so the next tap starts fresh without issue.
+            _isSpeechRecording = false;
+            if (_speechRecognitionInstance) {
+                // Instance already done, clear reference and reset UI
+                _speechRecognitionInstance = null;
+                resetAiVoiceMicUI();
+            }
         };
 
         _speechRecognitionInstance.onerror = (event) => {
-            console.warn('Speech recognition error:', event.error);
+            console.warn('Speech recognition error:', event.error, '| iOS:', _isIOS);
             if (event.error === 'not-allowed') {
                 alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนในเบราว์เซอร์ของคุณ หรือพิมพ์ข้อความแทนได้ครับ');
             }
@@ -1118,21 +1145,32 @@ function _executeStartSpeech() {
 
         _speechRecognitionInstance.start();
     } catch (err) {
-        console.warn('Could not start speech recognition, retrying:', err);
+        console.warn('Could not start speech recognition, retrying:', err.message);
         clearTimeout(_speechStartTimer);
+        // Increase retry delay for mobile, as audio pipeline may not be free yet
+        const retryDelay = _isIOS ? 400 : 250;
         _speechStartTimer = setTimeout(() => {
             try {
-                if (!_speechRecognitionInstance) {
-                    _speechRecognitionInstance = initSpeechRecognition();
-                }
+                _speechRecognitionInstance = initSpeechRecognition();
                 if (_speechRecognitionInstance) {
+                    // Re-bind minimal handlers before retry start
+                    _speechRecognitionInstance.onstart = () => {
+                        _isSpeechRecording = true;
+                        setAiVoiceMicActiveUI();
+                    };
+                    _speechRecognitionInstance.onend = () => {
+                        _isSpeechRecording = false;
+                        _speechRecognitionInstance = null;
+                        resetAiVoiceMicUI();
+                    };
+                    _speechRecognitionInstance.onerror = () => { stopAiVoiceRecording(); };
                     _speechRecognitionInstance.start();
                 }
             } catch (retryErr) {
-                console.error('Speech recognition recovery start failed:', retryErr);
+                console.error('Speech recognition recovery start failed:', retryErr.message);
                 stopAiVoiceRecording();
             }
-        }, 200);
+        }, retryDelay);
     }
 }
 

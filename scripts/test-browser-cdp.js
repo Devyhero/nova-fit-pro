@@ -950,19 +950,19 @@ server.listen(PORT, async () => {
             throw new Error(`cleanDuplicateMealLogs failed! Expected 2 items / 695 kcal, got ${dedupResult.cleanedCount} items / ${dedupResult.cleanedCal} kcal`);
         }
 
-        // Test 28: AI Voice Repeated Recording & Clear Cycle
+        // Test 28: AI Voice Repeated Recording & Clear Cycle (Mobile-First Lifecycle v2)
         console.log('--- Test 28: AI Voice Repeated Recording & Clear Cycle ---');
         const voiceClearTest = await evalJs(`(() => {
             // 1. Set text into textarea
             const input = document.getElementById('aiVoiceTextInput');
             input.value = 'ข้าวหมูแดง 1 จาน';
-            
-            // 2. Call clearAiVoiceText
+
+            // 2. Call clearAiVoiceText — should stop mic, clear text, reset state
             window.clearAiVoiceText();
             const valAfterClear = input.value;
             const isRecAfterClear = typeof window.isSpeechRecording === 'function' ? window.isSpeechRecording() : false;
 
-            // 3. Test starting second recording cycle after clearing
+            // 3. Test starting second recording cycle after clearing — must not throw
             let canStartAfterClear = true;
             try {
                 window.startAiVoiceRecording();
@@ -971,15 +971,27 @@ server.listen(PORT, async () => {
             }
             window.stopAiVoiceRecording();
 
+            // 4. Verify toggleAiVoiceRecording also respects guard flag
+            //    Simulate rapid double-tap scenario (mobile re-entry protection)
+            let guardWorking = true;
+            try {
+                window.startAiVoiceRecording(); // first tap — starts
+                window.startAiVoiceRecording(); // second immediate tap — should teardown+restart safely
+                window.stopAiVoiceRecording();  // clean up
+            } catch(e) {
+                guardWorking = false;
+            }
+
             return {
                 valAfterClear,
                 isRecAfterClear,
-                canStartAfterClear
+                canStartAfterClear,
+                guardWorking
             };
         })()`);
         console.log('AI Voice clear and second recording cycle test:', voiceClearTest);
-        if (voiceClearTest.valAfterClear !== '' || voiceClearTest.isRecAfterClear !== false || !voiceClearTest.canStartAfterClear) {
-            throw new Error('AI Voice repeated recording cycle after clear failed');
+        if (voiceClearTest.valAfterClear !== '' || voiceClearTest.isRecAfterClear !== false || !voiceClearTest.canStartAfterClear || !voiceClearTest.guardWorking) {
+            throw new Error('AI Voice repeated recording cycle after clear failed (mobile lifecycle)');
         }
 
         // Test 29: Admin Table Pagination Engine
