@@ -34,3 +34,31 @@
 - แจ้งรายการที่แก้ไข/เพิ่มใหม่
 - แจ้งสถานะ Git commit และ push
 - แจ้งสถานะการ deploy บน Firebase พร้อมลิงก์เข้าใช้งาน
+
+---
+
+## ดัชนีแผนผังโค้ดประหยัด Token (Token-Saving Architecture Reference)
+
+> เพื่อประหยัดเวลาและ Token ห้ามไล่อ่านโค้ดไฟล์ขนาดใหญ่ (`app.js`, `index.html`) ทั้งไฟล์โดยไม่จำเป็น ให้ตรวจสอบตำแหน่งฟังก์ชันจาก [CODEBASE_MAP.md](file:///Users/benznova/Desktop/fitmacro-web/CODEBASE_MAP.md) หรือดัชนีด้านล่างก่อนเสมอ:
+
+### ตำแหน่งฟังก์ชันหลักใน `public/app.js`:
+- **State & Storage**: บรรทัด 1–187 (`state`, `ensureStateIntegrity`, `saveState`, `getTodayStr`)
+- **Profile & Macro Calculator**: บรรทัด 188–350 (`calculateMacroTargets`, `getCalculatedTargets`, `toggleTheme`)
+- **Date Navigation**: บรรทัด 351–580 (`shiftDate`, `goToToday`, `onDateChange`, `renderDailySummary`)
+- **Meals & Daily Tracker**: บรรทัด 581–1150 (`renderAll`, `renderMacros`, `renderMeals`, `deleteFoodLog`, `renderWaterSection`)
+- **Food DB & Search**: บรรทัด 1151–1450 (`renderFoodDatabase`, Universal Food Search)
+- **Custom Foods & Workouts**: บรรทัด 1451–1740 (`submitCustomFood`, `renderWorkouts`, `addWorkoutLog`)
+- **Meal Combos**: บรรทัด 1741–1870 (`copyMealFromYesterday`, `applyMealCombo`)
+- **Supplements & Vitamins**: บรรทัด 1871–2055 (`renderSupplements`, `toggleSupplement`, `deleteSupplement`, `restoreDefaultSupplements`)
+- **Quick Meal Picker**: บรรทัด 2056–2350 (`openFoodMealPicker`, `submitFoodMealPicker`)
+- **Intermittent Fasting (IF)**: บรรทัด 2351–2650 (`toggleFastingTimer`, `renderFastingSection`, `openFastingCompleteModal`)
+- **PWA & Version Updates**: บรรทัด 2651–2950 (`initPwaUpdates`, `checkForAppUpdate`, `openChangelogModal`)
+- **Weekly Analytics & Charts**: บรรทัด 2951–3250 (`renderWeightChart`, `renderCalorieTrends`)
+- **Visual Share Card**: บรรทัด 3251–3550 (`openShareCardModal`, `drawShareCard`)
+- **Notifications & Health Tips**: บรรทัด 3551–3890 (`openUserNotificationsModal`, `shuffleDailyTip`)
+- **Modals & Window Bindings**: บรรทัด 3891–4085 (`openModalAnimated`, `closeModalAnimated`, `openQuickAddModal`)
+
+### หลักการแยกประวัติการอัปเดต (Changelog Separation):
+- **User Side (`index.html` & `version.json`)**: แสดงเฉพาะฟีเจอร์ที่ผู้ใช้ได้ประโยชน์โดยตรง ห้ามมีคำว่า Admin, Dashboard, Firestore rules, หรือโค้ดหลังบ้าน
+- **Admin Side (`admin.html` Tab 6 `tabView_system_changelog`)**: บันทึกการอัปเดตสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, Security Rules, และระบบหลังบ้านทั้งหมด
+
