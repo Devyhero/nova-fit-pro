@@ -88,12 +88,17 @@ function incrementAiScanUsage() {
     updateAiSnapQuotaDisplay();
 }
 
+function getDailyAiScanLimit() {
+    const sys = Number(window._systemDailyQuota) || Number(localStorage.getItem('novafit_system_daily_quota'));
+    return (sys && sys > 0) ? sys : DAILY_AI_SCAN_LIMIT;
+}
+
 function isAiQuotaExceeded() {
     // UAT preview channel & Admin accounts have UNLIMITED scanning capability
     if (isUatEnvironment() || isUserAdmin()) {
         return false;
     }
-    return getTodayAiScanUsage() >= DAILY_AI_SCAN_LIMIT;
+    return getTodayAiScanUsage() >= getDailyAiScanLimit();
 }
 
 // Demo Food Knowledge Base for instant testing when no API key is provided
@@ -203,8 +208,9 @@ function updateAiSnapQuotaDisplay() {
         quotaPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
     } else {
         const usage = getTodayAiScanUsage();
-        const remaining = Math.max(0, DAILY_AI_SCAN_LIMIT - usage);
-        quotaPill.textContent = `โควตาวันนี้: เหลือ ${remaining}/${DAILY_AI_SCAN_LIMIT} ครั้ง`;
+        const limit = getDailyAiScanLimit();
+        const remaining = Math.max(0, limit - usage);
+        quotaPill.textContent = `โควตาวันนี้: เหลือ ${remaining}/${limit} ครั้ง`;
         quotaPill.className = remaining > 0
             ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
             : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
@@ -575,6 +581,31 @@ function renderAiAnalysisResult(result, isDemo = false) {
     if (selectMeal) selectMeal.value = activeMeal;
 }
 
+// Record AI Scan Event to Firestore for Admin Audit & Quota Analytics
+async function recordAiScanAuditLog(analyzedData) {
+    try {
+        if (!window.currentUser || !window.firebaseDb || !window.firestoreCollection || !window.firestoreAddDoc) return;
+        const user = window.currentUser;
+        await window.firestoreAddDoc(window.firestoreCollection(window.firebaseDb, 'ai_scan_logs'), {
+            userId: user.uid,
+            userEmail: user.email || 'guest',
+            userName: user.displayName || user.email || 'ผู้ใช้งาน',
+            userPhoto: user.photoURL || '',
+            foodName: analyzedData.foodName || 'เมนูอาหาร',
+            cal: Number(analyzedData.cal) || 0,
+            p: Number(analyzedData.p) || 0,
+            c: Number(analyzedData.c) || 0,
+            f: Number(analyzedData.f) || 0,
+            servingSize: analyzedData.servingSize || '1 ที่',
+            timestamp: Date.now(),
+            dateStr: getTodayIsoDate(),
+            environment: isUatEnvironment() ? 'uat' : 'prod'
+        });
+    } catch (e) {
+        console.warn('Could not record AI scan audit log:', e);
+    }
+}
+
 // Save analyzed meal into Daily Logs
 function saveAiAnalyzedMeal() {
     const inName = document.getElementById('aiResFoodName');
@@ -600,13 +631,20 @@ function saveAiAnalyzedMeal() {
     if (!window.state.logsByDate) window.state.logsByDate = {};
     if (!window.state.logsByDate[dStr]) window.state.logsByDate[dStr] = [];
 
+    const uniqueId = 'ai_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
     const newLogItem = {
+        id: uniqueId,
         name,
         cal,
         p,
         c,
         f,
         portion: 1,
+        baseCal: cal,
+        baseP: p,
+        baseC: c,
+        baseF: f,
+        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
         meal,
         servingSize: _currentAiAnalyzedData?.servingSize || '1 ที่',
         timestamp: Date.now(),
@@ -616,6 +654,8 @@ function saveAiAnalyzedMeal() {
     window.state.logsByDate[dStr].push(newLogItem);
     if (window.saveState) window.saveState();
     if (window.renderAll) window.renderAll();
+    if (window.triggerCloudSync) window.triggerCloudSync(false);
+    recordAiScanAuditLog({ foodName: name, cal, p, c, f, servingSize: newLogItem.servingSize });
 
     closeAiSnapModal();
     if (window.showToast) {

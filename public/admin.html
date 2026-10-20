@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th" class="dark">
 
 <head>
@@ -504,6 +504,18 @@
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.7.3 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">๐€ v5.7.3 (AI Log Integrity Fix, Dynamic Quota Control & Audit Activity Logs)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 เธ•.เธ. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>โก เนเธเนเนเธเธเธฑเนเธ Meal ID Integrity:</b> เน€เธเธดเนเธก Unique ID (<code>id</code>), Base Macros (<code>baseCal</code>, <code>baseP</code>, <code>baseC</code>, <code>baseF</code>) เนเธซเนเธเธฑเธเธฃเธฒเธขเธเธฒเธฃเธญเธฒเธซเธฒเธฃเธ—เธตเนเธเธฑเธเธ—เธถเธเธเนเธฒเธ AI Snap เธ—เธณเนเธซเนเธชเธฒเธกเธฒเธฃเธ–เธเธ”เธฅเธเธฃเธฒเธขเธเธฒเธฃ เธขเนเธฒเธขเธกเธทเนเธญเธญเธฒเธซเธฒเธฃ เธซเธฃเธทเธญเธเธฃเธฑเธเธชเธฑเธ”เธชเนเธงเธเนเธ”เน 100% เธเธฃเนเธญเธกเธฃเธฐเธเธ Auto-migration เนเธซเนเธฃเธฒเธขเธเธฒเธฃเน€เธ”เธดเธกเนเธเน€เธเธฃเธทเนเธญเธเธ—เธฑเธเธ—เธต</li>
+                                <li><b>๐๏ธ เธฃเธฐเธเธเธเธฃเธฑเธเนเธเธงเธ•เธฒ Dynamic Daily Quota:</b> เนเธญเธ”เธกเธดเธเธชเธฒเธกเธฒเธฃเธ–เธเธณเธซเธเธ”เนเธเธงเธ•เธฒเธชเนเธเธเธ•เนเธญเธเธ/เธงเธฑเธ เนเธ”เนเนเธ”เธขเธ•เธฃเธเธเธฒเธเธซเธเนเธฒ Admin เนเธ—เนเธ 7 (เธเธฑเธเธ—เธถเธเธฅเธ <code>system_config/ai</code>) เธ—เธธเธเน€เธเธฃเธทเนเธญเธเธเธฐเธญเธฑเธเน€เธ”เธ•เนเธเธงเธ•เธฒเนเธซเธกเนเธ•เธฒเธกเธ—เธฑเธเธ—เธต</li>
+                                <li><b>๐“ เธ•เธฒเธฃเธฒเธเธ•เธฃเธงเธเธชเธญเธเธเธนเนเนเธเนเธเธฒเธ AI (ai_scan_logs):</b> เธเธฑเธเธ—เธถเธเธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธชเนเธเธเนเธเธ Real-time เธฅเธ Firestore เธเธฃเนเธญเธกเธซเธเนเธฒเธเธญเนเธชเธ”เธเธฃเธฒเธขเธเธทเนเธญเธเธนเนเนเธเน เน€เธกเธเธนเธ—เธตเนเธ•เธฃเธงเธเธเธ เนเธฅเธฐเธชเธ–เธดเธ•เธดเธฃเธงเธกเธฃเธฒเธขเธงเธฑเธ</li>
+                            </ul>
+                        </div>
 
                         <!-- Release: v5.7.2 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
@@ -649,6 +661,20 @@
                             </p>
                         </div>
 
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                โควตาสแกนต่อคน/วัน (Daily Quota per User):
+                            </label>
+                            <div class="flex items-center gap-2 max-w-xs">
+                                <input type="number" id="adminAiDailyQuotaInput" min="1" max="100" placeholder="15"
+                                    class="w-24 bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-purple-500">
+                                <span class="text-xs text-slate-500 dark:text-slate-400">รูป / คน / วัน (ค่าเริ่มต้น 15)</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">
+                                💡 แอดมินสามารถปรับเพิ่ม-ลดโควตาตามต้องการ ทุกเครื่องจะอัปเดตโควตาใหม่ตามนี้ทันที
+                            </p>
+                        </div>
+
                         <div class="flex items-center gap-2 pt-1 flex-wrap">
                             <button type="button" onclick="saveAdminGeminiApiKey()"
                                 class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
@@ -694,7 +720,69 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- AI Scan Activity & Live Logs -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">๐“ธ</span>
+                            <div>
+                                <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
+                                    เธเธฃเธฐเธงเธฑเธ•เธดเนเธฅเธฐเธชเธ–เธดเธ•เธดเธเธฒเธฃเธชเนเธเธเธญเธฒเธซเธฒเธฃ (AI Scan Activity & Live Logs)
+                                </h3>
+                                <p class="text-[11px] text-slate-400">
+                                    เธ•เธฃเธงเธเธชเธญเธเธฃเธฒเธขเธเธทเนเธญเธเธนเนเนเธเนเธเธฒเธ เน€เธกเธเธนเธ—เธตเนเธชเนเธเธ เนเธฅเธฐเธเธฃเธดเธกเธฒเธ“เธเธฒเธฃเนเธเนเธเธฒเธเนเธเธ Real-time
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="loadAdminAiScanLogs()"
+                            class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>๐”</span> <span>เธฃเธตเน€เธเธฃเธเธเนเธญเธกเธนเธฅ</span>
+                        </button>
+                    </div>
+
+                    <!-- Stats Quick Summary -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
+                            <span class="text-[11px] text-purple-600 dark:text-purple-400 font-medium block">เธชเนเธเธเธฃเธงเธกเธงเธฑเธเธเธตเน</span>
+                            <span id="statAiScansToday" class="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5 block">0</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
+                            <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium block">เธเธนเนเนเธเนเธ—เธตเนเธชเนเธเธเธงเธฑเธเธเธตเน</span>
+                            <span id="statAiUniqueUsers" class="text-lg sm:text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block">0</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium block">เนเธเธงเธ•เธฒเธเธฑเธเธเธธเธเธฑเธ</span>
+                            <span id="statAiCurrentQuota" class="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">15/เธเธ</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                            <span class="text-[11px] text-blue-600 dark:text-blue-400 font-medium block">เธเธฃเธฐเธกเธฒเธ“เธเธฒเธฃเธเนเธฒเนเธเนเธเนเธฒเธข</span>
+                            <span class="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">เธฟ0 (เธเธฃเธต)</span>
+                        </div>
+                    </div>
+
+                    <!-- Logs Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-750 border-b border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="py-2.5 px-3 font-semibold">เน€เธงเธฅเธฒ</th>
+                                    <th class="py-2.5 px-3 font-semibold">เธเธนเนเนเธเนเธเธฒเธ</th>
+                                    <th class="py-2.5 px-3 font-semibold">เน€เธกเธเธนเธญเธฒเธซเธฒเธฃเธ—เธตเนเธ•เธฃเธงเธเธเธ</th>
+                                    <th class="py-2.5 px-3 font-semibold text-right">เธเธฅเธฑเธเธเธฒเธ</th>
+                                    <th class="py-2.5 px-3 font-semibold text-center">เธเนเธญเธเธ—เธฒเธ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminAiScanLogsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                                <tr>
+                                    <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
+                                        โณ เธเธณเธฅเธฑเธเนเธซเธฅเธ”เธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธชเนเธเธ...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>            </div>
 
         </div>
 

@@ -1,4 +1,4 @@
-const APP_VERSION = '5.7.2';
+const APP_VERSION = '5.7.3';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -134,6 +134,7 @@ const APP_VERSION = '5.7.2';
                     if (state.logsByDate) {
                         Object.keys(state.logsByDate).forEach(date => {
                             state.logsByDate[date] = (state.logsByDate[date] || []).map(m => {
+                                const id = m.id || ('log_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7));
                                 const portion = m.portion || 1;
                                 const baseCal = m.baseCal !== undefined ? m.baseCal : Math.round(m.cal / portion);
                                 const baseP = m.baseP !== undefined ? m.baseP : Math.round((m.p / portion) * 10) / 10;
@@ -142,6 +143,7 @@ const APP_VERSION = '5.7.2';
                                 const meal = m.meal || inferMealFromTime(m.time);
                                 return {
                                     ...m,
+                                    id,
                                     meal,
                                     portion,
                                     baseCal,
@@ -1640,6 +1642,7 @@ const APP_VERSION = '5.7.2';
                             </div>
                         `
                         : items.map(m => {
+                            if (!m.id) m.id = 'log_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
                             const portion = m.portion || 1;
                             const portionBadge = portion !== 1
                                 ? `<span class="px-1.5 py-0.5 rounded text-xs font-bold bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30">x${portion}</span>`
@@ -2389,6 +2392,7 @@ const APP_VERSION = '5.7.2';
             item.meal = newMeal;
             saveState();
             renderAll();
+            if (window.triggerCloudSync) window.triggerCloudSync(false);
             showToast(`ย้าย "${item.name}" ไปยัง ${MEAL_CONFIG[newMeal]?.name || newMeal} แล้ว`);
         }
 
@@ -2416,7 +2420,8 @@ const APP_VERSION = '5.7.2';
         function removeFoodItem(id) {
             const dStr = state.selectedDate;
             if (!state.logsByDate[dStr]) return;
-            state.logsByDate[dStr] = state.logsByDate[dStr].filter(m => m.id !== id);
+            state.logsByDate[dStr] = state.logsByDate[dStr].filter(m => m.id && m.id !== id);
+            if (window.triggerCloudSync) window.triggerCloudSync(false);
             saveState();
             renderAll();
         }
@@ -3838,6 +3843,9 @@ const APP_VERSION = '5.7.2';
         window.syncResponsiveLayout = syncResponsiveLayout;
         window.checkDayRollover = checkDayRollover;
         window.checkFirstVisitProfilePrompt = checkFirstVisitProfilePrompt;
+        window.addFoodItem = addFoodItem;
+        window.removeFoodItem = removeFoodItem;
+        window.changeMealCategory = changeMealCategory;
 
         // Directly updates lexical state and re-renders UI across all components
         window.applyCloudState = function (cloudState) {

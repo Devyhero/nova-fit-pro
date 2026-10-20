@@ -644,6 +644,28 @@ server.listen(PORT, async () => {
             throw new Error(`Saving AI meal failed! Expected ${logsBefore + 1}, got ${logsAfter}`);
         }
 
+        const savedAiItem = await evalJs('state.logsByDate[state.selectedDate].find(m => m.name === "ข้าวกะเพราหมูสับไข่ดาว (AI Test)")');
+        console.log('Saved AI item has valid id:', !!(savedAiItem && savedAiItem.id));
+        if (!savedAiItem || !savedAiItem.id) {
+            throw new Error('AI saved item must have a valid id');
+        }
+
+        // Test changing meal category on the saved AI item
+        await evalJs(`changeMealCategory('${savedAiItem.id}', 'dinner')`);
+        const itemMealAfter = await evalJs(`state.logsByDate[state.selectedDate].find(m => m.id === '${savedAiItem.id}').meal`);
+        console.log('Saved AI item meal changed to dinner:', itemMealAfter === 'dinner');
+        if (itemMealAfter !== 'dinner') {
+            throw new Error('Failed to change meal category on AI item');
+        }
+
+        // Test deleting the saved AI item
+        await evalJs(`removeFoodItem('${savedAiItem.id}')`);
+        const logsAfterDelete = await evalJs('(state.logsByDate[state.selectedDate] || []).length');
+        console.log('Logs count after deleting AI item:', logsAfterDelete);
+        if (logsAfterDelete !== logsBefore) {
+            throw new Error(`Failed to delete AI item with id ${savedAiItem.id}`);
+        }
+
         // Test 22: AI Snap Anti-Abuse, Rate Limiting (15/day) & UAT Unlimited Bypass
         console.log('--- Test 22: AI Snap Anti-Abuse, Quotas & UAT Environment Bypass ---');
         const isUatEnv = await evalJs('isUatEnvironment()');

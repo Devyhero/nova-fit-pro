@@ -17,7 +17,10 @@ import {
     addDoc,
     doc,
     getDoc,
-    setDoc
+    setDoc,
+    query,
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -680,7 +683,8 @@ window.switchAdminTab = function (tabId) {
     if (tabId === 'message_logs' && window.loadAdminMessageLogs) {
         window.loadAdminMessageLogs();
     }
-    if (tabId === 'system_ai' && window.loadAdminGeminiApiKey) {
+    if (tabId === 'system_ai') {
+        if (window.loadAdminAiScanLogs) window.loadAdminAiScanLogs();
         window.loadAdminGeminiApiKey();
     }
 };
@@ -1146,6 +1150,11 @@ window.loadAdminGeminiApiKey = async function () {
             const key = data.geminiApiKey || '';
             if (input && !input.value) {
                 input.value = key;
+                const quota = data.dailyQuota || 15;
+                const quotaInput = document.getElementById('adminAiDailyQuotaInput');
+                if (quotaInput) quotaInput.value = quota;
+                const quotaStat = document.getElementById('statAiCurrentQuota');
+                if (quotaStat) quotaStat.textContent = quota + '/คน';
             }
             if (badge) {
                 if (key) {
@@ -1185,7 +1194,11 @@ window.saveAdminGeminiApiKey = async function () {
     }
 
     try {
+        const quotaInput = document.getElementById('adminAiDailyQuotaInput');
+        const dailyQuota = Math.max(1, Math.min(100, Number(quotaInput ? quotaInput.value : 15) || 15));
+
         await setDoc(doc(db, 'system_config', 'ai'), {
+            dailyQuota: dailyQuota,
             geminiApiKey: key,
             updatedAt: new Date().toISOString(),
             updatedBy: currentUser?.email || 'admin'
@@ -1252,5 +1265,93 @@ window.testAdminGeminiApiKey = async function () {
     } else {
         console.error('Gemini test ping failed:', lastErr);
         alert('❌ การทดสอบล้มเหลว: ' + (lastErr?.message || 'ไม่สามารถเชื่อมต่อได้'));
+    }
+};
+
+window.loadAdminAiScanLogs = async function () {
+    const tbody = document.getElementById('adminAiScanLogsTableBody');
+    const statScans = document.getElementById('statAiScansToday');
+    const statUsers = document.getElementById('statAiUniqueUsers');
+    if (!tbody) return;
+
+    try {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 text-xs">⏳ กำลังโหลดประวัติการสแกน...</td></tr>';
+
+        const logsRef = collection(db, 'ai_scan_logs');
+        const q = query(logsRef, orderBy('timestamp', 'desc'), limit(50));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">ยังไม่มีประวัติการสแกนอาหารในระบบ</td></tr>';
+            if (statScans) statScans.textContent = '0';
+            if (statUsers) statUsers.textContent = '0';
+            return;
+        }
+
+        const todayIso = new Date().toISOString().split('T')[0];
+        let scansTodayCount = 0;
+        const uniqueUsersToday = new Set();
+
+        const rows = [];
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const dateStr = d.dateStr || (d.timestamp ? new Date(d.timestamp).toISOString().split('T')[0] : '');
+            if (dateStr === todayIso) {
+                scansTodayCount++;
+                if (d.userId || d.userEmail) uniqueUsersToday.add(d.userId || d.userEmail);
+            }
+
+            const timeFormatted = d.timestamp
+                ? new Date(d.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+                : '-';
+            const dateFormatted = d.timestamp
+                ? new Date(d.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                : '';
+
+            const userPhoto = d.userPhoto || 'icon.svg';
+            const userName = d.userName || 'ผู้ใช้งาน';
+            const userEmail = d.userEmail || '';
+            const foodName = d.foodName || 'เมนูอาหาร';
+            const cal = d.cal || 0;
+            const env = d.environment === 'uat' ? 'UAT' : 'PROD';
+            const envBadge = env === 'UAT'
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400">UAT</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">PROD</span>';
+
+            rows.push(`
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-750/50 transition">
+                    <td class="py-2.5 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 text-[11px]">
+                        <div>${timeFormatted} น.</div>
+                        <div class="text-[10px] text-slate-400">${dateFormatted}</div>
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <div class="flex items-center gap-2">
+                            <img src="${userPhoto}" class="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 object-cover" onerror="this.src='icon.svg'">
+                            <div class="min-w-0">
+                                <div class="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px] sm:max-w-[180px]">${userName}</div>
+                                <div class="text-[10px] text-slate-400 truncate max-w-[130px] sm:max-w-[180px]">${userEmail}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">${foodName}</span>
+                        <div class="text-[10px] text-slate-400">P:${d.p || 0}g C:${d.c || 0}g F:${d.f || 0}g</div>
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-black text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                        ${cal} kcal
+                    </td>
+                    <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                        ${envBadge}
+                    </td>
+                </tr>
+            `);
+        });
+
+        tbody.innerHTML = rows.join('');
+        if (statScans) statScans.textContent = scansTodayCount;
+        if (statUsers) statUsers.textContent = uniqueUsersToday.size;
+    } catch (err) {
+        console.error('Failed to load AI scan logs:', err);
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-500 text-xs">⚠️ เกิดข้อผิดพลาดในการโหลดประวัติ: ${err.message}</td></tr>`;
     }
 };

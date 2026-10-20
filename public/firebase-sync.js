@@ -19,7 +19,8 @@ import {
     collection,
     query,
     orderBy,
-    updateDoc
+    updateDoc,
+    addDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -107,11 +108,19 @@ async function fetchSystemAiConfig() {
         const snap = await getDoc(doc(db, 'system_config', 'ai'));
         if (snap.exists()) {
             const aiConfig = snap.data();
-            if (aiConfig && aiConfig.geminiApiKey) {
-                window._systemGeminiApiKey = aiConfig.geminiApiKey;
-                try {
-                    localStorage.setItem('novafit_system_gemini_api_key', aiConfig.geminiApiKey);
-                } catch (e) { }
+            if (aiConfig) {
+                if (aiConfig.geminiApiKey) {
+                    window._systemGeminiApiKey = aiConfig.geminiApiKey;
+                    try {
+                        localStorage.setItem('novafit_system_gemini_api_key', aiConfig.geminiApiKey);
+                    } catch (e) { }
+                }
+                if (aiConfig.dailyQuota) {
+                    window._systemDailyQuota = Number(aiConfig.dailyQuota);
+                    try {
+                        localStorage.setItem('novafit_system_daily_quota', aiConfig.dailyQuota);
+                    } catch (e) { }
+                }
                 if (window.updateAiSnapQuotaDisplay) {
                     window.updateAiSnapQuotaDisplay();
                 }
@@ -699,4 +708,8 @@ window.markAllNotificationsAsRead = async function () {
     updateNotificationBadge(0);
     renderNotificationsModalList();
 };
+
+window.firebaseDb = db;
+window.firestoreCollection = collection;
+window.firestoreAddDoc = addDoc;
 
