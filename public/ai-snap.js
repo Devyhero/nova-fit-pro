@@ -949,32 +949,39 @@ function getSuggestedMealByHour() {
     return 'snack';
 }
 
-// Web Speech Recognition Controller (th-TH) - Mobile-First Lifecycle v4
-// Architecture: "session-token" pattern — each recording attempt gets a unique token.
-// All async callbacks check this token before acting, preventing stale callbacks
-// from interfering with a new session. This is the most robust mobile approach.
+// Web Speech Recognition Controller (th-TH) - Mobile-First Lifecycle v5
+// ══════════════════════════════════════════════════════════════════
+// CRITICAL iOS Safari Rule: webkitSpeechRecognition.start() MUST be
+// called SYNCHRONOUSLY inside a user-gesture handler (touchend/click).
+// ANY setTimeout before .start() — even 1ms — breaks the permission
+// chain on iOS and causes silent failure on every subsequent tap.
+//
+// Architecture:
+//  • toggleAiVoiceRecording() → called directly from button click
+//    → calls _executeStartSpeech() SYNCHRONOUSLY (no setTimeout gap)
+//  • After each session ends (onend): button is disabled for cooldown.
+//    When cooldown ends, button re-enables. User taps again → new
+//    user-gesture → start() is legal again.
+//  • Session-token pattern prevents stale async callbacks from
+//    interfering with a newer session.
+// ══════════════════════════════════════════════════════════════════
 let _speechBaseText = '';
-let _speechStartTimer = null;
-let _sessionToken = 0; // Incremented on each new session — stale callbacks are dropped
-let _micReadyTimer = null; // Timer that re-enables the button after mic cooldown
+let _sessionToken = 0;
+let _micReadyTimer = null;
 
-// Detect iOS/iPadOS — needs longer delays & continuous=false
 const _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-// Android Chrome also needs guards
 const _isMobile = _isIOS || /Android/i.test(navigator.userAgent);
-
-// Mic hardware needs this long to fully release after a session ends
-const _MIC_COOLDOWN_MS = _isIOS ? 600 : (_isMobile ? 400 : 80);
+// iOS needs no auto-restart during cooldown (user gesture required).
+// Android needs a short cooldown but can still use setTimeout.
+const _MIC_COOLDOWN_MS = _isIOS ? 500 : (_isMobile ? 350 : 80);
 
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     const recognition = new SpeechRecognition();
     recognition.lang = 'th-TH';
-    // continuous=true is unreliable on mobile: auto-stops after brief silence.
-    // Use false for mobile so each session is one phrase, stopping cleanly.
-    recognition.continuous = !_isMobile;
+    recognition.continuous = !_isMobile; // continuous unreliable on iOS/Android
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     return recognition;
@@ -996,14 +1003,16 @@ function resetAiVoiceMicUI() {
     const btnRecord = document.getElementById('btnAiVoiceRecord');
 
     if (micIcon) micIcon.textContent = '🎙️';
-    if (recordText) recordText.textContent = 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
+    if (recordText) recordText.textContent = _isIOS
+        ? 'กดปุ่มเพื่อเริ่มพูด (พูดจบแล้วกดอีกครั้ง)'
+        : 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
     if (micPulse) micPulse.classList.add('hidden');
     if (liveStatus) liveStatus.classList.add('hidden');
     if (liveTranscript) liveTranscript.classList.add('hidden');
     if (btnRecord) {
         btnRecord.classList.remove('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
         btnRecord.classList.add('from-purple-600', 'via-indigo-600', 'to-pink-500');
-        // Do NOT force-enable here — _setMicBtnReady controls disabled state
+        // NOTE: do NOT touch .disabled here — cooldown timer controls that
     }
 }
 
@@ -1019,21 +1028,32 @@ function setAiVoiceMicActiveUI() {
     if (recordText) recordText.textContent = 'กำลังฟังเสียง... แตะเพื่อหยุด';
     if (micPulse) micPulse.classList.remove('hidden');
     if (liveStatus) liveStatus.classList.remove('hidden');
-    if (liveTranscript) {
-        liveTranscript.textContent = '';
-        liveTranscript.classList.add('hidden');
-    }
+    if (liveTranscript) { liveTranscript.textContent = ''; liveTranscript.classList.add('hidden'); }
     if (btnRecord) {
         btnRecord.classList.remove('from-purple-600', 'via-indigo-600', 'to-pink-500');
         btnRecord.classList.add('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
-        _setMicBtnReady(true);
+        _setMicBtnReady(true); // Always tappable while recording (to stop)
     }
 }
 
-// Central stop: always increments session token, locks button, schedules re-enable
+// Called after session ends — locks button for cooldown, then re-enables
+function _scheduleReadyAfterCooldown() {
+    clearTimeout(_micReadyTimer);
+    _setMicBtnReady(false);
+    const btn = document.getElementById('btnAiVoiceRecord');
+    if (btn) {
+        const origText = document.getElementById('aiVoiceRecordText');
+        if (origText) origText.textContent = 'รอสักครู่...';
+    }
+    _micReadyTimer = setTimeout(() => {
+        resetAiVoiceMicUI();
+        _setMicBtnReady(true);
+    }, _MIC_COOLDOWN_MS);
+}
+
+// Fully stop and dispose current session
 function stopAiVoiceRecording() {
-    _sessionToken++; // Invalidate all stale callbacks from the old session
-    clearTimeout(_speechStartTimer);
+    _sessionToken++; // Invalidate stale callbacks
     clearTimeout(_micReadyTimer);
     _isSpeechRecording = false;
 
@@ -1045,33 +1065,30 @@ function stopAiVoiceRecording() {
     }
 
     resetAiVoiceMicUI();
-
-    // Lock button during mic cooldown — prevents rapid re-entry before audio pipeline resets
-    _setMicBtnReady(false);
-    _micReadyTimer = setTimeout(() => {
-        _setMicBtnReady(true);
-    }, _MIC_COOLDOWN_MS);
+    _scheduleReadyAfterCooldown();
 }
 
+// ══════════════════════════════════════════════════════════════════
+// toggleAiVoiceRecording — MUST be called directly from button onclick
+// Do NOT wrap in setTimeout before calling this from HTML
+// ══════════════════════════════════════════════════════════════════
 function toggleAiVoiceRecording() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        const notice = document.getElementById('aiVoiceNotSupportedNotice');
-        if (notice) notice.classList.remove('hidden');
+        document.getElementById('aiVoiceNotSupportedNotice')?.classList.remove('hidden');
         return;
     }
+
+    // Button disabled = cooldown period, ignore tap
     const btn = document.getElementById('btnAiVoiceRecord');
-    if (btn && btn.disabled) return; // Button locked during cooldown — ignore tap
+    if (btn?.disabled) return;
 
     if (_isSpeechRecording) {
         stopAiVoiceRecording();
-    } else {
-        startAiVoiceRecording();
+        return;
     }
-}
 
-function startAiVoiceRecording() {
-    // Auth & Quota check
+    // Auth & quota check
     if (!window.currentUser && !isUatEnvironment()) {
         alert('กรุณาเข้าสู่ระบบด้วย Google ก่อนใช้งานฟีเจอร์ AI Voice ครับ');
         return;
@@ -1080,21 +1097,40 @@ function startAiVoiceRecording() {
         alert('คุณใช้โควตา AI ประจำวันครบ 15/15 ครั้งแล้ว โควตาจะรีเซ็ตใหม่ในวันพรุ่งนี้เวลา 00:00 น.');
         return;
     }
-    // Force-stop any existing session
+
+    // Dispose any ghost instance synchronously before starting
+    if (_speechRecognitionInstance) {
+        const ghost = _speechRecognitionInstance;
+        _speechRecognitionInstance = null;
+        try { ghost.onstart = null; ghost.onresult = null; ghost.onend = null; ghost.onerror = null; ghost.stop(); } catch(e) {}
+    }
+    _isSpeechRecording = false;
+
+    // ↓↓↓ CRITICAL: _executeStartSpeech() — and the inst.start() inside it —
+    //     must be called HERE synchronously inside this click/touch handler.
+    //     NO setTimeout before this line — that would break iOS permission chain.
+    _executeStartSpeech();
+}
+
+// startAiVoiceRecording: for programmatic use (not from button tap).
+// Uses setTimeout for non-iOS — will NOT work on iOS (no user gesture).
+function startAiVoiceRecording() {
+    if (_isIOS) return; // iOS must go through toggleAiVoiceRecording (user gesture)
+    if (!window.currentUser && !isUatEnvironment()) return;
+    if (isAiQuotaExceeded()) return;
+
     if (_speechRecognitionInstance || _isSpeechRecording) {
         stopAiVoiceRecording();
-        // stopAiVoiceRecording already scheduled _micReadyTimer to re-enable button
-        // after cooldown — piggyback on that: schedule start after cooldown too
-        clearTimeout(_speechStartTimer);
-        _speechStartTimer = setTimeout(() => _executeStartSpeech(), _MIC_COOLDOWN_MS + 10);
+        clearTimeout(_micReadyTimer);
+        _micReadyTimer = setTimeout(() => _executeStartSpeech(), _MIC_COOLDOWN_MS + 10);
         return;
     }
     _executeStartSpeech();
 }
 
 function _executeStartSpeech() {
-    const myToken = ++_sessionToken; // Claim a new session token
-    _isSpeechRecording = false; // Will be set true in onstart
+    const myToken = ++_sessionToken;
+    _isSpeechRecording = false;
 
     const textInput = document.getElementById('aiVoiceTextInput');
     _speechBaseText = (textInput?.value || '').trim();
@@ -1112,81 +1148,71 @@ function _executeStartSpeech() {
     }
 
     inst.onstart = () => {
-        if (_sessionToken !== myToken) return; // Stale callback — ignore
+        if (_sessionToken !== myToken) return;
         _isSpeechRecording = true;
         setAiVoiceMicActiveUI();
     };
 
     inst.onresult = (event) => {
-        if (_sessionToken !== myToken) return; // Stale callback — ignore
-        let finalTranscript = '';
-        let interimTranscript = '';
+        if (_sessionToken !== myToken) return;
+        let final = '', interim = '';
         for (let i = 0; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
+            if (event.results[i].isFinal) final += event.results[i][0].transcript;
+            else interim += event.results[i][0].transcript;
         }
-        const spokenSoFar = (finalTranscript + ' ' + interimTranscript).trim().replace(/\s+/g, ' ');
-        if (liveTranscript && spokenSoFar) {
-            liveTranscript.textContent = '🗣️ "' + spokenSoFar + '"';
-            liveTranscript.classList.remove('hidden');
-        } else if (liveTranscript) {
-            liveTranscript.classList.add('hidden');
+        const spoken = (final + ' ' + interim).trim().replace(/\s+/g, ' ');
+        if (liveTranscript) {
+            if (spoken) { liveTranscript.textContent = '🗣️ "' + spoken + '"'; liveTranscript.classList.remove('hidden'); }
+            else liveTranscript.classList.add('hidden');
         }
-        if (textInput && spokenSoFar) {
-            textInput.value = _speechBaseText ? (_speechBaseText + ' ' + spokenSoFar) : spokenSoFar;
-        }
+        if (textInput && spoken) textInput.value = _speechBaseText ? (_speechBaseText + ' ' + spoken) : spoken;
     };
 
     inst.onend = () => {
-        if (_sessionToken !== myToken) return; // Stale callback — already superseded
-        // Session ended naturally (mobile auto-stop after silence, or user tapped stop)
+        if (_sessionToken !== myToken) return;
+        // Session ended naturally (silence auto-stop on mobile, or .stop() called)
         _isSpeechRecording = false;
         _speechRecognitionInstance = null;
-        // Lock button for cooldown, then re-enable
         resetAiVoiceMicUI();
-        _setMicBtnReady(false);
-        clearTimeout(_micReadyTimer);
-        _micReadyTimer = setTimeout(() => { _setMicBtnReady(true); }, _MIC_COOLDOWN_MS);
+        // Re-enable button after cooldown — user must tap again (user gesture for next start)
+        _scheduleReadyAfterCooldown();
     };
 
     inst.onerror = (event) => {
-        if (_sessionToken !== myToken) return; // Stale callback — ignore
+        if (_sessionToken !== myToken) return;
         const err = event.error;
-        console.warn('[Voice] onerror:', err, '| iOS:', _isIOS, '| Android:', _isMobile && !_isIOS);
-        // 'aborted' fires on Android after every normal stop — safe to ignore if not recording
+        console.warn('[Voice] onerror:', err, '| iOS:', _isIOS);
+        // 'aborted' is routine on Android after a normal stop — ignore if not recording
         if (err === 'aborted' && !_isSpeechRecording) return;
         if (err === 'not-allowed') {
-            alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนในการตั้งค่าเบราว์เซอร์ หรือพิมพ์ข้อความแทนได้ครับ');
+            alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาตรวจสอบการตั้งค่าไมโครโฟนของเบราว์เซอร์');
         }
         _isSpeechRecording = false;
         _speechRecognitionInstance = null;
         resetAiVoiceMicUI();
-        _setMicBtnReady(false);
-        clearTimeout(_micReadyTimer);
-        _micReadyTimer = setTimeout(() => { _setMicBtnReady(true); }, _MIC_COOLDOWN_MS);
+        _scheduleReadyAfterCooldown();
     };
 
+    // ↓↓↓ start() called SYNCHRONOUSLY — must stay here, no setTimeout wrapper
     try {
-        _setMicBtnReady(true); // Ensure button is tappable (to stop) once we start
         inst.start();
     } catch (err) {
-        if (_sessionToken !== myToken) return;
-        console.warn('[Voice] start() threw:', err.message, '— retrying after cooldown');
+        console.warn('[Voice] inst.start() threw:', err.message);
         _speechRecognitionInstance = null;
+        _isSpeechRecording = false;
         resetAiVoiceMicUI();
-        _setMicBtnReady(false);
-        clearTimeout(_micReadyTimer);
-        // One automatic retry after full cooldown
-        _micReadyTimer = setTimeout(() => {
+        // On iOS: don't auto-retry (no user gesture in setTimeout context)
+        // Just re-enable button so user can tap again
+        if (_isIOS) {
             _setMicBtnReady(true);
-            // Only auto-retry if user hasn't started another session
-            if (_sessionToken === myToken && !_isSpeechRecording) {
-                _executeStartSpeech();
-            }
-        }, _MIC_COOLDOWN_MS + 100);
+        } else {
+            // Non-iOS: safe to retry after delay
+            clearTimeout(_micReadyTimer);
+            _micReadyTimer = setTimeout(() => {
+                if (_sessionToken === myToken && !_isSpeechRecording) _executeStartSpeech();
+                else { resetAiVoiceMicUI(); _setMicBtnReady(true); }
+            }, _MIC_COOLDOWN_MS + 50);
+        }
     }
 }
 
