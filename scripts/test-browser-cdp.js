@@ -363,7 +363,7 @@ server.listen(PORT, async () => {
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.5') || !toolsBadgeText.includes('v5.6.5')) {
+        if (!headerBadgeText.includes('v5.6.6') || !toolsBadgeText.includes('v5.6.6')) {
             throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
         }
 
@@ -505,6 +505,85 @@ server.listen(PORT, async () => {
         console.log('Fasting complete modal closed:', isFastingModalClosed);
         if (!isFastingModalClosed) {
             throw new Error('Fasting Complete Modal failed to close');
+        }
+
+        // Test 20: Supplements Management (Add, Delete Any, Empty State & Restore Defaults)
+        console.log('--- Test 20: Supplement Management (Add, Delete Any & Restore Defaults) ---');
+        await evalJs('renderSupplements()');
+        const initialSuppCount = await evalJs('(state.supplementList || []).length');
+        console.log('Initial supplement count:', initialSuppCount);
+
+        // Add custom supplement
+        await evalJs(`
+            state.supplementList.push({
+                id: 'supp_test_omega',
+                name: 'โอเมก้า 3 พรีเมียม',
+                time: 'หลังอาหารเช้า',
+                icon: '🐟',
+                isCustom: true
+            });
+            saveState();
+            renderSupplements();
+        `);
+        const afterAddCount = await evalJs('(state.supplementList || []).length');
+        console.log('Supplement count after adding:', afterAddCount);
+        if (afterAddCount !== initialSuppCount + 1) {
+            throw new Error(`Supplement add failed! Expected ${initialSuppCount + 1}, got ${afterAddCount}`);
+        }
+
+        // Verify that delete button exists for all items
+        const suppContainerHtml = await evalJs('document.getElementById("supplementListContainer").innerHTML');
+        if (!suppContainerHtml.includes('deleteSupplement(')) {
+            throw new Error('Delete button with deleteSupplement() handler not found in supplement list HTML');
+        }
+
+        // Test delete item without confirm prompt mock
+        await evalJs(`(() => {
+            const origConfirm = window.confirm;
+            window.confirm = () => true;
+            try {
+                deleteSupplement('supp_test_omega');
+            } finally {
+                window.confirm = origConfirm;
+            }
+        })()`);
+        const afterDeleteCount = await evalJs('(state.supplementList || []).length');
+        console.log('Supplement count after deleting test item:', afterDeleteCount);
+        if (afterDeleteCount !== initialSuppCount) {
+            throw new Error(`Supplement delete failed! Expected ${initialSuppCount}, got ${afterDeleteCount}`);
+        }
+
+        // Test delete default item (e.g. first item)
+        await evalJs(`(() => {
+            const firstId = state.supplementList[0].id;
+            const origConfirm = window.confirm;
+            window.confirm = () => true;
+            try {
+                deleteSupplement(firstId);
+            } finally {
+                window.confirm = origConfirm;
+            }
+        })()`);
+        const afterDelDefaultCount = await evalJs('(state.supplementList || []).length');
+        console.log('Supplement count after deleting default item:', afterDelDefaultCount);
+        if (afterDelDefaultCount !== initialSuppCount - 1) {
+            throw new Error(`Deleting default supplement failed! Expected ${initialSuppCount - 1}, got ${afterDelDefaultCount}`);
+        }
+
+        // Test restore default supplements
+        await evalJs(`(() => {
+            const origConfirm = window.confirm;
+            window.confirm = () => true;
+            try {
+                restoreDefaultSupplements();
+            } finally {
+                window.confirm = origConfirm;
+            }
+        })()`);
+        const restoredCount = await evalJs('(state.supplementList || []).length');
+        console.log('Supplement count after restoreDefaultSupplements:', restoredCount);
+        if (restoredCount !== 7) {
+            throw new Error(`Restore default supplements failed! Expected 7, got ${restoredCount}`);
         }
 
         ws.close();

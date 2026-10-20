@@ -1,4 +1,4 @@
-const APP_VERSION = '5.6.5';
+const APP_VERSION = '5.6.6';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -47,7 +47,7 @@ const APP_VERSION = '5.6.5';
             workoutsByDate: {},
             dayTypeByDate: {},
             mealCombos: DEFAULT_MEAL_COMBOS,
-            supplementList: DEFAULT_SUPPLEMENTS,
+            supplementList: JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS)),
             supplementsByDate: {},
             fasting: {
                 isFasting: false,
@@ -99,7 +99,7 @@ const APP_VERSION = '5.6.5';
                         workoutsByDate: (parsed.workoutsByDate && typeof parsed.workoutsByDate === 'object') ? parsed.workoutsByDate : {},
                         dayTypeByDate: (parsed.dayTypeByDate && typeof parsed.dayTypeByDate === 'object') ? parsed.dayTypeByDate : {},
                         mealCombos: (Array.isArray(parsed.mealCombos) && parsed.mealCombos.length > 0) ? parsed.mealCombos : DEFAULT_MEAL_COMBOS,
-                        supplementList: (Array.isArray(parsed.supplementList) && parsed.supplementList.length > 0) ? parsed.supplementList : DEFAULT_SUPPLEMENTS,
+                        supplementList: Array.isArray(parsed.supplementList) ? parsed.supplementList : JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS)),
                         supplementsByDate: (parsed.supplementsByDate && typeof parsed.supplementsByDate === 'object') ? parsed.supplementsByDate : {},
                         fasting: (parsed.fasting && typeof parsed.fasting === 'object') ? {
                             isFasting: !!parsed.fasting.isFasting,
@@ -177,7 +177,7 @@ const APP_VERSION = '5.6.5';
             if (!state.selectedPortion) state.selectedPortion = 1;
             if (!Array.isArray(state.favorites)) state.favorites = [];
             if (!Array.isArray(state.mealCombos) || state.mealCombos.length === 0) state.mealCombos = DEFAULT_MEAL_COMBOS;
-            if (!Array.isArray(state.supplementList) || state.supplementList.length === 0) state.supplementList = DEFAULT_SUPPLEMENTS;
+            if (!Array.isArray(state.supplementList)) state.supplementList = JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS));
             if (!state.dayTypeByDate || typeof state.dayTypeByDate !== 'object') state.dayTypeByDate = {};
             if (!state.supplementsByDate || typeof state.supplementsByDate !== 'object') state.supplementsByDate = {};
             if (!state.bodyTab) state.bodyTab = 'weight';
@@ -1868,7 +1868,7 @@ const APP_VERSION = '5.6.5';
         }
 
         // ==========================================
-        // SUPPLEMENT & VITAMIN CHECKLIST (v5.0.0)
+        // SUPPLEMENT & VITAMIN CHECKLIST (v5.6.6)
         // ==========================================
         function renderSupplements() {
             const container = document.getElementById('supplementListContainer');
@@ -1877,7 +1877,10 @@ const APP_VERSION = '5.6.5';
             if (!container) return;
 
             const dStr = state.selectedDate;
-            const supps = state.supplementList || DEFAULT_SUPPLEMENTS;
+            const defaultList = (typeof window.DEFAULT_SUPPLEMENTS !== 'undefined' && Array.isArray(window.DEFAULT_SUPPLEMENTS))
+                ? window.DEFAULT_SUPPLEMENTS
+                : (typeof DEFAULT_SUPPLEMENTS !== 'undefined' ? DEFAULT_SUPPLEMENTS : []);
+            const supps = Array.isArray(state.supplementList) ? state.supplementList : defaultList;
             const checkedMap = (state.supplementsByDate && state.supplementsByDate[dStr]) || {};
 
             let takenCount = 0;
@@ -1898,11 +1901,25 @@ const APP_VERSION = '5.6.5';
             }
 
             if (supps.length === 0) {
-                container.innerHTML = '<div class="col-span-2 text-center py-4 text-xs text-slate-400">ยังไม่มีรายการอาหารเสริม กดปุ่ม + เพิ่ม ด้านบนเพื่อเริ่มใช้งาน</div>';
+                container.innerHTML = `
+                    <div class="col-span-1 sm:col-span-2 text-center py-6 px-4 bg-slate-50/60 dark:bg-slate-700/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <div class="text-2xl mb-1.5">💊</div>
+                        <div class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">ยังไม่มีรายการวิตามินหรืออาหารเสริม</div>
+                        <div class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">กดปุ่ม "+ เพิ่มวิตามิน" เพื่อบันทึกตัวที่คุณทาน หรือคืนค่าเริ่มต้นได้เลย</div>
+                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                            <button type="button" onclick="openAddSupplementModal()" class="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-xs transition">
+                                + เพิ่มวิตามิน
+                            </button>
+                            <button type="button" onclick="restoreDefaultSupplements()" class="text-xs px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition">
+                                ↺ คืนค่าเริ่มต้น (7 รายการ)
+                            </button>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
-            container.innerHTML = supps.map(s => {
+            const itemsHtml = supps.map(s => {
                 const isTaken = !!checkedMap[s.id];
                 const bgClass = isTaken
                     ? 'bg-emerald-500/10 border-emerald-500/40 text-slate-800 dark:text-slate-100 shadow-xs'
@@ -1924,13 +1941,23 @@ const APP_VERSION = '5.6.5';
                                 <div class="text-[10px] text-slate-400 truncate">${s.time || 'พร้อมอาหาร'}</div>
                             </div>
                         </div>
-                        ${s.isCustom ? `
-                            <button onclick="event.stopPropagation(); deleteCustomSupplement('${s.id}')"
-                                class="text-slate-300 hover:text-rose-500 p-1 text-xs shrink-0" title="ลบอาหารเสริมนี้">✕</button>
-                        ` : ''}
+                        <button type="button" onclick="event.stopPropagation(); deleteSupplement('${s.id}')"
+                            class="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-1.5 text-xs shrink-0 rounded hover:bg-rose-500/10 transition"
+                            title="ลบ ${s.name} ออกจากรายการ">✕</button>
                     </div>
                 `;
             }).join('');
+
+            const footerHtml = `
+                <div class="col-span-1 sm:col-span-2 flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                    <span>💡 แตะการ์ดเพื่อติ๊กทานแล้ว หรือกด ✕ เพื่อลบ</span>
+                    <button type="button" onclick="restoreDefaultSupplements()" class="text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 underline transition">
+                        ↺ คืนค่ารายการเริ่มต้น
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = itemsHtml + footerHtml;
         }
 
         function toggleSupplement(suppId) {
@@ -1945,7 +1972,7 @@ const APP_VERSION = '5.6.5';
             const defaultList = (typeof window.DEFAULT_SUPPLEMENTS !== 'undefined' && Array.isArray(window.DEFAULT_SUPPLEMENTS))
                 ? window.DEFAULT_SUPPLEMENTS
                 : (typeof DEFAULT_SUPPLEMENTS !== 'undefined' ? DEFAULT_SUPPLEMENTS : []);
-            const allSupps = (Array.isArray(state.supplementList) && state.supplementList.length > 0)
+            const allSupps = Array.isArray(state.supplementList)
                 ? state.supplementList
                 : defaultList;
 
@@ -2006,11 +2033,8 @@ const APP_VERSION = '5.6.5';
                 alert('กรุณากรอกชื่อวิตามินหรืออาหารเสริมครับ');
                 return;
             }
-            const defaultList = (typeof window.DEFAULT_SUPPLEMENTS !== 'undefined' && Array.isArray(window.DEFAULT_SUPPLEMENTS))
-                ? window.DEFAULT_SUPPLEMENTS
-                : (typeof DEFAULT_SUPPLEMENTS !== 'undefined' ? DEFAULT_SUPPLEMENTS : []);
-            if (!Array.isArray(state.supplementList) || state.supplementList.length === 0) {
-                state.supplementList = [...defaultList];
+            if (!Array.isArray(state.supplementList)) {
+                state.supplementList = [];
             } else {
                 state.supplementList = [...state.supplementList];
             }
@@ -2038,12 +2062,30 @@ const APP_VERSION = '5.6.5';
             showToast(`✓ เพิ่มอาหารเสริม "${name}" เรียบร้อยแล้ว`);
         }
 
-        function deleteCustomSupplement(suppId) {
-            if (!confirm('ต้องการลบรายการอาหารเสริมนี้ใช่หรือไม่?')) return;
-            state.supplementList = (state.supplementList || []).filter(s => s.id !== suppId);
+        function deleteSupplement(suppId) {
+            const list = Array.isArray(state.supplementList) ? state.supplementList : [];
+            const target = list.find(s => s.id === suppId);
+            const targetName = target ? target.name : 'อาหารเสริมนี้';
+            if (!confirm(`ต้องการลบ "${targetName}" ออกจากรายการใช่หรือไม่?`)) return;
+            state.supplementList = list.filter(s => s.id !== suppId);
             saveState();
             renderSupplements();
-            showToast('ลบรายการอาหารเสริมเรียบร้อยแล้ว');
+            showToast(`ลบ "${targetName}" เรียบร้อยแล้ว`);
+        }
+
+        function deleteCustomSupplement(suppId) {
+            deleteSupplement(suppId);
+        }
+
+        function restoreDefaultSupplements() {
+            const defaultList = (typeof window.DEFAULT_SUPPLEMENTS !== 'undefined' && Array.isArray(window.DEFAULT_SUPPLEMENTS))
+                ? window.DEFAULT_SUPPLEMENTS
+                : (typeof DEFAULT_SUPPLEMENTS !== 'undefined' ? DEFAULT_SUPPLEMENTS : []);
+            if (!confirm('ต้องการคืนค่ารายการวิตามิน/อาหารเสริมเริ่มต้น (7 รายการมาตรฐาน) ใช่หรือไม่?')) return;
+            state.supplementList = JSON.parse(JSON.stringify(defaultList));
+            saveState();
+            renderSupplements();
+            showToast('✓ คืนค่ารายการอาหารเสริมเริ่มต้นเรียบร้อยแล้ว');
         }
 
         function forceReshuffleRecommendations() {
@@ -4027,3 +4069,12 @@ window.confirmFinishFasting = confirmFinishFasting;
 window.promptEditFastingStartTime = promptEditFastingStartTime;
 window.renderFastingSection = renderFastingSection;
 window.updateVersionBadges = updateVersionBadges;
+window.renderSupplements = renderSupplements;
+window.toggleSupplement = toggleSupplement;
+window.openAddSupplementModal = openAddSupplementModal;
+window.closeAddSupplementModal = closeAddSupplementModal;
+window.closeAddSupplementModalOnBackdrop = closeAddSupplementModalOnBackdrop;
+window.submitNewSupplement = submitNewSupplement;
+window.deleteSupplement = deleteSupplement;
+window.deleteCustomSupplement = deleteCustomSupplement;
+window.restoreDefaultSupplements = restoreDefaultSupplements;

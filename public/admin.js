@@ -965,17 +965,28 @@ window.submitSendAdminMessage = async function () {
     }
 };
 
+function escapeAdminHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 window.loadAdminMessageLogs = async function () {
     const tableBody = document.getElementById('messageLogsTableBody');
-    if (!tableBody) return;
+    const mobileList = document.getElementById('messageLogsMobileList');
+    if (!tableBody && !mobileList) return;
 
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="6" class="py-8 text-center text-slate-400">
-                <span class="inline-block animate-spin mr-2">🔄</span> กำลังโหลดประวัติข้อความ...
-            </td>
-        </tr>
-    `;
+    const loadingHtml = '<span class="inline-block animate-spin mr-2">🔄</span> กำลังโหลดประวัติข้อความ...';
+    if (tableBody) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">${loadingHtml}</td></tr>`;
+    }
+    if (mobileList) {
+        mobileList.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">${loadingHtml}</div>`;
+    }
 
     try {
         const snap = await getDocs(collection(db, 'admin_messages_log'));
@@ -988,63 +999,118 @@ window.loadAdminMessageLogs = async function () {
         logs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
         if (logs.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="py-8 text-center text-slate-400">
-                        📭 ยังไม่มีประวัติการส่งข้อความจากแอดมิน
-                    </td>
-                </tr>
-            `;
+            const emptyHtml = '📭 ยังไม่มีประวัติการส่งข้อความจากแอดมิน';
+            if (tableBody) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">${emptyHtml}</td></tr>`;
+            }
+            if (mobileList) {
+                mobileList.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">${emptyHtml}</div>`;
+            }
             return;
         }
 
-        tableBody.innerHTML = logs.map(log => {
-            const d = log.createdAt ? new Date(log.createdAt) : new Date();
-            const dateStr = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
-            const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
+        // Render Desktop Table (md and up)
+        if (tableBody) {
+            tableBody.innerHTML = logs.map(log => {
+                const d = log.createdAt ? new Date(log.createdAt) : new Date();
+                const dateStr = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+                const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
 
-            return `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-nowrap">
-                        ${dateStr}
-                    </td>
-                    <td class="py-3 px-3">
-                        ${isBroadcast ? `
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
-                                📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                        <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-nowrap">
+                            ${dateStr}
+                        </td>
+                        <td class="py-3 px-3">
+                            ${isBroadcast ? `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                                    📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                                </span>
+                            ` : `
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-100">${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}</div>
+                                    <div class="text-[10px] text-slate-400">${escapeAdminHtml(log.recipientEmail || '-')}</div>
+                                </div>
+                            `}
+                        </td>
+                        <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                            ${escapeAdminHtml(log.title || 'โดย BenzNova')}
+                        </td>
+                        <td class="py-3 px-3 max-w-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
+                            ${escapeAdminHtml(log.message || '-')}
+                        </td>
+                        <td class="py-3 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium text-[11px]">
+                            ${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}
+                        </td>
+                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                                ✓ ส่งสำเร็จ
                             </span>
-                        ` : `
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Render Mobile Cards (sm and down)
+        if (mobileList) {
+            mobileList.innerHTML = logs.map(log => {
+                const d = log.createdAt ? new Date(log.createdAt) : new Date();
+                const dateStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+                const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
+
+                return `
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
+                        <div class="flex items-center justify-between gap-2">
                             <div>
-                                <div class="font-bold text-slate-800 dark:text-slate-100">${log.recipientName || 'ผู้ใช้'}</div>
-                                <div class="text-[10px] text-slate-400">${log.recipientEmail || '-'}</div>
+                                ${isBroadcast ? `
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                                        📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                                    </span>
+                                ` : `
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
+                                        👤 ${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}
+                                    </span>
+                                `}
                             </div>
-                        `}
-                    </td>
-                    <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
-                        ${log.title || 'โดย BenzNova'}
-                    </td>
-                    <td class="py-3 px-3 max-w-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                        ${log.message || '-'}
-                    </td>
-                    <td class="py-3 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium text-[11px]">
-                        ${log.sentBy || 'โดย BenzNova'}
-                    </td>
-                    <td class="py-3 px-3 text-center whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                            ✓ ส่งสำเร็จ
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] text-slate-400 font-mono">${dateStr}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">✓ ส่งแล้ว</span>
+                            </div>
+                        </div>
+
+                        ${!isBroadcast && log.recipientEmail ? `
+                            <div class="text-[11px] text-slate-400 -mt-1 truncate">
+                                อีเมล: <span class="text-slate-600 dark:text-slate-300 font-mono text-[10px]">${escapeAdminHtml(log.recipientEmail)}</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="space-y-1">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                                📌 ${escapeAdminHtml(log.title || 'โดย BenzNova')}
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
+                                ${escapeAdminHtml(log.message || '-')}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400 border-t border-slate-200/60 dark:border-slate-700/60">
+                            <span>ผู้ส่ง: <strong class="text-slate-600 dark:text-slate-300 font-medium">${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}</strong></span>
+                            <span class="text-slate-400 text-[10px]">Audit Log</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
     } catch (err) {
         console.error('Failed to load message logs:', err);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="py-8 text-center text-rose-500">
-                    ❌ โหลดประวัติข้อความไม่สำเร็จ: ${err.message}
-                </td>
-            </tr>
-        `;
+        const errMsg = `❌ โหลดประวัติข้อความไม่สำเร็จ: ${err.message}`;
+        if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-rose-500 text-xs">${errMsg}</td></tr>`;
+        }
+        if (mobileList) {
+            mobileList.innerHTML = `<div class="py-8 text-center text-rose-500 text-xs">${errMsg}</div>`;
+        }
     }
 };

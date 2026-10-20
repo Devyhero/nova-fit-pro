@@ -49,15 +49,15 @@ const DEFAULT_MEAL_COMBOS = [
     }
 ];
 
-const DEFAULT_SUPPLEMENTS = [
-    { id: 'supp_whey', name: 'เวย์โปรตีน (Whey)', time: 'หลังซ้อม / ตื่นนอน', icon: '🥛' },
-    { id: 'supp_creatine', name: 'ครีเอทีน (Creatine 5g)', time: 'พร้อมน้ำดื่ม / หลังซ้อม', icon: '⚡' },
-    { id: 'supp_vitc', name: 'วิตามิน C (1,000mg)', time: 'หลังอาหารเช้า', icon: '🍊' },
-    { id: 'supp_vitd', name: 'วิตามิน D3 + K2', time: 'พร้อมมื้อเช้า', icon: '☀️' },
-    { id: 'supp_fishoil', name: 'น้ำมันปลา (Omega-3)', time: 'พร้อมมื้ออาหาร', icon: '🐟' },
-    { id: 'supp_zinc', name: 'ซิงค์ (Zinc)', time: 'หลังอาหารกลางวัน/เย็น', icon: '🛡️' },
-    { id: 'supp_magnesium', name: 'แมกนีเซียม (Magnesium)', time: 'ก่อนนอน 30 นาที', icon: '🌙' }
-];
+const DEFAULT_SUPPLEMENTS = Object.freeze([
+    Object.freeze({ id: 'supp_whey', name: 'เวย์โปรตีน (Whey)', time: 'หลังซ้อม / ตื่นนอน', icon: '🥛' }),
+    Object.freeze({ id: 'supp_creatine', name: 'ครีเอทีน (Creatine 5g)', time: 'พร้อมน้ำดื่ม / หลังซ้อม', icon: '⚡' }),
+    Object.freeze({ id: 'supp_vitc', name: 'วิตามิน C (1,000mg)', time: 'หลังอาหารเช้า', icon: '🍊' }),
+    Object.freeze({ id: 'supp_vitd', name: 'วิตามิน D3 + K2', time: 'พร้อมมื้อเช้า', icon: '☀️' }),
+    Object.freeze({ id: 'supp_fishoil', name: 'น้ำมันปลา (Omega-3)', time: 'พร้อมมื้ออาหาร', icon: '🐟' }),
+    Object.freeze({ id: 'supp_zinc', name: 'ซิงค์ (Zinc)', time: 'หลังอาหารกลางวัน/เย็น', icon: '🛡️' }),
+    Object.freeze({ id: 'supp_magnesium', name: 'แมกนีเซียม (Magnesium)', time: 'ก่อนนอน 30 นาที', icon: '🌙' })
+]);
 
 const FOOD_DATABASE = {
     "categories": [
