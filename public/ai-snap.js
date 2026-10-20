@@ -726,6 +726,107 @@ function closeAiSnapModalAndFocusSearch() {
     }
 }
 
+
+// ==========================================
+// AI Macro Coach Analysis Engine (Gemini Flash)
+// ==========================================
+async function requestGeminiCoachAdvice(context) {
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+        return null;
+    }
+
+    const candidateModels = [
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
+
+    const goalLabel = context.goal === 'muscle'
+        ? 'เพิ่มกล้ามเนื้อ'
+        : (context.goal === 'maintain' ? 'รักษาน้ำหนัก' : 'ลดไขมัน/ลดน้ำหนัก');
+
+    const promptText = `
+คุณคือนักกำหนดอาหารและโค้ชสุขภาพส่วนตัว (NovaFit Pro AI Macro Coach)
+โปรดวิเคราะห์สถานะสารอาหารวันนี้ของผู้ใช้อย่างมืออาชีพ และตอบกลับเป็น JSON เท่านั้น
+
+ข้อมูลวันนี้ของผู้ใช้:
+- เป้าหมายแคลอรี: ${context.targetCal} kcal (ทานไปแล้ว ${context.consumedCal} kcal, คงเหลือ ${context.remCal} kcal)
+- โปรตีน: เป้า ${context.pGram}g (ทานไปแล้ว ${context.consumedP}g, คงเหลือ ${context.remP}g)
+- คาร์โบไฮเดรต: เป้า ${context.cGram}g (ทานไปแล้ว ${context.consumedC}g, คงเหลือ ${context.remC}g)
+- ไขมัน: เป้า ${context.fGram}g (ทานไปแล้ว ${context.consumedF}g, คงเหลือ ${context.remF}g)
+- เป้าหมายสุขภาพ: ${goalLabel}
+- เมนูที่ทานไปแล้ว: ${context.todayMeals && context.todayMeals.length > 0 ? context.todayMeals.join(', ') : 'ยังไม่ได้บันทึกอาหาร'}
+
+โครงสร้าง JSON ตอบกลับ:
+{
+  "coachAdvice": "คำแนะนำ 2-3 ประโยค ภาษาไทยเป็นกันเอง มีพลัง สรุปสถานะสิ่งที่ทานไป และบอกกลยุทธ์มื้อถัดไปเพื่อปิดยอดสารอาหารอย่างถูกต้อง",
+  "suggestedMenus": [
+    {
+      "name": "ชื่อเมนูภาษาไทย",
+      "servingSize": "ขนาดเสิร์ฟ เช่น 1 จาน (300g)",
+      "calories": ตัวเลขแคลอรีรวม (kcal),
+      "protein": ตัวเลขโปรตีน (กรัม),
+      "carbs": ตัวเลขคาร์โบไฮเดรต (กรัม),
+      "fat": ตัวเลขไขมัน (กรัม),
+      "why": "เหตุผลสั้นๆ ไม่เกิน 10 คำ ว่าทำไมเมนูนี้ถึงเหมาะกับสารอาหารที่เหลือ"
+    }
+  ]
+}
+สร้างรายการอาหารแนะนำ 3-4 เมนูที่เหมาะสมกับแคลอรีและโปรตีนคงเหลือข้างต้น
+`;
+
+    for (let i = 0; i < candidateModels.length; i++) {
+        const modelName = candidateModels[i];
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }],
+                    generationConfig: {
+                        temperature: 0.4,
+                        responseMimeType: "application/json"
+                    }
+                })
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) continue;
+            const data = await response.json();
+            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) continue;
+
+            const parsed = JSON.parse(jsonText);
+            if (parsed && parsed.coachAdvice) {
+                // Record audit log
+                if (typeof recordAiScanAuditLog === 'function') {
+                    recordAiScanAuditLog({
+                        foodName: `AI Macro Coach (${context.remCal} kcal rem, P:${context.remP}g)`,
+                        cal: Math.max(0, context.remCal),
+                        modelUsed: `${modelName} (coach)`
+                    }).catch(() => {});
+                }
+
+                return {
+                    ...parsed,
+                    model: modelName,
+                    source: 'gemini'
+                };
+            }
+        } catch (e) {
+            console.warn(`AI Coach attempt with ${modelName} failed:`, e);
+        }
+    }
+    return null;
+}
+
 // Window attachments for HTML inline handlers
 window.openAiSnapModal = openAiSnapModal;
 window.closeAiSnapModal = closeAiSnapModal;
@@ -745,3 +846,5 @@ window.isAiQuotaExceeded = isAiQuotaExceeded;
 window.isUatEnvironment = isUatEnvironment;
 window.isAiSnapEnabled = isAiSnapEnabled;
 window.isUserAdmin = isUserAdmin;
+
+window.requestGeminiCoachAdvice = requestGeminiCoachAdvice;

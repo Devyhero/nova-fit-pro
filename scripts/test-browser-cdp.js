@@ -68,12 +68,15 @@ server.listen(PORT, async () => {
 
     try {
         let targets = null;
-        for (let attempt = 0; attempt < 10; attempt++) {
+        for (let attempt = 0; attempt < 25; attempt++) {
             await new Promise(r => setTimeout(r, 400));
             try {
                 targets = await httpGet('http://127.0.0.1:9227/json');
                 if (targets && targets.length > 0) break;
             } catch (e) {}
+        }
+        if (!targets || !Array.isArray(targets)) {
+            throw new Error('Chrome remote debugging did not respond at http://127.0.0.1:9227/json');
         }
         const pageTarget = targets.find(t => t.type === 'page' && t.url.includes(PORT.toString()));
         if (!pageTarget || !pageTarget.webSocketDebuggerUrl) {
@@ -123,6 +126,7 @@ server.listen(PORT, async () => {
         await evalJs('new Promise(r => setTimeout(r, 500))');
 
         // Test 1: Check Header Profile Drawer Button
+        console.log('DEBUG URL:', await evalJs('location.href'), 'readyState:', await evalJs('document.readyState'));
         console.log('--- Test 1: Header Profile Drawer Button ---');
         const hasHeaderBtn = await evalJs('!!document.getElementById("btnToolsProfileSettings")');
         console.log('Header profile settings button exists:', hasHeaderBtn);
@@ -743,6 +747,30 @@ server.listen(PORT, async () => {
         }
 
         await evalJs('closeAiSnapModal()');
+
+        // Test 23: AI Macro Coach & Nutrition Advisory Engine (v5.8.0)
+        console.log('--- Test 23: AI Macro Coach & Nutrition Advisory Engine ---');
+        const coachSectionExists = await evalJs('!!document.getElementById("card_recommendations")');
+        console.log('AI Coach section card exists:', coachSectionExists);
+        if (!coachSectionExists) throw new Error('Missing #card_recommendations');
+
+        const coachSubtitle = await evalJs('document.getElementById("recSubtitle").textContent');
+        console.log('Coach advice subtitle populated:', !!coachSubtitle);
+        if (!coachSubtitle || coachSubtitle.length < 5) throw new Error('AI Coach advice subtitle not populated');
+
+        const macroPillsHtml = await evalJs('document.getElementById("aiCoachMacroPills").innerHTML');
+        console.log('Macro gap pills rendered:', macroPillsHtml.includes('โปรตีน'));
+        if (!macroPillsHtml.includes('โปรตีน')) throw new Error('AI Coach macro pills must render protein status');
+
+        const recItemsCount = await evalJs('document.querySelectorAll("#smartRecommendationList > div").length');
+        console.log('Recommended food items count:', recItemsCount);
+        if (recItemsCount === 0) throw new Error('Smart recommendations list must contain candidate foods');
+
+        // Test triggering forceReshuffleRecommendations
+        await evalJs('forceReshuffleRecommendations()');
+        const statusAfterReshuffle = await evalJs('document.getElementById("aiCoachStatusBadge").textContent');
+        console.log('Coach status badge active:', !!statusAfterReshuffle);
+        if (!statusAfterReshuffle) throw new Error('AI Coach status badge not active after reshuffle');
 
         ws.close();
         console.log('========================================');

@@ -1,4 +1,4 @@
-const APP_VERSION = '5.7.3';
+const APP_VERSION = '5.8.0';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -2105,85 +2105,232 @@ const APP_VERSION = '5.7.3';
                 Math.max(0, t.fGram - sumF),
                 true
             );
-            showToast('🔄 สุ่มเมนูแนะนำชุดใหม่แล้ว');
+            showToast('✨ AI Macro Coach กำลังวิเคราะห์คำแนะนำชุดใหม่...');
+        }
+
+        let _aiCoachAnalysisCache = {};
+
+        function generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, targetCal, goal) {
+            if (remCal <= 50 && remP <= 10) {
+                return '🎉 ยอดเยี่ยมมากครับ! วันนี้คุณคุมอาหารและเติมสารอาหารได้ครบตามเป้าหมาย 100% แล้ว แนะนำจิบน้ำเปล่าให้ครบโควตาแล้วพักผ่อนให้เพียงพอ เพื่อให้ร่างกายฟื้นฟูกล้ามเนื้อได้อย่างเต็มที่ครับ';
+            }
+            if (remCal < -50) {
+                const over = Math.abs(remCal);
+                if (remP > 15) {
+                    return `⚠️ วันนี้พลังงานเกินเป้าไป ${over.toLocaleString()} kcal และโปรตีนยังขาดอีก ${remP}g สำหรับมื้อที่เหลือแนะนำเลือก 'โปรตีนบริสุทธิ์ไขมันต่ำมาก' เช่น ไข่ขาวต้ม 3-4 ฟอง หรือเวย์โปรตีนไอโซเลท เพื่อช่วยดึงโปรตีนขึ้นโดยไม่เพิ่มไขมันครับ`;
+                }
+                return `🔥 วันนี้พลังงานเกินเป้าไป ${over.toLocaleString()} kcal แต่ไม่ต้องกังวลครับ ช่วงเย็นนี้แนะนำเน้นดื่มน้ำเปล่า ผักใบเขียวต้ม และออกกำลังกายเบาๆ พรุ่งนี้กลับมาคุมใหม่อย่างต่อเนื่องได้เลยครับ`;
+            }
+            if (remP >= 25 && remCal < 380) {
+                return `💪 โปรตีนยังขาดอีก ${remP}g แต่มีโควตาแคลอรีเหลือเพียง ${Math.max(0, remCal)} kcal มื้อนี้แนะนำเน้น 'โปรตีนลีนไขมันต่ำ' เช่น สเต็กอกไก่ย่างฉีก, ทูน่าในน้ำแร่ หรือไข่ขาว เพื่อปิดยอดโปรตีนให้ถึงเป้าโดยคาร์บและไขมันไม่ล้นครับ`;
+            }
+            if (remP >= 20) {
+                return `🥩 ร่างกายยังต้องการโปรตีนเพิ่มอีก ${remP}g (พลังงานเหลือ ${remCal.toLocaleString()} kcal) แนะนำเติมอาหารจานหลักที่มีเนื้อสัตว์คุณภาพดี เช่น อกไก่, ปลาแซลมอน หรือไข่ต้ม เพื่อเสริมสร้างกล้ามเนื้อและทำให้อิ่มนานครับ`;
+            }
+            if (remC >= 35 && remCal >= 250) {
+                return `🍚 พลังงานยังเหลืออีก ${remCal.toLocaleString()} kcal และคาร์โบไฮเดรตขาด ${remC}g มื้อต่อไปสามารถทานคาร์โบไฮเดรตเชิงซ้อน เช่น ข้าวกล้อง ข้าวไรซ์เบอร์รี่ หรือมันเทศหวาน เพื่อเติมไกลโคเจนให้ร่างกายสดชื่นครับ`;
+            }
+            return `🥗 วันนี้คุมอาหารได้ดีมาก พลังงานยังเหลืออีก ${Math.max(0, remCal).toLocaleString()} kcal แนะนำเลือกมื้อเบาๆ ที่ย่อยง่าย เช่น สลัดผักอกไก่ โยเกิร์ต หรือผลไม้หวานน้อย เพื่อปิดยอดวันอย่างสมบูรณ์ครับ`;
         }
 
         function renderSmartRecommendations(remCal, remP, remC, remF, forceReshuffle = false) {
             const container = document.getElementById('smartRecommendationList');
             const subtitle = document.getElementById('recSubtitle');
+            const pillsContainer = document.getElementById('aiCoachMacroPills');
+            const statusBadge = document.getElementById('aiCoachStatusBadge');
+            const modeLabel = document.getElementById('aiCoachModeLabel');
 
+            if (!container || !subtitle) return;
+
+            const t = getCalculatedTargets();
+            const meals = state.logsByDate[state.selectedDate] || [];
+            const sumCal = Math.round(meals.reduce((s, m) => s + m.cal, 0));
+            const sumP = Math.round(meals.reduce((s, m) => s + m.p, 0));
+            const sumC = Math.round(meals.reduce((s, m) => s + m.c, 0));
+            const sumF = Math.round(meals.reduce((s, m) => s + m.f, 0));
+            const goal = (state.profile && state.profile.goal) || 'loss';
+
+            // 1. Render Macro Gap Quick Badges
+            if (pillsContainer) {
+                const calBadge = remCal > 0
+                    ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/25">⚡ เหลือ ${remCal.toLocaleString()} kcal</span>`
+                    : `<span class="px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/25">🔥 เกิน ${Math.abs(remCal).toLocaleString()} kcal</span>`;
+
+                const pBadge = remP > 0
+                    ? `<span class="px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold border border-blue-500/25">🥩 โปรตีนขาด ${remP}g</span>`
+                    : `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/25">✓ โปรตีนครบ</span>`;
+
+                const cBadge = remC > 0
+                    ? `<span class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/25">🍚 คาร์บขาด ${remC}g</span>`
+                    : `<span class="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium">✓ คาร์บครบ</span>`;
+
+                const fBadge = remF > 0
+                    ? `<span class="px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/25">🥑 ไขมันขาด ${remF}g</span>`
+                    : `<span class="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium">✓ ไขมันครบ</span>`;
+
+                pillsContainer.innerHTML = `${calBadge}${pBadge}${cBadge}${fBadge}`;
+            }
+
+            // 2. Goal Complete Check
             if (remCal <= 50 && remP <= 10) {
-                subtitle.textContent = 'คุณทานอาหารครบตามเป้าหมายของวันนี้แล้ว!';
+                if (statusBadge) {
+                    statusBadge.textContent = '🎉 ถึงเป้าหมายแล้ว';
+                    statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
+                }
+                if (modeLabel) modeLabel.textContent = 'วิเคราะห์: สารอาหารครบ 100%';
+                subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
                 container.innerHTML = `
-                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                        🎉 วันนี้สารอาหารครบเป๊ะ! แนะนำจิบน้ำเปล่าให้ครบตามหลอดเป้าหมายด้านบนครับ
+                    <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-3">
+                        <div class="text-2xl">🎉</div>
+                        <div>
+                            <div class="font-bold text-sm">สารอาหารและพลังงานครบถ้วนสมบูรณ์!</div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">วันนี้ทำได้ยอดเยี่ยมมากครับ แนะนำจิบน้ำเปล่าให้ครบหลอดด้านบน แล้วพักผ่อนให้สบายได้เลย</p>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
-            const cacheKey = `${state.selectedDate}_${remCal}_${remP}_${remC}`;
-            let reasonLabel = '';
-
-            if (remP >= 20 && remCal < 400) {
-                reasonLabel = `เน้นโปรตีนลีนไขมันต่ำ (โปรตีนยังขาด ${remP}g แต่แคลอรีเหลือ ${Math.max(0, remCal)} kcal)`;
-            } else if (remP >= 25) {
-                reasonLabel = `เน้นเติมโปรตีนให้ถึงเป้า (ยังขาดโปรตีนอีก ${remP}g)`;
-            } else if (remC >= 30 && remCal >= 200) {
-                reasonLabel = `เติมคาร์โบไฮเดรตและพลังงาน (ยังขาดคาร์บ ${remC}g / ${remCal} kcal)`;
-            } else {
-                reasonLabel = `มื้อเบาๆ พอดีกับแคลอรีที่เหลือ (${Math.max(0, remCal)} kcal)`;
+            // 3. Instant Heuristic Coaching Advice (Zero latency)
+            const cacheKey = `${state.selectedDate}_${remCal}_${remP}_${remC}_${remF}_${meals.length}`;
+            subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
+            if (statusBadge) {
+                statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
+                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
             }
+            if (modeLabel) modeLabel.textContent = 'วิเคราะห์จากโควตาสารอาหารวันนี้';
 
-            if (forceReshuffle || cacheKey !== lastRecCacheKey || cachedRecommendations.length === 0) {
-                const allFoods = [];
+            // Filter food candidates from FOOD_DATABASE
+            const allFoods = [];
+            if (typeof FOOD_DATABASE !== 'undefined' && FOOD_DATABASE.categories) {
                 FOOD_DATABASE.categories.forEach(c => {
                     c.foods.forEach(f => allFoods.push({ ...f, catName: c.name }));
                 });
-
-                let candidates = [];
-                if (remP >= 20 && remCal < 400) {
-                    candidates = allFoods.filter(f => f.protein >= 15 && f.calories <= 320);
-                } else if (remP >= 25) {
-                    candidates = allFoods.filter(f => f.protein >= 22 && f.calories <= Math.max(350, remCal + 100));
-                } else if (remC >= 30 && remCal >= 200) {
-                    candidates = allFoods.filter(f => f.carbs >= 25 && f.calories <= remCal + 100 && f.calories >= 100);
-                } else {
-                    candidates = allFoods.filter(f => f.calories > 40 && f.calories <= Math.max(250, remCal + 50));
-                }
-
-                if (candidates.length === 0) {
-                    candidates = allFoods.filter(f => f.protein >= 12);
-                }
-
-                cachedRecommendations = [...candidates].sort(() => 0.5 - Math.random()).slice(0, 4);
-                lastRecCacheKey = cacheKey;
             }
 
-            subtitle.textContent = reasonLabel;
-            container.innerHTML = cachedRecommendations.map(item => {
-                const safeName = item.name.replace(/'/g, "\\'");
-                return `
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 gap-2">
-                        <div>
-                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${item.name} <span class="text-xs text-slate-400 font-normal">(${item.servingSize})</span></div>
-                            <div class="text-xs text-slate-400 mt-1 flex flex-wrap gap-2">
-                                <span class="text-emerald-500 font-bold">${item.calories} kcal</span>
-                                <span class="text-blue-500 dark:text-blue-400 font-semibold">โปรตีน ${item.protein}g</span>
-                                <span class="text-amber-500 dark:text-amber-400 font-medium">คาร์บ ${item.carbs}g</span>
-                                <span class="text-rose-500 dark:text-rose-400 font-medium">ไขมัน ${item.fat}g</span>
+            let candidates = [];
+            if (remP >= 20 && remCal < 400) {
+                candidates = allFoods.filter(f => f.protein >= 15 && f.calories <= 320);
+            } else if (remP >= 25) {
+                candidates = allFoods.filter(f => f.protein >= 20 && f.calories <= Math.max(350, remCal + 100));
+            } else if (remC >= 30 && remCal >= 200) {
+                candidates = allFoods.filter(f => f.carbs >= 25 && f.calories <= remCal + 100 && f.calories >= 100);
+            } else {
+                candidates = allFoods.filter(f => f.calories > 40 && f.calories <= Math.max(250, remCal + 50));
+            }
+            if (candidates.length === 0) {
+                candidates = allFoods.filter(f => f.protein >= 12);
+            }
+
+            const selectedCandidates = [...candidates].sort(() => 0.5 - Math.random()).slice(0, 4);
+
+            function renderFoodCards(foodItems) {
+                container.innerHTML = foodItems.map(item => {
+                    const safeName = item.name.replace(/'/g, "\\'");
+                    const whyHtml = item.why
+                        ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium border border-purple-500/20">${item.why}</span>`
+                        : '';
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200/80 dark:border-slate-700/80 gap-2.5 transition hover:border-purple-500/40">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
+                                    <span class="text-[11px] text-slate-400 font-normal">(${item.servingSize || '1 เสิร์ฟ'})</span>
+                                    ${whyHtml}
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">${item.calories} kcal</span>
+                                    <span class="text-blue-500 dark:text-blue-400 font-semibold">โปรตีน ${item.protein}g</span>
+                                    <span class="text-amber-500 dark:text-amber-400 font-medium">คาร์บ ${item.carbs}g</span>
+                                    <span class="text-rose-500 dark:text-rose-400 font-medium">ไขมัน ${item.fat}g</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="openFoodMealPicker('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories}, event)"
+                                    title="เลือกมื้ออาหารที่จะบันทึก"
+                                    class="p-2 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 shadow-2xs">
+                                    📋
+                                </button>
+                                <button type="button" onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories})"
+                                    class="text-xs px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold transition shadow-xs flex items-center gap-1">
+                                    <span>+</span> <span>กินเมนูนี้</span>
+                                </button>
                             </div>
                         </div>
-                        <button onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories})"
-                            class="text-xs sm:text-sm px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition shrink-0 shadow-xs">
-                            + กินเมนูนี้
-                        </button>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            }
+
+            renderFoodCards(selectedCandidates);
+
+            // 4. Gemini Deep AI Coach Call (Asynchronous with caching)
+            if (typeof window.requestGeminiCoachAdvice === 'function') {
+                const cachedAi = _aiCoachAnalysisCache[cacheKey];
+                if (cachedAi && !forceReshuffle) {
+                    subtitle.textContent = cachedAi.coachAdvice;
+                    if (statusBadge) {
+                        statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
+                    }
+                    if (modeLabel) modeLabel.textContent = `โมเดล: ${cachedAi.model || 'Gemini Flash'}`;
+                    if (cachedAi.suggestedMenus && cachedAi.suggestedMenus.length > 0) {
+                        renderFoodCards(cachedAi.suggestedMenus);
+                    }
+                    return;
+                }
+
+                // If user clicks reshuffle or first view and has API key
+                const apiKey = (typeof window.getGeminiApiKey === 'function') ? window.getGeminiApiKey() : '';
+                if (apiKey && (forceReshuffle || !_aiCoachAnalysisCache[cacheKey])) {
+                    if (statusBadge) {
+                        statusBadge.textContent = '✨ AI กำลังวิเคราะห์...';
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0 animate-pulse';
+                    }
+
+                    window.requestGeminiCoachAdvice({
+                        targetCal: t.targetCal,
+                        pGram: t.pGram,
+                        cGram: t.cGram,
+                        fGram: t.fGram,
+                        consumedCal: sumCal,
+                        consumedP: sumP,
+                        consumedC: sumC,
+                        consumedF: sumF,
+                        remCal,
+                        remP,
+                        remC,
+                        remF,
+                        goal,
+                        todayMeals: meals.map(m => `${m.name} (${m.cal} kcal, P:${m.p}g)`)
+                    }).then(aiRes => {
+                        if (aiRes && aiRes.coachAdvice) {
+                            _aiCoachAnalysisCache[cacheKey] = aiRes;
+                            subtitle.textContent = aiRes.coachAdvice;
+                            if (statusBadge) {
+                                statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
+                                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
+                            }
+                            if (modeLabel) modeLabel.textContent = `โมเดล: ${aiRes.model || 'Gemini Flash'}`;
+                            if (aiRes.suggestedMenus && aiRes.suggestedMenus.length > 0) {
+                                renderFoodCards(aiRes.suggestedMenus);
+                            }
+                        } else {
+                            if (statusBadge) {
+                                statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
+                                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
+                            }
+                        }
+                    }).catch(err => {
+                        console.warn('AI Coach background analysis error:', err);
+                        if (statusBadge) {
+                            statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
+                            statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
+                        }
+                    });
+                }
+            }
         }
 
-        // Fixed Water Functions: Only updates water & alert banner without reshuffling food recommendations
         function adjustWater(delta) {
             const dStr = state.selectedDate;
             const cur = state.waterByDate[dStr] || 0;
@@ -4086,3 +4233,6 @@ window.submitNewSupplement = submitNewSupplement;
 window.deleteSupplement = deleteSupplement;
 window.deleteCustomSupplement = deleteCustomSupplement;
 window.restoreDefaultSupplements = restoreDefaultSupplements;
+
+window.forceReshuffleRecommendations = forceReshuffleRecommendations;
+window.renderSmartRecommendations = renderSmartRecommendations;

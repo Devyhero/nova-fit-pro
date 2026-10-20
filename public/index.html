@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.7.3)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.0)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1043,28 +1043,63 @@
                 </div>
             </section>
 
-                <!-- Order 8: SMART RECOMMENDATION ACCORDION -->
+                <!-- Order 8: SMART RECOMMENDATION ACCORDION (AI Macro Coach) -->
                 <section id="card_recommendations" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
                 <div role="button" tabindex="0" onclick="toggleCardSection('section_recommendations')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_recommendations');}"
                     class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-slate-50/50 dark:bg-slate-800/80 hover:bg-slate-100/60 dark:hover:bg-slate-700/50 transition">
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5">
-                            💡 แนะนำเมนูเติมสารอาหารที่ยังขาด
+                        <h2 class="text-base sm:text-lg font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+                            🤖 AI Macro Coach โค้ชวิเคราะห์สารอาหาร
                         </h2>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="event.stopPropagation(); forceReshuffleRecommendations();"
-                            class="text-xs px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold transition mr-1">
-                            🔄 สุ่มใหม่
+                            id="btnReshuffleCoach"
+                            class="text-xs px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-semibold transition flex items-center gap-1 mr-1 active:scale-95">
+                            <span>✨</span> <span>วิเคราะห์ใหม่</span>
                         </button>
                         <span id="icon_section_recommendations" class="accordion-chevron text-xs text-slate-400">▼</span>
                     </div>
                 </div>
 
-                <div id="body_section_recommendations" class="accordion-section p-5 pt-0 space-y-3">
-                    <p id="recSubtitle" class="text-xs text-slate-500 dark:text-slate-400">
-                        ระบบคัดเมนูที่เหมาะกับแคลอรีและโปรตีนที่ยังเหลือในวันนี้
-                    </p>
+                <div id="body_section_recommendations" class="accordion-section p-5 pt-0 space-y-3.5">
+                    <!-- Macro Gap Quick Badges Strip -->
+                    <div id="aiCoachMacroPills" class="flex flex-wrap gap-1.5 text-[11px]"></div>
+
+                    <!-- AI Coach Speech Card -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/25 space-y-2.5 relative overflow-hidden">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                                    🤖
+                                </div>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-purple-700 dark:text-purple-300">
+                                        คำแนะนำจาก AI Macro Coach
+                                    </h4>
+                                    <span id="aiCoachModeLabel" class="text-[10px] text-slate-400 block -mt-0.5">
+                                        วิเคราะห์จากโควตาสารอาหารวันนี้
+                                    </span>
+                                </div>
+                            </div>
+                            <span id="aiCoachStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+                                ✓ พร้อมให้คำแนะนำ
+                            </span>
+                        </div>
+                        <p id="recSubtitle" class="text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 font-medium">
+                            กำลังเตรียมคำแนะนำส่วนบุคคล...
+                        </p>
+                    </div>
+
+                    <!-- Recommended Meal Items Heading & Subtitle -->
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span>🍽️</span> เมนูแนะนำเพื่อปิดยอดวันนี้
+                        </span>
+                        <span class="text-[11px] text-slate-400">กด + เพื่อบันทึกมื้อ</span>
+                    </div>
+
+                    <!-- Recommended Meals List -->
                     <div id="smartRecommendationList" class="space-y-2"></div>
                 </div>
             </section>
@@ -1141,7 +1176,21 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.7.3!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.0!</b> สรุปการอัปเดตล่าสุด:</span>
+                </div>
+
+                <!-- Latest Release: v5.8.0 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        <span>🤖 v5.8.0 (AI Macro Coach โค้ชวิเคราะห์สารอาหารวันนี้)</span>
+                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
+                        <li><b>🤖 เปิดตัว AI Macro Coach:</b> โค้ชสุขภาพอัจฉริยะวิเคราะห์สารอาหารคงเหลือและมื้ออาหารที่ทานไปในวันนั้น พร้อมให้คำแนะนำเชิงลึกเป็นภาษาพูดที่เข้าใจง่าย</li>
+                        <li><b>💡 แถบสรุปสถานะสารอาหารด่วน:</b> แสดงโควตาพลังงาน, โปรตีน, คาร์โบไฮเดรต, ไขมัน คงเหลือ/เกินเป้า แบบ Real-time</li>
+                        <li><b>🍽️ เมนูแนะนำปิดยอดโควตา 1-Click:</b> คัดสรรเมนูสุขภาพที่ตอบโจทย์สารอาหารที่ยังขาด พร้อมปุ่ม <b>"+ กินเมนูนี้"</b> และปุ่ม <b>"📋 เลือกมื้อ"</b> จัดการได้ทันที</li>
+                        <li><b>✨ ระบบวิเคราะห์ Hybrid:</b> ตอบสนองทันที 0 วินาทีด้วย Smart Heuristic Engine และเชื่อมต่อ Gemini Flash วิเคราะห์เจาะลึกเมื่อกดวิเคราะห์ใหม่</li>
+                    </ul>
                 </div>
 
                 <!-- Latest Release: v5.7.3 -->
@@ -2505,19 +2554,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.7.3"></script>
+    <script src="food-db.js?v=5.8.0"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.7.3"></script>
+    <script src="health-tips.js?v=5.8.0"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.7.3"></script>
+    <script src="ai-snap.js?v=5.8.0"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.7.3"></script>
+    <script src="app.js?v=5.8.0"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.7.3"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.0"></script>
 
 </body>
 

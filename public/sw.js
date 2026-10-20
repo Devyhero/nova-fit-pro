@@ -1,5 +1,5 @@
 // NovaFit Pro Service Worker (v5.7.2)
-const CACHE_NAME = 'novafit-pro-v5.7.3-cache';
+const CACHE_NAME = 'novafit-pro-v5.8.0-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
