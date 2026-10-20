@@ -929,12 +929,14 @@ function getSuggestedMealByHour() {
 }
 
 // Web Speech Recognition Controller (th-TH)
+let _speechBaseText = '';
+
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     const recognition = new SpeechRecognition();
     recognition.lang = 'th-TH';
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     return recognition;
@@ -966,37 +968,69 @@ function startAiVoiceRecording() {
         return;
     }
 
+    // Safely abort and clear any previous instance
+    if (_speechRecognitionInstance) {
+        try {
+            _speechRecognitionInstance.onstart = null;
+            _speechRecognitionInstance.onresult = null;
+            _speechRecognitionInstance.onend = null;
+            _speechRecognitionInstance.onerror = null;
+            _speechRecognitionInstance.abort();
+        } catch (e) {}
+        _speechRecognitionInstance = null;
+    }
+
     try {
         _speechRecognitionInstance = initSpeechRecognition();
         if (!_speechRecognitionInstance) return;
+
+        const textInput = document.getElementById('aiVoiceTextInput');
+        _speechBaseText = (textInput?.value || '').trim();
 
         const micIcon = document.getElementById('aiVoiceMicIcon');
         const recordText = document.getElementById('aiVoiceRecordText');
         const micPulse = document.getElementById('aiVoiceMicPulse');
         const liveStatus = document.getElementById('aiVoiceLiveStatus');
-        const textInput = document.getElementById('aiVoiceTextInput');
+        const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+        const btnRecord = document.getElementById('btnAiVoiceRecord');
 
         _speechRecognitionInstance.onstart = () => {
             _isSpeechRecording = true;
-            if (micIcon) micIcon.textContent = '🔴';
-            if (recordText) recordText.textContent = 'กำลังฟัง... พูดชื่ออาหารได้เลย (กดเพื่อหยุด)';
+            if (micIcon) micIcon.textContent = '⏹️';
+            if (recordText) recordText.textContent = 'กำลังฟังเสียง... แตะเพื่อหยุด';
             if (micPulse) micPulse.classList.remove('hidden');
             if (liveStatus) liveStatus.classList.remove('hidden');
+            if (liveTranscript) {
+                liveTranscript.textContent = '';
+                liveTranscript.classList.add('hidden');
+            }
+            if (btnRecord) {
+                btnRecord.classList.remove('from-purple-600', 'via-indigo-600', 'to-pink-500');
+                btnRecord.classList.add('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
+            }
         };
 
         _speechRecognitionInstance.onresult = (event) => {
-            let interimTranscript = '';
             let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
+            let interimTranscript = '';
+            for (let i = 0; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript;
                 } else {
                     interimTranscript += event.results[i][0].transcript;
                 }
             }
-            const activeText = finalTranscript || interimTranscript;
-            if (textInput && activeText) {
-                textInput.value = activeText;
+            const spokenSoFar = (finalTranscript + ' ' + interimTranscript).trim().replace(/\s+/g, ' ');
+            if (liveTranscript) {
+                if (spokenSoFar) {
+                    liveTranscript.textContent = '🗣️ "' + spokenSoFar + '"';
+                    liveTranscript.classList.remove('hidden');
+                } else {
+                    liveTranscript.classList.add('hidden');
+                }
+            }
+            if (textInput && spokenSoFar) {
+                textInput.value = _speechBaseText ? (_speechBaseText + ' ' + spokenSoFar) : spokenSoFar;
             }
         };
 
@@ -1006,10 +1040,10 @@ function startAiVoiceRecording() {
 
         _speechRecognitionInstance.onerror = (event) => {
             console.warn('Speech recognition error:', event.error);
-            stopAiVoiceRecording();
             if (event.error === 'not-allowed') {
-                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนหรือพิมพ์ข้อความได้เลยครับ');
+                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนหรือพิมพ์ข้อความแทนได้ครับ');
             }
+            stopAiVoiceRecording();
         };
 
         _speechRecognitionInstance.start();
@@ -1020,21 +1054,38 @@ function startAiVoiceRecording() {
 }
 
 function stopAiVoiceRecording() {
-    if (_speechRecognitionInstance) {
-        try { _speechRecognitionInstance.stop(); } catch (e) {}
-        _speechRecognitionInstance = null;
-    }
     _isSpeechRecording = false;
+
+    if (_speechRecognitionInstance) {
+        const inst = _speechRecognitionInstance;
+        _speechRecognitionInstance = null;
+        try {
+            inst.onstart = null;
+            inst.onresult = null;
+            inst.onend = null;
+            inst.onerror = null;
+            inst.stop();
+        } catch (e) {
+            try { inst.abort(); } catch (err) {}
+        }
+    }
 
     const micIcon = document.getElementById('aiVoiceMicIcon');
     const recordText = document.getElementById('aiVoiceRecordText');
     const micPulse = document.getElementById('aiVoiceMicPulse');
     const liveStatus = document.getElementById('aiVoiceLiveStatus');
+    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+    const btnRecord = document.getElementById('btnAiVoiceRecord');
 
     if (micIcon) micIcon.textContent = '🎙️';
     if (recordText) recordText.textContent = 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
     if (micPulse) micPulse.classList.add('hidden');
     if (liveStatus) liveStatus.classList.add('hidden');
+    if (liveTranscript) liveTranscript.classList.add('hidden');
+    if (btnRecord) {
+        btnRecord.classList.remove('from-rose-600', 'via-red-600', 'to-pink-600', 'ring-4', 'ring-rose-400/40');
+        btnRecord.classList.add('from-purple-600', 'via-indigo-600', 'to-pink-500');
+    }
 }
 
 // Realistic simulation engine when no API Key is configured

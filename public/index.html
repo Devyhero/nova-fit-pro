@@ -731,34 +731,37 @@
 
                     <!-- Search Input & Category Bar -->
                     <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 space-y-3 max-w-full overflow-hidden">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
+                        <!-- Top Row: Title & AI Quick Launch Buttons -->
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
                             <div>
                                 <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">
                                     ค้นหาอาหารจากคลัง
                                 </span>
                                 <span class="text-xs text-emerald-500 block">✨ เมนูที่กินวันนี้จะมีกรอบเขียว และกด ⭐ เพื่อติดดาว</span>
                             </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <div class="flex items-center gap-1.5 sm:gap-2">
                                 <button id="btnAiSnapMain" type="button" onclick="openAiSnapModal('photo')"
-                                    class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                                    class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-xs hover:shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
                                     title="สแกนจานอาหารด้วยภาพถ่าย AI">
                                     <span>📸</span>
                                     <span>ถ่ายรูป AI</span>
                                 </button>
                                 <button id="btnAiVoiceMain" type="button" onclick="openAiSnapModal('voice')"
-                                    class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                                    class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-bold text-xs shadow-xs hover:shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
                                     title="พิมพ์หรือพูดบันทึกมื้ออาหารด้วยเสียง AI">
                                     <span>🎙️</span>
                                     <span>พิมพ์/พูด AI</span>
                                 </button>
-                                <div class="relative flex-1 sm:w-64">
-                                    <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
-                                        placeholder="🔍 ค้นหาเมนู เช่น กะเพรา, ราเมน..."
-                                        class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-7 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
-                                    <button onclick="clearFoodSearch()" id="btnClearSearch"
-                                        class="hidden absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
-                                </div>
                             </div>
+                        </div>
+
+                        <!-- Second Row: Full Width Search Input -->
+                        <div class="relative w-full">
+                            <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
+                                placeholder="🔍 ค้นหาเมนู เช่น กะเพรา, ราเมน, ข้าวมันไก่..."
+                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 shadow-inner">
+                            <button onclick="clearFoodSearch()" id="btnClearSearch"
+                                class="hidden absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
                         </div>
 
                         <!-- Category Tabs -->
@@ -2356,42 +2359,42 @@
             
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span id="aiModalIcon" class="text-xl">📸</span>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 id="aiModalTitleText" class="font-bold text-base leading-tight">AI Snap & Log</h3>
-                            <button type="button" onclick="promptEditGeminiApiKey()" id="aiSnapApiKeyBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:scale-105 transition cursor-pointer">⚡ โหมดตัวอย่าง (Demo)</button>
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span id="aiModalIcon" class="text-2xl shrink-0">📸</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h3 id="aiModalTitleText" class="font-bold text-sm sm:text-base leading-tight truncate text-slate-800 dark:text-slate-100">AI Snap & Log</h3>
+                            <button type="button" onclick="promptEditGeminiApiKey()" id="aiSnapApiKeyBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:scale-105 transition cursor-pointer shrink-0">⚡ โหมดตัวอย่าง (Demo)</button>
                         </div>
                         <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            <p id="aiModalSubText" class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที</p>
-                            <span id="aiSnapQuotaPill" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">โควตาวันนี้: เหลือ 15/15 ครั้ง</span>
+                            <p id="aiModalSubText" class="text-[11px] text-slate-400 truncate">ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที</p>
+                            <span id="aiSnapQuotaPill" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 shrink-0">โควตา: 15/15 ครั้ง</span>
                         </div>
                     </div>
                 </div>
 
-            <!-- Modal Tabs (📸 Photo Snap / 🎙️ Smart Text & Voice) -->
-            <div class="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 text-xs font-bold shrink-0">
-                <button type="button" id="tabBtnAiPhoto" onclick="switchAiModalTab('photo')"
-                    class="py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400">
-                    <span>📸</span> <span>สแกนรูปภาพ</span>
-                </button>
-                <button type="button" id="tabBtnAiVoice" onclick="switchAiModalTab('voice')"
-                    class="py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-                    <span>🎙️</span> <span>พิมพ์/พูดด้วยเสียง</span>
-                </button>
-            </div>
-
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 shrink-0 ml-2">
                     <button type="button" onclick="promptEditGeminiApiKey()" title="ตั้งค่า Gemini API Key"
-                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs transition">
+                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs transition cursor-pointer">
                         🔑
                     </button>
                     <button type="button" onclick="closeAiSnapModal()" title="ปิดหน้าต่าง"
-                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 font-bold flex items-center justify-center text-sm transition">
+                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 font-bold flex items-center justify-center text-sm transition cursor-pointer">
                         ✕
                     </button>
                 </div>
+            </div>
+
+            <!-- Modal Segmented Tabs (📸 Photo Snap / 🎙️ Smart Text & Voice) - Clean Full-width Row -->
+            <div class="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 text-xs font-bold shrink-0">
+                <button type="button" id="tabBtnAiPhoto" onclick="switchAiModalTab('photo')"
+                    class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 cursor-pointer">
+                    <span>📸</span> <span>สแกนรูปภาพ</span>
+                </button>
+                <button type="button" id="tabBtnAiVoice" onclick="switchAiModalTab('voice')"
+                    class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
+                    <span>🎙️</span> <span>พิมพ์/พูดด้วยเสียง</span>
+                </button>
             </div>
 
             <!-- Modal Content (Scrollable) -->
@@ -2630,8 +2633,10 @@
                                 <span id="aiVoiceRecordText">กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)</span>
                                 <span id="aiVoiceMicPulse" class="hidden absolute -inset-1 rounded-2xl bg-rose-500/40 animate-ping"></span>
                             </button>
-                            <div id="aiVoiceLiveStatus" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold animate-pulse">
-                                🔴 กำลังฟังเสียงของคุณ... พูดชื่อเมนูและปริมาณได้เลย (กดปุ่มอีกครั้งเมื่อพูดจบ)
+                            <div id="aiVoiceLiveStatus" class="hidden text-xs text-rose-500 dark:text-rose-400 font-semibold animate-pulse">
+                                🔴 กำลังฟังเสียงของคุณ... พูดชื่อเมนูและปริมาณได้เลย (แตะปุ่มเพื่อหยุด)
+                            </div>
+                            <div id="aiVoiceLiveTranscript" class="hidden text-xs font-medium text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-600 max-w-full break-words">
                             </div>
                             <div id="aiVoiceNotSupportedNotice" class="hidden text-[11px] text-amber-600 dark:text-amber-400">
                                 💡 อุปกรณ์นี้ยังไม่รองรับการสั่งงานด้วยเสียง สามารถพิมพ์ข้อความในช่องด้านล่างได้ทันทีครับ
