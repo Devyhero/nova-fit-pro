@@ -13,6 +13,7 @@
 | `public/food-db.js` | ~50 KB | ฐานข้อมูลอาหาร (280+ รายการ), หมวดหมู่อาหาร, ค่าวิตามินมาตรฐาน (`DEFAULT_SUPPLEMENTS`), Meal Combos |
 | `public/health-tips.js` | ~88 KB | เอนจินเกร็ดความรู้สุขภาพ (Daily Health Tips) 65+ รายการ, การสุ่มเรื่อง, การแสดงผล |
 | `public/health-tips.json`| ~75 KB | ข้อมูลดิบเกร็ดความรู้สุขภาพและโภชนาการสำหรับดึงผ่าน API/Offline |
+| `public/ai-snap.js`     | ~10 KB | เอนจินสแกนอาหารด้วยภาพ AI Snap & Log (Gemini 1.5/2.0 Flash Vision) พร้อม Demo Mode |
 | `public/firebase-sync.js`| ~28 KB | ซิงค์ข้อมูลกับ Firebase Firestore แบบ Realtime (`users/{uid}`), Google Auth, สถานะออนไลน์ |
 | `public/admin.html` | ~58 KB | หน้าแดชบอร์ดเฉพาะผู้ดูแลระบบ (Admin Dashboard) มี 5 แท็บหลัก |
 | `public/admin.js` | ~52 KB | ตรวจสอบสิทธิ์แอดมิน, โหลดข้อมูลผู้ใช้ทั้งหมด, คำนวณสถิติ DAU/Peak Hours, ระบบส่งข้อความ, Audit Logs |
@@ -104,6 +105,7 @@ state = {
 | `profileSettingsModal` | `app.js` | `openProfileSettingsModal()` / `closeProfileSettingsModal()` | ตั้งค่าโปรไฟล์ น้ำหนัก ส่วนสูง เป้าหมายโภชนาการ |
 | `changelogModal` | `app.js` | `openChangelogModal()` / `closeChangelogModal()` | ดูประวัติอัปเดตฟังก์ชันสำหรับผู้ใช้ (User-Centric) |
 | `dailyReportModal` | `app.js` | `openDailyReportModal()` / `closeDailyReportModal()` | สรุปโภชนาการประจำวัน |
+| `aiSnapModal`      | `ai-snap.js` | `openAiSnapModal()` / `closeAiSnapModal()` | ถ่ายรูปหรือเลือกรูปอาหารเพื่อสแกนแคลอรีด้วย AI |
 | `addSupplementModal` | `app.js` | `openAddSupplementModal()` / `closeAddSupplementModal()` | เพิ่มวิตามิน/อาหารเสริม พร้อมปุ่มลัด Emoji |
 | `quickAddModal` | `app.js` | `openQuickAddModal()` / `closeQuickAddModal()` | บันทึกแคลอรีและโปรตีนด่วน (Quick Add) |
 | `foodMealPickerModal` | `app.js` | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | แตะเลือกมื้ออาหารจากคลัง (เช้า/เที่ยง/เย็น/ว่าง) |

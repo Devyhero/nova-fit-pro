@@ -586,6 +586,53 @@ server.listen(PORT, async () => {
             throw new Error(`Restore default supplements failed! Expected 7, got ${restoredCount}`);
         }
 
+        // Test 21: AI Snap & Log Modal, Simulation & Meal Save
+        console.log('--- Test 21: AI Snap & Log Modal, Simulation & Meal Save ---');
+        const hasAiModal = await evalJs('!!document.getElementById("aiSnapModal")');
+        console.log('AI Snap Modal exists in DOM:', hasAiModal);
+        if (!hasAiModal) {
+            throw new Error('AI Snap Modal element is missing in DOM');
+        }
+
+        // Open AI Snap Modal
+        await evalJs('openAiSnapModal()');
+        const isAiModalOpen = await evalJs('!document.getElementById("aiSnapModal").classList.contains("hidden")');
+        console.log('AI Snap Modal is visible:', isAiModalOpen);
+        if (!isAiModalOpen) {
+            throw new Error('AI Snap Modal failed to open');
+        }
+
+        // Test Demo Simulation Render
+        await evalJs(`
+            renderAiAnalysisResult({
+                foodName: 'ข้าวกะเพราหมูสับไข่ดาว (AI Test)',
+                servingSize: '1 จาน (350 กรัม)',
+                cal: 620,
+                p: 26,
+                c: 65,
+                f: 28,
+                ingredients: ['ข้าวสวย', 'หมูสับ', 'ไข่ดาว'],
+                healthyTip: 'อร่อยและโปรตีนดี'
+            }, true);
+        `);
+
+        const isResultVisible = await evalJs('!document.getElementById("aiSnapResultState").classList.contains("hidden")');
+        const aiFoodNameVal = await evalJs('document.getElementById("aiResFoodName").value');
+        console.log('AI Snap result card visible:', isResultVisible);
+        console.log('AI Snap food name populated:', aiFoodNameVal);
+        if (!isResultVisible || aiFoodNameVal !== 'ข้าวกะเพราหมูสับไข่ดาว (AI Test)') {
+            throw new Error('AI Snap failed to render analysis results');
+        }
+
+        // Save AI meal into logs
+        const logsBefore = await evalJs('(state.logsByDate[state.selectedDate] || []).length');
+        await evalJs('saveAiAnalyzedMeal()');
+        const logsAfter = await evalJs('(state.logsByDate[state.selectedDate] || []).length');
+        console.log('Logs count before AI save:', logsBefore, 'after:', logsAfter);
+        if (logsAfter !== logsBefore + 1) {
+            throw new Error(`Saving AI meal failed! Expected ${logsBefore + 1}, got ${logsAfter}`);
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

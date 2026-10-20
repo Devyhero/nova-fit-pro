@@ -59,6 +59,7 @@ const jsFiles = [
     { path: 'public/app.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/health-tips.js', isModule: false },
+    { path: 'public/ai-snap.js', isModule: false },
     { path: 'public/firebase-sync.js', isModule: true },
     { path: 'public/admin.js', isModule: true }
 ];

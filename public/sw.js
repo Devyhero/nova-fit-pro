@@ -7,6 +7,7 @@ const PRECACHE_ASSETS = [
     './food-db.js',
     './health-tips.js',
     './health-tips.json',
+    './ai-snap.js',
     './firebase-sync.js',
     './admin.html',
     './admin.js',

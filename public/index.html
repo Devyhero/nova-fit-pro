@@ -327,6 +327,10 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
                             <span>💡</span> คลังเกร็ดความรู้สุขภาพ
                         </button>
+                        <button onclick="openAiSnapModal(); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition">
+                            <span>📸</span> สแกนอาหารด้วย AI (AI Snap & Log)
+                        </button>
                         <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
                             class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
                             <span>🛡️</span> แดชบอร์ดผู้ดูแล (Admin)
@@ -730,12 +734,19 @@
                                 </span>
                                 <span class="text-xs text-emerald-500 block">✨ เมนูที่กินวันนี้จะมีกรอบเขียว และกด ⭐ เพื่อติดดาว</span>
                             </div>
-                            <div class="relative w-full sm:w-72">
-                                <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
-                                    placeholder="🔍 ค้นหาเมนู เช่น กะเพรา, ราเมน..."
-                                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-7 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
-                                <button onclick="clearFoodSearch()" id="btnClearSearch"
-                                    class="hidden absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" onclick="openAiSnapModal()"
+                                    class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
+                                    <span>📸</span>
+                                    <span>ถ่ายรูปให้ AI กะแคล</span>
+                                </button>
+                                <div class="relative flex-1 sm:w-64">
+                                    <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
+                                        placeholder="🔍 ค้นหาเมนู เช่น กะเพรา, ราเมน..."
+                                        class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-7 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
+                                    <button onclick="clearFoodSearch()" id="btnClearSearch"
+                                        class="hidden absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                                </div>
                             </div>
                         </div>
 
@@ -2179,11 +2190,204 @@
         </div>
     </div>
 
+    <!-- MODAL: AI Snap & Log (v5.6.6) -->
+    <div id="aiSnapModal"
+        class="hidden fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop-smooth"
+        onclick="closeAiSnapModalOnBackdrop(event)">
+        <!-- Hidden file input for camera / file picker -->
+        <input type="file" id="aiSnapFileInput" accept="image/*" class="hidden" onchange="handleAiPhotoSelected(event)">
+
+        <div onclick="event.stopPropagation()"
+            class="modal-sheet-panel bg-white dark:bg-slate-800 border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-[32px] sm:rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 my-0 sm:my-auto max-h-[90vh] flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📸</span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-base leading-tight">AI Snap & Log</h3>
+                            <span id="aiSnapApiKeyBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">⚡ โหมดตัวอย่าง (Demo)</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI ช่วยคำนวณแคล & โปรตีนทันที</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="promptEditGeminiApiKey()" title="ตั้งค่า Gemini API Key"
+                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs transition">
+                        🔑
+                    </button>
+                    <button type="button" onclick="closeAiSnapModal()" title="ปิดหน้าต่าง"
+                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 font-bold flex items-center justify-center text-sm transition">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
+
+                <!-- STATE 1: Upload / Take Photo Area -->
+                <div id="aiSnapUploadState" class="space-y-3 py-2">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="triggerAiCameraInput(true)"
+                            class="p-5 rounded-2xl border-2 border-dashed border-purple-400/50 dark:border-purple-500/40 bg-purple-500/5 hover:bg-purple-500/10 active:scale-95 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer">
+                            <span class="text-3xl group-hover:scale-110 transition">📷</span>
+                            <span class="font-bold text-purple-600 dark:text-purple-400">ถ่ายรูปด้วยกล้อง</span>
+                            <span class="text-[10px] text-slate-400">เปิดกล้องมือถือถ่ายจานอาหาร</span>
+                        </button>
+
+                        <button type="button" onclick="triggerAiCameraInput(false)"
+                            class="p-5 rounded-2xl border-2 border-dashed border-indigo-400/50 dark:border-indigo-500/40 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95 transition flex flex-col items-center justify-center gap-2 text-center group cursor-pointer">
+                            <span class="text-3xl group-hover:scale-110 transition">🖼️</span>
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400">เลือกจากอัลบั้ม</span>
+                            <span class="text-[10px] text-slate-400">เลือกรูปภาพที่มีอยู่แล้วในเครื่อง</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-750/50 border border-slate-200/80 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-1">
+                        <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                            <span>💡</span> <span>เคล็ดลับการถ่ายรูปให้แม่นยำ:</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                            <li>ถ่ายให้เห็นทั้งจานชัดเจน มีแสงสว่างเพียงพอ</li>
+                            <li>หากเป็นเมนูสั่งพิเศษ เช่น ไม่เอามัน หรือหวานน้อย สามารถพิมพ์โน้ตบอก AI ได้ในขั้นตอนถัดไป</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- STATE 2: Image Preview & Confirmation -->
+                <div id="aiSnapPreviewState" class="hidden space-y-3">
+                    <div class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 aspect-video flex items-center justify-center">
+                        <img id="aiSnapPreviewImg" src="" alt="Food Preview" class="max-h-56 w-auto object-contain rounded-xl">
+                        <button type="button" onclick="resetAiSnapImage()"
+                            class="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 text-white font-medium text-[11px] backdrop-blur-sm transition">
+                            🔄 เปลี่ยนรูป
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                            📝 รายละเอียดเพิ่มเติม (ไม่บังคับ):
+                        </label>
+                        <input type="text" id="aiSnapUserNote" placeholder="เช่น กินแค่ครึ่งจาน, ใช้น้ำมันมะกอกผัด, ไก่ไม่เอาหนัง"
+                            class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500">
+                    </div>
+
+                    <button type="button" onclick="analyzeAiPhoto()"
+                        class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
+                        <span>✨</span> <span>เริ่มวิเคราะห์สารอาหารด้วย AI</span>
+                    </button>
+                </div>
+
+                <!-- STATE 3: Loading / Scanning Animation -->
+                <div id="aiSnapLoadingState" class="hidden py-10 flex flex-col items-center justify-center space-y-3 text-center">
+                    <div class="relative w-16 h-16">
+                        <div class="absolute inset-0 rounded-full border-4 border-purple-500/20 animate-ping"></div>
+                        <div class="w-16 h-16 rounded-full border-4 border-purple-600 border-t-transparent animate-spin flex items-center justify-center"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-xl">🔍</span>
+                    </div>
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100">
+                        AI กำลังแยกแยะวัตถุดิบและคำนวณแคลอรี...
+                    </div>
+                    <p class="text-[11px] text-slate-400 max-w-xs">
+                        ตรวจสอบสัดส่วนอาหาร คำนวณโปรตีน คาร์โบไฮเดรต และไขมัน
+                    </p>
+                </div>
+
+                <!-- STATE 4: Analysis Result Card -->
+                <div id="aiSnapResultState" class="hidden space-y-3">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                                <span>🎯</span> ผลการวิเคราะห์จาก AI
+                            </span>
+                            <span id="aiResDemoBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                ผลจำลอง (Demo)
+                            </span>
+                        </div>
+
+                        <!-- Food Name & Serving -->
+                        <div>
+                            <label class="block text-[10px] text-slate-400 font-medium">ชื่อเมนูอาหาร:</label>
+                            <input type="text" id="aiResFoodName" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-purple-500">
+                            <div class="text-[11px] text-slate-400 mt-0.5">ขนาดเสิร์ฟ: <span id="aiResServing" class="font-medium text-slate-600 dark:text-slate-300">-</span></div>
+                        </div>
+
+                        <!-- Macro Badges Grid -->
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <div class="text-[10px] text-slate-400 font-semibold">แคลอรี</div>
+                                <input type="number" id="aiResCal" class="w-full text-center font-black text-sm text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none">
+                                <div class="text-[9px] text-slate-400">kcal</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-rose-200/80 dark:border-rose-900/40">
+                                <div class="text-[10px] text-rose-500 font-semibold">โปรตีน</div>
+                                <input type="number" id="aiResP" class="w-full text-center font-bold text-sm text-rose-600 dark:text-rose-400 bg-transparent focus:outline-none">
+                                <div class="text-[9px] text-slate-400">g</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-amber-200/80 dark:border-amber-900/40">
+                                <div class="text-[10px] text-amber-500 font-semibold">คาร์บ</div>
+                                <input type="number" id="aiResC" class="w-full text-center font-bold text-sm text-amber-600 dark:text-amber-400 bg-transparent focus:outline-none">
+                                <div class="text-[9px] text-slate-400">g</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-sky-200/80 dark:border-sky-900/40">
+                                <div class="text-[10px] text-sky-500 font-semibold">ไขมัน</div>
+                                <input type="number" id="aiResF" class="w-full text-center font-bold text-sm text-sky-600 dark:text-sky-400 bg-transparent focus:outline-none">
+                                <div class="text-[9px] text-slate-400">g</div>
+                            </div>
+                        </div>
+
+                        <!-- Detected Ingredients -->
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-semibold mb-1">วัตถุดิบที่ตรวจพบ:</div>
+                            <div id="aiResIngredients" class="flex flex-wrap gap-1"></div>
+                        </div>
+
+                        <!-- Healthy Tip -->
+                        <div class="p-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 text-[11px] text-slate-600 dark:text-slate-300">
+                            <span id="aiResTip">แนะนำรับประทานคู่กับผักสด</span>
+                        </div>
+                    </div>
+
+                    <!-- Target Meal Selector -->
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                            🍱 บันทึกลงมื้ออาหาร:
+                        </label>
+                        <select id="aiResMealSelect" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500">
+                            <option value="breakfast">มื้อเช้า (Breakfast)</option>
+                            <option value="lunch">มื้อเที่ยง (Lunch)</option>
+                            <option value="dinner">มื้อเย็น (Dinner)</option>
+                            <option value="snack">ของว่าง (Snack)</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" onclick="resetAiSnapImage()"
+                            class="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-xs transition cursor-pointer">
+                            ถ่ายใหม่
+                        </button>
+                        <button type="button" onclick="saveAiAnalyzedMeal()"
+                            class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
+                            <span>✓</span> <span>บันทึกลงมื้ออาหารทันที</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Core Food Database -->
     <script src="food-db.js?v=5.6.6"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.6.6) -->
     <script src="health-tips.js?v=5.6.6"></script>
+
+    <!-- AI Snap & Log Engine (NEW v5.6.6) -->
+    <script src="ai-snap.js?v=5.6.6"></script>
 
     <!-- Modularized Core Application Logic (v5.6.6 - High Performance) -->
     <script src="app.js?v=5.6.6"></script>
