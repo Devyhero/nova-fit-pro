@@ -359,12 +359,13 @@ server.listen(PORT, async () => {
 
         // Test 16: Dynamic Version Badges & Admin Access
         console.log('--- Test 16: Dynamic Version Badges & Admin Access ---');
+        const curAppVer = await evalJs('typeof APP_VERSION !== "undefined" ? APP_VERSION : "5.7.0"');
         const headerBadgeText = await evalJs('document.getElementById("headerVersionBadge").textContent');
         const toolsBadgeText = await evalJs('document.getElementById("toolsVersionBadge").textContent');
         console.log('Header version badge text:', headerBadgeText);
         console.log('Tools version badge text:', toolsBadgeText);
-        if (!headerBadgeText.includes('v5.6.6') || !toolsBadgeText.includes('v5.6.6')) {
-            throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}`);
+        if (!headerBadgeText.includes(curAppVer) || !toolsBadgeText.includes(curAppVer)) {
+            throw new Error(`Version badge text mismatch! Header=${headerBadgeText}, Tools=${toolsBadgeText}, Expected=${curAppVer}`);
         }
 
         // Test 17: IF Collapsible Tab Accordion & Mobile Scroll Clamping
@@ -632,6 +633,80 @@ server.listen(PORT, async () => {
         if (logsAfter !== logsBefore + 1) {
             throw new Error(`Saving AI meal failed! Expected ${logsBefore + 1}, got ${logsAfter}`);
         }
+
+        // Test 22: AI Snap Anti-Abuse, Rate Limiting (15/day) & UAT Unlimited Bypass
+        console.log('--- Test 22: AI Snap Anti-Abuse, Quotas & UAT Environment Bypass ---');
+        const isUatEnv = await evalJs('isUatEnvironment()');
+        console.log('Current testing environment is detected as UAT/Localhost:', isUatEnv);
+        if (!isUatEnv) {
+            throw new Error('Localhost should be detected as UAT/Dev environment');
+        }
+
+        // In UAT environment, isAiQuotaExceeded() must be false even if 20 scans were used
+        await evalJs(`(() => {
+            const today = getTodayStr();
+            state.aiDailyScans = { [today]: 20 };
+        })()`);
+        const isQuotaExceededOnUat = await evalJs('isAiQuotaExceeded()');
+        console.log('Is quota exceeded on UAT when usage is 20 (should be false - unlimited):', isQuotaExceededOnUat);
+        if (isQuotaExceededOnUat !== false) {
+            throw new Error('UAT environment must allow unlimited scans without quota blocks');
+        }
+
+        // Quota usage increment check
+        const initialUsage = await evalJs('getTodayAiScanUsage()');
+        await evalJs('incrementAiScanUsage()');
+        const updatedUsage = await evalJs('getTodayAiScanUsage()');
+        console.log('AI scan usage incremented:', initialUsage, '->', updatedUsage);
+        if (updatedUsage !== initialUsage + 1) {
+            throw new Error(`incrementAiScanUsage failed! Expected ${initialUsage + 1}, got ${updatedUsage}`);
+        }
+
+        // Test non-UAT simulation: Auth check
+        const nonUatAuthCheck = await evalJs(`(() => {
+            // Mock non-UAT and logged out
+            const origUat = window.isUatEnvironment;
+            const origUser = window.currentUser;
+            window.isUatEnvironment = () => false;
+            window.currentUser = null;
+            try {
+                openAiSnapModal();
+                const authRequiredVisible = !document.getElementById('aiSnapAuthRequiredState').classList.contains('hidden');
+                return authRequiredVisible;
+            } finally {
+                window.isUatEnvironment = origUat;
+                window.currentUser = origUser;
+            }
+        })()`);
+        console.log('Non-UAT unauthenticated user is shown Auth Required state:', nonUatAuthCheck);
+        if (!nonUatAuthCheck) {
+            throw new Error('Non-UAT unauthenticated users must be prompted to log in');
+        }
+
+        // Test non-UAT simulation: Daily Quota 15 limit exceeded check
+        const nonUatQuotaCheck = await evalJs(`(() => {
+            // Mock non-UAT, logged in as normal user, usage >= 15
+            const origUat = window.isUatEnvironment;
+            const origUser = window.currentUser;
+            window.isUatEnvironment = () => false;
+            window.currentUser = { email: 'normal_user@example.com' };
+            const today = getTodayStr();
+            state.aiDailyScans = { [today]: 15 };
+            try {
+                openAiSnapModal();
+                const quotaExceededVisible = !document.getElementById('aiSnapQuotaExceededState').classList.contains('hidden');
+                return quotaExceededVisible;
+            } finally {
+                window.isUatEnvironment = origUat;
+                window.currentUser = origUser;
+            }
+        })()`);
+        console.log('Non-UAT user with 15 scans is shown Quota Exceeded state:', nonUatQuotaCheck);
+        if (!nonUatQuotaCheck) {
+            throw new Error('Non-UAT users with >= 15 scans must be blocked by quota exceeded state');
+        }
+
+        await evalJs('closeAiSnapModal()');
 
         ws.close();
         console.log('========================================');

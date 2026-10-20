@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.6.6)
+                            <span>🚀</span> ประวัติอัปเดต (v5.7.0)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1141,12 +1141,26 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.6.6!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.7.0!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.6.6 -->
+                <!-- Latest Release: v5.7.0 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.7.0 (เปิดตัว AI Snap & Log ถ่ายรูปจานอาหารวิเคราะห์แคลทันที)</span>
+                        <span>20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>📸 เปิดตัว AI Snap & Log:</b> ถ่ายรูปหรือเลือกรูปภาพจานอาหาร AI ช่วยแยกแยะวัตถุดิบและคำนวณแคลอรี โปรตีน คาร์บ ไขมัน บันทึกลงมื้ออาหารได้ทันทีในคลิกเดียว</li>
+                        <li><b>⚡ โควตาสแกนฟรี 15 ครั้ง/วัน:</b> สมาชิกทุกคนสามารถใช้งาน AI ถ่ายรูปวิเคราะห์อาหารได้ฟรี 15 ครั้งต่อวัน (รีเซ็ตทุกเที่ยงคืน)</li>
+                        <li><b>💊 จัดการวิตามิน & อาหารเสริมได้เต็มรูปแบบ:</b> เพิ่มหรือลบรายการได้ทุกตัวตามใจชอบ พร้อมปุ่มคืนค่าเริ่มต้นได้ทุกเมื่อ</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.6.6 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.6.6 (จัดการวิตามิน & อาหารเสริมได้อิสระตามใจคุณ)</span>
                         <span>20 ต.ค. 2026</span>
@@ -2205,11 +2219,14 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xl">📸</span>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="font-bold text-base leading-tight">AI Snap & Log</h3>
                             <button type="button" onclick="promptEditGeminiApiKey()" id="aiSnapApiKeyBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:scale-105 transition cursor-pointer">⚡ โหมดตัวอย่าง (Demo)</button>
                         </div>
-                        <p class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI ช่วยคำนวณแคล & โปรตีนทันที</p>
+                        <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <p class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที</p>
+                            <span id="aiSnapQuotaPill" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">โควตาวันนี้: เหลือ 15/15 ครั้ง</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -2226,6 +2243,73 @@
 
             <!-- Modal Content (Scrollable) -->
             <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-xs">
+
+                <!-- STATE 0A: Auth Required State (Login required on Production) -->
+                <div id="aiSnapAuthRequiredState" class="hidden space-y-4 py-3 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-3xl">
+                        🔐
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-100">
+                            เข้าสู่ระบบก่อนใช้งาน AI Snap & Log
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                            ระบบเปิดให้สมาชิก NovaFit Pro ถ่ายรูปวิเคราะห์สารอาหารฟรี 15 ครั้ง/วัน กรุณาเข้าสู่ระบบด้วย Google เพื่อเริ่มต้นใช้งาน
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750/50 border border-slate-200/80 dark:border-slate-700 text-left space-y-2 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>🛡️</span> <span>สิทธิประโยชน์สำหรับสมาชิก:</span>
+                        </div>
+                        <ul class="space-y-1 text-slate-500 dark:text-slate-400">
+                            <li class="flex items-center gap-1.5"><span class="text-emerald-500 font-bold">✓</span> <span>สแกนจานอาหารด้วย AI ฟรี 15 ครั้งต่อวัน (รีเซ็ตเที่ยงคืน)</span></li>
+                            <li class="flex items-center gap-1.5"><span class="text-emerald-500 font-bold">✓</span> <span>ข้อมูลอาหารและน้ำหนักซิงค์ข้ามมือถือ-แท็บเล็ตแบบ Real-time</span></li>
+                            <li class="flex items-center gap-1.5"><span class="text-emerald-500 font-bold">✓</span> <span>ป้องกันข้อมูลสูญหาย ข้อมูลถูกจัดเก็บบน Cloud ปลอดภัย 100%</span></li>
+                        </ul>
+                    </div>
+
+                    <button type="button" onclick="loginWithGoogleFromAiSnap()"
+                        class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12.24 10.285V13.4h6.887C18.2 16.1 15.645 18 12.24 18c-3.315 0-6-2.685-6-6s2.685-6 6-6c1.44 0 2.76.51 3.81 1.35l2.445-2.445C17.01 3.51 14.79 2.5 12.24 2.5 7.02 2.5 2.76 6.76 2.76 12s4.26 9.5 9.48 9.5c5.445 0 9.15-3.825 9.15-9.315 0-.675-.06-1.32-.18-1.9H12.24z"/></svg>
+                        <span>เข้าสู่ระบบด้วย Google ทันที</span>
+                    </button>
+                </div>
+
+                <!-- STATE 0B: Daily Quota Exceeded State (15/15 limit hit on PROD) -->
+                <div id="aiSnapQuotaExceededState" class="hidden space-y-4 py-3 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-3xl">
+                        ⏳
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-100">
+                            คุณใช้โควตา AI ประจำวันครบ 15/15 ครั้งแล้ว
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                            เพื่อจัดสรรทรัพยากร AI ให้เพื่อนสมาชิกทุกคนได้ใช้งานอย่างทั่วถึง ระบบจำกัดโควตาการถ่ายรูป 15 รูป/วัน โดยโควตาจะรีเซ็ตอัตโนมัติเวลา 00:00 น.
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-purple-500/5 border border-purple-500/20 text-left space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div class="font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                            <span>💡</span> <span>ข้อแนะนำระหว่างรอรีเซ็ตโควตา:</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 leading-normal">
+                            คุณยังสามารถค้นหาและบันทึกอาหารจากคลัง 600+ เมนู หรือใช้ระบบ <b>"เพิ่มเองแบบด่วน"</b> ได้ฟรีไม่มีจำกัดตลอดเวลาครับ
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button type="button" onclick="closeAiSnapModal()"
+                            class="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                            ปิดหน้าต่าง
+                        </button>
+                        <button type="button" onclick="closeAiSnapModalAndFocusSearch()"
+                            class="py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                            🔍 ค้นหาเมนูอาหาร
+                        </button>
+                    </div>
+                </div>
 
                 <!-- STATE 1: Upload / Take Photo Area -->
                 <div id="aiSnapUploadState" class="space-y-3 py-2">
@@ -2381,19 +2465,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.6.6"></script>
+    <script src="food-db.js?v=5.7.0"></script>
 
-    <!-- Daily Health & Nutrition Tips Engine (v5.6.6) -->
-    <script src="health-tips.js?v=5.6.6"></script>
+    <!-- Daily Health & Nutrition Tips Engine (v5.7.0) -->
+    <script src="health-tips.js?v=5.7.0"></script>
 
-    <!-- AI Snap & Log Engine (NEW v5.6.6) -->
-    <script src="ai-snap.js?v=5.6.6"></script>
+    <!-- AI Snap & Log Engine (NEW v5.7.0) -->
+    <script src="ai-snap.js?v=5.7.0"></script>
 
-    <!-- Modularized Core Application Logic (v5.6.6 - High Performance) -->
-    <script src="app.js?v=5.6.6"></script>
+    <!-- Modularized Core Application Logic (v5.7.0 - High Performance) -->
+    <script src="app.js?v=5.7.0"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.6.6"></script>
+    <script type="module" src="firebase-sync.js?v=5.7.0"></script>
 
 </body>
 

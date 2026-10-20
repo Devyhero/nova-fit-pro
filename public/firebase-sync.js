@@ -101,6 +101,28 @@ window.addEventListener('online', () => {
     }
 });
 
+// Fetch System AI Configuration (Gemini API Key) from Firestore
+async function fetchSystemAiConfig() {
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'ai'));
+        if (snap.exists()) {
+            const aiConfig = snap.data();
+            if (aiConfig && aiConfig.geminiApiKey) {
+                window._systemGeminiApiKey = aiConfig.geminiApiKey;
+                try {
+                    localStorage.setItem('novafit_system_gemini_api_key', aiConfig.geminiApiKey);
+                } catch (e) { }
+                if (window.updateAiSnapQuotaDisplay) {
+                    window.updateAiSnapQuotaDisplay();
+                }
+            }
+        }
+    } catch (err) {
+        // Non-fatal: if offline or rules block, fallback to cached or manual key
+        console.warn('System AI config fetch skipped or failed:', err);
+    }
+}
+
 // Listen for authentication changes
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
@@ -120,9 +142,14 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         setupRealtimeCloudListener(user);
         setupRealtimeNotificationsListener(user);
+        fetchSystemAiConfig();
     } else {
         userNotifications = [];
         updateNotificationBadge(0);
+    }
+
+    if (window.updateAiSnapQuotaDisplay) {
+        window.updateAiSnapQuotaDisplay();
     }
 });
 
@@ -338,6 +365,7 @@ window.handleGoogleLogin = async function () {
         }
     }
 };
+window.loginWithGoogle = window.handleGoogleLogin;
 
 window.handleUserLogout = async function () {
     if (!confirm('ต้องการออกจากระบบใช่หรือไม่? (ข้อมูลในเครื่องยังคงอยู่)')) return;

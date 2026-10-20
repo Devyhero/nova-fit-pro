@@ -14,7 +14,10 @@ import {
     getFirestore,
     collection,
     getDocs,
-    addDoc
+    addDoc,
+    doc,
+    getDoc,
+    setDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -661,7 +664,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {
@@ -676,6 +679,9 @@ window.switchAdminTab = function (tabId) {
 
     if (tabId === 'message_logs' && window.loadAdminMessageLogs) {
         window.loadAdminMessageLogs();
+    }
+    if (tabId === 'system_ai' && window.loadAdminGeminiApiKey) {
+        window.loadAdminGeminiApiKey();
     }
 };
 
@@ -1112,5 +1118,111 @@ window.loadAdminMessageLogs = async function () {
         if (mobileList) {
             mobileList.innerHTML = `<div class="py-8 text-center text-rose-500 text-xs">${errMsg}</div>`;
         }
+    }
+};
+
+// ==========================================
+// Admin: Gemini AI API Key Management (Firestore system_config/ai)
+// ==========================================
+
+window.toggleAdminKeyVisibility = function () {
+    const input = document.getElementById('adminGeminiApiKeyInput');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+window.loadAdminGeminiApiKey = async function () {
+    const input = document.getElementById('adminGeminiApiKeyInput');
+    const badge = document.getElementById('adminAiKeyStatusBadge');
+    if (badge) {
+        badge.textContent = '⏳ กำลังโหลด...';
+        badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500';
+    }
+
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'ai'));
+        if (snap.exists()) {
+            const data = snap.data();
+            const key = data.geminiApiKey || '';
+            if (input && !input.value) {
+                input.value = key;
+            }
+            if (badge) {
+                if (key) {
+                    badge.textContent = '✓ บันทึกคีย์แล้ว (พร้อมใช้งาน)';
+                    badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
+                } else {
+                    badge.textContent = '⚡ ยังไม่มี API Key (ใช้ Demo)';
+                    badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+                }
+            }
+        } else {
+            if (badge) {
+                badge.textContent = '⚡ ยังไม่มี API Key (ใช้ Demo)';
+                badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load system AI config:', err);
+        if (badge) {
+            badge.textContent = '⚠️ ไม่สามารถโหลดสถานะได้';
+            badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+        }
+    }
+};
+
+window.saveAdminGeminiApiKey = async function () {
+    const input = document.getElementById('adminGeminiApiKeyInput');
+    const key = (input ? input.value : '').trim();
+
+    if (!confirm(key ? 'ต้องการบันทึก Gemini API Key นี้ลงระบบ Firestore ใช่หรือไม่?' : 'ต้องการล้าง Gemini API Key และเปลี่ยนเป็น Demo ใช่หรือไม่?')) {
+        return;
+    }
+
+    try {
+        await setDoc(doc(db, 'system_config', 'ai'), {
+            geminiApiKey: key,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser?.email || 'admin'
+        }, { merge: true });
+
+        alert('✓ บันทึกการตั้งค่า Gemini AI ลงระบบ Firestore เรียบร้อยแล้ว!\nสมาชิกทุกคนที่ล็อกอินจะดึงคีย์ไปใช้งานได้ทันที');
+        window.loadAdminGeminiApiKey();
+    } catch (err) {
+        console.error('Failed to save Gemini API key:', err);
+        alert('❌ บันทึกไม่สำเร็จ: ' + err.message);
+    }
+};
+
+window.testAdminGeminiApiKey = async function () {
+    const input = document.getElementById('adminGeminiApiKeyInput');
+    const key = (input ? input.value : '').trim();
+
+    if (!key) {
+        alert('กรุณากรอก API Key ก่อนทดสอบครับ');
+        return;
+    }
+
+    try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [
+                    { parts: [{ text: "ping" }] }
+                ]
+            })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error?.message || 'HTTP ' + res.status);
+        }
+
+        const data = await res.json();
+        alert('🎉 การเชื่อมต่อสำเร็จ (Connection Verified 100%)!\n\nGemini API ตอบกลับปกติ คีย์นี้สามารถใช้งานฟังก์ชัน AI Snap & Log ได้สมบูรณ์');
+    } catch (err) {
+        console.error('Gemini test ping failed:', err);
+        alert('❌ การทดสอบล้มเหลว: ' + err.message);
     }
 };

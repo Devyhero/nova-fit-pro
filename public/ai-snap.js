@@ -1,9 +1,76 @@
 // ==========================================
-// NovaFit Pro - AI Snap & Log Engine (v5.6.6)
+// NovaFit Pro - AI Snap & Log Engine (v5.7.0)
 // Powered by Google Gemini Vision API (Free Tier)
+// Integrated Anti-Abuse Quota Protection (15 scans/day)
 // ==========================================
 
 const AI_SNAP_STORAGE_KEY = 'novafit_gemini_api_key';
+const SYSTEM_AI_KEY_STORAGE = 'novafit_system_gemini_api_key';
+const DAILY_AI_SCAN_LIMIT = 15;
+
+// Authorized Admin Emails (Bypass quota & full administrative rights)
+const ADMIN_EMAILS = [
+    'benznova01@gmail.com',
+    'parinya6969@gmail.com'
+];
+
+// Helper: Check if running in UAT (Preview) or Local Development environment
+function isUatEnvironment() {
+    const host = window.location.hostname || '';
+    return host.includes('uat') || host === 'localhost' || host === '127.0.0.1';
+}
+
+// Helper: Check if current logged-in user is an administrator
+function isUserAdmin() {
+    const email = (window.currentUser && window.currentUser.email) || '';
+    return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+// Helper: Get today ISO string (YYYY-MM-DD)
+function getTodayIsoDate() {
+    if (typeof window.getTodayStr === 'function') {
+        return window.getTodayStr();
+    }
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - offset).toISOString().split('T')[0];
+}
+
+// Daily Quota Tracking per User / Date
+function getTodayAiScanUsage() {
+    const today = getTodayIsoDate();
+    if (!window.state) return 0;
+    if (!window.state.aiDailyScans || typeof window.state.aiDailyScans !== 'object') {
+        window.state.aiDailyScans = {};
+    }
+    return Number(window.state.aiDailyScans[today]) || 0;
+}
+
+function incrementAiScanUsage() {
+    const today = getTodayIsoDate();
+    if (!window.state) window.state = {};
+    if (!window.state.aiDailyScans || typeof window.state.aiDailyScans !== 'object') {
+        window.state.aiDailyScans = {};
+    }
+    const current = Number(window.state.aiDailyScans[today]) || 0;
+    window.state.aiDailyScans[today] = current + 1;
+
+    if (typeof window.saveState === 'function') {
+        window.saveState();
+    }
+    if (typeof window.triggerCloudSync === 'function') {
+        window.triggerCloudSync(false);
+    }
+    updateAiSnapQuotaDisplay();
+}
+
+function isAiQuotaExceeded() {
+    // UAT preview channel & Admin accounts have UNLIMITED scanning capability
+    if (isUatEnvironment() || isUserAdmin()) {
+        return false;
+    }
+    return getTodayAiScanUsage() >= DAILY_AI_SCAN_LIMIT;
+}
 
 // Demo Food Knowledge Base for instant testing when no API key is provided
 const DEMO_AI_FOODS = [
@@ -48,7 +115,11 @@ let _currentAiAnalyzedData = null;
 
 // API Key Management
 function getGeminiApiKey() {
-    return localStorage.getItem(AI_SNAP_STORAGE_KEY) || '';
+    return localStorage.getItem(AI_SNAP_STORAGE_KEY) ||
+           window._systemGeminiApiKey ||
+           sessionStorage.getItem(SYSTEM_AI_KEY_STORAGE) ||
+           localStorage.getItem(SYSTEM_AI_KEY_STORAGE) ||
+           '';
 }
 
 function setGeminiApiKey(key) {
@@ -56,6 +127,41 @@ function setGeminiApiKey(key) {
         localStorage.setItem(AI_SNAP_STORAGE_KEY, key.trim());
     } else {
         localStorage.removeItem(AI_SNAP_STORAGE_KEY);
+    }
+    updateAiSnapQuotaDisplay();
+}
+
+// Update Quota and Key Indicator Badges in UI
+function updateAiSnapQuotaDisplay() {
+    const quotaPill = document.getElementById('aiSnapQuotaPill');
+    const keyBadge = document.getElementById('aiSnapApiKeyBadge');
+    const key = getGeminiApiKey();
+
+    if (keyBadge) {
+        keyBadge.textContent = key ? '✓ เชื่อมต่อ Gemini AI แล้ว' : '⚡ โหมดตัวอย่าง (Demo)';
+        keyBadge.className = key
+            ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+            : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30';
+    }
+
+    if (!quotaPill) return;
+
+    if (isUatEnvironment()) {
+        quotaPill.textContent = '⚡ UAT Mode (ไม่จำกัดโควตา)';
+        quotaPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30';
+    } else if (isUserAdmin()) {
+        quotaPill.textContent = '👑 แอดมิน (ไม่จำกัดโควตา)';
+        quotaPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30';
+    } else if (!window.currentUser) {
+        quotaPill.textContent = '🔐 ต้องเข้าสู่ระบบ';
+        quotaPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+    } else {
+        const usage = getTodayAiScanUsage();
+        const remaining = Math.max(0, DAILY_AI_SCAN_LIMIT - usage);
+        quotaPill.textContent = `โควตาวันนี้: เหลือ ${remaining}/${DAILY_AI_SCAN_LIMIT} ครั้ง`;
+        quotaPill.className = remaining > 0
+            ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+            : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
     }
 }
 
@@ -107,19 +213,28 @@ function openAiSnapModal() {
     _currentAiImageBase64 = null;
     _currentAiAnalyzedData = null;
 
-    // Show upload state, hide results & loading
-    document.getElementById('aiSnapUploadState')?.classList.remove('hidden');
-    document.getElementById('aiSnapPreviewState')?.classList.add('hidden');
-    document.getElementById('aiSnapLoadingState')?.classList.add('hidden');
-    document.getElementById('aiSnapResultState')?.classList.add('hidden');
+    const elAuthReq = document.getElementById('aiSnapAuthRequiredState');
+    const elQuotaExc = document.getElementById('aiSnapQuotaExceededState');
+    const elUpload = document.getElementById('aiSnapUploadState');
+    const elPreview = document.getElementById('aiSnapPreviewState');
+    const elLoading = document.getElementById('aiSnapLoadingState');
+    const elResult = document.getElementById('aiSnapResultState');
 
-    const key = getGeminiApiKey();
-    const keyBadge = document.getElementById('aiSnapApiKeyBadge');
-    if (keyBadge) {
-        keyBadge.textContent = key ? '✓ เชื่อมต่อ Gemini API แล้ว' : '⚡ โหมดตัวอย่าง (Demo)';
-        keyBadge.className = key
-            ? 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-            : 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30';
+    [elAuthReq, elQuotaExc, elUpload, elPreview, elLoading, elResult].forEach(el => el?.classList.add('hidden'));
+
+    updateAiSnapQuotaDisplay();
+
+    // Check 1: Must be logged in on Production (UAT preview channel allows free testing)
+    if (!window.currentUser && !isUatEnvironment()) {
+        elAuthReq?.classList.remove('hidden');
+    }
+    // Check 2: Daily Quota Limit (15 scans/day on PROD, bypass for UAT & Admin)
+    else if (isAiQuotaExceeded()) {
+        elQuotaExc?.classList.remove('hidden');
+    }
+    // Check 3: Ready to upload & take photo
+    else {
+        elUpload?.classList.remove('hidden');
     }
 
     if (window.openModalAnimated) {
@@ -197,6 +312,20 @@ async function analyzeAiPhoto() {
         return;
     }
 
+    // Safeguard 1: Auth check on Production (UAT preview channel allows free testing)
+    if (!window.currentUser && !isUatEnvironment()) {
+        alert('กรุณาเข้าสู่ระบบด้วย Google ก่อนใช้งานฟีเจอร์ AI Snap ครับ');
+        openAiSnapModal();
+        return;
+    }
+
+    // Safeguard 2: Quota check (15 scans/day on PROD, bypass for UAT & Admin)
+    if (isAiQuotaExceeded()) {
+        alert('คุณใช้โควตา AI ประจำวันครบ 15/15 ครั้งแล้ว โควตาจะรีเซ็ตใหม่ในวันพรุ่งนี้เวลา 00:00 น.');
+        openAiSnapModal();
+        return;
+    }
+
     const note = (document.getElementById('aiSnapUserNote')?.value || '').trim();
     const apiKey = getGeminiApiKey();
 
@@ -209,6 +338,7 @@ async function analyzeAiPhoto() {
     if (!apiKey) {
         setTimeout(() => {
             const randomDemo = DEMO_AI_FOODS[Math.floor(Math.random() * DEMO_AI_FOODS.length)];
+            incrementAiScanUsage();
             renderAiAnalysisResult(randomDemo, true);
         }, 1500);
         return;
@@ -266,11 +396,13 @@ async function analyzeAiPhoto() {
         if (!jsonText) throw new Error('ไม่ได้รับข้อมูลการตอบกลับจาก AI');
 
         const parsedResult = JSON.parse(jsonText);
+        incrementAiScanUsage();
         renderAiAnalysisResult(parsedResult, false);
     } catch (err) {
         console.error('Gemini Vision analysis failed:', err);
         alert('⚠️ เกิดข้อผิดพลาดในการวิเคราะห์ด้วย Gemini: ' + err.message + '\n\nระบบจะแสดงผลการประเมินแบบจำลองแทนให้ชั่วคราว');
         const fallback = DEMO_AI_FOODS[0];
+        incrementAiScanUsage();
         renderAiAnalysisResult(fallback, true);
     }
 }
@@ -390,6 +522,40 @@ function promptEditGeminiApiKey() {
     }
 }
 
+// Trigger Google Login popup from AI Snap Modal
+async function loginWithGoogleFromAiSnap() {
+    try {
+        if (typeof window.handleGoogleLogin === 'function') {
+            await window.handleGoogleLogin();
+        } else if (typeof window.loginWithGoogle === 'function') {
+            await window.loginWithGoogle();
+        } else {
+            const btn = document.getElementById('btnGoogleLogin');
+            if (btn) btn.click();
+        }
+    } catch (e) {
+        console.error('Login from AI Snap failed:', e);
+    }
+    // Re-evaluate modal view if logged in
+    setTimeout(() => {
+        if (window.currentUser) {
+            openAiSnapModal();
+        }
+    }, 600);
+}
+
+// Close Modal and scroll to Food Search for manual search
+function closeAiSnapModalAndFocusSearch() {
+    closeAiSnapModal();
+    const searchInput = document.getElementById('foodSearchInput');
+    if (searchInput) {
+        setTimeout(() => {
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            searchInput.focus();
+        }, 200);
+    }
+}
+
 // Window attachments for HTML inline handlers
 window.openAiSnapModal = openAiSnapModal;
 window.closeAiSnapModal = closeAiSnapModal;
@@ -400,3 +566,11 @@ window.resetAiSnapImage = resetAiSnapImage;
 window.analyzeAiPhoto = analyzeAiPhoto;
 window.saveAiAnalyzedMeal = saveAiAnalyzedMeal;
 window.promptEditGeminiApiKey = promptEditGeminiApiKey;
+window.updateAiSnapQuotaDisplay = updateAiSnapQuotaDisplay;
+window.loginWithGoogleFromAiSnap = loginWithGoogleFromAiSnap;
+window.closeAiSnapModalAndFocusSearch = closeAiSnapModalAndFocusSearch;
+window.getTodayAiScanUsage = getTodayAiScanUsage;
+window.incrementAiScanUsage = incrementAiScanUsage;
+window.isAiQuotaExceeded = isAiQuotaExceeded;
+window.isUatEnvironment = isUatEnvironment;
+window.isUserAdmin = isUserAdmin;
