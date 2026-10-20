@@ -1070,7 +1070,7 @@ window.loadAdminMessageLogs = async function () {
                 const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
 
                 return `
-                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
                         <div class="flex items-center justify-between gap-2">
                             <div>
                                 ${isBroadcast ? `
@@ -1319,7 +1319,7 @@ window.loadAdminAiScanLogs = async function () {
                 : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">PROD</span>';
 
             rows.push(`
-                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-750/50 transition">
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition">
                     <td class="py-2.5 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 text-[11px]">
                         <div>${timeFormatted} น.</div>
                         <div class="text-[10px] text-slate-400">${dateFormatted}</div>
