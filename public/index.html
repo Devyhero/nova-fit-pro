@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.1)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.2)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1176,7 +1176,20 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.1!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.2!</b> สรุปการอัปเดตล่าสุด:</span>
+                </div>
+
+                                <!-- Latest Release: v5.8.2 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        <span>✨ v5.8.2 (AI Coach Loading Skeleton & กล่องแจ้งเตือนยืนยันลบดีไซน์ใหม่)</span>
+                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
+                        <li><b>✨ แอนิเมชัน Loading Skeleton สำหรับ AI Macro Coach:</b> เพิ่มแอนิเมชันโครงร่างการ์ดเรืองแสงระหว่างรอ AI วิเคราะห์ ไม่กระตุก ไม่สลับเมนูซ้ำซ้อน สวยงามพรีเมียม</li>
+                        <li><b>🔔 หน้าต่างยืนยันการลบดีไซน์ใหม่ (Unified Confirm Modal):</b> หน้าต่างแจ้งเตือนเมื่อกดยกเลิก/ลบวิตามินและอาหารเสริม ออกแบบสวยงามเข้ากับธีม ไม่ใช้กล่องข้อความเดิมๆ ของเบราว์เซอร์</li>
+                        <li><b>⚡ ประหยัดโควตาและตอบสนองเร็วขึ้น:</b> ปรับปรุงระบบแนะนำอาหารให้เปิดปุ๊บติดปั๊บ และเรียก AI เจาะลึกเฉพาะเมื่อกดปุ่มวิเคราะห์ใหม่เท่านั้น</li>
+                    </ul>
                 </div>
 
                 <!-- Latest Release: v5.8.1 -->
@@ -2567,20 +2580,53 @@
         </div>
     </div>
 
+    <!-- GLOBAL UNIFIED CONFIRM MODAL (v5.8.2) -->
+    <div id="globalConfirmModal"
+        class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 modal-backdrop-smooth"
+        onclick="closeConfirmDialog(false)">
+        <div onclick="event.stopPropagation()"
+            class="modal-sheet-panel bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 my-auto text-center">
+            <!-- Icon Badge -->
+            <div id="confirmModalIconBg" class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs">
+                <span id="confirmModalIcon">🗑️</span>
+            </div>
+            <!-- Title & Message -->
+            <div class="space-y-1.5">
+                <h3 id="confirmModalTitle" class="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100">
+                    ยืนยันการทำรายการ
+                </h3>
+                <p id="confirmModalMessage" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1">
+                    คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?
+                </p>
+            </div>
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2.5 pt-2">
+                <button type="button" id="btnConfirmCancel" onclick="closeConfirmDialog(false)"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                    ยกเลิก
+                </button>
+                <button type="button" id="btnConfirmAction" onclick="closeConfirmDialog(true)"
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer">
+                    ยืนยันการลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.1"></script>
+    <script src="food-db.js?v=5.8.2"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.1"></script>
+    <script src="health-tips.js?v=5.8.2"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.1"></script>
+    <script src="ai-snap.js?v=5.8.2"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.1"></script>
+    <script src="app.js?v=5.8.2"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.1"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.2"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

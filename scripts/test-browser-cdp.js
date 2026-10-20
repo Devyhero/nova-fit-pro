@@ -792,6 +792,36 @@ server.listen(PORT, async () => {
         console.log('Cloud past data retained via non-destructive merge:', mergeResult);
         if (!mergeResult) throw new Error('applyCloudState must retain past cloud logs');
 
+        // Test 25: Unified Confirmation Modal (v5.8.2)
+        console.log('--- Test 25: Unified Custom Confirm Modal ---');
+        const modalExists = await evalJs('!!document.getElementById("globalConfirmModal")');
+        if (!modalExists) throw new Error('Missing #globalConfirmModal DOM element');
+
+        await evalJs(`(() => {
+            window.__testModalConfirmed = false;
+            showConfirmDialog({
+                icon: '💊',
+                title: 'ทดสอบการยืนยัน',
+                message: 'คุณต้องการดำเนินการนี้หรือไม่?',
+                confirmText: 'ยืนยันการลบ',
+                onConfirm: () => { window.__testModalConfirmed = true; }
+            });
+        })()`);
+
+        const isModalVisible = await evalJs('!document.getElementById("globalConfirmModal").classList.contains("hidden")');
+        const modalTitle = await evalJs('document.getElementById("confirmModalTitle").textContent.trim()');
+        const modalIcon = await evalJs('document.getElementById("confirmModalIcon").textContent.trim()');
+        console.log('Confirm modal visible:', isModalVisible, '| Title:', modalTitle, '| Icon:', modalIcon);
+        if (!isModalVisible || modalTitle !== 'ทดสอบการยืนยัน' || modalIcon !== '💊') {
+            throw new Error('Confirm modal failed to render expected title, icon or visibility');
+        }
+
+        // Test confirming action
+        await evalJs('closeConfirmDialog(true)');
+        const wasCallbackFired = await evalJs('window.__testModalConfirmed === true');
+        console.log('Confirm dialog callback executed:', wasCallbackFired);
+        if (!wasCallbackFired) throw new Error('Confirm dialog onConfirm callback was not triggered');
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

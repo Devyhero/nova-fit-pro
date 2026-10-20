@@ -1,4 +1,4 @@
-const APP_VERSION = '5.8.1';
+const APP_VERSION = '5.8.2';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -797,13 +797,85 @@ const APP_VERSION = '5.8.1';
             return map;
         }
 
+
+        // ==========================================
+        // UNIFIED CONFIRMATION DIALOG (v5.8.2)
+        // ==========================================
+        let _confirmDialogCallback = null;
+
+        function showConfirmDialog(options) {
+            if (!options) return;
+
+            // Automated test environment compatibility (e.g. window.confirm = () => true)
+            if (typeof window.confirm === 'function' && window.confirm.toString().indexOf('[native code]') === -1) {
+                const approved = window.confirm(options.message || options.title || 'ยืนยัน?');
+                if (approved && typeof options.onConfirm === 'function') {
+                    options.onConfirm();
+                } else if (!approved && typeof options.onCancel === 'function') {
+                    options.onCancel();
+                }
+                return;
+            }
+
+            const modal = document.getElementById('globalConfirmModal');
+            if (!modal) {
+                if (window.confirm(options.message || options.title || 'ยืนยัน?')) {
+                    if (typeof options.onConfirm === 'function') options.onConfirm();
+                }
+                return;
+            }
+
+            const iconEl = document.getElementById('confirmModalIcon');
+            const iconBg = document.getElementById('confirmModalIconBg');
+            const titleEl = document.getElementById('confirmModalTitle');
+            const msgEl = document.getElementById('confirmModalMessage');
+            const actionBtn = document.getElementById('btnConfirmAction');
+            const cancelBtn = document.getElementById('btnConfirmCancel');
+
+            if (iconEl) iconEl.textContent = options.icon || '🗑️';
+            if (iconBg) {
+                iconBg.className = options.iconBgClass || 'w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs';
+            }
+            if (titleEl) titleEl.textContent = options.title || 'ยืนยันการทำรายการ';
+            if (msgEl) msgEl.textContent = options.message || 'คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?';
+            if (cancelBtn) cancelBtn.textContent = options.cancelText || 'ยกเลิก';
+
+            if (actionBtn) {
+                actionBtn.textContent = options.confirmText || 'ยืนยันการลบ';
+                actionBtn.className = options.confirmClass || 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer';
+            }
+
+            _confirmDialogCallback = options.onConfirm || null;
+            openModalAnimated('globalConfirmModal');
+        }
+
+        function closeConfirmDialog(confirmed = false) {
+            closeModalAnimated('globalConfirmModal');
+            if (confirmed && typeof _confirmDialogCallback === 'function') {
+                const cb = _confirmDialogCallback;
+                _confirmDialogCallback = null;
+                cb();
+            } else {
+                _confirmDialogCallback = null;
+            }
+        }
+
         function deleteCustomPreset(name, event) {
             if (event) event.stopPropagation();
-            if (!confirm(`ต้องการลบเมนู "${name}" ออกจากหมวดเมนูส่วนตัวใช่หรือไม่?`)) return;
-            state.customPresets = (state.customPresets || []).filter(p => p.name !== name);
-            saveState();
-            renderFoodDatabaseExplorer();
-            showToast(`ลบ "${name}" ออกจากเมนูส่วนตัวแล้ว`);
+            showConfirmDialog({
+                icon: '🗑️',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'ลบเมนูส่วนตัว',
+                message: `ต้องการลบเมนู "${name}" ออกจากหมวดเมนูส่วนตัวใช่หรือไม่?`,
+                confirmText: 'ลบเมนูส่วนตัว',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    state.customPresets = (state.customPresets || []).filter(p => p.name !== name);
+                    saveState();
+                    renderFoodDatabaseExplorer();
+                    showToast(`✓ ลบ "${name}" ออกจากเมนูส่วนตัวแล้ว`);
+                }
+            });
         }
 
         function renderFoodDatabaseExplorer() {
@@ -1863,11 +1935,20 @@ const APP_VERSION = '5.8.1';
             }
             const combo = (state.mealCombos || []).find(c => c.id === comboId);
             if (!combo) return;
-            if (!confirm(`ต้องการลบเซ็ต "${combo.name}" ใช่หรือไม่?`)) return;
-            state.mealCombos = (state.mealCombos || []).filter(c => c.id !== comboId);
-            saveState();
-            renderFoodDatabaseExplorer();
-            showToast(`ลบเซ็ต "${combo.name}" เรียบร้อยแล้ว`);
+            showConfirmDialog({
+                icon: '🍱',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'ลบเซ็ตอาหาร (Meal Combo)',
+                message: `ต้องการลบเซ็ตอาหาร "${combo.name}" ใช่หรือไม่?`,
+                confirmText: 'ลบเซ็ตอาหาร',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    state.mealCombos = (state.mealCombos || []).filter(c => c.id !== comboId);
+                    saveState();
+                    renderFoodDatabaseExplorer();
+                    showToast(`✓ ลบเซ็ต "${combo.name}" เรียบร้อยแล้ว`);
+                }
+            });
         }
 
         // ==========================================
@@ -2069,11 +2150,20 @@ const APP_VERSION = '5.8.1';
             const list = Array.isArray(state.supplementList) ? state.supplementList : [];
             const target = list.find(s => s.id === suppId);
             const targetName = target ? target.name : 'อาหารเสริมนี้';
-            if (!confirm(`ต้องการลบ "${targetName}" ออกจากรายการใช่หรือไม่?`)) return;
-            state.supplementList = list.filter(s => s.id !== suppId);
-            saveState();
-            renderSupplements();
-            showToast(`ลบ "${targetName}" เรียบร้อยแล้ว`);
+            showConfirmDialog({
+                icon: '💊',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'ลบรายการวิตามิน / อาหารเสริม',
+                message: `ต้องการลบ "${targetName}" ออกจากเช็กลิสต์ประจำวันใช่หรือไม่?`,
+                confirmText: 'ลบรายการนี้',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    state.supplementList = list.filter(s => s.id !== suppId);
+                    saveState();
+                    renderSupplements();
+                    showToast(`✓ ลบ "${targetName}" เรียบร้อยแล้ว`);
+                }
+            });
         }
 
         function deleteCustomSupplement(suppId) {
@@ -2084,31 +2174,45 @@ const APP_VERSION = '5.8.1';
             const defaultList = (typeof window.DEFAULT_SUPPLEMENTS !== 'undefined' && Array.isArray(window.DEFAULT_SUPPLEMENTS))
                 ? window.DEFAULT_SUPPLEMENTS
                 : (typeof DEFAULT_SUPPLEMENTS !== 'undefined' ? DEFAULT_SUPPLEMENTS : []);
-            if (!confirm('ต้องการคืนค่ารายการวิตามิน/อาหารเสริมเริ่มต้น (7 รายการมาตรฐาน) ใช่หรือไม่?')) return;
-            state.supplementList = JSON.parse(JSON.stringify(defaultList));
-            saveState();
-            renderSupplements();
-            showToast('✓ คืนค่ารายการอาหารเสริมเริ่มต้นเรียบร้อยแล้ว');
+            showConfirmDialog({
+                icon: '🔄',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'คืนค่าอาหารเสริมเริ่มต้น',
+                message: 'ต้องการคืนค่ารายการวิตามิน/อาหารเสริมเริ่มต้น (7 รายการมาตรฐาน) ใช่หรือไม่? รายการที่เพิ่มใหม่จะถูกแทนที่ด้วยชุดมาตรฐาน',
+                confirmText: 'คืนค่ามาตรฐาน',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    state.supplementList = JSON.parse(JSON.stringify(defaultList));
+                    saveState();
+                    renderSupplements();
+                    showToast('✓ คืนค่ารายการอาหารเสริมเริ่มต้นเรียบร้อยแล้ว');
+                }
+            });
         }
 
+        let _aiCoachAnalysisCache = {};
+        let _isAiCoachLoading = false;
+
         function forceReshuffleRecommendations() {
+            if (_isAiCoachLoading) return;
             const t = getCalculatedTargets();
             const meals = state.logsByDate[state.selectedDate] || [];
             const sumP = Math.round(meals.reduce((s, m) => s + m.p, 0));
             const sumC = Math.round(meals.reduce((s, m) => s + m.c, 0));
             const sumF = Math.round(meals.reduce((s, m) => s + m.f, 0));
             const sumCal = Math.round(meals.reduce((s, m) => s + m.cal, 0));
-            renderSmartRecommendations(
-                t.targetCal - sumCal,
-                Math.max(0, t.pGram - sumP),
-                Math.max(0, t.cGram - sumC),
-                Math.max(0, t.fGram - sumF),
-                true
-            );
-            showToast('✨ AI Macro Coach กำลังวิเคราะห์คำแนะนำชุดใหม่...');
-        }
 
-        let _aiCoachAnalysisCache = {};
+            const remCal = t.targetCal - sumCal;
+            const remP = Math.max(0, t.pGram - sumP);
+            const remC = Math.max(0, t.cGram - sumC);
+            const remF = Math.max(0, t.fGram - sumF);
+
+            // Invalidate cache for current state to fetch fresh deep analysis
+            const cacheKey = `${state.selectedDate}_${remCal}_${remP}_${remC}_${remF}_${meals.length}`;
+            delete _aiCoachAnalysisCache[cacheKey];
+
+            renderSmartRecommendations(remCal, remP, remC, remF, true);
+        }
 
         function generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, targetCal, goal) {
             if (remCal <= 50 && remP <= 10) {
@@ -2139,6 +2243,7 @@ const APP_VERSION = '5.8.1';
             const pillsContainer = document.getElementById('aiCoachMacroPills');
             const statusBadge = document.getElementById('aiCoachStatusBadge');
             const modeLabel = document.getElementById('aiCoachModeLabel');
+            const btnReshuffle = document.getElementById('btnReshuffleCoach');
 
             if (!container || !subtitle) return;
 
@@ -2191,39 +2296,7 @@ const APP_VERSION = '5.8.1';
                 return;
             }
 
-            // 3. Instant Heuristic Coaching Advice (Zero latency)
-            const cacheKey = `${state.selectedDate}_${remCal}_${remP}_${remC}_${remF}_${meals.length}`;
-            subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
-            if (statusBadge) {
-                statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
-                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
-            }
-            if (modeLabel) modeLabel.textContent = 'วิเคราะห์จากโควตาสารอาหารวันนี้';
-
-            // Filter food candidates from FOOD_DATABASE
-            const allFoods = [];
-            if (typeof FOOD_DATABASE !== 'undefined' && FOOD_DATABASE.categories) {
-                FOOD_DATABASE.categories.forEach(c => {
-                    c.foods.forEach(f => allFoods.push({ ...f, catName: c.name }));
-                });
-            }
-
-            let candidates = [];
-            if (remP >= 20 && remCal < 400) {
-                candidates = allFoods.filter(f => f.protein >= 15 && f.calories <= 320);
-            } else if (remP >= 25) {
-                candidates = allFoods.filter(f => f.protein >= 20 && f.calories <= Math.max(350, remCal + 100));
-            } else if (remC >= 30 && remCal >= 200) {
-                candidates = allFoods.filter(f => f.carbs >= 25 && f.calories <= remCal + 100 && f.calories >= 100);
-            } else {
-                candidates = allFoods.filter(f => f.calories > 40 && f.calories <= Math.max(250, remCal + 50));
-            }
-            if (candidates.length === 0) {
-                candidates = allFoods.filter(f => f.protein >= 12);
-            }
-
-            const selectedCandidates = [...candidates].sort(() => 0.5 - Math.random()).slice(0, 4);
-
+            // Helper to render food cards
             function renderFoodCards(foodItems) {
                 container.innerHTML = foodItems.map(item => {
                     const safeName = item.name.replace(/'/g, "\\'");
@@ -2261,73 +2334,190 @@ const APP_VERSION = '5.8.1';
                 }).join('');
             }
 
-            renderFoodCards(selectedCandidates);
-
-            // 4. Gemini Deep AI Coach Call (Asynchronous with caching)
-            if (typeof window.requestGeminiCoachAdvice === 'function') {
-                const cachedAi = _aiCoachAnalysisCache[cacheKey];
-                if (cachedAi && !forceReshuffle) {
-                    subtitle.textContent = cachedAi.coachAdvice;
-                    if (statusBadge) {
-                        statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
-                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
-                    }
-                    if (modeLabel) modeLabel.textContent = `โมเดล: ${cachedAi.model || 'Gemini Flash'}`;
-                    if (cachedAi.suggestedMenus && cachedAi.suggestedMenus.length > 0) {
-                        renderFoodCards(cachedAi.suggestedMenus);
-                    }
-                    return;
+            // Helper to get curated heuristic candidates
+            function getHeuristicCandidates() {
+                const allFoods = [];
+                if (typeof FOOD_DATABASE !== 'undefined' && FOOD_DATABASE.categories) {
+                    FOOD_DATABASE.categories.forEach(c => {
+                        c.foods.forEach(f => allFoods.push({ ...f, catName: c.name }));
+                    });
                 }
+                let candidates = [];
+                if (remP >= 20 && remCal < 400) {
+                    candidates = allFoods.filter(f => f.protein >= 15 && f.calories <= 320);
+                } else if (remP >= 25) {
+                    candidates = allFoods.filter(f => f.protein >= 20 && f.calories <= Math.max(350, remCal + 100));
+                } else if (remC >= 30 && remCal >= 200) {
+                    candidates = allFoods.filter(f => f.carbs >= 25 && f.calories <= remCal + 100 && f.calories >= 100);
+                } else {
+                    candidates = allFoods.filter(f => f.calories > 40 && f.calories <= Math.max(250, remCal + 50));
+                }
+                if (candidates.length === 0) {
+                    candidates = allFoods.filter(f => f.protein >= 12);
+                }
+                return [...candidates].sort(() => 0.5 - Math.random()).slice(0, 4);
+            }
 
-                // If user clicks reshuffle or first view and has API key
-                const apiKey = (typeof window.getGeminiApiKey === 'function') ? window.getGeminiApiKey() : '';
-                if (apiKey && (forceReshuffle || !_aiCoachAnalysisCache[cacheKey])) {
-                    if (statusBadge) {
-                        statusBadge.textContent = '✨ AI กำลังวิเคราะห์...';
-                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0 animate-pulse';
+            const cacheKey = `${state.selectedDate}_${remCal}_${remP}_${remC}_${remF}_${meals.length}`;
+            const cachedAi = _aiCoachAnalysisCache[cacheKey];
+
+            // If we already have a cached AI analysis for this exact macro state, use it immediately
+            if (cachedAi && !forceReshuffle) {
+                subtitle.textContent = cachedAi.coachAdvice;
+                if (statusBadge) {
+                    statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
+                    statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
+                }
+                if (modeLabel) modeLabel.textContent = `โมเดล: ${cachedAi.model || 'Gemini Flash'}`;
+                if (cachedAi.suggestedMenus && cachedAi.suggestedMenus.length > 0) {
+                    renderFoodCards(cachedAi.suggestedMenus);
+                } else {
+                    renderFoodCards(getHeuristicCandidates());
+                }
+                return;
+            }
+
+            const apiKey = (typeof window.getGeminiApiKey === 'function') ? window.getGeminiApiKey() : '';
+            const hasGeminiFn = typeof window.requestGeminiCoachAdvice === 'function';
+
+            // 3. User clicked "✨ วิเคราะห์ใหม่" (forceReshuffle = true) and has API key -> Call Gemini with Loading Skeleton UX
+            if (forceReshuffle && apiKey && hasGeminiFn) {
+                _isAiCoachLoading = true;
+                if (btnReshuffle) {
+                    btnReshuffle.disabled = true;
+                    btnReshuffle.innerHTML = `<span class="inline-block animate-spin">✨</span> <span>กำลังวิเคราะห์...</span>`;
+                }
+                if (statusBadge) {
+                    statusBadge.textContent = '✨ AI กำลังวิเคราะห์...';
+                    statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0 animate-pulse';
+                }
+                if (modeLabel) modeLabel.textContent = 'กำลังประมวลผลผ่าน Gemini Flash...';
+
+                // Display Shimmering Subtitle
+                subtitle.innerHTML = `
+                    <div class="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold animate-pulse text-xs sm:text-sm">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0"></span>
+                        <span>AI Macro Coach กำลังคำนวณสัดส่วนสารอาหารคงเหลือและเมนูที่เหมาะสม...</span>
+                    </div>
+                `;
+
+                // Display Shimmering Loading Skeleton Cards
+                container.innerHTML = `
+                    <div class="space-y-2.5 animate-pulse">
+                        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3">
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-md w-2/5"></div>
+                                <div class="flex gap-2">
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-16"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                </div>
+                            </div>
+                            <div class="w-20 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3">
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-md w-1/2"></div>
+                                <div class="flex gap-2">
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-16"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                </div>
+                            </div>
+                            <div class="w-20 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3">
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-md w-1/3"></div>
+                                <div class="flex gap-2">
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-16"></div>
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-md w-14"></div>
+                                </div>
+                            </div>
+                            <div class="w-20 h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        </div>
+                    </div>
+                `;
+
+                window.requestGeminiCoachAdvice({
+                    targetCal: t.targetCal,
+                    pGram: t.pGram,
+                    cGram: t.cGram,
+                    fGram: t.fGram,
+                    consumedCal: sumCal,
+                    consumedP: sumP,
+                    consumedC: sumC,
+                    consumedF: sumF,
+                    remCal,
+                    remP,
+                    remC,
+                    remF,
+                    goal,
+                    todayMeals: meals.map(m => `${m.name} (${m.cal} kcal, P:${m.p}g)`)
+                }).then(aiRes => {
+                    _isAiCoachLoading = false;
+                    if (btnReshuffle) {
+                        btnReshuffle.disabled = false;
+                        btnReshuffle.innerHTML = `<span>✨</span> <span>วิเคราะห์ใหม่</span>`;
                     }
-
-                    window.requestGeminiCoachAdvice({
-                        targetCal: t.targetCal,
-                        pGram: t.pGram,
-                        cGram: t.cGram,
-                        fGram: t.fGram,
-                        consumedCal: sumCal,
-                        consumedP: sumP,
-                        consumedC: sumC,
-                        consumedF: sumF,
-                        remCal,
-                        remP,
-                        remC,
-                        remF,
-                        goal,
-                        todayMeals: meals.map(m => `${m.name} (${m.cal} kcal, P:${m.p}g)`)
-                    }).then(aiRes => {
-                        if (aiRes && aiRes.coachAdvice) {
-                            _aiCoachAnalysisCache[cacheKey] = aiRes;
-                            subtitle.textContent = aiRes.coachAdvice;
-                            if (statusBadge) {
-                                statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
-                                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
-                            }
-                            if (modeLabel) modeLabel.textContent = `โมเดล: ${aiRes.model || 'Gemini Flash'}`;
-                            if (aiRes.suggestedMenus && aiRes.suggestedMenus.length > 0) {
-                                renderFoodCards(aiRes.suggestedMenus);
-                            }
-                        } else {
-                            if (statusBadge) {
-                                statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
-                                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
-                            }
+                    if (aiRes && aiRes.coachAdvice) {
+                        _aiCoachAnalysisCache[cacheKey] = aiRes;
+                        subtitle.textContent = aiRes.coachAdvice;
+                        if (statusBadge) {
+                            statusBadge.textContent = '✓ วิเคราะห์โดย Gemini Flash';
+                            statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shrink-0';
                         }
-                    }).catch(err => {
-                        console.warn('AI Coach background analysis error:', err);
+                        if (modeLabel) modeLabel.textContent = `โมเดล: ${aiRes.model || 'Gemini Flash'}`;
+                        if (aiRes.suggestedMenus && aiRes.suggestedMenus.length > 0) {
+                            renderFoodCards(aiRes.suggestedMenus);
+                        } else {
+                            renderFoodCards(getHeuristicCandidates());
+                        }
+                        showToast('✨ AI Macro Coach วิเคราะห์คำแนะนำสำเร็จ!');
+                    } else {
+                        // Fallback to heuristic
+                        subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
                         if (statusBadge) {
                             statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
                             statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
                         }
-                    });
-                }
+                        if (modeLabel) modeLabel.textContent = 'วิเคราะห์จากโควตาสารอาหารวันนี้';
+                        renderFoodCards(getHeuristicCandidates());
+                    }
+                }).catch(err => {
+                    console.warn('AI Coach background analysis error:', err);
+                    _isAiCoachLoading = false;
+                    if (btnReshuffle) {
+                        btnReshuffle.disabled = false;
+                        btnReshuffle.innerHTML = `<span>✨</span> <span>วิเคราะห์ใหม่</span>`;
+                    }
+                    subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
+                    if (statusBadge) {
+                        statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
+                    }
+                    if (modeLabel) modeLabel.textContent = 'วิเคราะห์จากโควตาสารอาหารวันนี้';
+                    renderFoodCards(getHeuristicCandidates());
+                });
+                return;
+            }
+
+            // 4. Default / Regular Render (Page load, date shift, meal logging)
+            // Zero latency, zero quota consumed: use Smart Heuristic Engine!
+            subtitle.textContent = generateHeuristicCoachAdvice(remCal, remP, remC, remF, sumCal, t.targetCal, goal);
+            if (statusBadge) {
+                statusBadge.textContent = '✓ โค้ชพร้อมแนะนำ';
+                statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0';
+            }
+            if (modeLabel) modeLabel.textContent = 'วิเคราะห์จากโควตาสารอาหารวันนี้';
+            if (btnReshuffle) {
+                btnReshuffle.disabled = false;
+                btnReshuffle.innerHTML = `<span>✨</span> <span>วิเคราะห์ใหม่</span>`;
+            }
+            renderFoodCards(getHeuristicCandidates());
+            if (forceReshuffle) {
+                showToast('✨ สุ่มเมนูแนะนำชุดใหม่เรียบร้อย');
             }
         }
 
@@ -2576,11 +2766,21 @@ const APP_VERSION = '5.8.1';
         function clearSelectedDateMeals() {
             const dStr = state.selectedDate;
             if (!state.logsByDate[dStr] || state.logsByDate[dStr].length === 0) return;
-            if (confirm(`ต้องการล้างรายการอาหารทั้งหมดของวันที่ ${dStr} ใช่หรือไม่?`)) {
-                delete state.logsByDate[dStr];
-                saveState();
-                renderAll();
-            }
+            showConfirmDialog({
+                icon: '⚠️',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'ล้างรายการอาหารของวัน',
+                message: `ต้องการล้างรายการอาหารทั้งหมดของวันที่ ${dStr} ใช่หรือไม่? รายการอาหารของวันนี้จะถูกลบทั้งหมด`,
+                confirmText: 'ล้างข้อมูลวันนี้',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    delete state.logsByDate[dStr];
+                    saveState();
+                    renderAll();
+                    if (window.triggerCloudSync) window.triggerCloudSync(false);
+                    showToast(`✓ ล้างรายการอาหารของวันที่ ${dStr} เรียบร้อยแล้ว`);
+                }
+            });
         }
 
         function copyYesterdayMeals() {
@@ -3910,10 +4110,18 @@ const APP_VERSION = '5.8.1';
         }
 
         function resetAllData() {
-            if (confirm('ต้องการล้างข้อมูลทั้งหมดในเครื่อง (รวมถึงประวัติทุกวัน) เพื่อเริ่มต้นใหม่ใช่หรือไม่?')) {
-                localStorage.removeItem(STORAGE_KEY);
-                location.reload();
-            }
+            showConfirmDialog({
+                icon: '⚠️',
+                iconBgClass: 'w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-3xl shadow-xs',
+                title: 'ล้างข้อมูลทั้งหมดในเครื่อง',
+                message: 'ต้องการล้างข้อมูลทั้งหมดในเครื่อง (รวมถึงประวัติทุกวัน) เพื่อเริ่มต้นใหม่ใช่หรือไม่? (การกระทำนี้ไม่สามารถย้อนกลับได้)',
+                confirmText: 'ล้างข้อมูลทั้งหมด',
+                confirmClass: 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition cursor-pointer',
+                onConfirm: () => {
+                    localStorage.removeItem(STORAGE_KEY);
+                    location.reload();
+                }
+            });
         }
 
         // --- PWA Installation & Service Worker Integration ---
@@ -4310,3 +4518,5 @@ window.restoreDefaultSupplements = restoreDefaultSupplements;
 
 window.forceReshuffleRecommendations = forceReshuffleRecommendations;
 window.renderSmartRecommendations = renderSmartRecommendations;
+window.showConfirmDialog = showConfirmDialog;
+window.closeConfirmDialog = closeConfirmDialog;

@@ -498,12 +498,25 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.8.1
+                            Current Version: v5.8.2
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                                                <!-- Release: v5.8.2 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.8.2 (Unified Confirmation Modal & AI Coach Skeleton UX Optimization)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🔔 ออกแบบ Unified Confirm Dialog Architecture:</b> เพิ่ม <code>#globalConfirmModal</code> รวมศูนย์การแจ้งเตือนยืนยันการลบทุกจุดในแอปพลิเคชัน (ลบวิตามิน, ลบเมนู, คืนค่าเริ่มต้น) สวยงามตามมาตรฐาน iOS Glassmorphism</li>
+                                <li><b>✨ AI Macro Coach Shimmer Skeleton UX:</b> แสดงสถานะ Loading Skeleton Pulse ระหว่างรอ Gemini Flash วิเคราะห์ ป้องกันการแสดงผลแบบ Flickering/Double-rendering 100%</li>
+                                <li><b>🛡️ API Quota Protection Engine:</b> หยุดการเรียก Gemini API อัตโนมัติในทุกการเปลี่ยนวันหรือโหลดหน้าแรก โดยใช้ Smart Heuristic เป็นหลัก และเรียก Gemini เมื่อผู้ใช้กดปุ่ม 'วิเคราะห์ใหม่' เท่านั้น</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.8.1 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
