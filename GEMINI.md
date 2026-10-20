@@ -133,6 +133,44 @@
 
 ---
 
+## กฎเหล็กการตัดรอบเวอร์ชันและการแยกประวัติอัปเดต (Mandatory Versioning & Dual Changelog Protocol)
+
+> [!IMPORTANT]
+> ทุกครั้งที่มีการพัฒนาฟีเจอร์หรือแก้ไขบั๊กใหญ่และเตรียมปล่อยอัปเดต **ต้องตัดรอบเวอร์ชัน (Bump Version) และบันทึกประวัติการเปลี่ยนแปลง (Changelog) โดยแยกออกจากกันอย่างเด็ดขาดระหว่างฝั่งผู้ใช้ (User) และฝั่งผู้ดูแลระบบ (Admin)**
+
+### 1. ความสอดคล้องของเลขเวอร์ชัน 100% (Strict 5-File Version Alignment)
+เมื่อตัดรอบเวอร์ชันใหม่ ต้องอัปเดตเลขเวอร์ชันให้ตรงกันทั้ง 5 ไฟล์เสมอ:
+1. `public/version.json` ➔ `"version": "x.y.z"` และอัปเดต `"buildDate"` ให้เป็นเวลาปัจจุบัน
+2. `public/sw.js` ➔ `CACHE_NAME = 'novafit-pro-vx.y.z-cache'`
+3. `public/app.js` ➔ `const APP_VERSION = 'x.y.z';`
+4. `public/index.html` ➔ ปรับ Query String สคริปต์ทั้งหมดเป็น `?v=x.y.z` และป้าย `#toolsVersionBadge` เป็น `(vx.y.z)`
+5. `public/admin.html` ➔ ปรับป้ายสถานะ `Current Version: vx.y.z`
+
+---
+
+### 2. กฎการบันทึกประวัติฝั่งผู้ใช้งานทั่วไป (User-Facing Changelog Rules)
+* **ตำแหน่งที่ต้องอัปเดต**: 
+  - `public/version.json` (ฟิลด์ `features`)
+  - `public/index.html` (กล่องการแจ้งเตือน `#whatsNewAlertText` และป็อปอัปประวัติการอัปเดต `#changelogModal`)
+* **ภาษาและโทนเสียง (Tone of Voice)**: 
+  - ใช้ภาษาไทยที่สุภาพ เข้าใจง่าย สนุกสนาน และมีชีวิตชีวา เน้นประโยชน์ต่อผู้ใช้ (User Value & Benefits)
+  - มีอีโมจิน่ารักประกอบ เช่น 🚀, 🤖, 🍎, 💧, ✨, 🎙️
+* **ข้อห้ามเด็ดขาด (Strict Restrictions)**:
+  - ❌ **ห้ามมีคำศัพท์เชิงเทคนิคหลังบ้านเด็ดขาด**: ห้ามมีคำว่า `Admin`, `Dashboard`, `Firestore Security Rules`, `Cloud Functions`, `API endpoint`, `Service Worker Cache`, `CDP tests`, `Preflight`, `Database Index`, หรือ `Backend Architecture`
+  - เน้นบอกสิ่งที่ผู้ใช้ "สัมผัสได้จริง" เช่น "ระบบบับเบิ้ลเพื่อนคู่คิดส่งกำลังใจ", "แก้ไขการคำนวณแคลอรี่ให้แม่นยำยิ่งขึ้น", "พิมพ์และสั่งการด้วยเสียงได้ต่อเนื่องลื่นไหล"
+
+---
+
+### 3. กฎการบันทึกประวัติฝั่งผู้ดูแลระบบและหลังบ้าน (Admin-Facing Changelog Rules)
+* **ตำแหน่งที่ต้องอัปเดต**: 
+  - `public/admin.html` (แท็บที่ 6: `tabView_system_changelog`)
+* **ภาษาและเนื้อหา (Technical & Architectural Details)**:
+  - บันทึกรายละเอียดเชิงลึกทางวิศวกรรมและสถาปัตยกรรมระบบ (System Architecture)
+  - บันทึกการเปลี่ยนแปลง Logic การทำงาน เช่น การ Sanitize ข้อมูลใน `ensureStateIntegrity()`, Pagination Engine, Security Rules, Web Speech API State Lifecycle, การ Optimize การเรนเดอร์ DOM และ Performance
+  - ระบุชื่อฟังก์ชันหรือโมดูลที่เกี่ยวข้องชัดเจน เพื่อให้ย้อนรอยตรวจสอบระบบ (Audit & Debug) ได้ง่ายในอนาคต
+
+---
+
 ## ดัชนีแผนผังโค้ดประหยัด Token (Token-Saving Architecture Reference)
 
 > เพื่อประหยัดเวลาและ Token ห้ามไล่อ่านโค้ดไฟล์ขนาดใหญ่ (`app.js`, `index.html`) ทั้งไฟล์โดยไม่จำเป็น ให้ตรวจสอบตำแหน่งฟังก์ชันจาก [CODEBASE_MAP.md](file:///Users/benznova/Desktop/fitmacro-web/CODEBASE_MAP.md) หรือดัชนีด้านล่างก่อนเสมอ:
@@ -154,7 +192,4 @@
 - **Notifications & Health Tips**: บรรทัด 3551–3890 (`openUserNotificationsModal`, `shuffleDailyTip`)
 - **Modals & Window Bindings**: บรรทัด 3891–4085 (`openModalAnimated`, `closeModalAnimated`, `openQuickAddModal`)
 
-### หลักการแยกประวัติการอัปเดต (Changelog Separation):
-- **User Side (`index.html` & `version.json`)**: แสดงเฉพาะฟีเจอร์ที่ผู้ใช้ได้ประโยชน์โดยตรง ห้ามมีคำว่า Admin, Dashboard, Firestore rules, หรือโค้ดหลังบ้าน
-- **Admin Side (`admin.html` Tab 6 `tabView_system_changelog`)**: บันทึกการอัปเดตสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, Security Rules, และระบบหลังบ้านทั้งหมด
 
