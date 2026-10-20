@@ -829,8 +829,104 @@ server.listen(PORT, async () => {
         console.log('Confirm dialog callback executed:', wasCallbackFired);
         if (!wasCallbackFired) throw new Error('Confirm dialog onConfirm callback was not triggered');
 
-        // Test 26: Admin Table Pagination Engine (v5.8.3)
-        console.log('--- Test 26: Admin Table Pagination Engine ---');
+                // Test 26: AI Smart Text & Voice Log Engine (v5.8.3)
+        console.log('--- Test 26: AI Smart Text & Voice Log Engine ---');
+        
+        // 1. Verify UI buttons exist
+        const voiceButtonsExist = await evalJs(`(() => {
+            const mainBtn = !!document.getElementById('btnAiVoiceMain');
+            const toolsBtn = !!document.getElementById('btnAiVoiceTools');
+            const voiceTab = !!document.getElementById('tabBtnAiVoice');
+            const photoTab = !!document.getElementById('tabBtnAiPhoto');
+            const voicePane = !!document.getElementById('aiVoiceTabPane');
+            return { mainBtn, toolsBtn, voiceTab, photoTab, voicePane };
+        })()`);
+        console.log('Voice buttons and elements exist:', voiceButtonsExist);
+        if (!voiceButtonsExist.mainBtn || !voiceButtonsExist.voiceTab || !voiceButtonsExist.voicePane) {
+            throw new Error('AI Voice UI elements are missing from DOM');
+        }
+
+        // 2. Open modal in voice tab
+        await evalJs('openAiSnapModal("voice")');
+        const modalTabState = await evalJs(`(() => {
+            const modal = document.getElementById('aiSnapModal');
+            const isOpen = !modal.classList.contains('hidden');
+            const isVoiceVisible = !document.getElementById('aiVoiceTabPane').classList.contains('hidden');
+            const isPhotoHidden = document.getElementById('aiPhotoTabPane').classList.contains('hidden');
+            return { isOpen, isVoiceVisible, isPhotoHidden };
+        })()`);
+        console.log('AI Modal opened in voice tab:', modalTabState);
+        if (!modalTabState.isOpen || !modalTabState.isVoiceVisible || !modalTabState.isPhotoHidden) {
+            throw new Error('AI Modal failed to open directly in voice tab');
+        }
+
+        // 3. Tab switching test
+        await evalJs('switchAiModalTab("photo")');
+        const switchedToPhoto = await evalJs(`(() => {
+            const isPhotoVisible = !document.getElementById('aiPhotoTabPane').classList.contains('hidden');
+            const isVoiceHidden = document.getElementById('aiVoiceTabPane').classList.contains('hidden');
+            return isPhotoVisible && isVoiceHidden;
+        })()`);
+        if (!switchedToPhoto) throw new Error('Tab switching to photo failed');
+
+        await evalJs('switchAiModalTab("voice")');
+
+        // 4. Test Sample Pill & Text Input
+        await evalJs('setAiVoiceSample("ข้าวมันไก่ต้ม 1 จาน กับ โค้กซีโร่ 1 กระป๋อง")');
+        const inputValue = await evalJs('document.getElementById("aiVoiceTextInput").value');
+        console.log('Voice input set with sample pill:', inputValue);
+        if (!inputValue.includes('ข้าวมันไก่ต้ม')) {
+            throw new Error('setAiVoiceSample failed to set textarea value');
+        }
+
+        // 5. Run Voice / Text Analysis
+        await evalJs('analyzeAiVoiceText()');
+        let analysisDone = false;
+        for (let i = 0; i < 20; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            analysisDone = await evalJs(`(() => {
+                const resSection = document.getElementById('aiVoiceResultState');
+                return resSection && !resSection.classList.contains('hidden');
+            })()`);
+            if (analysisDone) break;
+        }
+        console.log('Voice analysis completed and result section shown:', analysisDone);
+        if (!analysisDone) throw new Error('Voice analysis timed out or failed to render result section');
+
+        // 6. Verify Multi-Item parsing results
+        const voiceResultData = await evalJs(`(() => {
+            const items = (window._currentAiVoiceResult || window._aiVoiceCurrentResult)?.items || [];
+            const cards = document.querySelectorAll('#aiVoiceItemsListContainer > div').length;
+            const totalCal = parseInt(document.getElementById('aiVoiceTotalCal').textContent) || 0;
+            return { itemCount: items.length, cards, totalCal };
+        })()`);
+        console.log('Voice Multi-Item parsing verified:', voiceResultData);
+        if (voiceResultData.itemCount < 2 || voiceResultData.cards < 2 || voiceResultData.totalCal <= 0) {
+            throw new Error('Multi-item parser failed to detect at least 2 items or sum calories');
+        }
+
+        // 7. Delete an item from result list
+        const initialVoiceCount = voiceResultData.itemCount;
+        await evalJs('removeAiVoiceResultItem(1)');
+        const voiceAfterDeleteCount = await evalJs('(window._currentAiVoiceResult || window._aiVoiceCurrentResult)?.items?.length || 0');
+        console.log('After item deletion count:', voiceAfterDeleteCount, 'from initial:', initialVoiceCount);
+        if (voiceAfterDeleteCount !== initialVoiceCount - 1) {
+            throw new Error('removeAiVoiceResultItem failed to reduce items count');
+        }
+
+        // 8. Save meals to diary
+        const initialDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
+        await evalJs('saveAiVoiceAnalyzedMeals()');
+        const afterSaveDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
+        const isModalClosed = await evalJs('document.getElementById("aiSnapModal").classList.contains("hidden")');
+        console.log('Meals saved from voice log:', { initialDateLogsCount, afterSaveDateLogsCount, isModalClosed });
+        if (afterSaveDateLogsCount <= initialDateLogsCount || !isModalClosed) {
+            throw new Error('saveAiVoiceAnalyzedMeals failed to log meals to state or close modal');
+        }
+
+        // Test 27: Admin Table Pagination Engine
+
+        console.log('--- Test 27: Admin Table Pagination Engine ---');
         await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
         
         let isReady = false;
@@ -868,8 +964,8 @@ server.listen(PORT, async () => {
         console.log('Pagination control rendered correct slice text:', paginationRenderTest);
         if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
 
-        // Test 27: Admin AI Scan Logs Table Data Mapping Test (v5.8.4)
-        console.log('--- Test 27: Admin AI Scan Logs Table Data Mapping ---');
+        // Test 28: Admin AI Scan Logs Table Data Mapping Test
+        console.log('--- Test 28: Admin AI Scan Logs Table Data Mapping ---');
         const aiScanTableTest = await evalJs(`(() => {
             window._currentAiScanLogs = [
                 {

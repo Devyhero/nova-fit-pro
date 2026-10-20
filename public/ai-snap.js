@@ -29,12 +29,18 @@ function applyAiSnapEnvironmentGate() {
     const enabled = isAiSnapEnabled();
     const btnMain = document.getElementById('btnAiSnapMain');
     const btnTools = document.getElementById('btnAiSnapTools');
+    const btnVoiceMain = document.getElementById('btnAiVoiceMain');
+    const btnVoiceTools = document.getElementById('btnAiVoiceTools');
     if (!enabled) {
         if (btnMain) btnMain.classList.add('hidden');
         if (btnTools) btnTools.classList.add('hidden');
+        if (btnVoiceMain) btnVoiceMain.classList.add('hidden');
+        if (btnVoiceTools) btnVoiceTools.classList.add('hidden');
     } else {
         if (btnMain) btnMain.classList.remove('hidden');
         if (btnTools) btnTools.classList.remove('hidden');
+        if (btnVoiceMain) btnVoiceMain.classList.remove('hidden');
+        if (btnVoiceTools) btnVoiceTools.classList.remove('hidden');
     }
 }
 if (document.readyState === 'loading') {
@@ -256,8 +262,8 @@ function compressImageToDataUrl(file, maxDimension = 640, quality = 0.70) {
     });
 }
 
-// Open AI Snap Modal
-function openAiSnapModal() {
+// Open AI Snap & Voice Modal
+function openAiSnapModal(initialTab = 'photo') {
     const modal = document.getElementById('aiSnapModal');
     if (!modal) return;
 
@@ -289,6 +295,8 @@ function openAiSnapModal() {
         elUpload?.classList.remove('hidden');
     }
 
+    switchAiModalTab(initialTab);
+
     if (window.openModalAnimated) {
         window.openModalAnimated('aiSnapModal');
     } else {
@@ -297,6 +305,7 @@ function openAiSnapModal() {
 }
 
 function closeAiSnapModal() {
+    stopAiVoiceRecording();
     if (window.closeModalAnimated) {
         window.closeModalAnimated('aiSnapModal');
     } else {
@@ -827,6 +836,701 @@ async function requestGeminiCoachAdvice(context) {
     return null;
 }
 
+
+// ==========================================
+// AI Smart Text & Voice Log Engine (v5.8.3)
+// Web Speech Recognition API + Gemini Multi-Item Parser
+// ==========================================
+
+let _currentAiVoiceResult = null;
+let _speechRecognitionInstance = null;
+let _isSpeechRecording = false;
+let _currentAiActiveTab = 'photo';
+
+// Switch between Photo and Voice Tabs
+function switchAiModalTab(tab = 'photo') {
+    _currentAiActiveTab = tab;
+    const photoTabBtn = document.getElementById('tabBtnAiPhoto');
+    const voiceTabBtn = document.getElementById('tabBtnAiVoice');
+    const photoPane = document.getElementById('aiPhotoTabPane');
+    const voicePane = document.getElementById('aiVoiceTabPane');
+    const headerTitle = document.getElementById('aiModalTitleText');
+    const headerSub = document.getElementById('aiModalSubText');
+    const modalIcon = document.getElementById('aiModalIcon');
+
+    if (tab === 'voice') {
+        if (photoTabBtn) {
+            photoTabBtn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
+            photoTabBtn.classList.add('text-slate-500', 'dark:text-slate-400');
+        }
+        if (voiceTabBtn) {
+            voiceTabBtn.classList.add('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
+            voiceTabBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        }
+
+        photoPane?.classList.add('hidden');
+        voicePane?.classList.remove('hidden');
+
+        if (modalIcon) modalIcon.textContent = '🎙️';
+        if (headerTitle) headerTitle.textContent = 'AI Smart Text & Voice Log';
+        if (headerSub) headerSub.textContent = 'พิมพ์หรือสั่งงานด้วยเสียง บันทึกหลายเมนูพร้อมกัน';
+
+        // Auto select suggested meal for current hour
+        const mealSelect = document.getElementById('aiVoiceMealSelect');
+        if (mealSelect && !_currentAiVoiceResult) {
+            mealSelect.value = getSuggestedMealByHour();
+        }
+    } else {
+        stopAiVoiceRecording();
+
+        if (voiceTabBtn) {
+            voiceTabBtn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
+            voiceTabBtn.classList.add('text-slate-500', 'dark:text-slate-400');
+        }
+        if (photoTabBtn) {
+            photoTabBtn.classList.add('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
+            photoTabBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        }
+
+        voicePane?.classList.add('hidden');
+        photoPane?.classList.remove('hidden');
+
+        if (modalIcon) modalIcon.textContent = '📸';
+        if (headerTitle) headerTitle.textContent = 'AI Snap & Log';
+        if (headerSub) headerSub.textContent = 'ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที';
+    }
+}
+
+// Clear voice/text textarea
+function clearAiVoiceText() {
+    const input = document.getElementById('aiVoiceTextInput');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+}
+
+// Quick Sample setter
+function setAiVoiceSample(text) {
+    const input = document.getElementById('aiVoiceTextInput');
+    if (input) {
+        input.value = text;
+        input.focus();
+    }
+}
+
+// Suggested Meal based on current hour
+function getSuggestedMealByHour() {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 15) return 'lunch';
+    if (hour >= 15 && hour < 21) return 'dinner';
+    return 'snack';
+}
+
+// Web Speech Recognition Controller (th-TH)
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'th-TH';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    return recognition;
+}
+
+function toggleAiVoiceRecording() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        const notice = document.getElementById('aiVoiceNotSupportedNotice');
+        if (notice) notice.classList.remove('hidden');
+        return;
+    }
+
+    if (_isSpeechRecording) {
+        stopAiVoiceRecording();
+    } else {
+        startAiVoiceRecording();
+    }
+}
+
+function startAiVoiceRecording() {
+    // Auth & Quota check
+    if (!window.currentUser && !isUatEnvironment()) {
+        alert('กรุณาเข้าสู่ระบบด้วย Google ก่อนใช้งานฟีเจอร์ AI Voice ครับ');
+        return;
+    }
+    if (isAiQuotaExceeded()) {
+        alert('คุณใช้โควตา AI ประจำวันครบ 15/15 ครั้งแล้ว โควตาจะรีเซ็ตใหม่ในวันพรุ่งนี้เวลา 00:00 น.');
+        return;
+    }
+
+    try {
+        _speechRecognitionInstance = initSpeechRecognition();
+        if (!_speechRecognitionInstance) return;
+
+        const micIcon = document.getElementById('aiVoiceMicIcon');
+        const recordText = document.getElementById('aiVoiceRecordText');
+        const micPulse = document.getElementById('aiVoiceMicPulse');
+        const liveStatus = document.getElementById('aiVoiceLiveStatus');
+        const textInput = document.getElementById('aiVoiceTextInput');
+
+        _speechRecognitionInstance.onstart = () => {
+            _isSpeechRecording = true;
+            if (micIcon) micIcon.textContent = '🔴';
+            if (recordText) recordText.textContent = 'กำลังฟัง... พูดชื่ออาหารได้เลย (กดเพื่อหยุด)';
+            if (micPulse) micPulse.classList.remove('hidden');
+            if (liveStatus) liveStatus.classList.remove('hidden');
+        };
+
+        _speechRecognitionInstance.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            const activeText = finalTranscript || interimTranscript;
+            if (textInput && activeText) {
+                textInput.value = activeText;
+            }
+        };
+
+        _speechRecognitionInstance.onend = () => {
+            stopAiVoiceRecording();
+        };
+
+        _speechRecognitionInstance.onerror = (event) => {
+            console.warn('Speech recognition error:', event.error);
+            stopAiVoiceRecording();
+            if (event.error === 'not-allowed') {
+                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนหรือพิมพ์ข้อความได้เลยครับ');
+            }
+        };
+
+        _speechRecognitionInstance.start();
+    } catch (err) {
+        console.warn('Could not start speech recognition:', err);
+        stopAiVoiceRecording();
+    }
+}
+
+function stopAiVoiceRecording() {
+    if (_speechRecognitionInstance) {
+        try { _speechRecognitionInstance.stop(); } catch (e) {}
+        _speechRecognitionInstance = null;
+    }
+    _isSpeechRecording = false;
+
+    const micIcon = document.getElementById('aiVoiceMicIcon');
+    const recordText = document.getElementById('aiVoiceRecordText');
+    const micPulse = document.getElementById('aiVoiceMicPulse');
+    const liveStatus = document.getElementById('aiVoiceLiveStatus');
+
+    if (micIcon) micIcon.textContent = '🎙️';
+    if (recordText) recordText.textContent = 'กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)';
+    if (micPulse) micPulse.classList.add('hidden');
+    if (liveStatus) liveStatus.classList.add('hidden');
+}
+
+// Realistic simulation engine when no API Key is configured
+function simulateDemoVoiceTextAnalysis(text) {
+    const lower = text.toLowerCase();
+    const items = [];
+    let tip = '💡 เคล็ดลับ: การกระจายโปรตีนให้เพียงพอในทุกมื้อ ช่วยคงมวลกล้ามเนื้อและลดความอยากจุบจิบระหว่างวัน';
+
+    if (lower.includes('ข้าวมันไก่')) {
+        const noSkin = lower.includes('ไม่หนัง') || lower.includes('ไม่เอาหนัง');
+        items.push({
+            foodName: noSkin ? 'ข้าวมันไก่ต้ม (ไม่เอาหนัง)' : 'ข้าวมันไก่ต้ม',
+            servingSize: '1 จาน (350g)',
+            cal: noSkin ? 510 : 590,
+            p: 34,
+            c: 62,
+            f: noSkin ? 12 : 22
+        });
+        if (noSkin) tip = '🌟 ยอดเยี่ยม: สั่งไม่เอาหนังช่วยลดไขมันอิ่มตัวได้มากกว่า 10g!';
+    }
+
+    if (lower.includes('โค้กซีโร่') || lower.includes('coke zero') || lower.includes('เป๊ปซี่แม็กซ์')) {
+        items.push({
+            foodName: 'โค้กซีโร่ (Coke Zero)',
+            servingSize: '1 กระป๋อง (325ml)',
+            cal: 0,
+            p: 0,
+            c: 0,
+            f: 0
+        });
+    }
+
+    if (lower.includes('กะเพรา')) {
+        items.push({
+            foodName: 'ข้าวกะเพราหมูสับ',
+            servingSize: '1 จาน (300g)',
+            cal: 580,
+            p: 26,
+            c: 62,
+            f: 24
+        });
+    }
+
+    if (lower.includes('ไข่ดาว')) {
+        items.push({
+            foodName: 'ไข่ดาวทอด',
+            servingSize: '1 ฟอง',
+            cal: 115,
+            p: 7,
+            c: 1,
+            f: 9
+        });
+    }
+
+    if (lower.includes('ไข่ต้ม')) {
+        items.push({
+            foodName: 'ไข่ต้มสุก',
+            servingSize: '1 ฟอง',
+            cal: 75,
+            p: 7,
+            c: 0.5,
+            f: 5
+        });
+    }
+
+    if (lower.includes('เวย์') || lower.includes('โปรตีน')) {
+        items.push({
+            foodName: 'เวย์โปรตีนไอโซเลท',
+            servingSize: '1 สกู๊ป (30g)',
+            cal: 120,
+            p: 25,
+            c: 2,
+            f: 1
+        });
+    }
+
+    if (lower.includes('นมโอ๊ต') || lower.includes('oat milk')) {
+        items.push({
+            foodName: 'นมโอ๊ต (Oat Milk)',
+            servingSize: '1 แก้ว (250ml)',
+            cal: 130,
+            p: 3,
+            c: 16,
+            f: 5
+        });
+    }
+
+    if (lower.includes('ส้มตำ')) {
+        items.push({
+            foodName: 'ส้มตำไทย',
+            servingSize: '1 จาน (200g)',
+            cal: 120,
+            p: 4,
+            c: 24,
+            f: 2
+        });
+    }
+
+    if (lower.includes('ไก่ย่าง') || lower.includes('อกไก่')) {
+        items.push({
+            foodName: 'อกไก่ย่างสมุนไพร',
+            servingSize: '150 กรัม',
+            cal: 195,
+            p: 38,
+            c: 2,
+            f: 4
+        });
+    }
+
+    if (items.length === 0) {
+        items.push({
+            foodName: text.trim().slice(0, 35) || 'อาหารตามสั่งเพื่อสุขภาพ',
+            servingSize: '1 จาน (300g)',
+            cal: 480,
+            p: 24,
+            c: 55,
+            f: 18
+        });
+    }
+
+    let suggestedMeal = getSuggestedMealByHour();
+    if (lower.includes('เช้า')) suggestedMeal = 'breakfast';
+    else if (lower.includes('เที่ยง') || lower.includes('กลางวัน')) suggestedMeal = 'lunch';
+    else if (lower.includes('เย็น')) suggestedMeal = 'dinner';
+    else if (lower.includes('ว่าง') || lower.includes('เล่น')) suggestedMeal = 'snack';
+
+    let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+    items.forEach(it => {
+        totalCal += it.cal;
+        totalP += it.p;
+        totalC += it.c;
+        totalF += it.f;
+    });
+
+    const summaryTitle = items.map(it => it.foodName).join(' + ');
+
+    return {
+        summaryTitle,
+        suggestedMeal,
+        totalCal,
+        totalP,
+        totalC,
+        totalF,
+        items,
+        healthyTip: tip
+    };
+}
+
+// Call Google Gemini API to analyze Thai natural text / voice transcription
+async function analyzeAiVoiceText() {
+    const textInput = document.getElementById('aiVoiceTextInput');
+    const text = (textInput?.value || '').trim();
+
+    if (!text) {
+        alert('กรุณาพิมพ์หรือพูดชื่อเมนูอาหารก่อนกดวิเคราะห์ครับ');
+        textInput?.focus();
+        return;
+    }
+
+    // Safeguard 1: Auth check on Production
+    if (!window.currentUser && !isUatEnvironment()) {
+        alert('กรุณาเข้าสู่ระบบด้วย Google ก่อนใช้งานฟีเจอร์ AI Voice ครับ');
+        openAiSnapModal('voice');
+        return;
+    }
+
+    // Safeguard 2: Quota check
+    if (isAiQuotaExceeded()) {
+        alert('คุณใช้โควตา AI ประจำวันครบ 15/15 ครั้งแล้ว โควตาจะรีเซ็ตใหม่ในวันพรุ่งนี้เวลา 00:00 น.');
+        openAiSnapModal('voice');
+        return;
+    }
+
+    stopAiVoiceRecording();
+
+    // Show Loading Animation
+    document.getElementById('aiVoiceInputState')?.classList.add('hidden');
+    document.getElementById('aiVoiceLoadingState')?.classList.remove('hidden');
+    document.getElementById('aiVoiceResultState')?.classList.add('hidden');
+
+    const apiKey = getGeminiApiKey();
+
+    // If NO API key is entered, use realistic Demo Simulation
+    if (!apiKey) {
+        setTimeout(() => {
+            const demoResult = simulateDemoVoiceTextAnalysis(text);
+            incrementAiScanUsage();
+            renderAiVoiceResultView(demoResult, true);
+        }, 1100);
+        return;
+    }
+
+    // Call Real Gemini API with Multi-Model Fallback Chain
+    const candidateModels = [
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
+
+    const currentTimeStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const promptText = `
+คุณคือนักกำหนดอาหารและผู้เชี่ยวชาญด้านโภชนาการไทย โปรดวิเคราะห์ข้อความรายการอาหารที่ผู้ใช้พิมพ์หรือพูดต่อไปนี้ และแปลงเป็นข้อมูลโภชนาการที่แม่นยำ
+
+ข้อความจากผู้ใช้: "${text}"
+เวลาปัจจุบัน: ${currentTimeStr}
+
+คำแนะนำการวิเคราะห์:
+1. หากผู้ใช้ระบุอาหารหลายอย่างในประโยค (เช่น "ข้าวมันไก่พิเศษไม่หนัง 1 จาน กับ โค้กซีโร่ 1 กระป๋อง" หรือ "ไข่ต้ม 2 ฟอง ขนมปังโฮลวีท 1 แผ่น") ให้แยกรายการอาหารออกมาในอาเรย์ "items" แต่ละรายการอย่างชัดเจน
+2. คำนวณปริมาณแคลอรีรวม (kcal), โปรตีน (g), คาร์บ (g), ไขมัน (g) ทั้งแบบแยกรายเมนู และผลรวมทั้งหมด (totalCal, totalP, totalC, totalF)
+3. วิเคราะห์ช่วงเวลาของมื้ออาหาร (suggestedMeal: "breakfast" | "lunch" | "dinner" | "snack") โดยดูจากคำพูดของผู้ใช้ (เช่น มีคำว่า "เที่ยง", "เช้า", "เย็น", "กินเล่น") หรืออิงจากเวลาปัจจุบัน
+4. ตอบกลับเป็น JSON เท่านั้น โครงสร้างตามนี้:
+{
+  "summaryTitle": "ชื่อสรุปมื้ออาหารสั้นๆ ภาษาไทย เช่น ข้าวมันไก่ไม่หนัง + โค้กซีโร่",
+  "suggestedMeal": "breakfast หรือ lunch หรือ dinner หรือ snack",
+  "totalCal": ตัวเลขแคลอรีรวม,
+  "totalP": ตัวเลขโปรตีนรวม,
+  "totalC": ตัวเลขคาร์โบไฮเดรตรวม,
+  "totalF": ตัวเลขไขมันรวม,
+  "items": [
+    {
+      "foodName": "ชื่อรายการอาหาร",
+      "servingSize": "ขนาดเสิร์ฟโดยประมาณ เช่น 1 จาน (350g) หรือ 1 แก้ว",
+      "cal": ตัวเลขแคลอรี,
+      "p": ตัวเลขโปรตีน,
+      "c": ตัวเลขคาร์บ,
+      "f": ตัวเลขไขมัน
+    }
+  ],
+  "healthyTip": "คำแนะนำโภชนาการที่เป็นประโยชน์สั้นๆ 1 ประโยค"
+}
+`;
+
+    const statusEl = document.getElementById('aiVoiceLoadingStatusText');
+    let parsedResult = null;
+    let lastError = null;
+
+    for (let i = 0; i < candidateModels.length; i++) {
+        const modelName = candidateModels[i];
+        if (statusEl) {
+            statusEl.textContent = i === 0
+                ? 'AI กำลังแยกแยะวัตถุดิบและคำนวณแคลอรี...'
+                : `กำลังเชื่อมต่อช่องทางสำรอง (${modelName.replace('gemini-', '')})...`;
+        }
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [
+                                { text: promptText }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        temperature: 0.2
+                    }
+                })
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                let errDetail = '';
+                try {
+                    const errJson = await response.json();
+                    errDetail = errJson.error?.message || response.statusText;
+                } catch (e) {
+                    errDetail = `HTTP ${response.status}`;
+                }
+                console.warn(`Model ${modelName} returned HTTP ${response.status}: ${errDetail}`);
+                lastError = new Error(`${modelName} (${errDetail})`);
+                continue;
+            }
+
+            const data = await response.json();
+            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) {
+                lastError = new Error(`${modelName}: ไม่พบผลลัพธ์จาก AI`);
+                continue;
+            }
+
+            parsedResult = JSON.parse(jsonText);
+            break;
+        } catch (err) {
+            console.warn(`Attempt with ${modelName} failed:`, err);
+            lastError = err;
+        }
+    }
+
+    if (parsedResult && parsedResult.items && parsedResult.items.length > 0) {
+        incrementAiScanUsage();
+        renderAiVoiceResultView(parsedResult, false);
+    } else {
+        console.warn('Gemini Voice parse failed, falling back to heuristic simulation:', lastError);
+        const fallback = simulateDemoVoiceTextAnalysis(text);
+        incrementAiScanUsage();
+        renderAiVoiceResultView(fallback, true);
+    }
+}
+
+// Render multi-item analyzed result view
+function renderAiVoiceResultView(resultData, isDemo = false) {
+    _currentAiVoiceResult = resultData;
+    window._currentAiVoiceResult = _currentAiVoiceResult;
+    window._aiVoiceCurrentResult = _currentAiVoiceResult;
+
+    document.getElementById('aiVoiceLoadingState')?.classList.add('hidden');
+    document.getElementById('aiVoiceInputState')?.classList.add('hidden');
+    document.getElementById('aiVoiceResultState')?.classList.remove('hidden');
+
+    const summaryTitleEl = document.getElementById('aiVoiceSummaryTitle');
+    const demoBadgeEl = document.getElementById('aiVoiceDemoBadge');
+    const mealSelect = document.getElementById('aiVoiceMealSelect');
+    const itemCountText = document.getElementById('aiVoiceItemCountText');
+    const itemsContainer = document.getElementById('aiVoiceItemsListContainer');
+    const tipEl = document.getElementById('aiVoiceTipText');
+
+    if (summaryTitleEl) summaryTitleEl.textContent = resultData.summaryTitle || 'สรุปรายการอาหาร';
+    if (demoBadgeEl) demoBadgeEl.classList.toggle('hidden', !isDemo);
+
+    if (mealSelect) {
+        mealSelect.value = resultData.suggestedMeal || getSuggestedMealByHour();
+    }
+
+    if (tipEl) {
+        tipEl.textContent = resultData.healthyTip || '💡 เคล็ดลับ: การจัดสัดส่วนโปรตีนและผักในมื้ออาหารช่วยให้อิ่มนานและคุมแคลอรีได้ดี';
+    }
+
+    renderAiVoiceItemsList();
+}
+
+function renderAiVoiceItemsList() {
+    const itemsContainer = document.getElementById('aiVoiceItemsListContainer');
+    const itemCountText = document.getElementById('aiVoiceItemCountText');
+    const totalCalEl = document.getElementById('aiVoiceTotalCal');
+    const totalPEl = document.getElementById('aiVoiceTotalP');
+    const totalCEl = document.getElementById('aiVoiceTotalC');
+    const totalFEl = document.getElementById('aiVoiceTotalF');
+    const saveBtnText = document.getElementById('btnSaveAiVoiceMealText');
+
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items) return;
+    const items = _currentAiVoiceResult.items;
+
+    if (itemCountText) itemCountText.textContent = `${items.length} รายการ`;
+    if (saveBtnText) saveBtnText.textContent = `บันทึก ${items.length} รายการลงมื้ออาหาร`;
+
+    // Recalculate totals
+    let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+    items.forEach(it => {
+        totalCal += Math.round(Number(it.cal) || 0);
+        totalP += Math.round(Number(it.p) || 0);
+        totalC += Math.round(Number(it.c) || 0);
+        totalF += Math.round(Number(it.f) || 0);
+    });
+
+    _currentAiVoiceResult.totalCal = totalCal;
+    _currentAiVoiceResult.totalP = totalP;
+    _currentAiVoiceResult.totalC = totalC;
+    _currentAiVoiceResult.totalF = totalF;
+
+    if (totalCalEl) totalCalEl.textContent = totalCal.toLocaleString();
+    if (totalPEl) totalPEl.textContent = totalP;
+    if (totalCEl) totalCEl.textContent = totalC;
+    if (totalFEl) totalFEl.textContent = totalF;
+
+    if (!itemsContainer) return;
+    if (items.length === 0) {
+        itemsContainer.innerHTML = '<div class="py-4 text-center text-slate-400 text-xs">ไม่พบรายการอาหาร กรุณาลองพูดหรือพิมพ์ใหม่อีกครั้ง</div>';
+        return;
+    }
+
+    itemsContainer.innerHTML = items.map((it, idx) => {
+        const cal = Math.round(Number(it.cal) || 0);
+        const p = Math.round(Number(it.p) || 0);
+        const c = Math.round(Number(it.c) || 0);
+        const f = Math.round(Number(it.f) || 0);
+        const serving = it.servingSize || '1 ที่';
+
+        return `
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex items-start justify-between gap-2 shadow-2xs">
+                <div class="min-w-0 flex-1">
+                    <div class="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">${it.foodName}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">ขนาดเสิร์ฟ: ${serving}</div>
+                    <div class="flex items-center gap-2 mt-1.5 text-[11px] flex-wrap">
+                        <span class="font-black text-purple-600 dark:text-purple-400">${cal} kcal</span>
+                        <span class="text-rose-500 font-semibold text-[10px]">P:${p}g</span>
+                        <span class="text-amber-500 font-semibold text-[10px]">C:${c}g</span>
+                        <span class="text-sky-500 font-semibold text-[10px]">F:${f}g</span>
+                    </div>
+                </div>
+                <button type="button" onclick="removeAiVoiceResultItem(${idx})"
+                    class="w-6 h-6 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition flex items-center justify-center shrink-0 cursor-pointer"
+                    title="ลบรายการนี้ออก">
+                    ✕
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function removeAiVoiceResultItem(index) {
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items) return;
+    _currentAiVoiceResult.items.splice(index, 1);
+    renderAiVoiceItemsList();
+}
+
+function resetAiVoiceState() {
+    _currentAiVoiceResult = null;
+    window._currentAiVoiceResult = null;
+    document.getElementById('aiVoiceResultState')?.classList.add('hidden');
+    document.getElementById('aiVoiceLoadingState')?.classList.add('hidden');
+    document.getElementById('aiVoiceInputState')?.classList.remove('hidden');
+    const input = document.getElementById('aiVoiceTextInput');
+    if (input) input.focus();
+}
+
+function saveAiVoiceAnalyzedMeals() {
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items || _currentAiVoiceResult.items.length === 0) {
+        alert('ไม่พบรายการอาหารที่สามารถบันทึกได้ครับ');
+        return;
+    }
+
+    if (!window.state) {
+        alert('เกิดข้อผิดพลาด: ไม่พบ state ของระบบ');
+        return;
+    }
+
+    const selectMeal = document.getElementById('aiVoiceMealSelect');
+    const meal = selectMeal ? selectMeal.value : 'lunch';
+    const dStr = window.state.selectedDate || getTodayIsoDate();
+
+    if (!window.state.logsByDate) window.state.logsByDate = {};
+    if (!window.state.logsByDate[dStr]) window.state.logsByDate[dStr] = [];
+
+    const nowTimeStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const items = _currentAiVoiceResult.items;
+
+    items.forEach((item, idx) => {
+        const cal = Math.round(Number(item.cal) || 0);
+        const p = Math.round(Number(item.p) || 0);
+        const c = Math.round(Number(item.c) || 0);
+        const f = Math.round(Number(item.f) || 0);
+        const uniqueId = 'aiv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7) + '_' + idx;
+
+        const newLogItem = {
+            id: uniqueId,
+            name: item.foodName || 'เมนูอาหาร (AI)',
+            cal,
+            p,
+            c,
+            f,
+            portion: 1,
+            baseCal: cal,
+            baseP: p,
+            baseC: c,
+            baseF: f,
+            time: nowTimeStr,
+            meal,
+            servingSize: item.servingSize || '1 ที่',
+            timestamp: Date.now() + idx,
+            source: 'ai_voice_text'
+        };
+
+        window.state.logsByDate[dStr].push(newLogItem);
+        recordAiScanAuditLog({
+            foodName: newLogItem.name,
+            cal,
+            p,
+            c,
+            f,
+            servingSize: newLogItem.servingSize
+        });
+    });
+
+    if (window.saveState) window.saveState();
+    if (window.renderAll) window.renderAll();
+    if (window.triggerCloudSync) window.triggerCloudSync(false);
+
+    closeAiSnapModal();
+    if (window.showToast) {
+        window.showToast(`🎙️ บันทึก ${items.length} เมนู (${_currentAiVoiceResult.totalCal || 0} kcal) ด้วย AI สำเร็จแล้ว!`);
+    }
+}
+
 // Window attachments for HTML inline handlers
 window.openAiSnapModal = openAiSnapModal;
 window.closeAiSnapModal = closeAiSnapModal;
@@ -848,3 +1552,14 @@ window.isAiSnapEnabled = isAiSnapEnabled;
 window.isUserAdmin = isUserAdmin;
 
 window.requestGeminiCoachAdvice = requestGeminiCoachAdvice;
+window.openAiVoiceModal = () => openAiSnapModal('voice');
+window.switchAiModalTab = switchAiModalTab;
+window.toggleAiVoiceRecording = toggleAiVoiceRecording;
+window.clearAiVoiceText = clearAiVoiceText;
+window.setAiVoiceSample = setAiVoiceSample;
+window.analyzeAiVoiceText = analyzeAiVoiceText;
+window.removeAiVoiceResultItem = removeAiVoiceResultItem;
+window.saveAiVoiceAnalyzedMeals = saveAiVoiceAnalyzedMeals;
+window.resetAiVoiceState = resetAiVoiceState;
+window.getCurrentAiVoiceResult = () => _currentAiVoiceResult;
+

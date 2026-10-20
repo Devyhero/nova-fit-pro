@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.2)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.3)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -327,9 +327,13 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
                             <span>💡</span> คลังเกร็ดความรู้สุขภาพ
                         </button>
-                        <button id="btnAiSnapTools" onclick="openAiSnapModal(); toggleToolsMenu();"
+                        <button id="btnAiSnapTools" onclick="openAiSnapModal('photo'); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition">
-                            <span>📸</span> สแกนอาหารด้วย AI (AI Snap & Log)
+                            <span>📸</span> สแกนภาพถ่าย AI (AI Snap & Log)
+                        </button>
+                        <button id="btnAiVoiceTools" onclick="openAiSnapModal('voice'); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 transition">
+                            <span>🎙️</span> พิมพ์หรือพูดบันทึก AI (Text & Voice)
                         </button>
                         <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
                             class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
@@ -735,10 +739,17 @@
                                 <span class="text-xs text-emerald-500 block">✨ เมนูที่กินวันนี้จะมีกรอบเขียว และกด ⭐ เพื่อติดดาว</span>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <button id="btnAiSnapMain" type="button" onclick="openAiSnapModal()"
-                                    class="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer">
+                                <button id="btnAiSnapMain" type="button" onclick="openAiSnapModal('photo')"
+                                    class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                                    title="สแกนจานอาหารด้วยภาพถ่าย AI">
                                     <span>📸</span>
-                                    <span>ถ่ายรูปให้ AI กะแคล</span>
+                                    <span>ถ่ายรูป AI</span>
+                                </button>
+                                <button id="btnAiVoiceMain" type="button" onclick="openAiSnapModal('voice')"
+                                    class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                                    title="พิมพ์หรือพูดบันทึกมื้ออาหารด้วยเสียง AI">
+                                    <span>🎙️</span>
+                                    <span>พิมพ์/พูด AI</span>
                                 </button>
                                 <div class="relative flex-1 sm:w-64">
                                     <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
@@ -1176,7 +1187,20 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.2!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.3!</b> สรุปการอัปเดตล่าสุด:</span>
+                </div>
+
+                                <!-- Latest Release: v5.8.3 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        <span>🎙️ v5.8.3 (AI Smart Text & Voice Log บันทึกอาหารด้วยเสียงและข้อความ)</span>
+                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
+                        <li><b>🎙️ สั่งงานด้วยเสียงภาษาไทย (Thai Voice Log):</b> บันทึกมื้ออาหารผ่านไมโครโฟน พูดชื่อเมนูและปริมาณ ระบบจะแปลงเสียงเป็นข้อความและคำนวณแคลอรีทันที</li>
+                        <li><b>🍱 รองรับหลายเมนูในประโยคเดียว (Multi-Item Parser):</b> เช่น "ข้าวมันไก่ไม่หนัง 1 จาน กับ โค้กซีโร่ 1 กระป๋อง" AI จะแยกรายการอาหารแต่ละอย่างและบันทึกลงมื้อพร้อมกันใน 1 คลิก</li>
+                        <li><b>✨ Unified AI Modal Hub:</b> รวมหน้าต่าง AI ให้สลับโหมดถ่ายรูปและโหมดสั่งงานด้วยเสียงได้สะดวก พร้อมปุ่มลัด '🎙️ พิมพ์/พูด AI' บนหน้าหลัก</li>
+                    </ul>
                 </div>
 
                 <!-- Latest Release: v5.8.2 -->
@@ -2333,18 +2357,31 @@
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">📸</span>
+                    <span id="aiModalIcon" class="text-xl">📸</span>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="font-bold text-base leading-tight">AI Snap & Log</h3>
+                            <h3 id="aiModalTitleText" class="font-bold text-base leading-tight">AI Snap & Log</h3>
                             <button type="button" onclick="promptEditGeminiApiKey()" id="aiSnapApiKeyBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:scale-105 transition cursor-pointer">⚡ โหมดตัวอย่าง (Demo)</button>
                         </div>
                         <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            <p class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที</p>
+                            <p id="aiModalSubText" class="text-[11px] text-slate-400">ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที</p>
                             <span id="aiSnapQuotaPill" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">โควตาวันนี้: เหลือ 15/15 ครั้ง</span>
                         </div>
                     </div>
                 </div>
+
+            <!-- Modal Tabs (📸 Photo Snap / 🎙️ Smart Text & Voice) -->
+            <div class="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 text-xs font-bold shrink-0">
+                <button type="button" id="tabBtnAiPhoto" onclick="switchAiModalTab('photo')"
+                    class="py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400">
+                    <span>📸</span> <span>สแกนรูปภาพ</span>
+                </button>
+                <button type="button" id="tabBtnAiVoice" onclick="switchAiModalTab('voice')"
+                    class="py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                    <span>🎙️</span> <span>พิมพ์/พูดด้วยเสียง</span>
+                </button>
+            </div>
+
                 <div class="flex items-center gap-1.5">
                     <button type="button" onclick="promptEditGeminiApiKey()" title="ตั้งค่า Gemini API Key"
                         class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs transition">
@@ -2427,6 +2464,8 @@
                     </div>
                 </div>
 
+                <!-- TAB PANE 1: PHOTO SNAP -->
+                <div id="aiPhotoTabPane" class="space-y-4">
                 <!-- STATE 1: Upload / Take Photo Area -->
                 <div id="aiSnapUploadState" class="space-y-3 py-2">
                     <div class="grid grid-cols-2 gap-3">
@@ -2576,6 +2615,172 @@
                     </div>
                 </div>
 
+                </div>
+                <!-- /TAB PANE 1: PHOTO SNAP -->
+
+                <!-- TAB PANE 2: SMART TEXT & VOICE LOG (NEW v5.8.3) -->
+                <div id="aiVoiceTabPane" class="hidden space-y-4">
+                    <!-- Voice & Text Input State -->
+                    <div id="aiVoiceInputState" class="space-y-3.5">
+                        <!-- Speech Recognition Button (Animated Soundwave / Mic) -->
+                        <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-pink-500/10 border border-purple-500/20 text-center space-y-2">
+                            <button type="button" id="btnAiVoiceRecord" onclick="toggleAiVoiceRecording()"
+                                class="relative px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-md transition flex items-center gap-2 active:scale-95 cursor-pointer">
+                                <span id="aiVoiceMicIcon" class="text-base">🎙️</span>
+                                <span id="aiVoiceRecordText">กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)</span>
+                                <span id="aiVoiceMicPulse" class="hidden absolute -inset-1 rounded-2xl bg-rose-500/40 animate-ping"></span>
+                            </button>
+                            <div id="aiVoiceLiveStatus" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold animate-pulse">
+                                🔴 กำลังฟังเสียงของคุณ... พูดชื่อเมนูและปริมาณได้เลย (กดปุ่มอีกครั้งเมื่อพูดจบ)
+                            </div>
+                            <div id="aiVoiceNotSupportedNotice" class="hidden text-[11px] text-amber-600 dark:text-amber-400">
+                                💡 อุปกรณ์นี้ยังไม่รองรับการสั่งงานด้วยเสียง สามารถพิมพ์ข้อความในช่องด้านล่างได้ทันทีครับ
+                            </div>
+                        </div>
+
+                        <!-- Textarea Input -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <label for="aiVoiceTextInput" class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <span>💬</span> <span>พิมพ์หรือแก้ไขข้อความอาหาร:</span>
+                                </label>
+                                <button type="button" onclick="clearAiVoiceText()" class="text-[11px] text-slate-400 hover:text-rose-500 transition">
+                                    ล้างข้อความ
+                                </button>
+                            </div>
+                            <textarea id="aiVoiceTextInput" rows="3"
+                                placeholder="เช่น ข้าวมันไก่พิเศษไม่หนัง 1 จาน กับ โค้กซีโร่ 1 กระป๋อง หรือ กะเพราหมูสับไข่ดาว + ไข่ต้ม..."
+                                class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl p-3 text-xs focus:outline-none focus:border-purple-500 resize-none leading-relaxed text-slate-800 dark:text-slate-100 placeholder:text-slate-400"></textarea>
+                        </div>
+
+                        <!-- Sample Food Pills -->
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">⚡ ตัวอย่างประโยคยอดนิยม (แตะเพื่อลอง):</span>
+                            <div class="flex flex-wrap gap-1.5 text-[11px]">
+                                <button type="button" onclick="setAiVoiceSample('ข้าวมันไก่ต้มไม่เอาหนัง 1 จาน กับ โค้กซีโร่ 1 กระป๋อง')"
+                                    class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-purple-500/15 text-slate-600 dark:text-slate-300 hover:text-purple-600 transition border border-slate-200/50 dark:border-slate-600/50 cursor-pointer">
+                                    🍗 ข้าวมันไก่ไม่หนัง + โค้กซีโร่
+                                </button>
+                                <button type="button" onclick="setAiVoiceSample('ข้าวกะเพราหมูสับไข่ดาว 1 จาน + ไข่ต้ม 1 ฟอง')"
+                                    class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-purple-500/15 text-slate-600 dark:text-slate-300 hover:text-purple-600 transition border border-slate-200/50 dark:border-slate-600/50 cursor-pointer">
+                                    🍳 กะเพราหมูสับ + ไข่ต้ม
+                                </button>
+                                <button type="button" onclick="setAiVoiceSample('เวย์โปรตีน 1 สกู๊ป ผสม นมโอ๊ต 250ml')"
+                                    class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-purple-500/15 text-slate-600 dark:text-slate-300 hover:text-purple-600 transition border border-slate-200/50 dark:border-slate-600/50 cursor-pointer">
+                                    🥤 เวย์โปรตีน + นมโอ๊ต
+                                </button>
+                                <button type="button" onclick="setAiVoiceSample('ส้มตำไทย 1 จาน กับ อกไก่ย่าง 150 กรัม')"
+                                    class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-purple-500/15 text-slate-600 dark:text-slate-300 hover:text-purple-600 transition border border-slate-200/50 dark:border-slate-600/50 cursor-pointer">
+                                    🥗 ส้มตำไทย + อกไก่ย่าง
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button type="button" id="btnAnalyzeVoiceText" onclick="analyzeAiVoiceText()"
+                            class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
+                            <span>✨</span> <span>ให้ AI วิเคราะห์สารอาหาร (Smart Text)</span>
+                        </button>
+                    </div>
+
+                    <!-- Loading State for Voice/Text -->
+                    <div id="aiVoiceLoadingState" class="hidden py-8 flex flex-col items-center justify-center space-y-3 text-center">
+                        <div class="relative w-14 h-14">
+                            <div class="absolute inset-0 rounded-full border-4 border-purple-500/20 animate-ping"></div>
+                            <div class="w-14 h-14 rounded-full border-4 border-purple-600 border-t-transparent animate-spin flex items-center justify-center"></div>
+                            <span class="absolute inset-0 flex items-center justify-center text-lg">💬</span>
+                        </div>
+                        <div id="aiVoiceLoadingStatusText" class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">
+                            AI กำลังวิเคราะห์ข้อความและแยกแยะรายการอาหาร...
+                        </div>
+                        <p class="text-[11px] text-slate-400 max-w-xs">
+                            คำนวณแคลอรี โปรตีน คาร์โบไฮเดรต และไขมันของแต่ละเมนูอย่างละเอียด
+                        </p>
+                    </div>
+
+                    <!-- Multi-Item Result State -->
+                    <div id="aiVoiceResultState" class="hidden space-y-3.5">
+                        <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-3">
+                            <div class="flex items-center justify-between flex-wrap gap-1">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5 text-xs sm:text-sm">
+                                    <span>🎯</span> <span id="aiVoiceSummaryTitle">สรุปรายการอาหาร</span>
+                                </span>
+                                <span id="aiVoiceDemoBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                    ผลจำลอง (Demo)
+                                </span>
+                            </div>
+
+                            <!-- Target Meal Selector -->
+                            <div>
+                                <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300 text-[11px]">
+                                    🍱 บันทึกลงมื้ออาหาร:
+                                </label>
+                                <select id="aiVoiceMealSelect"
+                                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-purple-500 text-slate-800 dark:text-slate-100">
+                                    <option value="breakfast">มื้อเช้า (Breakfast)</option>
+                                    <option value="lunch">มื้อเที่ยง (Lunch)</option>
+                                    <option value="dinner">มื้อเย็น (Dinner)</option>
+                                    <option value="snack">ของว่าง (Snack)</option>
+                                </select>
+                            </div>
+
+                            <!-- Individual Item Cards List -->
+                            <div class="space-y-2">
+                                <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                                    <span>รายการอาหารที่ตรวจพบ:</span>
+                                    <span id="aiVoiceItemCountText" class="text-slate-400 font-normal">0 รายการ</span>
+                                </div>
+                                <div id="aiVoiceItemsListContainer" class="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Total Macro Summary Strip -->
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-purple-500/20 grid grid-cols-4 gap-1 text-center">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 block">แคลอรีรวม</span>
+                                    <span id="aiVoiceTotalCal" class="text-xs sm:text-sm font-black text-purple-600 dark:text-purple-400">0</span>
+                                    <span class="text-[9px] text-slate-400 block">kcal</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] text-rose-500 block">โปรตีนรวม</span>
+                                    <span id="aiVoiceTotalP" class="text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400">0</span>
+                                    <span class="text-[9px] text-slate-400 block">g</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] text-amber-500 block">คาร์บรวม</span>
+                                    <span id="aiVoiceTotalC" class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">0</span>
+                                    <span class="text-[9px] text-slate-400 block">g</span>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] text-sky-500 block">ไขมันรวม</span>
+                                    <span id="aiVoiceTotalF" class="text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400">0</span>
+                                    <span class="text-[9px] text-slate-400 block">g</span>
+                                </div>
+                            </div>
+
+                            <!-- Healthy Tip from AI -->
+                            <div class="p-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 text-[11px] text-slate-600 dark:text-slate-300">
+                                <span id="aiVoiceTipText">💡 เคล็ดลับ: การจัดสัดส่วนโปรตีนและผักในมื้ออาหารช่วยให้อิ่มนานและคุมแคลอรีได้ดี</span>
+                            </div>
+                        </div>
+
+                        <!-- Buttons: Save All Items & Try Again -->
+                        <div class="grid grid-cols-3 gap-2 pt-1">
+                            <button type="button" onclick="resetAiVoiceState()"
+                                class="col-span-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                                🔄 พูด/พิมพ์ใหม่
+                            </button>
+                            <button type="button" id="btnSaveAiVoiceMeal" onclick="saveAiVoiceAnalyzedMeals()"
+                                class="col-span-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer">
+                                <span>📥</span> <span id="btnSaveAiVoiceMealText">บันทึกลงมื้ออาหาร</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- /TAB PANE 2: SMART TEXT & VOICE LOG -->
+
+
             </div>
         </div>
     </div>
@@ -2614,19 +2819,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.2"></script>
+    <script src="food-db.js?v=5.8.3"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.2"></script>
+    <script src="health-tips.js?v=5.8.3"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.2"></script>
+    <script src="ai-snap.js?v=5.8.3"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.2"></script>
+    <script src="app.js?v=5.8.3"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.2"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.3"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
