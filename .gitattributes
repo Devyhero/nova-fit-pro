@@ -1,0 +1,19 @@
+# Set default behavior, that will treat files as text and normalize line endings to LF on checkout and commit
+* text=auto eol=lf
+
+# Explicitly declare text files you want to always be normalized and converted to LF on checkin
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.svg text eol=lf
+*.rules text eol=lf
+
+# Denote all binary files that should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary

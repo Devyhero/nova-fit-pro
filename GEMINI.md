@@ -171,6 +171,32 @@
 
 ---
 
+## กฎเหล็กการพัฒนาเพื่อประสิทธิภาพและลดข้อผิดพลาด (Efficiency & Reliability Protocols)
+
+### 1. 🛡️ การจัดการ Line Endings ข้ามระบบ Mac ↔ Windows (Cross-Platform Line Ending Consistency)
+- เพื่อป้องกันปัญหา Git Diff บวมทั้งไฟล์จากความต่างของ CRLF (Windows) และ LF (Mac):
+  - โครงการมีไฟล์ `.gitattributes` บังคับ `* text=auto eol=lf` สำหรับไฟล์ Text ทุกประเภท
+  - เมื่อทำงานบน Windows ให้ตั้งค่า Git รองรับ: `git config --global core.autocrlf true` หรือ `input`
+  - ห้าม Commit ไฟล์ที่ถูกแปลง Line Ending ปะปนเข้ามาเด็ดขาด
+
+### 2. 🧩 การรักษาความเข้ากันได้ของ State ย้อนหลัง (Safe State & Zero-Crash Backward Compatibility)
+- ทุกครั้งที่มีการเพิ่มฟิลด์ใหม่ใน Object `state` หรือ `localStorage`:
+  - **ต้องกำหนดค่าเริ่มต้น (Default Fallback) ในฟังก์ชัน `ensureStateIntegrity()` เสมอ**
+  - ป้องกันข้อผิดพลาดกรณีผู้ใช้เดิมมี Cache หรือ LocalStorage เก่า โดยใช้ Optional Chaining หรือ Guard เช่น `state.newFeature?.subProperty || defaultValue`
+  - ห้ามเรียกใช้งาน property ใหม่โดยไม่ผ่าน Guard เด็ดขาด เพื่อป้องกันปัญหาหน้าจอขาว
+
+### 3. 🎯 การจำกัดขอบเขตการแก้ไขโค้ด (Minimal Blast Radius & No Wholesale Reformatting)
+- เนื่องจากไฟล์หลัก (`app.js`, `index.html`) มีขนาดใหญ่หลายพันบรรทัด:
+  - แก้ไขเฉพาะบรรทัดและบล็อกที่เกี่ยวข้องกับงานโดยตรงเท่านั้น
+  - ห้ามสั่ง Auto-format หรือ Re-indent โค้ดทั้งไฟล์โดยไม่จำเป็น เพื่อป้องกัน Git Diff บวม สิ้นเปลือง Token และกระทบฟังก์ชันอื่นที่เสถียรอยู่แล้ว
+
+### 4. 🧪 การปรับปรุงชุดทดสอบอัตโนมัติควบคู่กับการพัฒนา (Synchronized CDP Testing)
+- เมื่อมีการสร้างฟีเจอร์ใหม่ หรือปรับโครงสร้าง UI (เช่น แก้ไข ID ของปุ่ม, ปรับ Flow ของ Modal):
+  - ต้องเพิ่มหรืออัปเดต Test Case ใน [`scripts/test-browser-cdp.js`](file:///Users/benznova/Desktop/fitmacro-web/scripts/test-browser-cdp.js) ควบคู่กันทันที
+  - ก่อนส่งมอบงานและ Deploy ขึ้น UAT ต้องรัน `node scripts/test-preflight.js` และ `node scripts/test-browser-cdp.js` ให้ผ่าน 100% เสมอ
+
+---
+
 ## ดัชนีแผนผังโค้ดประหยัด Token (Token-Saving Architecture Reference)
 
 > เพื่อประหยัดเวลาและ Token ห้ามไล่อ่านโค้ดไฟล์ขนาดใหญ่ (`app.js`, `index.html`) ทั้งไฟล์โดยไม่จำเป็น ให้ตรวจสอบตำแหน่งฟังก์ชันจาก [CODEBASE_MAP.md](file:///Users/benznova/Desktop/fitmacro-web/CODEBASE_MAP.md) หรือดัชนีด้านล่างก่อนเสมอ:
