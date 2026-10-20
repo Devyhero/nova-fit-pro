@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.3)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.2)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1176,19 +1176,7 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.3!</b> สรุปการอัปเดตล่าสุด:</span>
-                </div>
-
-                                                <!-- Latest Release: v5.8.3 -->
-                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
-                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
-                        <span>🚀 v5.8.3 (Admin Table Pagination & Dashboard Performance Optimization)</span>
-                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
-                    </div>
-                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1 leading-relaxed">
-                        <li><b>📑 ระบบแบ่งหน้าตารางใน Admin Dashboard:</b> เพิ่มแถบ Pagination พร้อมตัวเลือกแสดง 10, 25, 50 แถวต่อหน้าในตารางรายชื่อผู้ใช้, ประวัติสแกนอาหาร AI และบันทึกข้อความ</li>
-                        <li><b>⚡ โหลดเร็วและเป็นระเบียบ:</b> หน้าตารางไม่ยืดยาวจนเกินไป โหลดข้อมูลได้อย่างมีประสิทธิภาพ</li>
-                    </ul>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.2!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
                 <!-- Latest Release: v5.8.2 -->
@@ -2626,19 +2614,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.3"></script>
+    <script src="food-db.js?v=5.8.2"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.3"></script>
+    <script src="health-tips.js?v=5.8.2"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.3"></script>
+    <script src="ai-snap.js?v=5.8.2"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.3"></script>
+    <script src="app.js?v=5.8.2"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.3"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.2"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
