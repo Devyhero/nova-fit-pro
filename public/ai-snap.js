@@ -148,9 +148,11 @@ let _currentAiImageBase64 = null;
 let _currentAiImageMime = 'image/jpeg';
 let _currentAiAnalyzedData = null;
 
-// Validate if Gemini API Key is in correct Google AI Studio format (AIzaSy...)
+// Validate if Gemini API Key is in correct Google AI Studio format (AIzaSy... or AQ....)
 function isValidGeminiApiKey(key) {
-    return typeof key === 'string' && key.trim().startsWith('AIzaSy') && key.trim().length >= 35;
+    if (typeof key !== 'string') return false;
+    const trimmed = key.trim();
+    return (trimmed.startsWith('AIzaSy') || trimmed.startsWith('AQ.')) && trimmed.length >= 30;
 }
 
 // API Key Management
@@ -413,10 +415,13 @@ async function analyzeAiPhoto() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
             signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
             body: JSON.stringify({
                 contents: [
                     {
@@ -563,7 +568,7 @@ function promptEditGeminiApiKey() {
     if (input !== null) {
         const trimmed = input.trim();
         if (trimmed && !isValidGeminiApiKey(trimmed)) {
-            alert("⚠️ รูปแบบ API Key ไม่ถูกต้อง!\n\nGoogle Gemini API Key ต้องขึ้นต้นด้วย 'AIzaSy...' (รับได้ฟรีที่ https://aistudio.google.com/app/apikey) ครับ");
+            alert("⚠️ รูปแบบ API Key ไม่ถูกต้อง!\n\nGoogle Gemini API Key ต้องขึ้นต้นด้วย 'AIzaSy...' หรือ 'AQ....' (รับได้ที่ https://aistudio.google.com/app/apikey) ครับ");
             return;
         }
         setGeminiApiKey(trimmed);
