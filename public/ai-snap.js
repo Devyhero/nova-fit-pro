@@ -949,23 +949,31 @@ function getSuggestedMealByHour() {
     return 'snack';
 }
 
-// Web Speech Recognition Controller (th-TH) - Mobile-First Lifecycle v2
+// Web Speech Recognition Controller (th-TH) - Mobile-First Lifecycle v3
+// Key insight: on ALL mobile browsers, after onend fires the OS audio pipeline
+// is still "busy" for 200-500ms. We must enforce a minimum gap using a timestamp.
 let _speechBaseText = '';
 let _speechStartTimer = null;
-let _isTearingDown = false; // Guard flag: prevents re-entry during async teardown on mobile
+let _isTearingDown = false;
+let _lastStopTimestamp = 0; // Timestamp of last stop — enforces min gap before restart
 
-// Detect iOS/iPadOS for specific workaround needs
+// Detect iOS/iPadOS — needs longer delays & continuous=false
 const _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// Android Chrome also needs guards (but shorter delays than iOS)
+const _isMobile = _isIOS || /Android/i.test(navigator.userAgent);
+
+// Minimum milliseconds to wait after stop before starting again
+const _MOBILE_STOP_GAP = _isIOS ? 450 : (_isMobile ? 250 : 100);
 
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     const recognition = new SpeechRecognition();
     recognition.lang = 'th-TH';
-    // iOS Safari does NOT reliably support continuous=true.
-    // Use continuous=false on mobile — each press = one session, then auto-stops gracefully.
-    recognition.continuous = !_isIOS;
+    // continuous=true causes auto-stop issues on iOS and many Android browsers.
+    // Mobile: use single-session mode (one tap = start, speech stops = auto-end).
+    recognition.continuous = !_isMobile;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     return recognition;
@@ -1021,8 +1029,7 @@ function toggleAiVoiceRecording() {
         if (notice) notice.classList.remove('hidden');
         return;
     }
-
-    // Block tap during teardown to prevent double-fire on mobile
+    // Block tap during teardown (prevents double-fire race on mobile)
     if (_isTearingDown) return;
 
     if (_isSpeechRecording) {
@@ -1033,7 +1040,8 @@ function toggleAiVoiceRecording() {
 }
 
 function _destroySpeechInstance(inst) {
-    // Nullify all callbacks first so onend doesn't call stopAiVoiceRecording again
+    // Zero out all callbacks BEFORE calling stop/abort —
+    // this prevents onend from firing into our new lifecycle
     try { inst.onstart = null; } catch(e) {}
     try { inst.onresult = null; } catch(e) {}
     try { inst.onend = null; } catch(e) {}
@@ -1046,10 +1054,11 @@ function _destroySpeechInstance(inst) {
 function stopAiVoiceRecording() {
     clearTimeout(_speechStartTimer);
     _isSpeechRecording = false;
+    _lastStopTimestamp = Date.now(); // stamp the stop time for gap enforcement
 
     if (_speechRecognitionInstance) {
         const inst = _speechRecognitionInstance;
-        _speechRecognitionInstance = null;
+        _speechRecognitionInstance = null; // clear ref BEFORE destroy so onend finds null
         _destroySpeechInstance(inst);
     }
 
@@ -1067,21 +1076,21 @@ function startAiVoiceRecording() {
         return;
     }
 
-    // If an old instance/session is still lingering, tear it down first
+    // Tear down any lingering instance first
     if (_speechRecognitionInstance || _isSpeechRecording) {
         _isTearingDown = true;
         stopAiVoiceRecording();
-        clearTimeout(_speechStartTimer);
-        // iOS needs longer delay (~350ms) for audio session to fully release
-        const teardownDelay = _isIOS ? 350 : 150;
-        _speechStartTimer = setTimeout(() => {
-            _isTearingDown = false;
-            _executeStartSpeech();
-        }, teardownDelay);
-        return;
     }
 
-    _executeStartSpeech();
+    // Enforce minimum gap since last stop (covers both manual stop AND onend auto-stop on mobile)
+    const elapsed = Date.now() - _lastStopTimestamp;
+    const waitMs = Math.max(0, _MOBILE_STOP_GAP - elapsed);
+
+    clearTimeout(_speechStartTimer);
+    _speechStartTimer = setTimeout(() => {
+        _isTearingDown = false;
+        _executeStartSpeech();
+    }, waitMs);
 }
 
 function _executeStartSpeech() {
@@ -1089,88 +1098,78 @@ function _executeStartSpeech() {
     const textInput = document.getElementById('aiVoiceTextInput');
     _speechBaseText = (textInput?.value || '').trim();
 
+    const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+
+    let inst;
     try {
-        _speechRecognitionInstance = initSpeechRecognition();
-        if (!_speechRecognitionInstance) return;
+        inst = initSpeechRecognition();
+        if (!inst) return;
+        _speechRecognitionInstance = inst;
+    } catch(e) {
+        console.warn('initSpeechRecognition failed:', e.message);
+        stopAiVoiceRecording();
+        return;
+    }
 
-        const liveTranscript = document.getElementById('aiVoiceLiveTranscript');
+    inst.onstart = () => {
+        _isSpeechRecording = true;
+        setAiVoiceMicActiveUI();
+    };
 
-        _speechRecognitionInstance.onstart = () => {
-            _isSpeechRecording = true;
-            setAiVoiceMicActiveUI();
-        };
-
-        _speechRecognitionInstance.onresult = (event) => {
-            let finalTranscript = '';
-            let interimTranscript = '';
-            for (let i = 0; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
+    inst.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
             }
-            const spokenSoFar = (finalTranscript + ' ' + interimTranscript).trim().replace(/\s+/g, ' ');
-            if (liveTranscript) {
-                if (spokenSoFar) {
-                    liveTranscript.textContent = '🗣️ "' + spokenSoFar + '"';
-                    liveTranscript.classList.remove('hidden');
-                } else {
-                    liveTranscript.classList.add('hidden');
-                }
+        }
+        const spokenSoFar = (finalTranscript + ' ' + interimTranscript).trim().replace(/\s+/g, ' ');
+        if (liveTranscript) {
+            if (spokenSoFar) {
+                liveTranscript.textContent = '🗣️ "' + spokenSoFar + '"';
+                liveTranscript.classList.remove('hidden');
+            } else {
+                liveTranscript.classList.add('hidden');
             }
-            if (textInput && spokenSoFar) {
-                textInput.value = _speechBaseText ? (_speechBaseText + ' ' + spokenSoFar) : spokenSoFar;
-            }
-        };
+        }
+        if (textInput && spokenSoFar) {
+            textInput.value = _speechBaseText ? (_speechBaseText + ' ' + spokenSoFar) : spokenSoFar;
+        }
+    };
 
-        _speechRecognitionInstance.onend = () => {
-            // onend fires normally on mobile after speech stops —
-            // just reset state so the next tap starts fresh without issue.
-            _isSpeechRecording = false;
-            if (_speechRecognitionInstance) {
-                // Instance already done, clear reference and reset UI
-                _speechRecognitionInstance = null;
-                resetAiVoiceMicUI();
-            }
-        };
+    inst.onend = () => {
+        // This fires automatically on mobile when speech session ends.
+        // Record stop time and reset state cleanly so next tap works immediately.
+        _isSpeechRecording = false;
+        _lastStopTimestamp = Date.now();
+        _speechRecognitionInstance = null;
+        resetAiVoiceMicUI();
+    };
 
-        _speechRecognitionInstance.onerror = (event) => {
-            console.warn('Speech recognition error:', event.error, '| iOS:', _isIOS);
-            if (event.error === 'not-allowed') {
-                alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนในเบราว์เซอร์ของคุณ หรือพิมพ์ข้อความแทนได้ครับ');
-            }
-            stopAiVoiceRecording();
-        };
+    inst.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error, '| mobile:', _isMobile, '| iOS:', _isIOS);
+        if (event.error === 'not-allowed') {
+            alert('เบราว์เซอร์ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาเปิดสิทธิ์ไมโครโฟนในเบราว์เซอร์ของคุณ หรือพิมพ์ข้อความแทนได้ครับ');
+        }
+        stopAiVoiceRecording();
+    };
 
-        _speechRecognitionInstance.start();
+    try {
+        inst.start();
     } catch (err) {
-        console.warn('Could not start speech recognition, retrying:', err.message);
+        console.warn('inst.start() threw, scheduling retry:', err.message);
+        _speechRecognitionInstance = null;
+        _lastStopTimestamp = Date.now();
         clearTimeout(_speechStartTimer);
-        // Increase retry delay for mobile, as audio pipeline may not be free yet
-        const retryDelay = _isIOS ? 400 : 250;
+        // Retry with additional gap on top of the standard mobile gap
+        const extraRetryMs = _isIOS ? 400 : 250;
         _speechStartTimer = setTimeout(() => {
-            try {
-                _speechRecognitionInstance = initSpeechRecognition();
-                if (_speechRecognitionInstance) {
-                    // Re-bind minimal handlers before retry start
-                    _speechRecognitionInstance.onstart = () => {
-                        _isSpeechRecording = true;
-                        setAiVoiceMicActiveUI();
-                    };
-                    _speechRecognitionInstance.onend = () => {
-                        _isSpeechRecording = false;
-                        _speechRecognitionInstance = null;
-                        resetAiVoiceMicUI();
-                    };
-                    _speechRecognitionInstance.onerror = () => { stopAiVoiceRecording(); };
-                    _speechRecognitionInstance.start();
-                }
-            } catch (retryErr) {
-                console.error('Speech recognition recovery start failed:', retryErr.message);
-                stopAiVoiceRecording();
-            }
-        }, retryDelay);
+            _isTearingDown = false;
+            _executeStartSpeech();
+        }, extraRetryMs);
     }
 }
 
