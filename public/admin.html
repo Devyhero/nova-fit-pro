@@ -505,13 +505,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.8.3
+                            Current Version: v5.8.4
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                                                                        <!-- Release: v5.8.3 -->
+                        <!-- Release: v5.8.4 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.8.4 (Living App Companion Engine & Ghost Meal Deduplication)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🤖 สถาปัตยกรรม Living App Companion Engine:</b> เพิ่มระบบตรวจจับพฤติกรรมการใช้งานเชิงรุก (Proactive In-App Assistant) ตรวจสอบการดื่มน้ำ, การบันทึกมื้ออาหารตามช่วงเวลา (เช้า/เที่ยง/เย็น), และเป้าหมายแคลอรี่ พร้อมแสดงข้อความและอีโมจิให้กำลังใจสไตล์เพื่อนคู่คิด</li>
+                                <li><b>🛡️ กลไก Ghost Meal Auto-Deduplication:</b> เพิ่มกระบวนการ Sanitize ข้อมูลอัตโนมัติใน <code>ensureStateIntegrity()</code> ป้องกันปัญหาผลรวมแคลอรี่เกินจริงจากรายการอาหารแฝง หรือการเชื่อมต่อ Cloud Sync ซ้ำซ้อน</li>
+                                <li><b>🎙️ ปรับปรุง Speech Recognition State Lifecycle:</b> เพิ่มการตรวจจับข้อผิดพลาดบน Mobile WebKit / Safari iOS และระบบ Auto-fallback พร้อม Visual Guidance เพื่อเสถียรภาพสูงสุด</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.8.3 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.8.3 (Admin Table Pagination Engine & UI Optimization)</span>

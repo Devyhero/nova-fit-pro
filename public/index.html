@@ -347,7 +347,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.3)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.4)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1223,12 +1223,26 @@
             <div class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
                 <!-- What's New Automatic Banner on First Visit -->
                 <div id="whatsNewAlert"
-                    class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
+                    class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-purple-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.3!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.4!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                                <!-- Latest Release: v5.8.3 -->
+                <!-- Latest Release: v5.8.4 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-purple-500/15 border border-emerald-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                        <span>🌟 v5.8.4 (เพื่อนคู่คิด Nova Companion • แอพมีชีวิต & AI Smart Text Log)</span>
+                        <span class="text-xs text-slate-400 font-mono">20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                        <li><b>🌟 ระบบเพื่อนคู่คิด (Nova Companion • แอพมีชีวิต):</b> บับเบิ้ลป็อปอัปน่ารักๆ คอยดูแลและให้กำลังใจ ตอบสนองตามพฤติกรรมจริงในแต่ละวัน เช่น เตือนมื้อเช้า/เที่ยง/เย็น, ส่งกำลังใจเมื่อดื่มน้ำใกล้ถึงเป้า, ชื่นชมเมื่อคุมแคลอรีครบเป้า และสุ่มคำพูดพลังบวกประจำวัน</li>
+                        <li><b>💬 ระบบพิมพ์สั่งอาหาร AI Smart Text Log:</b> พิมพ์หรือกดปุ่มไมค์ 🎙️ ที่แป้นพิมพ์มือถือ (iOS Dictation / Android Voice Typing) เพื่อสั่งการด้วยเสียงได้ทันที แม่นยำ ลื่นไหล 100%</li>
+                        <li><b>🛡️ คลีนรายการอาหารเบิ้ลอัตโนมัติ (Ghost Meal Deduplication):</b> ป้องกันปัญหาแคลอรีเบิ้ลจากการซิงค์ 2 เครื่อง คืนค่าผลรวมสารอาหารที่ถูกต้องทันทีที่เปิดแอป</li>
+                        <li><b>🤖 กล่องทดลองเพื่อนคู่คิด (Companion Sandbox):</b> เพิ่มตัวเลือกในเมนูเครื่องมือ ⚙️ ให้กดลองดูข้อความบับเบิ้ลในแต่ละสถานการณ์ได้ทันที</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.8.3 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
                     <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
                         <span>🎙️ v5.8.3 (AI Smart Text & Voice Log บันทึกอาหารด้วยเสียงและข้อความ)</span>
@@ -2921,19 +2935,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.3"></script>
+    <script src="food-db.js?v=5.8.4"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.3"></script>
+    <script src="health-tips.js?v=5.8.4"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.3"></script>
+    <script src="ai-snap.js?v=5.8.4"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.3"></script>
+    <script src="app.js?v=5.8.4"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.3"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.4"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
