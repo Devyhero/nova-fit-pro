@@ -498,15 +498,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.7.0
+                            Current Version: v5.7.1
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
 
-                        <!-- Release: v5.7.0 -->
+                        <!-- Release: v5.7.1 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.7.1 (PWA Service Worker Gemini API Network Bypass Fix)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>⚡ แก้ไขข้อผิดพลาด Service Worker FetchEvent.respondWith null:</b> Service Worker ปรับปรุงให้ข้าม Request แบบ POST และ External API โดเมน <code>googleapis.com</code> และ <code>firebase</code> โดยอัตโนมัติ เพื่อให้คำขอ Gemini Flash API ทำงานตรงผ่านเน็ตเวิร์กเบราว์เซอร์ 100%</li>
+                                <li><b>🛡️ เสริมความทนทานแคช PWA:</b> อัปเกรด Cache Name เป็น <code>novafit-pro-v5.7.1-cache</code> พร้อมระบบ Skip Waiting และ Claim Clients ทันทีเมื่อมีเวอร์ชันใหม่</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.7.0 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.7.0 (AI Snap & Log Launch, Anti-Abuse Quotas & Firestore System Config)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>

@@ -222,11 +222,31 @@ try {
 }
 
 // 8. Firebase Firestore rules dry-run check
-try {
-    execSync('firebase deploy --dry-run', { stdio: 'pipe', cwd: ROOT_DIR });
-    logPass('Firebase deployment dry-run passed (rules & hosting validated)');
-} catch (err) {
-    logFail('Firebase dry-run failed', err.message);
+function hasCommand(bin) {
+    try {
+        const checkCmd = process.platform === 'win32' ? `where.exe ${bin}` : `which ${bin}`;
+        execSync(checkCmd, { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+if (!hasCommand('firebase')) {
+    logInfo('Firebase CLI is not installed in current environment PATH. Skipping dry-run.');
+} else {
+    try {
+        const bin = process.platform === 'win32' ? 'firebase.cmd' : 'firebase';
+        execSync(`${bin} deploy --dry-run`, { stdio: 'pipe', cwd: ROOT_DIR });
+        logPass('Firebase deployment dry-run passed (rules & hosting validated)');
+    } catch (err) {
+        const outStr = (err.stdout ? err.stdout.toString() : '') + ' ' + (err.stderr ? err.stderr.toString() : '') + ' ' + (err.message || '');
+        if (outStr.includes('firebase login') || outStr.includes('Failed to authenticate') || outStr.includes('not logged in')) {
+            logInfo('Firebase CLI is installed but not authenticated on this machine (run "firebase login" to connect). Skipping dry-run.');
+        } else {
+            logFail('Firebase dry-run failed', err.message);
+        }
+    }
 }
 
 console.log('========================================');

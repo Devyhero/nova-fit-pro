@@ -36,13 +36,23 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, async () => {
     console.log(`Test server running at http://localhost:${PORT}`);
 
-    const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    try { fs.rmSync('/tmp/novafit-chrome-test', { recursive: true, force: true }); } catch (e) {}
+    let chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (process.platform === 'win32') {
+        const winChromePaths = [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+            'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'
+        ];
+        chromePath = winChromePaths.find(p => fs.existsSync(p)) || 'chrome';
+    }
+    const testUserDataDir = path.join(require('os').tmpdir(), 'novafit-chrome-test');
+    try { fs.rmSync(testUserDataDir, { recursive: true, force: true }); } catch (e) {}
     const chrome = spawn(chromePath, [
         '--headless=new',
         '--disable-gpu',
         '--remote-debugging-port=9227',
-        '--user-data-dir=/tmp/novafit-chrome-test',
+        `--user-data-dir=${testUserDataDir}`,
         '--no-first-run',
         '--no-default-browser-check',
         `http://localhost:${PORT}`

@@ -1,10 +1,14 @@
 # Project Guidelines: NovaFit Pro (fitmacro-web)
 
-## Workflow การพัฒนาฟีเจอร์ใหม่ & ระบบ Branching (Git Feature Branch & UAT Workflow)
+## Workflow รองรับการทำงานสลับ 2 เครื่อง (2-Device Synchronization Standard)
 
-เพื่อความปลอดภัยสูงสุดของระบบ Production ให้ปฏิบัติตามมาตรฐานนี้เสมอ:
+> [!IMPORTANT]
+> เนื่องจากผู้ใช้พัฒนาโปรเจกต์สลับกันระหว่างคอมพิวเตอร์ 2 เครื่อง (เช่น Mac เครื่องหลัก และ Windows เครื่องทำงาน) **ก่อนเริ่มแตะต้องหรือแก้ไขโค้ดทุกครั้ง ต้องดึงโค้ดล่าสุดจาก GitHub เสมอ** เพื่อป้องกันบั๊กโค้ดย้อนกลับ (Code Overwrite / Regression) หรือ Git Conflict
 
 ```
+[ก่อนเริ่มงานทุกครั้ง]       ──► git pull origin main (ซิงค์โค้ดล่าสุดจากอีกเครื่อง)
+             │
+             ▼
 [แตก Branch พัฒนาฟีเจอร์] ──► git checkout -b feature/<name>
              │
              ▼
@@ -22,6 +26,16 @@
              ▼
 [Deploy ขึ้นเว็บจริง PROD]  ──► firebase deploy (URL: https://fitmacro-pro-benz.web.app)
 ```
+
+## Workflow อัตโนมัติก่อนเริ่มงานทุกครั้ง (Mandatory Pre-Work Steps)
+
+ทุกครั้งที่ผู้ใช้ส่งคำสั่งหรือเริ่มงานใหม่ **ผู้ช่วย AI ต้องปฏิบัติตามลำดับขั้นนี้ก่อนแตะต้องไฟล์เสมอ**:
+1. **ตรวจสอบความสอดคล้องของ Git**: ตรวจสอบว่าโปรเจกต์มี `.git` และ Remote เชื่อมต่ออยู่
+2. **ดึงโค้ดล่าสุด (Sync Latest Code)**:
+   ```bash
+   git pull origin main
+   ```
+   *หากมีไฟล์ค้างหรือมี Conflict ให้แจ้งเตือนผู้ใช้ทันทีก่อนดำเนินการต่อ*
 
 ## Workflow อัตโนมัติหลังแก้ไขงานเสร็จสิ้นทุกครั้ง (Mandatory Post-Edit Steps)
 

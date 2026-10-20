@@ -1,5 +1,5 @@
-// NovaFit Pro Service Worker (v5.7.0)
-const CACHE_NAME = 'novafit-pro-v5.7.0-cache';
+// NovaFit Pro Service Worker (v5.7.1)
+const CACHE_NAME = 'novafit-pro-v5.7.1-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
@@ -49,7 +49,25 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Strategy
 self.addEventListener('fetch', (event) => {
+    // 0. Only intercept GET requests. Never intercept POST, PUT, DELETE (e.g. Gemini AI, Firestore writes)
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     const url = new URL(event.request.url);
+
+    // 0.1 Bypass Service Worker completely for external APIs (Gemini Vision, Firebase Auth/Firestore, Google APIs)
+    if (url.hostname.includes('googleapis.com') ||
+        url.hostname.includes('firebase') ||
+        url.hostname.includes('identitytoolkit') ||
+        url.hostname.includes('securetoken')) {
+        return;
+    }
+
+    // 0.2 Only handle http and https schemes
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return;
+    }
 
     // 1. version.json: Always check network first to enable live update detection
     if (url.pathname.endsWith('version.json')) {
@@ -82,15 +100,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
-                if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET' && (url.protocol === 'http:' || url.protocol === 'https:')) {
+                if (networkResponse && networkResponse.status === 200 && (url.protocol === 'http:' || url.protocol === 'https:')) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
                     });
                 }
                 return networkResponse;
-            }).catch(() => null);
+            });
 
+            // Return cached response immediately if available; otherwise wait for network fetch
             return cachedResponse || fetchPromise;
         })
     );
