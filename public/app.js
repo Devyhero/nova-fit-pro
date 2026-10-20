@@ -4857,6 +4857,138 @@ function checkLivingAppNudges(force = false) {
     }
 }
 
+// Sandbox Test Launcher for Nova Companion
+function openCompanionTestModal() {
+    const modal = document.getElementById('companionTestModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeCompanionTestModal() {
+    const modal = document.getElementById('companionTestModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function triggerTestCompanionNudge(type) {
+    const targets = getCalculatedTargets();
+    const tCal = Math.round(targets.totalCal);
+    const tP = Math.round(targets.pGram);
+    const tGlasses = targets.waterTargetGlasses || 8;
+
+    switch (type) {
+        case 'water_near':
+            showLivingCompanionNudge({
+                id: 'test_water_near',
+                icon: '🥤',
+                category: 'ดื่มน้ำเพื่อสุขภาพ',
+                avatarGradient: 'bg-gradient-to-tr from-cyan-500 to-blue-400',
+                message: `🥤 สู้ๆ นะ! ดื่มน้ำไปแล้ว 6/${tGlasses} แก้ว ใกล้ถึงเป้าหมายแล้ว อีกแค่แก้วเดียวเท่านั้น! ✨`,
+                actionText: '+ ดื่มน้ำ 1 แก้ว',
+                actionFn: () => adjustWater(1)
+            });
+            break;
+        case 'water_full':
+            showLivingCompanionNudge({
+                id: 'test_water_full',
+                icon: '🎉',
+                category: 'พิชิตเป้าหมายดื่มน้ำ',
+                avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-cyan-400',
+                message: `🎉 ยอดเยี่ยมไปเลย! ดื่มน้ำครบ ${tGlasses}/${tGlasses} แก้ว (${tGlasses * 250} ml) ตามเป้าของวันนี้แล้ว ร่างกายสดชื่น ผิวพรรณสดใส ขอบคุณมากนะ! 💙`
+            });
+            break;
+        case 'water_afternoon':
+            showLivingCompanionNudge({
+                id: 'test_water_afternoon',
+                icon: '💧',
+                category: 'เตือนจิบน้ำเพื่อความสดชื่น',
+                avatarGradient: 'bg-gradient-to-tr from-blue-500 to-indigo-400',
+                message: `🥺 บ่ายสองแล้วน้า วันนี้ดื่มน้ำไปนิดเดียวเอง อย่าลืมจิบน้ำเติมความสดชื่นและช่วยให้สมองปลอดโปร่งหน่อยนะค้าบ 💧`,
+                actionText: '+ จิบน้ำ 1 แก้ว',
+                actionFn: () => adjustWater(1)
+            });
+            break;
+        case 'missing_bf':
+            showLivingCompanionNudge({
+                id: 'test_missing_bf',
+                icon: '🥺',
+                category: 'ห่วงใยสุขภาพยามเช้า',
+                avatarGradient: 'bg-gradient-to-tr from-amber-500 to-rose-400',
+                message: '🥺 ใกล้เที่ยงแล้วยังไม่เห็นมื้อเช้าเลย... งานยุ่งจนลืมทานหรือยังไม่ได้กรอกเอ่ย? แวะเติมพลังงานหน่อยนะค้าบบ 🍳',
+                actionText: '🍳 บันทึกมื้อเช้า',
+                actionFn: () => {
+                    state.activeMeal = 'breakfast';
+                    renderMealSelector();
+                }
+            });
+            break;
+        case 'missing_lunch':
+            showLivingCompanionNudge({
+                id: 'test_missing_lunch',
+                icon: '🍱',
+                category: 'พักเติมพลังยามบ่าย',
+                avatarGradient: 'bg-gradient-to-tr from-orange-500 to-amber-400',
+                message: '🍱 บ่ายแล้วนะ งานยุ่งจนลืมทานข้าวเที่ยงรึเปล่า? พักสายตาจากงานแล้วแวะทานของอร่อยๆ เติมพลังหน่อยนะ! 🥗',
+                actionText: '🥗 บันทึกมื้อเที่ยง',
+                actionFn: () => {
+                    state.activeMeal = 'lunch';
+                    renderMealSelector();
+                }
+            });
+            break;
+        case 'missing_dinner':
+            showLivingCompanionNudge({
+                id: 'test_missing_dinner',
+                icon: '🌙',
+                category: 'มื้อค่ำเพื่อสุขภาพ',
+                avatarGradient: 'bg-gradient-to-tr from-indigo-500 to-purple-400',
+                message: '🌙 ค่ำแล้วน้า วันนี้ทานมื้อเย็นหรือยังเอ่ย? อย่าปล่อยให้ท้องหิวจนนอนไม่หลับนะค้าบบ 🍲',
+                actionText: '🍲 บันทึกมื้อเย็น',
+                actionFn: () => {
+                    state.activeMeal = 'dinner';
+                    renderMealSelector();
+                }
+            });
+            break;
+        case 'cal_near':
+            showLivingCompanionNudge({
+                id: 'test_cal_near',
+                icon: '🔥',
+                category: 'ใกล้ถึงเป้าหมายแคลอรี',
+                avatarGradient: 'bg-gradient-to-tr from-amber-500 to-emerald-400',
+                message: `🔥 อีกนิดเดียว! วันนี้ทานไป ${Math.round(tCal * 0.9)} / ${tCal} kcal ใกล้ครบเป้าหมายพอดีเป๊ะ (เหลืออีก ${Math.round(tCal * 0.1)} kcal) รักษาสมดุลได้เก่งมากๆ! 👏`
+            });
+            break;
+        case 'cal_perfect':
+            showLivingCompanionNudge({
+                id: 'test_cal_perfect',
+                icon: '🎯',
+                category: 'Perfect Calorie Day!',
+                avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-teal-400',
+                message: `🎯 สุดยอดมาก! วันนี้ควบคุมแคลอรีได้ ${tCal} / ${tCal} kcal ครบตามเป้าหมายของร่างกายพอดีเป๊ะ มีวินัยระดับมือโปรเลย! ⭐`
+            });
+            break;
+        case 'protein':
+            showLivingCompanionNudge({
+                id: 'test_protein',
+                icon: '💪',
+                category: 'โปรตีนแน่นเสริมสร้างกล้ามเนื้อ',
+                avatarGradient: 'bg-gradient-to-tr from-purple-500 to-indigo-400',
+                message: `💪 โปรตีนวันนี้แน่นมาก! ได้ไปแล้ว ${Math.round(tP * 0.9)}g / ${tP}g กล้ามเนื้อได้รับการซ่อมแซมและเติบโตอย่างเต็มที่แน่นอน! 🥩`
+            });
+            break;
+        case 'cheerful':
+        default:
+            const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+            showLivingCompanionNudge({
+                id: 'test_cheerful_' + Date.now(),
+                icon: q.icon,
+                category: 'กำลังใจประจำวัน',
+                avatarGradient: 'bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-400',
+                message: q.msg
+            });
+            break;
+    }
+}
+
 // Ensure state and core handlers are attached to window
 window.state = state;
 window.openProfileSettingsModal = openProfileSettingsModal;
@@ -4901,3 +5033,6 @@ window.showLivingCompanionNudge = showLivingCompanionNudge;
 window.dismissLivingCompanionNudge = dismissLivingCompanionNudge;
 window.triggerLivingCompanionCheck = triggerLivingCompanionCheck;
 window.checkLivingAppNudges = checkLivingAppNudges;
+window.openCompanionTestModal = openCompanionTestModal;
+window.closeCompanionTestModal = closeCompanionTestModal;
+window.triggerTestCompanionNudge = triggerTestCompanionNudge;
