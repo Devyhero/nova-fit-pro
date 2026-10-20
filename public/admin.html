@@ -204,6 +204,8 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Users Pagination Bar (v5.8.3) -->
+                    <div id="usersPagination" class="p-3 sm:p-4 bg-slate-50/50 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-700/80"></div>
                 </div>
             </div>
 
@@ -437,6 +439,8 @@
                     <div id="customPresetsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2">
                         <div class="col-span-full py-6 text-center text-slate-400 text-xs">กำลังรวบรวมข้อมูล...</div>
                     </div>
+                    <!-- Custom Presets Pagination Bar (v5.8.3) -->
+                    <div id="customPresetsPagination" class="pt-2"></div>
                 </div>
             </div>
 
@@ -484,6 +488,9 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- Message Logs Pagination Bar (v5.8.3) -->
+                    <div id="messageLogsPagination" class="pt-2"></div>
                 </div>
             </div>
 
@@ -498,13 +505,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.8.2
+                            Current Version: v5.8.3
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                                                <!-- Release: v5.8.2 -->
+                                                                        <!-- Release: v5.8.3 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.8.3 (Admin Table Pagination Engine & UI Optimization)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📑 พัฒนาระบบ Table Pagination ใน Admin Dashboard:</b> แบ่งหน้าแสดงผลอัจฉริยะสำหรับตารางรายชื่อผู้ใช้ (Users Table), ประวัติการสแกนอาหาร AI (AI Scan Logs), ประวัติการส่งข้อความแจ้งเตือน (Message Logs) และคลังเมนูส่วนตัว (Custom Presets)</li>
+                                <li><b>🎛️ ตัวเลือกปรับจำนวนรายการต่อหน้า (Page Size Selector):</b> เลือกระดับการแสดงผล 10, 25, 50 แถวต่อหน้า พร้อมปุ่มเปลี่ยนหน้า [◀ ก่อนหน้า] [1] [2]... [ถัดไป ▶] และแสดงจำนวนสรุปชัดเจน</li>
+                                <li><b>⚡ ปรับปรุง Performance การเรนเดอร์:</b> หน้าเว็บไม่ยืดยาว โหลดข้อมูลลื่นไหล รองรับจำนวนผู้ใช้งานและประวัติสแกนจำนวนมากได้อย่างมีประสิทธิภาพ</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.8.2 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.8.2 (Unified Confirmation Modal & AI Coach Skeleton UX Optimization)</span>
@@ -820,6 +840,8 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <!-- AI Scan Logs Pagination Bar (v5.8.3) -->
+                        <div id="aiScanLogsPagination" class="p-3 bg-slate-50/50 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-700/80"></div>
                     </div>
                 </div>
             </div>

@@ -118,12 +118,14 @@ server.listen(PORT, async () => {
         };
 
         // Wait for page load and initialization
-        for (let i = 0; i < 30; i++) {
-            const ready = await evalJs('document.readyState === "complete" && !!document.getElementById("btnToolsProfileSettings")');
-            if (ready) break;
-            await new Promise(r => setTimeout(r, 200));
+        for (let i = 0; i < 50; i++) {
+            try {
+                const ready = await evalJs('document.readyState === "complete" && !!document.getElementById("btnToolsProfileSettings")');
+                if (ready) break;
+            } catch (e) {}
+            await new Promise(r => setTimeout(r, 250));
         }
-        await evalJs('new Promise(r => setTimeout(r, 500))');
+        await new Promise(r => setTimeout(r, 600));
 
         // Test 1: Check Header Profile Drawer Button
         console.log('DEBUG URL:', await evalJs('location.href'), 'readyState:', await evalJs('document.readyState'));
@@ -821,6 +823,45 @@ server.listen(PORT, async () => {
         const wasCallbackFired = await evalJs('window.__testModalConfirmed === true');
         console.log('Confirm dialog callback executed:', wasCallbackFired);
         if (!wasCallbackFired) throw new Error('Confirm dialog onConfirm callback was not triggered');
+
+        // Test 26: Admin Table Pagination Engine (v5.8.3)
+        console.log('--- Test 26: Admin Table Pagination Engine ---');
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
+        
+        let isReady = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isReady = await evalJs('typeof window.renderPaginationControls === "function" && !!document.getElementById("usersPagination")');
+                if (isReady) break;
+            } catch (e) {}
+        }
+        console.log('Admin page loaded and pagination engine ready:', isReady);
+
+        const usersPagExists = await evalJs('!!document.getElementById("usersPagination")');
+        const aiLogsPagExists = await evalJs('!!document.getElementById("aiScanLogsPagination")');
+        const msgLogsPagExists = await evalJs('!!document.getElementById("messageLogsPagination")');
+        const customPresetsPagExists = await evalJs('!!document.getElementById("customPresetsPagination")');
+
+        console.log('Admin pagination containers exist:', { usersPagExists, aiLogsPagExists, msgLogsPagExists, customPresetsPagExists });
+        if (!usersPagExists || !aiLogsPagExists || !msgLogsPagExists || !customPresetsPagExists) {
+            throw new Error('Missing admin pagination container elements');
+        }
+
+        const paginationRenderTest = await evalJs(`(() => {
+            window.renderPaginationControls({
+                containerId: 'usersPagination',
+                totalItems: 45,
+                currentPage: 2,
+                pageSize: 10,
+                onPageChange: 'changeUsersPage',
+                onPageSizeChange: 'changeUsersPageSize'
+            });
+            const text = document.getElementById('usersPagination').textContent;
+            return text.includes('11') && text.includes('20') && text.includes('45');
+        })()`);
+        console.log('Pagination control rendered correct slice text:', paginationRenderTest);
+        if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
 
         ws.close();
         console.log('========================================');

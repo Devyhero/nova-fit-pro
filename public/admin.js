@@ -509,23 +509,171 @@ function renderInDepthAnalytics(users) {
     if (statWeightToday) statWeightToday.textContent = `${weightUsersCount} คน`;
 }
 
+
+// ==========================================
+// GENERIC ADMIN TABLE PAGINATION ENGINE (v5.8.3)
+// ==========================================
+window.renderPaginationControls = renderPaginationControls;
+function renderPaginationControls({
+    containerId,
+    totalItems,
+    currentPage,
+    pageSize,
+    onPageChange,
+    onPageSizeChange
+}) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (totalItems === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    const startItem = (safePage - 1) * pageSize + 1;
+    const endItem = Math.min(safePage * pageSize, totalItems);
+
+    // Calculate visible page buttons (max 5)
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+        let start = Math.max(1, safePage - 2);
+        let end = Math.min(totalPages, start + maxVisiblePages - 1);
+        if (end - start < maxVisiblePages - 1) {
+            start = Math.max(1, end - maxVisiblePages + 1);
+        }
+        for (let i = start; i <= end; i++) pageNumbers.push(i);
+    }
+
+    const prevDisabled = safePage <= 1;
+    const nextDisabled = safePage >= totalPages;
+
+    const pageButtonsHtml = pageNumbers.map(p => {
+        const isActive = p === safePage;
+        return `
+            <button type="button" onclick="${onPageChange}(${p})"
+                class="min-w-8 h-8 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer ${
+                    isActive
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
+                }">
+                ${p}
+            </button>
+        `;
+    }).join('');
+
+    const pageSizeSelectorHtml = onPageSizeChange ? `
+        <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <span>แสดง</span>
+            <select onchange="${onPageSizeChange}(Number(this.value))"
+                class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-purple-500 cursor-pointer">
+                <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
+                <option value="25" ${pageSize === 25 ? 'selected' : ''}>25</option>
+                <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+            </select>
+            <span>/หน้า</span>
+        </div>
+    ` : '';
+
+    container.innerHTML = `
+        <div class="w-full flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3 flex-wrap">
+                <span class="text-slate-500 dark:text-slate-400">
+                    แสดง <b>${startItem.toLocaleString()}</b>-<b>${endItem.toLocaleString()}</b> จากทั้งหมด <b>${totalItems.toLocaleString()}</b> รายการ
+                </span>
+                ${pageSizeSelectorHtml}
+            </div>
+
+            ${totalPages > 1 ? `
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <button type="button" onclick="${onPageChange}(${safePage - 1})"
+                    ${prevDisabled ? 'disabled' : ''}
+                    class="h-8 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1 ${
+                        prevDisabled
+                            ? 'opacity-40 cursor-not-allowed text-slate-400 bg-slate-50 dark:bg-slate-800'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer bg-white dark:bg-slate-800'
+                    }">
+                    <span>◀</span> <span>ก่อนหน้า</span>
+                </button>
+
+                <div class="flex items-center gap-1">
+                    ${pageButtonsHtml}
+                </div>
+
+                <button type="button" onclick="${onPageChange}(${safePage + 1})"
+                    ${nextDisabled ? 'disabled' : ''}
+                    class="h-8 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1 ${
+                        nextDisabled
+                            ? 'opacity-40 cursor-not-allowed text-slate-400 bg-slate-50 dark:bg-slate-800'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer bg-white dark:bg-slate-800'
+                    }">
+                    <span>ถัดไป</span> <span>▶</span>
+                </button>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+let _currentUsersList = [];
+let _usersCurrentPage = 1;
+let _usersPageSize = 10;
+
+function changeUsersPage(newPage) {
+    _usersCurrentPage = newPage;
+    renderUsersTableSlice();
+}
+window.changeUsersPage = changeUsersPage;
+
+function changeUsersPageSize(newSize) {
+    _usersPageSize = newSize;
+    _usersCurrentPage = 1;
+    renderUsersTableSlice();
+}
+window.changeUsersPageSize = changeUsersPageSize;
+
 function renderUsersTable(users) {
+    _currentUsersList = users || [];
+    _usersCurrentPage = 1;
+    renderUsersTableSlice();
+}
+
+function renderUsersTableSlice() {
     const tbody = document.getElementById('usersTableBody');
     const todayStr = getTodayStr();
 
-    if (!users || users.length === 0) {
+    if (!_currentUsersList || _currentUsersList.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">ไม่พบรายชื่อผู้ใช้งาน</td></tr>`;
+        renderPaginationControls({
+            containerId: 'usersPagination',
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: _usersPageSize,
+            onPageChange: 'changeUsersPage',
+            onPageSizeChange: 'changeUsersPageSize'
+        });
         return;
     }
 
     // Sort by latest updatedAt
-    const sorted = [...users].sort((a, b) => {
+    const sorted = [..._currentUsersList].sort((a, b) => {
         const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
         const tB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
         return tB - tA;
     });
 
-    tbody.innerHTML = sorted.map(u => {
+    const totalPages = Math.max(1, Math.ceil(sorted.length / _usersPageSize));
+    if (_usersCurrentPage > totalPages) _usersCurrentPage = totalPages;
+    if (_usersCurrentPage < 1) _usersCurrentPage = 1;
+
+    const startIdx = (_usersCurrentPage - 1) * _usersPageSize;
+    const pageItems = sorted.slice(startIdx, startIdx + _usersPageSize);
+
+    tbody.innerHTML = pageItems.map(u => {
         const state = u.state || {};
         const p = state.profile || {};
         const photo = u.photoURL || 'icon.svg';
@@ -575,6 +723,15 @@ function renderUsersTable(users) {
             </tr>
         `;
     }).join('');
+
+    renderPaginationControls({
+        containerId: 'usersPagination',
+        totalItems: sorted.length,
+        currentPage: _usersCurrentPage,
+        pageSize: _usersPageSize,
+        onPageChange: 'changeUsersPage',
+        onPageSizeChange: 'changeUsersPageSize'
+    });
 }
 
 function renderTopFoods(foodCountMap) {
@@ -621,17 +778,56 @@ function renderTopWorkouts(workoutCountMap) {
     }).join('');
 }
 
-function renderCustomPresets(presets) {
-    const container = document.getElementById('customPresetsContainer');
-    const badge = document.getElementById('customPresetsCountBadge');
-    if (badge) badge.textContent = `${presets.length} รายการ`;
+let _currentPresetsList = [];
+let _presetsCurrentPage = 1;
+let _presetsPageSize = 12;
 
-    if (presets.length === 0) {
+function changeCustomPresetsPage(newPage) {
+    _presetsCurrentPage = newPage;
+    renderCustomPresetsSlice();
+}
+window.changeCustomPresetsPage = changeCustomPresetsPage;
+
+function changeCustomPresetsPageSize(newSize) {
+    _presetsPageSize = newSize;
+    _presetsCurrentPage = 1;
+    renderCustomPresetsSlice();
+}
+window.changeCustomPresetsPageSize = changeCustomPresetsPageSize;
+
+function renderCustomPresets(presets) {
+    _currentPresetsList = presets || [];
+    _presetsCurrentPage = 1;
+    const badge = document.getElementById('customPresetsCountBadge');
+    if (badge) badge.textContent = `${_currentPresetsList.length} รายการ`;
+    renderCustomPresetsSlice();
+}
+
+function renderCustomPresetsSlice() {
+    const container = document.getElementById('customPresetsContainer');
+    if (!container) return;
+
+    if (!_currentPresetsList || _currentPresetsList.length === 0) {
         container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">ยังไม่มีผู้ใช้เพิ่มเมนูอาหารส่วนตัว</div>`;
+        renderPaginationControls({
+            containerId: 'customPresetsPagination',
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: _presetsPageSize,
+            onPageChange: 'changeCustomPresetsPage',
+            onPageSizeChange: 'changeCustomPresetsPageSize'
+        });
         return;
     }
 
-    container.innerHTML = presets.map(item => {
+    const totalPages = Math.max(1, Math.ceil(_currentPresetsList.length / _presetsPageSize));
+    if (_presetsCurrentPage > totalPages) _presetsCurrentPage = totalPages;
+    if (_presetsCurrentPage < 1) _presetsCurrentPage = 1;
+
+    const startIdx = (_presetsCurrentPage - 1) * _presetsPageSize;
+    const pageItems = _currentPresetsList.slice(startIdx, startIdx + _presetsPageSize);
+
+    container.innerHTML = pageItems.map(item => {
         const cal = item.calories || Math.round((item.protein || 0) * 4 + (item.carbs || 0) * 4 + (item.fat || 0) * 9);
         return `
             <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 space-y-1.5 shadow-xs">
@@ -648,6 +844,15 @@ function renderCustomPresets(presets) {
             </div>
         `;
     }).join('');
+
+    renderPaginationControls({
+        containerId: 'customPresetsPagination',
+        totalItems: _currentPresetsList.length,
+        currentPage: _presetsCurrentPage,
+        pageSize: _presetsPageSize,
+        onPageChange: 'changeCustomPresetsPage',
+        onPageSizeChange: 'changeCustomPresetsPageSize'
+    });
 }
 
 window.filterUsersList = function (query) {
@@ -985,6 +1190,154 @@ function escapeAdminHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+
+let _currentMessageLogs = [];
+let _msgLogsCurrentPage = 1;
+let _msgLogsPageSize = 10;
+
+function changeMessageLogsPage(newPage) {
+    _msgLogsCurrentPage = newPage;
+    renderMessageLogsSlice();
+}
+window.changeMessageLogsPage = changeMessageLogsPage;
+
+function changeMessageLogsPageSize(newSize) {
+    _msgLogsPageSize = newSize;
+    _msgLogsCurrentPage = 1;
+    renderMessageLogsSlice();
+}
+window.changeMessageLogsPageSize = changeMessageLogsPageSize;
+
+function renderMessageLogsSlice() {
+    const tableBody = document.getElementById('messageLogsTableBody');
+    const mobileList = document.getElementById('messageLogsMobileList');
+
+    if (!_currentMessageLogs || _currentMessageLogs.length === 0) {
+        const emptyHtml = '📭 ยังไม่มีประวัติการส่งข้อความจากแอดมิน';
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">${emptyHtml}</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">${emptyHtml}</div>`;
+        renderPaginationControls({
+            containerId: 'messageLogsPagination',
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: _msgLogsPageSize,
+            onPageChange: 'changeMessageLogsPage',
+            onPageSizeChange: 'changeMessageLogsPageSize'
+        });
+        return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(_currentMessageLogs.length / _msgLogsPageSize));
+    if (_msgLogsCurrentPage > totalPages) _msgLogsCurrentPage = totalPages;
+    if (_msgLogsCurrentPage < 1) _msgLogsCurrentPage = 1;
+
+    const startIdx = (_msgLogsCurrentPage - 1) * _msgLogsPageSize;
+    const pageItems = _currentMessageLogs.slice(startIdx, startIdx + _msgLogsPageSize);
+
+    // Render Desktop Table (md and up)
+    if (tableBody) {
+        tableBody.innerHTML = pageItems.map(log => {
+            const d = log.createdAt ? new Date(log.createdAt) : new Date();
+            const dateStr = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+            const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
+
+            return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-nowrap">
+                        ${dateStr}
+                    </td>
+                    <td class="py-3 px-3">
+                        ${isBroadcast ? `
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                                📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                            </span>
+                        ` : `
+                            <div>
+                                <div class="font-bold text-slate-800 dark:text-slate-100">${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}</div>
+                                <div class="text-[10px] text-slate-400">${escapeAdminHtml(log.recipientEmail || '-')}</div>
+                            </div>
+                        `}
+                    </td>
+                    <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                        ${escapeAdminHtml(log.title || 'โดย BenzNova')}
+                    </td>
+                    <td class="py-3 px-3 max-w-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
+                        ${escapeAdminHtml(log.message || '-')}
+                    </td>
+                    <td class="py-3 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium text-[11px]">
+                        ${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}
+                    </td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                            ✓ ส่งสำเร็จ
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Render Mobile Cards (sm and down)
+    if (mobileList) {
+        mobileList.innerHTML = pageItems.map(log => {
+            const d = log.createdAt ? new Date(log.createdAt) : new Date();
+            const dateStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+            const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
+
+            return `
+                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            ${isBroadcast ? `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
+                                    📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
+                                </span>
+                            ` : `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
+                                    👤 ${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}
+                                </span>
+                            `}
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-[10px] text-slate-400 font-mono">${dateStr}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">✓ ส่งแล้ว</span>
+                        </div>
+                    </div>
+
+                    ${!isBroadcast && log.recipientEmail ? `
+                        <div class="text-[11px] text-slate-400 -mt-1 truncate">
+                            อีเมล: <span class="text-slate-600 dark:text-slate-300 font-mono text-[10px]">${escapeAdminHtml(log.recipientEmail)}</span>
+                        </div>
+                    ` : ''}
+
+                    <div class="space-y-1">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                            📌 ${escapeAdminHtml(log.title || 'โดย BenzNova')}
+                        </div>
+                        <div class="p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
+                            ${escapeAdminHtml(log.message || '-')}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <span>ผู้ส่ง: <strong class="text-slate-600 dark:text-slate-300 font-medium">${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}</strong></span>
+                        <span class="text-slate-400 text-[10px]">Audit Log</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderPaginationControls({
+        containerId: 'messageLogsPagination',
+        totalItems: _currentMessageLogs.length,
+        currentPage: _msgLogsCurrentPage,
+        pageSize: _msgLogsPageSize,
+        onPageChange: 'changeMessageLogsPage',
+        onPageSizeChange: 'changeMessageLogsPageSize'
+    });
+}
+
 window.loadAdminMessageLogs = async function () {
     const tableBody = document.getElementById('messageLogsTableBody');
     const mobileList = document.getElementById('messageLogsMobileList');
@@ -1016,103 +1369,20 @@ window.loadAdminMessageLogs = async function () {
             if (mobileList) {
                 mobileList.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">${emptyHtml}</div>`;
             }
+            renderPaginationControls({
+                containerId: 'messageLogsPagination',
+                totalItems: 0,
+                currentPage: 1,
+                pageSize: _msgLogsPageSize,
+                onPageChange: 'changeMessageLogsPage',
+                onPageSizeChange: 'changeMessageLogsPageSize'
+            });
             return;
         }
 
-        // Render Desktop Table (md and up)
-        if (tableBody) {
-            tableBody.innerHTML = logs.map(log => {
-                const d = log.createdAt ? new Date(log.createdAt) : new Date();
-                const dateStr = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
-                const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
-
-                return `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                        <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-nowrap">
-                            ${dateStr}
-                        </td>
-                        <td class="py-3 px-3">
-                            ${isBroadcast ? `
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
-                                    📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
-                                </span>
-                            ` : `
-                                <div>
-                                    <div class="font-bold text-slate-800 dark:text-slate-100">${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}</div>
-                                    <div class="text-[10px] text-slate-400">${escapeAdminHtml(log.recipientEmail || '-')}</div>
-                                </div>
-                            `}
-                        </td>
-                        <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
-                            ${escapeAdminHtml(log.title || 'โดย BenzNova')}
-                        </td>
-                        <td class="py-3 px-3 max-w-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
-                            ${escapeAdminHtml(log.message || '-')}
-                        </td>
-                        <td class="py-3 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium text-[11px]">
-                            ${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}
-                        </td>
-                        <td class="py-3 px-3 text-center whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                                ✓ ส่งสำเร็จ
-                            </span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Render Mobile Cards (sm and down)
-        if (mobileList) {
-            mobileList.innerHTML = logs.map(log => {
-                const d = log.createdAt ? new Date(log.createdAt) : new Date();
-                const dateStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
-                const isBroadcast = log.type === 'broadcast' || log.recipientUid === 'all';
-
-                return `
-                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
-                        <div class="flex items-center justify-between gap-2">
-                            <div>
-                                ${isBroadcast ? `
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[11px]">
-                                        📢 ทุกคน (${log.recipientCount || 'ทั้งหมด'} คน)
-                                    </span>
-                                ` : `
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
-                                        👤 ${escapeAdminHtml(log.recipientName || 'ผู้ใช้')}
-                                    </span>
-                                `}
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="text-[10px] text-slate-400 font-mono">${dateStr}</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">✓ ส่งแล้ว</span>
-                            </div>
-                        </div>
-
-                        ${!isBroadcast && log.recipientEmail ? `
-                            <div class="text-[11px] text-slate-400 -mt-1 truncate">
-                                อีเมล: <span class="text-slate-600 dark:text-slate-300 font-mono text-[10px]">${escapeAdminHtml(log.recipientEmail)}</span>
-                            </div>
-                        ` : ''}
-
-                        <div class="space-y-1">
-                            <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                                📌 ${escapeAdminHtml(log.title || 'โดย BenzNova')}
-                            </div>
-                            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed text-xs">
-                                ${escapeAdminHtml(log.message || '-')}
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400 border-t border-slate-200/60 dark:border-slate-700/60">
-                            <span>ผู้ส่ง: <strong class="text-slate-600 dark:text-slate-300 font-medium">${escapeAdminHtml(log.sentBy || 'โดย BenzNova')}</strong></span>
-                            <span class="text-slate-400 text-[10px]">Audit Log</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
+        _currentMessageLogs = logs;
+        _msgLogsCurrentPage = 1;
+        renderMessageLogsSlice();
     } catch (err) {
         console.error('Failed to load message logs:', err);
         const errMsg = `❌ โหลดประวัติข้อความไม่สำเร็จ: ${err.message}`;
@@ -1268,6 +1538,105 @@ window.testAdminGeminiApiKey = async function () {
     }
 };
 
+
+let _currentAiScanLogs = [];
+let _aiLogsCurrentPage = 1;
+let _aiLogsPageSize = 10;
+
+function changeAiScanLogsPage(newPage) {
+    _aiLogsCurrentPage = newPage;
+    renderAiScanLogsSlice();
+}
+window.changeAiScanLogsPage = changeAiScanLogsPage;
+
+function changeAiScanLogsPageSize(newSize) {
+    _aiLogsPageSize = newSize;
+    _aiLogsCurrentPage = 1;
+    renderAiScanLogsSlice();
+}
+window.changeAiScanLogsPageSize = changeAiScanLogsPageSize;
+
+function renderAiScanLogsSlice() {
+    const tbody = document.getElementById('adminAiScanLogsTableBody');
+    if (!tbody) return;
+
+    if (!_currentAiScanLogs || _currentAiScanLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">ยังไม่มีประวัติการสแกนอาหารในระบบ</td></tr>';
+        renderPaginationControls({
+            containerId: 'aiScanLogsPagination',
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: _aiLogsPageSize,
+            onPageChange: 'changeAiScanLogsPage',
+            onPageSizeChange: 'changeAiScanLogsPageSize'
+        });
+        return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(_currentAiScanLogs.length / _aiLogsPageSize));
+    if (_aiLogsCurrentPage > totalPages) _aiLogsCurrentPage = totalPages;
+    if (_aiLogsCurrentPage < 1) _aiLogsCurrentPage = 1;
+
+    const startIdx = (_aiLogsCurrentPage - 1) * _aiLogsPageSize;
+    const pageItems = _currentAiScanLogs.slice(startIdx, startIdx + _aiLogsPageSize);
+
+    tbody.innerHTML = pageItems.map(d => {
+        const timeFormatted = d.timestamp
+            ? new Date(d.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            : '-';
+        const dateFormatted = d.timestamp
+            ? new Date(d.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+            : '';
+
+        const userPhoto = d.userPhoto || 'icon.svg';
+        const userName = d.userName || 'ผู้ใช้งาน';
+        const userEmail = d.userEmail || '';
+        const foodName = d.foodName || 'เมนูอาหาร';
+        const cal = d.cal || 0;
+        const env = d.environment === 'uat' ? 'UAT' : 'PROD';
+        const envBadge = env === 'UAT'
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400">UAT</span>'
+            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">PROD</span>';
+
+        return `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition">
+                <td class="py-2.5 px-3 whitespace-nowrap text-slate-500 dark:text-slate-400 text-[11px]">
+                    <div>${timeFormatted} น.</div>
+                    <div class="text-[10px] text-slate-400">${dateFormatted}</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <div class="flex items-center gap-2">
+                        <img src="${userPhoto}" class="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 object-cover" onerror="this.src='icon.svg'">
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px] sm:max-w-[180px]">${userName}</div>
+                            <div class="text-[10px] text-slate-400 truncate max-w-[130px] sm:max-w-[180px]">${userEmail}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">${foodName}</span>
+                    <div class="text-[10px] text-slate-400">P:${d.p || 0}g C:${d.c || 0}g F:${d.f || 0}g</div>
+                </td>
+                <td class="py-2.5 px-3 text-right font-black text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                    ${cal} kcal
+                </td>
+                <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                    ${envBadge}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    renderPaginationControls({
+        containerId: 'aiScanLogsPagination',
+        totalItems: _currentAiScanLogs.length,
+        currentPage: _aiLogsCurrentPage,
+        pageSize: _aiLogsPageSize,
+        onPageChange: 'changeAiScanLogsPage',
+        onPageSizeChange: 'changeAiScanLogsPageSize'
+    });
+}
+
 window.loadAdminAiScanLogs = async function () {
     const tbody = document.getElementById('adminAiScanLogsTableBody');
     const statScans = document.getElementById('statAiScansToday');
@@ -1278,7 +1647,7 @@ window.loadAdminAiScanLogs = async function () {
         tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 text-xs">⏳ กำลังโหลดประวัติการสแกน...</td></tr>';
 
         const logsRef = collection(db, 'ai_scan_logs');
-        const q = query(logsRef, orderBy('timestamp', 'desc'), limit(50));
+        const q = query(logsRef, orderBy('timestamp', 'desc'), limit(150));
         const snap = await getDocs(q);
 
         if (snap.empty) {
@@ -1347,7 +1716,9 @@ window.loadAdminAiScanLogs = async function () {
             `);
         });
 
-        tbody.innerHTML = rows.join('');
+        _currentAiScanLogs = rows;
+        _aiLogsCurrentPage = 1;
+        renderAiScanLogsSlice();
         if (statScans) statScans.textContent = scansTodayCount;
         if (statUsers) statUsers.textContent = uniqueUsersToday.size;
     } catch (err) {
