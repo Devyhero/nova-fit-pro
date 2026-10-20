@@ -1,5 +1,28 @@
 # Project Guidelines: NovaFit Pro (fitmacro-web)
 
+## Workflow การพัฒนาฟีเจอร์ใหม่ & ระบบ Branching (Git Feature Branch & UAT Workflow)
+
+เพื่อความปลอดภัยสูงสุดของระบบ Production ให้ปฏิบัติตามมาตรฐานนี้เสมอ:
+
+```
+[แตก Branch พัฒนาฟีเจอร์] ──► git checkout -b feature/<name>
+             │
+             ▼
+[ตรวจสอบโค้ด 100%]        ──► node scripts/test-preflight.js && node scripts/test-browser-cdp.js
+             │
+             ▼
+[Deploy ขึ้น UAT เพื่อลอง] ──► firebase hosting:channel:deploy uat --expires 30d
+             │                (URL: https://fitmacro-pro-benz--uat-ywpcsdbf.web.app)
+             ▼
+[ผู้ใช้ทดสอบ UAT ผ่านแล้ว]
+             │
+             ▼
+[Merge กลับเข้า main]     ──► git checkout main && git merge feature/<name> && git push origin main
+             │
+             ▼
+[Deploy ขึ้นเว็บจริง PROD]  ──► firebase deploy (URL: https://fitmacro-pro-benz.web.app)
+```
+
 ## Workflow อัตโนมัติหลังแก้ไขงานเสร็จสิ้นทุกครั้ง (Mandatory Post-Edit Steps)
 
 ทุกครั้งที่มีการแก้ไขโค้ด ปรับปรุงฟีเจอร์ หรือแก้ไขบั๊กในโปรเจกต์นี้เสร็จเรียบร้อยแล้ว **ต้องปฏิบัติตามลำดับขั้นอย่างเคร่งครัด** ดังนี้:
