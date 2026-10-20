@@ -27,6 +27,11 @@ const APP_VERSION = '5.8.3';
             return 'snack';
         }
 
+        // Living Companion variables (hoisted for early renderAll calls)
+        var _companionDismissTimer = null;
+        var _companionCheckDebounce = null;
+        var _currentCompanionNudgeId = null;
+
         let state = {
             version: APP_VERSION,
             theme: 'dark',
@@ -615,6 +620,9 @@ const APP_VERSION = '5.8.3';
             updateVersionBadges();
             renderAllSectionCollapses();
             syncResponsiveLayout();
+            if (typeof triggerLivingCompanionCheck === 'function') {
+                triggerLivingCompanionCheck(2000);
+            }
         }
 
         function syncResponsiveLayout() {
@@ -2573,6 +2581,9 @@ const APP_VERSION = '5.8.3';
             saveState();
             const t = getCalculatedTargets();
             renderDateTrackerAndRecommendations(t, false);
+            if (typeof triggerLivingCompanionCheck === 'function') {
+                triggerLivingCompanionCheck(600, true);
+            }
         }
 
         function setWaterDirect(glasses) {
@@ -2582,6 +2593,9 @@ const APP_VERSION = '5.8.3';
             saveState();
             const t = getCalculatedTargets();
             renderDateTrackerAndRecommendations(t, false);
+            if (typeof triggerLivingCompanionCheck === 'function') {
+                triggerLivingCompanionCheck(600, true);
+            }
         }
 
         function onDateChange(val) {
@@ -4551,6 +4565,298 @@ function copyYesterdayActiveMeal() {
     copyMealFromYesterday(mealKey);
 }
 
+// ==========================================
+// Living App Companion Engine (v5.8.4)
+// "แอพมีชีวิต" - Smart In-App Companionship & Empathy Nudges
+// ==========================================
+
+var CHEERFUL_DAILY_QUOTES = [
+    { icon: '🌈', msg: 'สวัสดีวันใหม่นะ! มีเราคอยเชียร์อยู่ข้างๆ เสมอ วันนี้มาสร้างสุขภาพที่ดีไปด้วยกัน! ✨' },
+    { icon: '🥑', msg: 'สุขภาพดีไม่ได้สร้างได้ในวันเดียว แต่สร้างได้ในทุกคำที่เราเลือกทานในวันนี้ สู้ๆ น้า! 💖' },
+    { icon: '🚀', msg: 'ความมีวินัยของคุณวันนี้น่าชื่นชมมาก ไม่ว่าเป้าหมายคืออะไร คุณทำสำเร็จแน่นอน! ⭐' },
+    { icon: '💧', msg: 'อย่าลืมจิบน้ำเรื่อยๆ ระหว่างวันนะ จะช่วยให้สมองปลอดโปร่งและสดชื่นตลอดวันเลย 🧠' },
+    { icon: '🥗', msg: 'เลือกทานอาหารที่มีประโยชน์ให้ร่างกายวันนี้ ร่างกายจะขอบคุณคุณไปอีกนานเลยนะ 🥦' }
+];
+
+function showLivingCompanionNudge(config) {
+    const bubble = document.getElementById('livingCompanionBubble');
+    if (!bubble) return;
+
+    _currentCompanionNudgeId = config.id;
+    const mascotIcon = document.getElementById('companionMascotIcon');
+    const catEl = document.getElementById('companionNudgeCategory');
+    const msgEl = document.getElementById('companionNudgeMessage');
+    const actionArea = document.getElementById('companionActionArea');
+    const avatarBg = document.getElementById('companionAvatarBg');
+
+    if (mascotIcon) mascotIcon.textContent = config.icon || '🤖';
+    if (catEl) catEl.textContent = config.category || 'เพื่อนคู่คิด Nova';
+    if (msgEl) msgEl.textContent = config.message || '';
+    if (avatarBg && config.avatarGradient) {
+        avatarBg.className = `w-8 h-8 rounded-full ${config.avatarGradient} flex items-center justify-center text-lg shadow-xs select-none`;
+    }
+
+    if (actionArea) {
+        actionArea.innerHTML = '';
+        if (config.actionText && typeof config.actionFn === 'function') {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow-xs transition active:scale-95 cursor-pointer';
+            btn.textContent = config.actionText;
+            btn.onclick = () => {
+                config.actionFn();
+                dismissLivingCompanionNudge();
+            };
+            actionArea.appendChild(btn);
+        }
+        const thanksBtn = document.createElement('button');
+        thanksBtn.type = 'button';
+        thanksBtn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-[11px] transition cursor-pointer';
+        thanksBtn.textContent = 'ขอบคุณนะ ❤️';
+        thanksBtn.onclick = () => dismissLivingCompanionNudge();
+        actionArea.appendChild(thanksBtn);
+    }
+
+    // Record that this nudge ID was shown today
+    const today = getTodayStr();
+    try {
+        const shownKey = `novafit_shown_nudges_${today}`;
+        const raw = sessionStorage.getItem(shownKey) || '[]';
+        const list = JSON.parse(raw);
+        if (!list.includes(config.id)) {
+            list.push(config.id);
+            sessionStorage.setItem(shownKey, JSON.stringify(list));
+        }
+        sessionStorage.setItem('novafit_last_nudge_timestamp', String(Date.now()));
+    } catch(e) {}
+
+    // Animate Show
+    bubble.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        bubble.classList.remove('translate-y-6', 'opacity-0');
+        bubble.classList.add('translate-y-0', 'opacity-100');
+    });
+
+    clearTimeout(_companionDismissTimer);
+    const duration = config.duration || 9500;
+    _companionDismissTimer = setTimeout(() => {
+        dismissLivingCompanionNudge();
+    }, duration);
+}
+
+function dismissLivingCompanionNudge() {
+    clearTimeout(_companionDismissTimer);
+    const bubble = document.getElementById('livingCompanionBubble');
+    if (!bubble) return;
+    bubble.classList.remove('translate-y-0', 'opacity-100');
+    bubble.classList.add('translate-y-6', 'opacity-0');
+    setTimeout(() => {
+        bubble.classList.add('hidden');
+    }, 320);
+}
+
+function triggerLivingCompanionCheck(delay = 1800, force = false) {
+    clearTimeout(_companionCheckDebounce);
+    _companionCheckDebounce = setTimeout(() => {
+        checkLivingAppNudges(force);
+    }, delay);
+}
+
+function checkLivingAppNudges(force = false) {
+    const today = getTodayStr();
+    if (state.selectedDate !== today && !force) return;
+
+    // Cooldown check: don't show another nudge within 5 minutes (unless force=true)
+    const now = Date.now();
+    try {
+        const lastTime = parseInt(sessionStorage.getItem('novafit_last_nudge_timestamp') || '0', 10);
+        if (!force && (now - lastTime) < 5 * 60 * 1000) return;
+    } catch(e) {}
+
+    let shownList = [];
+    try {
+        const raw = sessionStorage.getItem(`novafit_shown_nudges_${today}`) || '[]';
+        shownList = JSON.parse(raw);
+    } catch(e) {}
+
+    const hour = new Date().getHours();
+    const minute = new Date().getMinutes();
+    const timeDecimal = hour + minute / 60;
+
+    // Daily Logs & Target
+    const todayLogs = (state.logsByDate && state.logsByDate[today]) || [];
+    const targets = getCalculatedTargets();
+    const currentCal = Math.round(todayLogs.reduce((s, x) => s + (Number(x.cal) || 0), 0));
+    const currentP = Math.round(todayLogs.reduce((s, x) => s + (Number(x.p) || 0), 0) * 10) / 10;
+    const targetCal = Math.round(targets.totalCal);
+    const targetP = Math.round(targets.pGram);
+
+    // Water data
+    const currentGlasses = (state.waterByDate && state.waterByDate[today]) || 0;
+    const targetGlasses = targets.waterTargetGlasses || 8;
+    const currentWaterMl = currentGlasses * 250;
+    const targetWaterMl = targets.waterTargetMl || (targetGlasses * 250);
+
+    // Check Meal Presence
+    const hasBreakfast = todayLogs.some(x => x.meal === 'breakfast');
+    const hasLunch = todayLogs.some(x => x.meal === 'lunch');
+    const hasDinner = todayLogs.some(x => x.meal === 'dinner');
+
+    // ── TRIGGER 1: Missing Breakfast (10:30 - 12:45) ──
+    if (timeDecimal >= 10.5 && timeDecimal < 12.8 && !hasBreakfast && !shownList.includes('missing_breakfast')) {
+        showLivingCompanionNudge({
+            id: 'missing_breakfast',
+            icon: '🥺',
+            category: 'ห่วงใยสุขภาพยามเช้า',
+            avatarGradient: 'bg-gradient-to-tr from-amber-500 to-rose-400',
+            message: '🥺 ใกล้เที่ยงแล้วยังไม่เห็นมื้อเช้าเลย... งานยุ่งจนลืมทานหรือยังไม่ได้กรอกเอ่ย? แวะเติมพลังงานหน่อยนะค้าบบ 🍳',
+            actionText: '🍳 บันทึกมื้อเช้า',
+            actionFn: () => {
+                state.activeMeal = 'breakfast';
+                renderMealSelector();
+                const foodSection = document.getElementById('foodSearchCard');
+                if (foodSection) foodSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        return;
+    }
+
+    // ── TRIGGER 2: Missing Lunch (13:30 - 15:45) ──
+    if (timeDecimal >= 13.5 && timeDecimal < 15.8 && !hasLunch && !shownList.includes('missing_lunch')) {
+        showLivingCompanionNudge({
+            id: 'missing_lunch',
+            icon: '🍱',
+            category: 'พักเติมพลังยามบ่าย',
+            avatarGradient: 'bg-gradient-to-tr from-orange-500 to-amber-400',
+            message: '🍱 บ่ายแล้วนะ งานยุ่งจนลืมทานข้าวเที่ยงรึเปล่า? พักสายตาจากงานแล้วแวะทานของอร่อยๆ เติมพลังหน่อยนะ! 🥗',
+            actionText: '🥗 บันทึกมื้อเที่ยง',
+            actionFn: () => {
+                state.activeMeal = 'lunch';
+                renderMealSelector();
+                const foodSection = document.getElementById('foodSearchCard');
+                if (foodSection) foodSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        return;
+    }
+
+    // ── TRIGGER 3: Missing Dinner (19:30 - 21:45) ──
+    if (timeDecimal >= 19.5 && timeDecimal < 21.8 && !hasDinner && !shownList.includes('missing_dinner')) {
+        showLivingCompanionNudge({
+            id: 'missing_dinner',
+            icon: '🌙',
+            category: 'มื้อค่ำเพื่อสุขภาพ',
+            avatarGradient: 'bg-gradient-to-tr from-indigo-500 to-purple-400',
+            message: '🌙 ค่ำแล้วน้า วันนี้ทานมื้อเย็นหรือยังเอ่ย? อย่าปล่อยให้ท้องหิวจนนอนไม่หลับนะค้าบบ 🍲',
+            actionText: '🍲 บันทึกมื้อเย็น',
+            actionFn: () => {
+                state.activeMeal = 'dinner';
+                renderMealSelector();
+                const foodSection = document.getElementById('foodSearchCard');
+                if (foodSection) foodSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        return;
+    }
+
+    // ── TRIGGER 4: Water Near Target (75% - 99%) ──
+    const waterRatio = targetGlasses > 0 ? (currentGlasses / targetGlasses) : 0;
+    if (waterRatio >= 0.75 && waterRatio < 1.0 && !shownList.includes('water_near_target')) {
+        const remainingGlasses = targetGlasses - currentGlasses;
+        showLivingCompanionNudge({
+            id: 'water_near_target',
+            icon: '🥤',
+            category: 'ดื่มน้ำเพื่อสุขภาพ',
+            avatarGradient: 'bg-gradient-to-tr from-cyan-500 to-blue-400',
+            message: `🥤 สู้ๆ นะ! ดื่มน้ำไปแล้ว ${currentGlasses}/${targetGlasses} แก้ว (${currentWaterMl.toLocaleString()} ml) ใกล้ถึงเป้าหมายแล้ว อีกแค่ ${remainingGlasses} แก้วเท่านั้น! ✨`,
+            actionText: '+ ดื่มน้ำ 1 แก้ว',
+            actionFn: () => {
+                adjustWater(1);
+            }
+        });
+        return;
+    }
+
+    // ── TRIGGER 5: Water Goal Completed (100%+) ──
+    if (waterRatio >= 1.0 && !shownList.includes('water_goal_completed')) {
+        showLivingCompanionNudge({
+            id: 'water_goal_completed',
+            icon: '🎉',
+            category: 'พิชิตเป้าหมายดื่มน้ำ',
+            avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-cyan-400',
+            message: `🎉 ยอดเยี่ยมไปเลย! ดื่มน้ำครบ ${currentGlasses}/${targetGlasses} แก้ว (${currentWaterMl.toLocaleString()} ml) ตามเป้าของวันนี้แล้ว ร่างกายสดชื่น ผิวพรรณสดใส ขอบคุณมากนะ! 💙`
+        });
+        return;
+    }
+
+    // ── TRIGGER 6: Afternoon Dehydration Warning (14:00+ and water < 35%) ──
+    if (timeDecimal >= 14.0 && waterRatio < 0.35 && !shownList.includes('water_afternoon_warning')) {
+        showLivingCompanionNudge({
+            id: 'water_afternoon_warning',
+            icon: '💧',
+            category: 'เตือนจิบน้ำเพื่อความสดชื่น',
+            avatarGradient: 'bg-gradient-to-tr from-blue-500 to-indigo-400',
+            message: `🥺 บ่ายสองแล้วน้า วันนี้ดื่มน้ำไปแค่ ${currentGlasses} แก้วเอง อย่าลืมจิบน้ำเติมความสดชื่นและช่วยให้สมองปลอดโปร่งหน่อยนะค้าบ 💧`,
+            actionText: '+ จิบน้ำ 1 แก้ว',
+            actionFn: () => {
+                adjustWater(1);
+            }
+        });
+        return;
+    }
+
+    // ── TRIGGER 7: Calories Near Target (85% - 99%) ──
+    const calRatio = targetCal > 0 ? (currentCal / targetCal) : 0;
+    if (calRatio >= 0.85 && calRatio < 1.0 && !shownList.includes('cal_near_target')) {
+        const calGap = targetCal - currentCal;
+        showLivingCompanionNudge({
+            id: 'cal_near_target',
+            icon: '🔥',
+            category: 'ใกล้ถึงเป้าหมายแคลอรี',
+            avatarGradient: 'bg-gradient-to-tr from-amber-500 to-emerald-400',
+            message: `🔥 อีกนิดเดียว! วันนี้ทานไป ${currentCal} / ${targetCal} kcal ใกล้ครบเป้าหมายพอดีเป๊ะ (เหลืออีก ${calGap} kcal) รักษาสมดุลได้เก่งมากๆ! 👏`
+        });
+        return;
+    }
+
+    // ── TRIGGER 8: Calories Perfect Hit (100% - 105%) ──
+    if (calRatio >= 1.0 && calRatio <= 1.05 && !shownList.includes('cal_perfect_hit')) {
+        showLivingCompanionNudge({
+            id: 'cal_perfect_hit',
+            icon: '🎯',
+            category: 'Perfect Calorie Day!',
+            avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-teal-400',
+            message: `🎯 สุดยอดมาก! วันนี้ควบคุมแคลอรีได้ ${currentCal} / ${targetCal} kcal ครบตามเป้าหมายของร่างกายพอดีเป๊ะ มีวินัยระดับมือโปรเลย! ⭐`
+        });
+        return;
+    }
+
+    // ── TRIGGER 9: Protein Target Strong (≥ 85% of target) ──
+    const pRatio = targetP > 0 ? (currentP / targetP) : 0;
+    if (pRatio >= 0.85 && !shownList.includes('protein_strong_nudge')) {
+        showLivingCompanionNudge({
+            id: 'protein_strong_nudge',
+            icon: '💪',
+            category: 'โปรตีนแน่นเสริมสร้างกล้ามเนื้อ',
+            avatarGradient: 'bg-gradient-to-tr from-purple-500 to-indigo-400',
+            message: `💪 โปรตีนวันนี้แน่นมาก! ได้ไปแล้ว ${currentP}g / ${targetP}g กล้ามเนื้อได้รับการซ่อมแซมและเติบโตอย่างเต็มที่แน่นอน! 🥩`
+        });
+        return;
+    }
+
+    // ── TRIGGER 10: Random Cheerful Quote (Once per day on opening) ──
+    if (!shownList.includes('daily_cheerful_quote')) {
+        const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+        showLivingCompanionNudge({
+            id: 'daily_cheerful_quote',
+            icon: q.icon,
+            category: 'กำลังใจประจำวัน',
+            avatarGradient: 'bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-400',
+            message: q.msg
+        });
+    }
+}
+
 // Ensure state and core handlers are attached to window
 window.state = state;
 window.openProfileSettingsModal = openProfileSettingsModal;
@@ -4589,3 +4895,9 @@ window.forceReshuffleRecommendations = forceReshuffleRecommendations;
 window.renderSmartRecommendations = renderSmartRecommendations;
 window.showConfirmDialog = showConfirmDialog;
 window.closeConfirmDialog = closeConfirmDialog;
+
+// Living App Companion Engine
+window.showLivingCompanionNudge = showLivingCompanionNudge;
+window.dismissLivingCompanionNudge = dismissLivingCompanionNudge;
+window.triggerLivingCompanionCheck = triggerLivingCompanionCheck;
+window.checkLivingAppNudges = checkLivingAppNudges;

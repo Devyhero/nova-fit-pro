@@ -157,6 +157,37 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- Living Companion Nudge Bubble (เพื่อนคู่คิด Nova Companion - แอพมีชีวิต v5.8.4) -->
+    <div id="livingCompanionBubble" class="hidden fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-40 transition-all duration-300 transform translate-y-6 opacity-0 pointer-events-auto">
+        <div class="relative p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-emerald-500/40 dark:border-emerald-500/50 shadow-2xl space-y-2">
+            <!-- Header: Mascot Avatar, Title, Dismiss Button -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div id="companionAvatarBg" class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-lg shadow-xs select-none">
+                        <span id="companionMascotIcon">🤖</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 block leading-tight">Nova Companion</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">เพื่อนคู่คิด</span>
+                        </div>
+                        <span id="companionNudgeCategory" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">กำลังดูแลคุณ</span>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissLivingCompanionNudge()" class="w-6 h-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs flex items-center justify-center transition cursor-pointer" title="ปิดการแจ้งเตือน">
+                    ✕
+                </button>
+            </div>
+            <!-- Message Body -->
+            <p id="companionNudgeMessage" class="text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                ...
+            </p>
+            <!-- Action Button Area -->
+            <div id="companionActionArea" class="flex items-center gap-2 pt-0.5">
+            </div>
+        </div>
+    </div>
+
     <!-- Top Navigation Header -->
     <header
         class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80 sticky top-0 z-40 shadow-xs">
@@ -333,7 +364,7 @@
                         </button>
                         <button id="btnAiVoiceTools" onclick="openAiSnapModal('voice'); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 transition">
-                            <span>🎙️</span> พิมพ์หรือพูดบันทึก AI (Text & Voice)
+                            <span>💬</span> พิมพ์สั่งอาหารด้วย AI (Smart Text Log)
                         </button>
                         <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
                             class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
@@ -748,9 +779,9 @@
                                 </button>
                                 <button id="btnAiVoiceMain" type="button" onclick="openAiSnapModal('voice')"
                                     class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-bold text-xs shadow-xs hover:shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
-                                    title="พิมพ์หรือพูดบันทึกมื้ออาหารด้วยเสียง AI">
-                                    <span>🎙️</span>
-                                    <span>พิมพ์/พูด AI</span>
+                                    title="พิมพ์สั่งอาหารด้วย AI หลายเมนูพร้อมกัน">
+                                    <span>💬</span>
+                                    <span>พิมพ์สั่ง AI</span>
                                 </button>
                             </div>
                         </div>
@@ -2393,7 +2424,7 @@
                 </button>
                 <button type="button" id="tabBtnAiVoice" onclick="switchAiModalTab('voice')"
                     class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
-                    <span>🎙️</span> <span>พิมพ์/พูดด้วยเสียง</span>
+                    <span>💬</span> <span>พิมพ์สั่งอาหาร AI</span>
                 </button>
             </div>
 
@@ -2625,21 +2656,17 @@
                 <div id="aiVoiceTabPane" class="hidden space-y-4">
                     <!-- Voice & Text Input State -->
                     <div id="aiVoiceInputState" class="space-y-3.5">
-                        <!-- Speech Recognition Button (Animated Soundwave / Mic) -->
-                        <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-pink-500/10 border border-purple-500/20 text-center space-y-2">
-                            <button type="button" id="btnAiVoiceRecord" onclick="toggleAiVoiceRecording()"
-                                class="relative px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-md transition flex items-center gap-2 active:scale-95 cursor-pointer">
-                                <span id="aiVoiceMicIcon" class="text-base">🎙️</span>
-                                <span id="aiVoiceRecordText">กดปุ่มเพื่อเริ่มพูดด้วยเสียง (ภาษาไทย)</span>
-                                <span id="aiVoiceMicPulse" class="hidden absolute -inset-1 rounded-2xl bg-rose-500/40 animate-ping"></span>
-                            </button>
-                            <div id="aiVoiceLiveStatus" class="hidden text-xs text-rose-500 dark:text-rose-400 font-semibold animate-pulse">
-                                🔴 กำลังฟังเสียงของคุณ... พูดชื่อเมนูและปริมาณได้เลย (แตะปุ่มเพื่อหยุด)
+                        <!-- AI Smart Text Instruction Card & Mobile Dictation Tip -->
+                        <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-pink-500/10 border border-indigo-500/20 text-slate-700 dark:text-slate-200 space-y-2">
+                            <div class="flex items-center gap-2 font-bold text-xs text-indigo-700 dark:text-indigo-300">
+                                <span class="text-base">✨</span> <span>พิมพ์สั่งอาหาร AI แยกแยะแคลอรีหลายเมนูพร้อมกัน</span>
                             </div>
-                            <div id="aiVoiceLiveTranscript" class="hidden text-xs font-medium text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-600 max-w-full break-words">
-                            </div>
-                            <div id="aiVoiceNotSupportedNotice" class="hidden text-[11px] text-amber-600 dark:text-amber-400">
-                                💡 อุปกรณ์นี้ยังไม่รองรับการสั่งงานด้วยเสียง สามารถพิมพ์ข้อความในช่องด้านล่างได้ทันทีครับ
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                พิมพ์หรือวางข้อความอาหารได้ตามสะดวก (รองรับหลายเมนูในข้อความเดียว) AI จะวิเคราะห์แยกรายการและคำนวณสารอาหารให้อัตโนมัติ
+                            </p>
+                            <div class="flex items-start gap-2 text-[11px] bg-white/80 dark:bg-slate-800/80 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800/50 text-indigo-900 dark:text-indigo-200 font-medium">
+                                <span class="text-sm shrink-0">🎙️</span>
+                                <span><b>เคล็ดลับการใช้เสียง:</b> แตะที่กล่องข้อความด้านล่าง แล้วกดปุ่มไมโครโฟน 🎙️ ที่แป้นพิมพ์มือถือ (ทั้ง iPhone และ Android) เพื่อพูดด้วยเสียงได้ทันที แม่นยำและลื่นไหล 100%!</span>
                             </div>
                         </div>
 

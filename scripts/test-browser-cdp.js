@@ -107,6 +107,9 @@ server.listen(PORT, async () => {
         const evalJs = async (expr, retries = 3) => {
             try {
                 const res = await sendCdp('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+                if (res.exceptionDetails) {
+                    console.error('JS EVAL ERROR:', res.exceptionDetails);
+                }
                 return res.result ? res.result.value : null;
             } catch (err) {
                 if (retries > 0 && err && err.message && err.message.includes('Execution context was destroyed')) {
@@ -950,53 +953,82 @@ server.listen(PORT, async () => {
             throw new Error(`cleanDuplicateMealLogs failed! Expected 2 items / 695 kcal, got ${dedupResult.cleanedCount} items / ${dedupResult.cleanedCal} kcal`);
         }
 
-        // Test 28: AI Voice Repeated Recording & Clear Cycle (Mobile-First Lifecycle v2)
-        console.log('--- Test 28: AI Voice Repeated Recording & Clear Cycle ---');
-        const voiceClearTest = await evalJs(`(() => {
+        // Test 28: AI Smart Text Input, Sample Pill Setter & Clear Cycle
+        console.log('--- Test 28: AI Smart Text Input & Clear Cycle ---');
+        const textClearTest = await evalJs(`(() => {
             // 1. Set text into textarea
             const input = document.getElementById('aiVoiceTextInput');
             input.value = 'ข้าวหมูแดง 1 จาน';
 
-            // 2. Call clearAiVoiceText — should stop mic, clear text, reset state
+            // 2. Call clearAiVoiceText — should clear text
             window.clearAiVoiceText();
             const valAfterClear = input.value;
-            const isRecAfterClear = typeof window.isSpeechRecording === 'function' ? window.isSpeechRecording() : false;
 
-            // 3. Test starting second recording cycle after clearing — must not throw
-            let canStartAfterClear = true;
+            // 3. Test sample setter
+            window.setAiVoiceSample('ข้าวมันไก่พิเศษ 1 จาน');
+            const valAfterSample = input.value;
+
+            // 4. Safe stubs check
+            let safeStubsOk = true;
             try {
                 window.startAiVoiceRecording();
-            } catch (err) {
-                canStartAfterClear = false;
-            }
-            window.stopAiVoiceRecording();
-
-            // 4. Verify toggleAiVoiceRecording also respects guard flag
-            //    Simulate rapid double-tap scenario (mobile re-entry protection)
-            let guardWorking = true;
-            try {
-                window.startAiVoiceRecording(); // first tap — starts
-                window.startAiVoiceRecording(); // second immediate tap — should teardown+restart safely
-                window.stopAiVoiceRecording();  // clean up
+                window.stopAiVoiceRecording();
+                window.toggleAiVoiceRecording();
             } catch(e) {
-                guardWorking = false;
+                safeStubsOk = false;
             }
 
             return {
                 valAfterClear,
-                isRecAfterClear,
-                canStartAfterClear,
-                guardWorking
+                valAfterSample,
+                safeStubsOk
             };
         })()`);
-        console.log('AI Voice clear and second recording cycle test:', voiceClearTest);
-        if (voiceClearTest.valAfterClear !== '' || voiceClearTest.isRecAfterClear !== false || !voiceClearTest.canStartAfterClear || !voiceClearTest.guardWorking) {
-            throw new Error('AI Voice repeated recording cycle after clear failed (mobile lifecycle)');
+        console.log('AI Smart Text clear and sample test:', textClearTest);
+        if (textClearTest.valAfterClear !== '' || textClearTest.valAfterSample !== 'ข้าวมันไก่พิเศษ 1 จาน' || !textClearTest.safeStubsOk) {
+            throw new Error('AI Smart Text clear or sample test failed');
         }
 
-        // Test 29: Admin Table Pagination Engine
+        // Test 29: Living App Companion Empathy Nudge System
+        console.log('--- Test 29: Living App Companion Empathy Nudge System ---');
+        const companionTest = await evalJs(`(() => {
+            const bubble = document.getElementById('livingCompanionBubble');
+            if (!bubble) return { hasBubble: false };
 
-        console.log('--- Test 29: Admin Table Pagination Engine ---');
+            // Trigger sample nudge
+            window.showLivingCompanionNudge({
+                id: 'test_nudge',
+                icon: '🥑',
+                category: 'ทดสอบแอพมีชีวิต',
+                message: 'สวัสดีจ้า ทดสอบเพื่อนคู่คิดทำงานสมบูรณ์แบบ',
+                actionText: 'รับทราบ',
+                actionFn: () => {}
+            });
+
+            const isShown = !bubble.classList.contains('hidden');
+            const msg = document.getElementById('companionNudgeMessage')?.textContent || '';
+            const icon = document.getElementById('companionMascotIcon')?.textContent || '';
+            const hasAction = document.querySelectorAll('#companionActionArea button').length >= 2;
+
+            // Dismiss
+            window.dismissLivingCompanionNudge();
+
+            return {
+                hasBubble: true,
+                isShown,
+                msgMatches: msg.includes('สวัสดีจ้า'),
+                iconMatches: icon === '🥑',
+                hasAction
+            };
+        })()`);
+        console.log('Living App Companion test:', companionTest);
+        if (!companionTest.hasBubble || !companionTest.isShown || !companionTest.msgMatches || !companionTest.iconMatches || !companionTest.hasAction) {
+            throw new Error('Living App Companion test failed');
+        }
+
+        // Test 30: Admin Table Pagination Engine
+
+        console.log('--- Test 30: Admin Table Pagination Engine ---');
         await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
         
         let isReady = false;
@@ -1034,8 +1066,8 @@ server.listen(PORT, async () => {
         console.log('Pagination control rendered correct slice text:', paginationRenderTest);
         if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
 
-        // Test 30: Admin AI Scan Logs Table Data Mapping Test
-        console.log('--- Test 30: Admin AI Scan Logs Table Data Mapping ---');
+        // Test 31: Admin AI Scan Logs Table Data Mapping Test
+        console.log('--- Test 31: Admin AI Scan Logs Table Data Mapping ---');
         const aiScanTableTest = await evalJs(`(() => {
             window._currentAiScanLogs = [
                 {
