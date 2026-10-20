@@ -5,27 +5,41 @@
 > [!IMPORTANT]
 > เนื่องจากผู้ใช้พัฒนาโปรเจกต์สลับกันระหว่างคอมพิวเตอร์ 2 เครื่อง (เช่น Mac เครื่องหลัก และ Windows เครื่องทำงาน) **ก่อนเริ่มแตะต้องหรือแก้ไขโค้ดทุกครั้ง ต้องดึงโค้ดล่าสุดจาก GitHub เสมอ** เพื่อป้องกันบั๊กโค้ดย้อนกลับ (Code Overwrite / Regression) หรือ Git Conflict
 
+## กฎเหล็กการพัฒนาฟีเจอร์ใหม่ & ระบบ Branching (Mandatory Feature Branch & UAT Workflow)
+
+> [!CAUTION]
+> **ห้ามแก้ไขหรือพัฒนาฟีเจอร์ใหม่บน Branch `main` โดยตรงเด็ดขาด!** 
+> ทุกฟีเจอร์ใหม่ต้องแตก Branch พัฒนาแยกอิสระ และ**ต้องผ่านการทดสอบบน UAT Channel จนผู้ใช้ยืนยันว่าผ่านแล้วเท่านั้น** จึงจะอนุญาตให้ Merge เข้า `main` แล้วขึ้น Production จริง (PROD) ได้
+
 ```
-[ก่อนเริ่มงานทุกครั้ง]       ──► git pull origin main (ซิงค์โค้ดล่าสุดจากอีกเครื่อง)
-             │
-             ▼
-[แตก Branch พัฒนาฟีเจอร์] ──► git checkout -b feature/<name>
-             │
-             ▼
-[ตรวจสอบโค้ด 100%]        ──► node scripts/test-preflight.js && node scripts/test-browser-cdp.js
-             │
-             ▼
-[Deploy ขึ้น UAT เพื่อลอง] ──► firebase hosting:channel:deploy uat --expires 30d
-             │                (URL: https://fitmacro-pro-benz--uat-ywpcsdbf.web.app)
-             ▼
-[ผู้ใช้ทดสอบ UAT ผ่านแล้ว]
-             │
-             ▼
-[Merge กลับเข้า main]     ──► git checkout main && git merge feature/<name> && git push origin main
-             │
-             ▼
-[Deploy ขึ้นเว็บจริง PROD]  ──► firebase deploy (URL: https://fitmacro-pro-benz.web.app)
+[1. เริ่มต้น]           ──► git checkout main && git pull origin main
+                             │
+                             ▼
+[2. แตก Branch ใหม่]    ──► git checkout -b feature/<feature-name>
+                             │
+                             ▼
+[3. เขียนโค้ด & ทดสอบ] ──► node scripts/test-preflight.js && node scripts/test-browser-cdp.js
+                             │
+                             ▼
+[4. บันทึก & พุช Branch] ─► git add . && git commit -m "feat: ..." && git push -u origin feature/<feature-name>
+                             │
+                             ▼
+[5. Deploy ขึ้น UAT]    ──► firebase hosting:channel:deploy uat --expires 30d
+                             │   (URL: https://fitmacro-pro-benz--uat-ywpcsdbf.web.app)
+                             ▼
+[6. รอผู้ใช้ทดสอบ UAT]  ──► ส่งลิงก์ UAT ให้ผู้ใช้ลองเล่นจริง (ห้ามขึ้น PROD เด็ดขาดจนกว่าผู้ใช้จะอนุมัติ)
+                             │
+                             ▼ [เมื่อผู้ใช้ยืนยันว่า UAT ผ่านแล้วเท่านั้น]
+[7. Merge เข้า main]    ──► git checkout main && git pull origin main && git merge feature/<feature-name>
+                             │
+                             ▼
+[8. พุช main & ขึ้น PROD] ─► git push origin main && firebase deploy
+                             │   (URL: https://fitmacro-pro-benz.web.app)
+                             ▼
+[9. ลบ Feature Branch]  ──► git branch -d feature/<feature-name>
 ```
+
+---
 
 ## Workflow อัตโนมัติก่อนเริ่มงานทุกครั้ง (Mandatory Pre-Work Steps)
 
@@ -33,44 +47,68 @@
 1. **ตรวจสอบความสอดคล้องของ Git**: ตรวจสอบว่าโปรเจกต์มี `.git` และ Remote เชื่อมต่ออยู่
 2. **ดึงโค้ดล่าสุด (Sync Latest Code)**:
    ```bash
-   git pull origin main
+   git checkout main && git pull origin main
    ```
    *หากมีไฟล์ค้างหรือมี Conflict ให้แจ้งเตือนผู้ใช้ทันทีก่อนดำเนินการต่อ*
+3. **หากเป็นฟีเจอร์ใหม่**: สั่งแตก Branch ทันที `git checkout -b feature/<name>` ห้ามเขียนโค้ดบน `main`
 
-## Workflow อัตโนมัติหลังแก้ไขงานเสร็จสิ้นทุกครั้ง (Mandatory Post-Edit Steps)
+---
 
-ทุกครั้งที่มีการแก้ไขโค้ด ปรับปรุงฟีเจอร์ หรือแก้ไขบั๊กในโปรเจกต์นี้เสร็จเรียบร้อยแล้ว **ต้องปฏิบัติตามลำดับขั้นอย่างเคร่งครัด** ดังนี้:
+## Workflow อัตโนมัติหลังพัฒนาฟีเจอร์เสร็จสิ้น (Mandatory Feature Delivery Steps)
 
-### ขั้นที่ 1: ตรวจสอบความถูกต้องของโค้ด (Mandatory Pre-flight Verification)
+เมื่อพัฒนาฟีเจอร์บน Branch `feature/<name>` เรียบร้อยแล้ว:
+
+### ขั้นที่ 1: ตรวจสอบความถูกต้องของโค้ด 100%
 - รันสคริปต์ตรวจสอบ:
   ```bash
   node scripts/test-preflight.js
+  node scripts/test-browser-cdp.js
   ```
-- **เงื่อนไขสำคัญ**: 
-  - สคริปต์นี้จะตรวจสอบ Syntax ของโค้ด JavaScript ทั้งหมด (ทั้งไฟล์เดี่ยวและ inline script ขนาดใหญ่ใน `index.html`), ตรวจสอบความถูกต้องของ JSON ทุกไฟล์, เช็ก Broken Link ของ Assets, ตรวจสอบความสอดคล้องของ Version ระหว่าง `version.json` กับ `sw.js`, และทดสอบความถูกต้องของ Firestore Rules ผ่าน Dry-run
-  - **หากผลการตรวจสอบไม่ผ่าน (Exit code != 0 หรือมีข้อผิดพลาด) ห้าม Commit และห้าม Deploy เด็ดขาด!** ต้องแก้ปัญหาให้โค้ดทำงานได้ถูกต้องเรียบร้อยและรันผ่าน 100% ก่อนเท่านั้น
+- **เงื่อนไขสำคัญ**: หากมีข้อผิดพลาดหรือ Test ไม่ผ่าน **ห้าม Commit และห้าม Deploy เด็ดขาด!** ต้องแก้ไขให้ผ่าน 100% ก่อน
 
-### ขั้นที่ 2: Commit & Push ขึ้น Git
-- รันคำสั่ง `git status` เพื่อตรวจสอบไฟล์ที่เปลี่ยนแปลง
-- สเตจไฟล์ด้วย `git add .` (หรือเฉพาะไฟล์ที่เกี่ยวข้อง)
-- สร้าง commit message ที่สื่อความหมายชัดเจน (เช่น `feat: ...`, `fix: ...`, `test: ...`)
-- พุชขึ้น GitHub:
+### ขั้นที่ 2: Commit & Push ขึ้น Feature Branch
+- สเตจและคอมมิต:
   ```bash
-  git push origin main
+  git add .
+  git commit -m "feat(<scope>): ..."
+  git push -u origin feature/<feature-name>
   ```
 
-### ขั้นที่ 3: Deploy ขึ้น Firebase
+### ขั้นที่ 3: Deploy ขึ้นช่องทางทดสอบ UAT (Preview Channel)
 - สั่งรันคำสั่ง:
   ```bash
-  firebase deploy
+  firebase hosting:channel:deploy uat --expires 30d
   ```
-- ตรวจสอบผลการ deploy ว่าสำเร็จเรียบร้อย (URL: https://fitmacro-pro-benz.web.app)
+- สรุปผลรายงานผู้ใช้ พร้อมแนบลิงก์ UAT: `https://fitmacro-pro-benz--uat-ywpcsdbf.web.app`
+- **หยุดรอผลการทดสอบจากผู้ใช้ ห้ามแตะต้อง Production!**
 
-### ขั้นที่ 4: สรุปผลรายงานผู้ใช้
-- แจ้งผลการตรวจสอบโค้ด (Pre-flight checks passed)
-- แจ้งรายการที่แก้ไข/เพิ่มใหม่
-- แจ้งสถานะ Git commit และ push
-- แจ้งสถานะการ deploy บน Firebase พร้อมลิงก์เข้าใช้งาน
+---
+
+## Workflow การนำขึ้น Production จริง (PROD Release Protocol)
+
+**เงื่อนไขเดียวที่จะขึ้น PROD ได้**: ผู้ใช้ส่งข้อความยืนยันว่า *"ทดสอบ UAT ผ่านแล้ว ขึ้น PROD ได้เลย"* เท่านั้น:
+
+1. สลับกลับมาที่ main และดึงโค้ดล่าสุด:
+   ```bash
+   git checkout main && git pull origin main
+   ```
+2. ทำการ Merge โค้ดจาก Feature Branch:
+   ```bash
+   git merge feature/<feature-name>
+   ```
+3. พุชขึ้น main บน GitHub:
+   ```bash
+   git push origin main
+   ```
+4. Deploy ขึ้นเซิร์ฟเวอร์จริง (Production):
+   ```bash
+   firebase deploy
+   ```
+5. ลบ Branch ฟีเจอร์ที่รวมเสร็จแล้ว:
+   ```bash
+   git branch -d feature/<feature-name>
+   ```
+6. รายงานสรุปผลให้ผู้ใช้ทราบ พร้อมลิงก์เว็บจริง: `https://fitmacro-pro-benz.web.app`
 
 ---
 
