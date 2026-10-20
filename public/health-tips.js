@@ -950,7 +950,7 @@ class HealthTipsManager {
             let res = await fetch('./health-tips.json', { cache: 'no-cache' }).catch(() => null);
             if (!res || !res.ok) {
                 if (navigator.onLine) {
-                    res = await fetch('https://raw.githubusercontent.com/parinya6969/nova-fit-pro/main/public/health-tips.json', { cache: 'no-cache' }).catch(() => null);
+                    res = await fetch('https://raw.githubusercontent.com/Devyhero/nova-fit-pro/main/public/health-tips.json', { cache: 'no-cache' }).catch(() => null);
                 }
             }
             if (res && res.ok) {
