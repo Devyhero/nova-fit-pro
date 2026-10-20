@@ -661,7 +661,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {

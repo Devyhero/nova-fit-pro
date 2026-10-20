@@ -161,6 +161,9 @@
                 <button type="button" onclick="switchAdminTab('message_logs')" id="tabBtn_message_logs" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0">
                     📨 ประวัติการส่งข้อความ (Logs)
                 </button>
+                <button type="button" onclick="switchAdminTab('system_changelog')" id="tabBtn_system_changelog" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
+                    <span>📋</span> <span>ประวัติอัปเดตระบบ & หลังบ้าน</span>
+                </button>
             </div>
 
             <!-- VIEW 1: USERS DIRECTORY -->
@@ -477,6 +480,91 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: ADMIN & SYSTEM CHANGELOG -->
+            <div id="tabView_system_changelog" class="hidden space-y-4">
+                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-4 shadow-xs">
+                    <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-3">
+                        <div>
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <span>📋</span> บันทึกการอัปเดตระบบ & หลังบ้าน (System & Admin Changelog)
+                            </h3>
+                            <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
+                            Current Version: v5.6.6
+                        </span>
+                    </div>
+
+                    <!-- Changelog Entries List -->
+                    <div class="space-y-3.5 text-xs">
+
+                        <!-- Release: v5.6.6 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.6.6 (Admin Message Mobile Cards & Changelog Separation)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📱 ปรับโฉมประวัติการส่งข้อความแอดมินบนมือถือ (Mobile Responsive Cards):</b> ออกแบบเลย์เอาต์การแสดงผลประวัติข้อความในหน้าแดชบอร์ดแอดมินใหม่ บนมือถือเปลี่ยนจากตารางกว้าง 6 คอลัมน์เป็นการ์ดแยกรายการ อ่านง่าย สบายตา ไม่ต้องเลื่อนตารางแนวนอน</li>
+                                <li><b>🛡️ แยกบันทึกการอัปเดตระบบ (Admin vs User Changelog Separation):</b> ย้ายข้อมูลทางเทคนิค ระบบหลังบ้าน และสิทธิ์แอดมินมาแสดงผลเฉพาะในแดชบอร์ดแอดมิน เพื่อความปลอดภัยและไม่รบกวนผู้ใช้งานทั่วไป</li>
+                                <li><b>💊 โครงสร้าง Data Persistence วิตามินและอาหารเสริม:</b> ปรับปรุง State Management ให้รองรับ Full CRUD (เพิ่ม/ลบรายการมาตรฐานและรายการส่วนตัว) ป้องกันการคืนค่าเริ่มต้นอัตโนมัติเมื่อรายการว่างเปล่า พร้อมปุ่มคืนค่าเริ่มต้นเมื่อต้องการ</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.6.5 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.6.5 (Expanded Health Tips & Randomization Engine)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">19 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>💡 ขยายฐานข้อมูลเกร็ดความรู้สุขภาพ 65+ รายการ:</b> แยกไฟล์ JSON และสคริปต์สุ่มเกร็ดความรู้สุขภาพ ลดขนาด Bundle และเพิ่มความเร็วในการโหลด</li>
+                                <li><b>🎲 ระบบสุ่มเรื่องใหม่อัตโนมัติ:</b> สุ่มเรื่องใหม่ทุกครั้งที่เปิดแอป พร้อม Cache-busting ใน Service Worker</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.6.0 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.6.0 (Admin Message Audit Logs & Prompt Fonts Migration)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">19 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📨 ระบบบันทึกประวัติการส่งข้อความของผู้ดูแลระบบ (Audit Logging):</b> ทุกครั้งที่แอดมินส่งข้อความ ระบบจะบันทึก Log ลง Cloud Firestore คอลเลกชัน <code>admin_messages_log</code> อัตโนมัติ พร้อมชื่อผู้ส่ง, อีเมล, วันเวลา และสถานะการส่ง</li>
+                                <li><b>🎨 เปลี่ยนระบบ Typography ทั้งเว็บเป็น Google Fonts 'Prompt':</b> ยกระดับ UI/UX สวยงาม ทันสมัย สบายตาทั้งภาษาไทยและอังกฤษ</li>
+                                <li><b>🏁 Fasting Completion & Autophagy Engine:</b> ระบบคำนวณและประเมินระยะการอดอาหาร พร้อมหน้าต่างสรุปผล</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.5.0 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.5.0 (Admin Direct & Broadcast Messaging Engine)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">19 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📢 ระบบส่งข้อความแจ้งเตือนเรียลไทม์ (Direct & Broadcast):</b> แอดมินสามารถส่งข้อความแจ้งเตือนรายคน หรือบรอดแคสต์ถึงผู้ใช้ทุกคนพร้อมกัน โดยข้อมูลจะซิงค์ผ่าน Firestore เข้าสู่อุปกรณ์ของผู้ใช้ทันที</li>
+                                <li><b>🔒 Firestore Security Rules Refactor:</b> ป้องกันการเข้าถึงข้อมูลโดยไม่ได้รับอนุญาต ตรวจสอบสิทธิ์ผู้ดูแลระบบ (benznova01@gmail.com)</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.4.0 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.4.0 (Admin Dashboard & Analytics Launch)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">19 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🛡️ เปิดตัวหน้าควบคุมผู้ดูแลระบบ (Admin Dashboard):</b> ระบบแดชบอร์ดเฉพาะแอดมิน ติดตามรายชื่อผู้ใช้, สถิติ Daily Active Users (DAU), มื้ออาหารรวม, น้ำดื่มรวม และ Peak Hours</li>
+                                <li><b>🔍 ระบบส่องสมุดบันทึกรายคน (User Inspection Modal):</b> ตรวจสอบรายการอาหาร น้ำดื่ม และสารอาหารรายบุคคลเพื่อการดูแลสุขภาพอย่างใกล้ชิด</li>
+                                <li><b>⏱️ Intermittent Fasting (IF) Engine:</b> รองรับแผน 16:8, 18:6, 14:10, 20:4 พร้อมระบบจับเวลาเบื้องหลัง</li>
+                            </ul>
+                        </div>
+
                     </div>
                 </div>
             </div>
