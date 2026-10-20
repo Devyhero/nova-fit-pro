@@ -20,9 +20,9 @@ function isUatEnvironment() {
     return host.includes('uat') || host === 'localhost' || host === '127.0.0.1';
 }
 
-// Control AI Snap visibility: Hidden on PROD as requested, only active on UAT / Local
+// Control AI Snap visibility: Enabled across all environments (PROD & UAT)
 function isAiSnapEnabled() {
-    return isUatEnvironment();
+    return true;
 }
 
 function applyAiSnapEnvironmentGate() {
@@ -703,4 +703,5 @@ window.getTodayAiScanUsage = getTodayAiScanUsage;
 window.incrementAiScanUsage = incrementAiScanUsage;
 window.isAiQuotaExceeded = isAiQuotaExceeded;
 window.isUatEnvironment = isUatEnvironment;
+window.isAiSnapEnabled = isAiSnapEnabled;
 window.isUserAdmin = isUserAdmin;
