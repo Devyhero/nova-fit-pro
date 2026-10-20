@@ -684,8 +684,8 @@ window.switchAdminTab = function (tabId) {
         window.loadAdminMessageLogs();
     }
     if (tabId === 'system_ai') {
+        if (window.loadAdminGeminiApiKey) window.loadAdminGeminiApiKey();
         if (window.loadAdminAiScanLogs) window.loadAdminAiScanLogs();
-        window.loadAdminGeminiApiKey();
     }
 };
 
@@ -1150,12 +1150,12 @@ window.loadAdminGeminiApiKey = async function () {
             const key = data.geminiApiKey || '';
             if (input && !input.value) {
                 input.value = key;
-                const quota = data.dailyQuota || 15;
-                const quotaInput = document.getElementById('adminAiDailyQuotaInput');
-                if (quotaInput) quotaInput.value = quota;
-                const quotaStat = document.getElementById('statAiCurrentQuota');
-                if (quotaStat) quotaStat.textContent = quota + '/คน';
             }
+            const quota = data.dailyQuota || 15;
+            const quotaInput = document.getElementById('adminAiDailyQuotaInput');
+            if (quotaInput) quotaInput.value = quota;
+            const quotaStat = document.getElementById('statAiCurrentQuota');
+            if (quotaStat) quotaStat.textContent = `${quota}/คน`;
             if (badge) {
                 if (key) {
                     badge.textContent = '✓ บันทึกคีย์แล้ว (พร้อมใช้งาน)';

@@ -115,7 +115,11 @@ server.listen(PORT, async () => {
         };
 
         // Wait for page load and initialization
-        await new Promise(r => setTimeout(r, 1000));
+        for (let i = 0; i < 30; i++) {
+            const ready = await evalJs('document.readyState === "complete" && !!document.getElementById("btnToolsProfileSettings")');
+            if (ready) break;
+            await new Promise(r => setTimeout(r, 200));
+        }
         await evalJs('new Promise(r => setTimeout(r, 500))');
 
         // Test 1: Check Header Profile Drawer Button
