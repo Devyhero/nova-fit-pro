@@ -394,9 +394,16 @@ async function analyzeAiPhoto() {
         return;
     }
 
-    // Call Real Gemini 1.5 Flash Vision API (Speed-optimized with 12s Timeout)
-    try {
-        const promptText = `
+    // Call Real Gemini Vision API with Multi-Model Fallback Chain
+    // (gemini-3.5-flash-lite ~1.1s -> gemini-3.1-flash-lite ~1.7s -> gemini-flash-lite-latest ~2.6s -> gemini-3.8-flash)
+    const candidateModels = [
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
+
+    const promptText = `
 คุณคือนักกำหนดอาหารและผู้เชี่ยวชาญด้านโภชนาการไทย โปรดวิเคราะห์รูปภาพอาหารนี้อย่างละเอียด และตอบกลับเป็น JSON เท่านั้น โดยมีโครงสร้างดังนี้:
 {
   "foodName": "ชื่ออาหารภาษาไทย",
@@ -412,54 +419,113 @@ async function analyzeAiPhoto() {
 คำแนะนำเพิ่มเติมจากผู้ใช้: ${note || "ไม่มี"}
 `;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const statusEl = document.getElementById('aiSnapLoadingStatusText');
+    const subStatusEl = document.getElementById('aiSnapLoadingSubText');
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            signal: controller.signal,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            { text: promptText },
-                            {
-                                inline_data: {
-                                    mime_type: _currentAiImageMime,
-                                    data: _currentAiImageBase64
-                                }
-                            }
-                        ]
-                    }
-                ],
-                generationConfig: {
-                    response_mime_type: 'application/json',
-                    temperature: 0.2
-                }
-            })
-        });
-        clearTimeout(timeoutId);
+    let parsedResult = null;
+    let successfulModel = null;
+    let lastError = null;
 
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error?.message || 'Gemini API Error');
+    for (let i = 0; i < candidateModels.length; i++) {
+        const modelName = candidateModels[i];
+        if (statusEl) {
+            statusEl.textContent = i === 0
+                ? 'AI กำลังแยกแยะวัตถุดิบและคำนวณแคลอรี...'
+                : `กำลังเชื่อมต่อช่องทางสำรอง (${modelName.replace('gemini-', '')})...`;
+        }
+        if (subStatusEl) {
+            subStatusEl.textContent = i === 0
+                ? 'วิเคราะห์สัดส่วนอาหาร คำนวณโปรตีน คาร์โบไฮเดรต และไขมัน'
+                : 'ปรับความเร็วด้วย Gemini Flash-Lite ความเร็วสูงพิเศษ';
         }
 
-        const data = await response.json();
-        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!jsonText) throw new Error('ไม่ได้รับข้อมูลการตอบกลับจาก AI');
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s per candidate
 
-        const parsedResult = JSON.parse(jsonText);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [
+                                { text: promptText },
+                                {
+                                    inlineData: {
+                                        mimeType: _currentAiImageMime || 'image/jpeg',
+                                        data: _currentAiImageBase64
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        temperature: 0.2
+                    }
+                })
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                let errDetail = '';
+                try {
+                    const errJson = await response.json();
+                    errDetail = errJson.error?.message || response.statusText;
+                } catch (e) {
+                    errDetail = `HTTP ${response.status}`;
+                }
+
+                // If API key itself is rejected by Google, abort retry early
+                if (response.status === 400 && (errDetail.includes('API key') || errDetail.includes('INVALID_ARGUMENT'))) {
+                    throw new Error(`Google API Key ไม่ถูกต้อง: ${errDetail}`);
+                }
+                if (response.status === 403) {
+                    throw new Error(`Google API Key ถูกปฏิเสธ (403): ${errDetail}`);
+                }
+
+                console.warn(`Model ${modelName} returned HTTP ${response.status}: ${errDetail}. Attempting next model...`);
+                lastError = new Error(`${modelName} (${errDetail})`);
+                continue;
+            }
+
+            const data = await response.json();
+            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) {
+                console.warn(`Model ${modelName} returned empty candidate parts.`);
+                lastError = new Error(`${modelName}: ไม่พบผลลัพธ์จาก AI`);
+                continue;
+            }
+
+            parsedResult = JSON.parse(jsonText);
+            successfulModel = modelName;
+            break; // Succeeded! Break loop
+        } catch (err) {
+            console.warn(`Attempt with ${modelName} failed:`, err);
+            lastError = err;
+            if (err.message && err.message.includes('API Key')) {
+                break;
+            }
+        }
+    }
+
+    if (parsedResult) {
+        console.log(`[AI Snap] Success via model: ${successfulModel}`, parsedResult);
         incrementAiScanUsage();
         renderAiAnalysisResult(parsedResult, false);
-    } catch (err) {
-        console.error('Gemini Vision analysis failed:', err);
-        const errMsg = err.name === 'AbortError' ? 'คำขอหมดเวลา (Timeout 12 วินาที)' : (err.message || 'เกิดข้อผิดพลาด');
-        alert('⚠️ การเชื่อมต่อ Gemini: ' + errMsg + '\n\nระบบจะประเมินสารอาหารจากคลังจำลองให้ทันทีครับ');
+    } else {
+        console.error('All Gemini candidate models failed:', lastError);
+        const errMsg = (lastError && lastError.name === 'AbortError')
+            ? 'คำขอหมดเวลา (อินเทอร์เน็ตอาจช้าหรือสัญญาณหลุด)'
+            : ((lastError && lastError.message) || 'เซิร์ฟเวอร์ AI มีผู้ใช้งานหนาแน่น');
+
+        alert(`⚠️ การเชื่อมต่อ Gemini: ${errMsg}\n\nระบบจะประมาณการจากคลังเมนูอาหารตัวอย่างให้ก่อนครับ`);
         const fallback = DEMO_AI_FOODS[0];
         incrementAiScanUsage();
         renderAiAnalysisResult(fallback, true);
@@ -561,7 +627,7 @@ function saveAiAnalyzedMeal() {
 function promptEditGeminiApiKey() {
     const current = getGeminiApiKey();
     const input = prompt(
-        "🔑 กรุณากรอก Google Gemini API Key ของคุณ:\n(รับคีย์ฟรีได้ทันทีที่ https://aistudio.google.com/app/apikey)\n\n* คีย์ที่ถูกต้องจะขึ้นต้นด้วย 'AIzaSy...'\n* หากเว้นว่างไว้ ระบบจะใช้โหมดตัวอย่าง (Demo Simulation) ให้ทดสอบฟรี:",
+        "🔑 กรุณากรอก Google Gemini API Key ของคุณ:\n(รับคีย์ฟรีได้ทันทีที่ https://aistudio.google.com/app/apikey)\n\n* คีย์ที่ถูกต้องจะขึ้นต้นด้วย 'AIzaSy...' หรือ 'AQ....'\n* หากเว้นว่างไว้ ระบบจะใช้โหมดตัวอย่าง (Demo Simulation) ให้ทดสอบฟรี:",
         current
     );
 

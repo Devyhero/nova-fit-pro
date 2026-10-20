@@ -316,7 +316,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.7.1)
+                            <span>🚀</span> ประวัติอัปเดต (v5.7.2)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1141,12 +1141,26 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.7.1!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.7.2!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.7.1 -->
+                <!-- Latest Release: v5.7.2 -->
                 <div
                     class="p-3.5 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-1.5">
+                    <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
+                        <span>🚀 v5.7.2 (เพิ่มความเร็ว AI Snap 3 เท่า & ระบบสลับช่องทางสำรอง)</span>
+                        <span>20 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><b>⚡ สแกนรูปอาหารไวขึ้น 3 เท่า:</b> อัปเกรดเอนจิน Flash-Lite ตอบสนองเร็วเฉลี่ย ~1-2 วินาที ไม่ต้องรอนาน</li>
+                        <li><b>🛡️ เสริมความเสถียรช่องทางสำรอง:</b> มีระบบเปลี่ยนช่องทางเชื่อมต่อ AI อัตโนมัติเมื่อเครือข่ายหนาแน่น ป้องกันคำขอหมดเวลา</li>
+                        <li><b>📊 แสดงสถานะเรียลไทม์:</b> แจ้งความคืบหน้าระหว่างแยกแยะวัตถุดิบและคำนวณแคลอรีชัดเจน</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.7.1 -->
+                <div
+                    class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div class="flex justify-between font-bold text-purple-600 dark:text-purple-400">
                         <span>🚀 v5.7.1 (ปรับปรุงความเสถียร AI Snap & Log และ PWA Network)</span>
                         <span>20 ต.ค. 2026</span>
@@ -2384,10 +2398,10 @@
                         <div class="w-16 h-16 rounded-full border-4 border-purple-600 border-t-transparent animate-spin flex items-center justify-center"></div>
                         <span class="absolute inset-0 flex items-center justify-center text-xl">🔍</span>
                     </div>
-                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100">
+                    <div id="aiSnapLoadingStatusText" class="font-bold text-sm text-slate-800 dark:text-slate-100">
                         AI กำลังแยกแยะวัตถุดิบและคำนวณแคลอรี...
                     </div>
-                    <p class="text-[11px] text-slate-400 max-w-xs">
+                    <p id="aiSnapLoadingSubText" class="text-[11px] text-slate-400 max-w-xs">
                         ตรวจสอบสัดส่วนอาหาร คำนวณโปรตีน คาร์โบไฮเดรต และไขมัน
                     </p>
                 </div>
@@ -2478,19 +2492,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.7.1"></script>
+    <script src="food-db.js?v=5.7.2"></script>
 
-    <!-- Daily Health & Nutrition Tips Engine (v5.7.1) -->
-    <script src="health-tips.js?v=5.7.1"></script>
+    <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
+    <script src="health-tips.js?v=5.7.2"></script>
 
-    <!-- AI Snap & Log Engine (NEW v5.7.1) -->
-    <script src="ai-snap.js?v=5.7.1"></script>
+    <!-- AI Snap & Log Engine (NEW v5.7.2) -->
+    <script src="ai-snap.js?v=5.7.2"></script>
 
-    <!-- Modularized Core Application Logic (v5.7.1 - High Performance) -->
-    <script src="app.js?v=5.7.1"></script>
+    <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
+    <script src="app.js?v=5.7.2"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.7.1"></script>
+    <script type="module" src="firebase-sync.js?v=5.7.2"></script>
 
 </body>
 

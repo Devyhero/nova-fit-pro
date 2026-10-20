@@ -505,8 +505,21 @@
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
 
-                        <!-- Release: v5.7.1 -->
+                        <!-- Release: v5.7.2 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.7.2 (Gemini Multi-Model Fallback Engine & High-Demand Spike Mitigation)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>⚡ สถาปัตยกรรม Multi-Model Fallback:</b> ปรับปรุงลำดับการเชื่อมต่อ Gemini Vision API ลำดับแรกใช้ <code>gemini-3.5-flash-lite</code> (ความเร็วเฉลี่ย ~1.09 วินาที) สลับไป <code>gemini-3.1-flash-lite</code>, <code>gemini-flash-lite-latest</code> และ <code>gemini-3.8-flash</code> อัตโนมัติ ป้องกันปัญหา HTTP 503 Overloaded Spikes และ Timeout 12 วินาทีโดยสิ้นเชิง</li>
+                                <li><b>🔑 รองรับ Google AI Studio Format:</b> รองรับคีย์ขึ้นต้นด้วย <code>AQ.</code> และ <code>AIzaSy</code> ส่งผ่าน Header <code>x-goog-api-key</code> พร้อม Payload แบบมาตรฐาน <code>inlineData</code> และ <code>responseMimeType</code></li>
+                                <li><b>🛠️ ยกระดับ Admin Ping Tool:</b> ปรับปรุง <code>testAdminGeminiApiKey()</code> พร้อมตั้ง Timeout 10s และทดสอบความเข้ากันได้ของโมเดลล่าสุดทันที</li>
+                            </ul>
+                        </div>
+
+                        <!-- Release: v5.7.1 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🚀 v5.7.1 (PWA Service Worker Gemini API Network Bypass Fix)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">20 ต.ค. 2026</span>

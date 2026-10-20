@@ -1208,26 +1208,49 @@ window.testAdminGeminiApiKey = async function () {
         return;
     }
 
-    try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    { parts: [{ text: "ping" }] }
-                ]
-            })
-        });
+    const testModels = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest'];
+    let lastErr = null;
+    let workedModel = null;
 
-        if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error?.message || 'HTTP ' + res.status);
+    for (const m of testModels) {
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000);
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': key
+                },
+                body: JSON.stringify({
+                    contents: [
+                        { parts: [{ text: "Ping test connection" }] }
+                    ]
+                })
+            });
+            clearTimeout(timer);
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error?.message || 'HTTP ' + res.status);
+            }
+
+            const data = await res.json();
+            workedModel = m;
+            break;
+        } catch (e) {
+            lastErr = e;
+            if (e.message && (e.message.includes('API key') || e.message.includes('INVALID_ARGUMENT'))) {
+                break;
+            }
         }
+    }
 
-        const data = await res.json();
-        alert('🎉 การเชื่อมต่อสำเร็จ (Connection Verified 100%)!\n\nGemini API ตอบกลับปกติ คีย์นี้สามารถใช้งานฟังก์ชัน AI Snap & Log ได้สมบูรณ์');
-    } catch (err) {
-        console.error('Gemini test ping failed:', err);
-        alert('❌ การทดสอบล้มเหลว: ' + err.message);
+    if (workedModel) {
+        alert(`🎉 การเชื่อมต่อสำเร็จ (Connection Verified 100%)!\n\nGemini API (${workedModel}) ตอบกลับปกติ คีย์นี้สามารถใช้งานฟังก์ชัน AI Snap & Log ได้อย่างสมบูรณ์แบบ`);
+    } else {
+        console.error('Gemini test ping failed:', lastErr);
+        alert('❌ การทดสอบล้มเหลว: ' + (lastErr?.message || 'ไม่สามารถเชื่อมต่อได้'));
     }
 };
