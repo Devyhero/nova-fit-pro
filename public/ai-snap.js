@@ -1108,8 +1108,120 @@ function simulateDemoVoiceTextAnalysis(text) {
     };
 }
 
-// Call Google Gemini API to analyze Thai natural text / voice transcription
-async function analyzeAiVoiceText() {
+// ==========================================
+// Smart Cloud & Local Food Cache Engine (v5.8.5)
+// ==========================================
+const LOCAL_FOOD_CACHE_KEY = 'novafit_ai_food_cache';
+
+function normalizeFoodCacheKey(text) {
+    if (!text || typeof text !== 'string') return '';
+    let clean = text.toLowerCase().trim();
+    clean = clean.replace(/[\n\r\t]+/g, ' ');
+    // Keep Unicode letters, marks (Thai vowels/tones), numbers and spaces
+    clean = clean.replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ');
+    // Remove common Thai polite / filler words (surrounded by space or at start/end)
+    const fillerRegex = /(?:^|\s+)(?:ครับ|ค่ะ|คับ|คะ|หน่อย|ด้วย|ช่วย|นะ|จ้ะ|จ้า)(?=\s+|$)/gu;
+    while (fillerRegex.test(clean)) {
+        clean = clean.replace(fillerRegex, ' ');
+    }
+    clean = clean.replace(/\s+/g, ' ').trim();
+    return clean;
+}
+
+function generateFoodCacheDocId(normalizedKey) {
+    if (!normalizedKey) return '';
+    return normalizedKey.replace(/[\/\\]/g, '-').slice(0, 180).trim();
+}
+
+function saveToLocalAiFoodCache(docId, data) {
+    if (!docId || !data) return;
+    try {
+        let cache = {};
+        const cachedStr = localStorage.getItem(LOCAL_FOOD_CACHE_KEY);
+        if (cachedStr) {
+            try { cache = JSON.parse(cachedStr) || {}; } catch (e) {}
+        }
+        const keys = Object.keys(cache);
+        if (keys.length > 80) {
+            delete cache[keys[0]];
+        }
+        cache[docId] = data;
+        localStorage.setItem(LOCAL_FOOD_CACHE_KEY, JSON.stringify(cache));
+    } catch (err) {
+        console.warn('saveToLocalAiFoodCache error:', err);
+    }
+}
+
+async function lookupAiFoodSmartCache(rawText) {
+    const key = normalizeFoodCacheKey(rawText);
+    if (!key || key.length < 2) return null;
+    const docId = generateFoodCacheDocId(key);
+
+    // Level 1: LocalStorage Cache (Instant ~0.001s)
+    try {
+        const cachedStr = localStorage.getItem(LOCAL_FOOD_CACHE_KEY);
+        if (cachedStr) {
+            const cache = JSON.parse(cachedStr);
+            if (cache[docId] && cache[docId].items && cache[docId].items.length > 0) {
+                console.log('⚡ Smart Cache Hit (LocalStorage):', docId);
+                return {
+                    data: cache[docId],
+                    source: 'local'
+                };
+            }
+        }
+    } catch (e) {}
+
+    // Level 2: Cloud Firestore Cache (~0.1s)
+    if (window.fetchAiFoodCacheFromCloud) {
+        try {
+            const cloudData = await window.fetchAiFoodCacheFromCloud(docId);
+            if (cloudData && cloudData.items && cloudData.items.length > 0) {
+                console.log('☁️ Smart Cache Hit (Cloud Firestore):', docId);
+                saveToLocalAiFoodCache(docId, cloudData);
+                return {
+                    data: cloudData,
+                    source: 'cloud'
+                };
+            }
+        } catch (e) {}
+    }
+
+    return null;
+}
+
+async function saveAiFoodSmartCache(rawText, resultData) {
+    const key = normalizeFoodCacheKey(rawText);
+    if (!key || key.length < 2 || !resultData || !resultData.items || resultData.items.length === 0) return;
+    const docId = generateFoodCacheDocId(key);
+
+    const payload = {
+        key: key,
+        rawQuery: rawText,
+        summaryTitle: resultData.summaryTitle || 'สรุปรายการอาหาร',
+        suggestedMeal: resultData.suggestedMeal || 'lunch',
+        totalCal: resultData.totalCal || 0,
+        totalP: resultData.totalP || 0,
+        totalC: resultData.totalC || 0,
+        totalF: resultData.totalF || 0,
+        items: resultData.items,
+        healthyTip: resultData.healthyTip || '',
+        cachedAt: new Date().toISOString()
+    };
+
+    saveToLocalAiFoodCache(docId, payload);
+
+    if (window.saveAiFoodCacheToCloud) {
+        window.saveAiFoodCacheToCloud(docId, payload).catch(() => {});
+    }
+}
+
+function reAnalyzeAiVoiceWithGemini() {
+    analyzeAiVoiceText(true);
+}
+
+// Call Google Gemini API to analyze Thai natural text / voice transcription (with Smart Cache integration)
+async function analyzeAiVoiceText(forceRefresh = false) {
     const textInput = document.getElementById('aiVoiceTextInput');
     const text = (textInput?.value || '').trim();
 
@@ -1117,6 +1229,20 @@ async function analyzeAiVoiceText() {
         alert('กรุณาพิมพ์หรือพูดชื่อเมนูอาหารก่อนกดวิเคราะห์ครับ');
         textInput?.focus();
         return;
+    }
+
+    // Step 1: Check Smart Cache first (unless user explicitly requests re-analysis)
+    if (!forceRefresh) {
+        try {
+            const cachedMatch = await lookupAiFoodSmartCache(text);
+            if (cachedMatch && cachedMatch.data) {
+                // Instant cache hit! No daily quota consumed, zero Gemini tokens spent!
+                renderAiVoiceResultView(cachedMatch.data, false, true);
+                return;
+            }
+        } catch (e) {
+            console.warn('Smart cache check error:', e);
+        }
     }
 
     // Safeguard 1: Auth check on Production
@@ -1147,7 +1273,8 @@ async function analyzeAiVoiceText() {
         setTimeout(() => {
             const demoResult = simulateDemoVoiceTextAnalysis(text);
             incrementAiScanUsage();
-            renderAiVoiceResultView(demoResult, true);
+            saveAiFoodSmartCache(text, demoResult);
+            renderAiVoiceResultView(demoResult, true, false);
         }, 1100);
         return;
     }
@@ -1263,17 +1390,19 @@ async function analyzeAiVoiceText() {
 
     if (parsedResult && parsedResult.items && parsedResult.items.length > 0) {
         incrementAiScanUsage();
-        renderAiVoiceResultView(parsedResult, false);
+        saveAiFoodSmartCache(text, parsedResult);
+        renderAiVoiceResultView(parsedResult, false, false);
     } else {
         console.warn('Gemini Voice parse failed, falling back to heuristic simulation:', lastError);
         const fallback = simulateDemoVoiceTextAnalysis(text);
         incrementAiScanUsage();
-        renderAiVoiceResultView(fallback, true);
+        saveAiFoodSmartCache(text, fallback);
+        renderAiVoiceResultView(fallback, true, false);
     }
 }
 
 // Render multi-item analyzed result view
-function renderAiVoiceResultView(resultData, isDemo = false) {
+function renderAiVoiceResultView(resultData, isDemo = false, isCache = false) {
     _currentAiVoiceResult = resultData;
     window._currentAiVoiceResult = _currentAiVoiceResult;
     window._aiVoiceCurrentResult = _currentAiVoiceResult;
@@ -1284,6 +1413,8 @@ function renderAiVoiceResultView(resultData, isDemo = false) {
 
     const summaryTitleEl = document.getElementById('aiVoiceSummaryTitle');
     const demoBadgeEl = document.getElementById('aiVoiceDemoBadge');
+    const cacheBadgeEl = document.getElementById('aiVoiceCacheBadge');
+    const cacheRecomputeRow = document.getElementById('aiVoiceCacheRecomputeRow');
     const mealSelect = document.getElementById('aiVoiceMealSelect');
     const itemCountText = document.getElementById('aiVoiceItemCountText');
     const itemsContainer = document.getElementById('aiVoiceItemsListContainer');
@@ -1291,6 +1422,8 @@ function renderAiVoiceResultView(resultData, isDemo = false) {
 
     if (summaryTitleEl) summaryTitleEl.textContent = resultData.summaryTitle || 'สรุปรายการอาหาร';
     if (demoBadgeEl) demoBadgeEl.classList.toggle('hidden', !isDemo);
+    if (cacheBadgeEl) cacheBadgeEl.classList.toggle('hidden', !isCache);
+    if (cacheRecomputeRow) cacheRecomputeRow.classList.toggle('hidden', !isCache);
 
     if (mealSelect) {
         mealSelect.value = resultData.suggestedMeal || getSuggestedMealByHour();
@@ -1480,6 +1613,11 @@ window.requestGeminiCoachAdvice = requestGeminiCoachAdvice;
 window.openAiVoiceModal = () => openAiSnapModal('voice');
 window.switchAiModalTab = switchAiModalTab;
 window.toggleAiVoiceRecording = toggleAiVoiceRecording;
+window.reAnalyzeAiVoiceWithGemini = reAnalyzeAiVoiceWithGemini;
+window.normalizeFoodCacheKey = normalizeFoodCacheKey;
+window.generateFoodCacheDocId = generateFoodCacheDocId;
+window.lookupAiFoodSmartCache = lookupAiFoodSmartCache;
+window.saveAiFoodSmartCache = saveAiFoodSmartCache;
 window.startAiVoiceRecording = startAiVoiceRecording;
 window.stopAiVoiceRecording = stopAiVoiceRecording;
 window.isSpeechRecording = () => _isSpeechRecording;

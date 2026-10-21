@@ -738,6 +738,48 @@ window.firebaseDb = db;
 window.firestoreCollection = collection;
 window.firestoreAddDoc = addDoc;
 
+// ==========================================
+// Global AI Food Cloud Cache Engine (v5.8.5)
+// ==========================================
+window.fetchAiFoodCacheFromCloud = async function(docId) {
+    if (!docId) return null;
+    try {
+        const docRef = doc(db, 'ai_food_cache', docId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            try {
+                updateDoc(docRef, {
+                    hitCount: (Number(data.hitCount) || 1) + 1,
+                    lastAccessedAt: new Date().toISOString()
+                }).catch(() => {});
+            } catch (e) {}
+            return data;
+        }
+    } catch (err) {
+        console.warn('Cloud food cache lookup error:', err);
+    }
+    return null;
+};
+
+window.saveAiFoodCacheToCloud = async function(docId, data) {
+    if (!docId || !data) return false;
+    try {
+        const docRef = doc(db, 'ai_food_cache', docId);
+        await setDoc(docRef, {
+            ...data,
+            hitCount: 1,
+            createdAt: new Date().toISOString(),
+            lastAccessedAt: new Date().toISOString(),
+            contributedBy: window.currentUser ? window.currentUser.uid : 'anonymous'
+        }, { merge: true });
+        return true;
+    } catch (err) {
+        console.warn('Cloud food cache save error:', err);
+        return false;
+    }
+};
+
 
 
 // ==========================================

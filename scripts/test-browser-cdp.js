@@ -1026,9 +1026,55 @@ server.listen(PORT, async () => {
             throw new Error('Living App Companion test failed');
         }
 
-        // Test 30: Admin Table Pagination Engine
+        // Test 30: Smart Cloud & Local Food Cache Engine (v5.8.5)
+        console.log('--- Test 30: Smart Cloud & Local Food Cache Engine ---');
+        const cacheTestResult = await evalJs(`(() => {
+            // 1. Verify Normalizer
+            const raw = '  ข้าวมันไก่ไม่หนัง 1 จาน ครับ! ';
+            const norm = window.normalizeFoodCacheKey(raw);
+            const normMatches = norm === 'ข้าวมันไก่ไม่หนัง 1 จาน';
 
-        console.log('--- Test 30: Admin Table Pagination Engine ---');
+            // 2. Verify UI elements exist
+            const cacheBadge = document.getElementById('aiVoiceCacheBadge');
+            const recomputeRow = document.getElementById('aiVoiceCacheRecomputeRow');
+            const hasElements = !!cacheBadge && !!recomputeRow;
+
+            // 3. Save item to smart cache
+            window.saveAiFoodSmartCache('ข้าวมันไก่พิเศษ 1 จาน', {
+                summaryTitle: 'ข้าวมันไก่พิเศษ',
+                suggestedMeal: 'lunch',
+                totalCal: 550,
+                totalP: 32,
+                totalC: 60,
+                totalF: 15,
+                items: [{ foodName: 'ข้าวมันไก่', servingSize: '1 จาน', cal: 550, p: 32, c: 60, f: 15 }],
+                healthyTip: 'พลังงานครบถ้วน'
+            });
+
+            // 4. Query from cache
+            let localHitOk = false;
+            try {
+                const rawCache = localStorage.getItem('novafit_ai_food_cache');
+                const parsed = JSON.parse(rawCache || '{}');
+                const matchedKey = window.generateFoodCacheDocId ? window.generateFoodCacheDocId('ข้าวมันไก่พิเศษ 1 จาน') : 'ข้าวมันไก่พิเศษ 1 จาน';
+                localHitOk = !!parsed[matchedKey];
+            } catch(e) {}
+
+            return {
+                normMatches,
+                hasElements,
+                localHitOk,
+                hasReAnalyzeFn: typeof window.reAnalyzeAiVoiceWithGemini === 'function'
+            };
+        })()`);
+        console.log('Smart Cache Test Result:', cacheTestResult);
+        if (!cacheTestResult.normMatches || !cacheTestResult.hasElements || !cacheTestResult.localHitOk || !cacheTestResult.hasReAnalyzeFn) {
+            throw new Error('Smart Cache Engine verification failed: ' + JSON.stringify(cacheTestResult));
+        }
+
+        // Test 31: Admin Table Pagination Engine
+
+        console.log('--- Test 31: Admin Table Pagination Engine ---');
         await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
         
         let isReady = false;
@@ -1066,8 +1112,8 @@ server.listen(PORT, async () => {
         console.log('Pagination control rendered correct slice text:', paginationRenderTest);
         if (!paginationRenderTest) throw new Error('Pagination control failed to render expected item range text');
 
-        // Test 31: Admin AI Scan Logs Table Data Mapping Test
-        console.log('--- Test 31: Admin AI Scan Logs Table Data Mapping ---');
+        // Test 32: Admin AI Scan Logs Table Data Mapping Test
+        console.log('--- Test 32: Admin AI Scan Logs Table Data Mapping ---');
         const aiScanTableTest = await evalJs(`(() => {
             window._currentAiScanLogs = [
                 {
