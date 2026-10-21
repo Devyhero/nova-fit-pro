@@ -757,6 +757,7 @@ server.listen(PORT, async () => {
         }
 
         await evalJs('closeAiSnapModal()');
+        await new Promise(r => setTimeout(r, 350));
 
         // Test 23: AI Macro Coach & Nutrition Advisory Engine (v5.8.0)
         console.log('--- Test 23: AI Macro Coach & Nutrition Advisory Engine ---');
@@ -920,6 +921,7 @@ server.listen(PORT, async () => {
         // 8. Save meals to diary
         const initialDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
         await evalJs('saveAiVoiceAnalyzedMeals()');
+        await new Promise(r => setTimeout(r, 350));
         const afterSaveDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
         const isModalClosed = await evalJs('document.getElementById("aiSnapModal").classList.contains("hidden")');
         console.log('Meals saved from voice log:', { initialDateLogsCount, afterSaveDateLogsCount, isModalClosed });
@@ -1144,6 +1146,75 @@ server.listen(PORT, async () => {
         console.log('AI Scan table rendered properly with real data:', aiScanTableTest);
         if (!aiScanTableTest.hasFood || !aiScanTableTest.hasUser || !aiScanTableTest.hasCal || !aiScanTableTest.hasMacros || !aiScanTableTest.hasUat) {
             throw new Error('AI scan logs table rendering failed to display mapped data!');
+        }
+
+        // Verify Admin Token Savings elements exist on admin.html
+        const adminCacheStatsTest = await evalJs(`(() => {
+            const hasTokensSavedCard = !!document.getElementById('statAiTokensSaved');
+            const hasUniqueFoods = !!document.getElementById('statCachedUniqueFoods');
+            const hasTopDishes = !!document.getElementById('topCachedDishesList');
+            return { hasTokensSavedCard, hasUniqueFoods, hasTopDishes };
+        })()`);
+        console.log('Admin Token Savings elements exist on admin.html:', adminCacheStatsTest);
+        if (!adminCacheStatsTest.hasTokensSavedCard || !adminCacheStatsTest.hasUniqueFoods || !adminCacheStatsTest.hasTopDishes) {
+            throw new Error('Admin Token Savings elements missing from DOM!');
+        }
+
+        // Test 33: Visual Photo Recents & Universal Search Cache Integration (v5.8.6)
+        console.log('--- Test 33: Visual Photo Recents & Universal Search Cache Integration ---');
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/' });
+        let isMainReady = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isMainReady = await evalJs('typeof window.saveToRecentPhotos === "function" && typeof window.onSearchFood === "function"');
+                if (isMainReady) break;
+            } catch (e) {}
+        }
+        console.log('Main app page reloaded and ready:', isMainReady);
+        
+        // 1. Verify Visual Photo Recents saving and rendering
+        const recentsTest = await evalJs(`(() => {
+            saveToRecentPhotos({
+                foodName: 'สเต็กอกไก่พริกไทยดำ (Test Photo)',
+                cal: 290,
+                p: 45,
+                c: 5,
+                f: 8,
+                servingSize: '1 จาน'
+            });
+            renderAiSnapRecentDishes();
+            const sectionVisible = !document.getElementById('aiSnapRecentDishesSection').classList.contains('hidden');
+            const listHtml = document.getElementById('aiSnapRecentDishesList').innerHTML;
+            const hasDish = listHtml.includes('สเต็กอกไก่พริกไทยดำ');
+            const hasCal = listHtml.includes('290 kcal');
+            return { sectionVisible, hasDish, hasCal };
+        })()`);
+        console.log('Visual Photo Recents rendering verified:', recentsTest);
+        if (!recentsTest.sectionVisible || !recentsTest.hasDish || !recentsTest.hasCal) {
+            throw new Error('Visual photo recents failed to render saved dishes!');
+        }
+
+        // 2. Verify Universal Search retrieves from Cache
+        const cacheSearchTest = await evalJs(`(() => {
+            const sampleCache = {
+                'salmon-salad-test': {
+                    items: [
+                        { foodName: 'สลัดแซลมอนย่างเทอริยากิ (Cache)', p: 30, c: 15, f: 12, cal: 310, servingSize: '1 จาน' }
+                    ]
+                }
+            };
+            localStorage.setItem('novafit_ai_food_cache', JSON.stringify(sampleCache));
+            onSearchFood('แซลมอนย่าง');
+            const searchHtml = document.getElementById('quickFoodList').innerHTML;
+            const hasCachedFood = searchHtml.includes('สลัดแซลมอนย่างเทอริยากิ');
+            const hasCacheBadge = searchHtml.includes('⚡ AI') || searchHtml.includes('⚡ คลังจำ AI');
+            clearFoodSearch();
+            return { hasCachedFood, hasCacheBadge };
+        })()`);
+        console.log('Universal Search with Cache verified:', cacheSearchTest);
+        if (!cacheSearchTest.hasCachedFood || !cacheSearchTest.hasCacheBadge) {
+            throw new Error('Universal search failed to retrieve and display cached meal!');
         }
 
         ws.close();

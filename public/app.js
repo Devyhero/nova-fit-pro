@@ -1,4 +1,4 @@
-const APP_VERSION = '5.8.5';
+const APP_VERSION = '5.8.6';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -1070,6 +1070,57 @@ const APP_VERSION = '5.8.5';
                         }
                     });
                 });
+
+                // ALSO SEARCH SMART CACHE & AI MEMORY (v5.8.6)
+                try {
+                    const rawCache = localStorage.getItem('novafit_ai_food_cache');
+                    if (rawCache) {
+                        const parsedCache = JSON.parse(rawCache);
+                        Object.values(parsedCache).forEach(entry => {
+                            const entryItems = Array.isArray(entry.items) ? entry.items : [];
+                            entryItems.forEach(food => {
+                                if (food && food.foodName && !seen.has(food.foodName) && matchesQuery(food.foodName, 'แคช AI')) {
+                                    seen.add(food.foodName);
+                                    items.push({
+                                        name: food.foodName,
+                                        protein: Math.round(Number(food.p) || 0),
+                                        carbs: Math.round(Number(food.c) || 0),
+                                        fat: Math.round(Number(food.f) || 0),
+                                        calories: Math.round(Number(food.cal) || 0),
+                                        servingSize: food.servingSize || '1 ที่',
+                                        catName: '⚡ คลังจำ AI',
+                                        isAiCache: true
+                                    });
+                                }
+                            });
+                        });
+                    }
+                } catch (cacheErr) {
+                    console.warn('Cache search error:', cacheErr);
+                }
+
+                // ALSO SEARCH RECENT SNAP PHOTOS (v5.8.6)
+                try {
+                    const rawPhotos = localStorage.getItem('novafit_recent_photos');
+                    if (rawPhotos) {
+                        const parsedPhotos = JSON.parse(rawPhotos);
+                        parsedPhotos.forEach(pDish => {
+                            if (pDish && pDish.foodName && !seen.has(pDish.foodName) && matchesQuery(pDish.foodName, 'สแกนรูป')) {
+                                seen.add(pDish.foodName);
+                                items.push({
+                                    name: pDish.foodName,
+                                    protein: Math.round(Number(pDish.p) || 0),
+                                    carbs: Math.round(Number(pDish.c) || 0),
+                                    fat: Math.round(Number(pDish.f) || 0),
+                                    calories: Math.round(Number(pDish.cal) || 0),
+                                    servingSize: pDish.servingSize || '1 ที่',
+                                    catName: '📸 สแกนล่าสุด',
+                                    isAiCache: true
+                                });
+                            }
+                        });
+                    }
+                } catch (photoErr) {}
             } else if (state.selectedCategory === 'favorites') {
                 const favSet = new Set(state.favorites || []);
                 categories.forEach(cat => {
@@ -1154,6 +1205,7 @@ const APP_VERSION = '5.8.5';
                                     <span class="text-blue-500 dark:text-blue-400 font-semibold">P:${item.protein}g</span>
                                     <span class="text-amber-500 dark:text-amber-400 font-semibold">C:${item.carbs}g</span>
                                     <span class="text-rose-500 dark:text-rose-400 font-semibold">F:${item.fat}g</span>
+                                    ${item.isAiCache ? '<span class="px-1.5 py-0.2 rounded-md font-bold text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400">⚡ AI</span>' : ''}
                                     ${item.catName ? `<span class="opacity-70 text-[11px]">• ${item.catName}</span>` : ''}
                                 </div>
                             </div>
@@ -4422,6 +4474,10 @@ const APP_VERSION = '5.8.5';
 function openModalAnimated(modalId, onOpened) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+    if (modal._closeTimer) {
+        clearTimeout(modal._closeTimer);
+        modal._closeTimer = null;
+    }
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
     requestAnimationFrame(() => {
@@ -4437,11 +4493,15 @@ function closeModalAnimated(modalId, onClosed) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.remove('modal-open');
-    setTimeout(() => {
+    if (modal._closeTimer) {
+        clearTimeout(modal._closeTimer);
+    }
+    modal._closeTimer = setTimeout(() => {
         modal.classList.add('hidden');
         modal.style.display = 'none';
         document.body.style.overflow = '';
         if (typeof onClosed === 'function') onClosed();
+        modal._closeTimer = null;
     }, 280);
 }
 

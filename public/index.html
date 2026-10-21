@@ -347,7 +347,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.5)
+                            <span>🚀</span> ประวัติอัปเดต (v5.8.6)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
@@ -1223,12 +1223,26 @@
             <div class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
                 <!-- What's New Automatic Banner on First Visit -->
                 <div id="whatsNewAlert"
-                    class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-purple-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
+                    class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.5!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.6!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.8.5 -->
+                <!-- Latest Release: v5.8.6 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
+                    <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
+                        <span>📸 v5.8.6 (จานที่สแกนล่าสุด & ค้นหาเมนูอัจฉริยะ)</span>
+                        <span class="text-xs text-slate-400 font-mono">21 ต.ค. 2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                        <li><b>📸 จานที่เคยสแกนล่าสุด (Visual Photo Recents):</b> เมนูอาหารที่คุณเคยถ่ายรูปจะถูกจดจำไว้ที่แถบด้านล่าง แตะปุ๊บ บันทึกซ้ำได้ทันทีใน 1 วินาที ไม่ต้องหยิบกล้องถ่ายใหม่</li>
+                        <li><b>🔍 ค้นหาเมนูอัจฉริยะ (Smart Memory Search):</b> ช่องค้นหาอาหารเชื่อมต่อกับคลังจำเมนูที่คุณเคยวิเคราะห์ไว้ พิมพ์ค้นหาแล้วเจอเมนูเฉพาะตัวของคุณได้ทันที</li>
+                        <li><b>⚡ ประหยัดเวลาและโควตา:</b> สแกนหรือพิมพ์ครั้งเดียว ระบบจำสูตรและแคลอรีไว้ใช้ซ้ำได้ตลอดไป</li>
+                        <li><b>✨ การแสดงผลรูปภาพลื่นไหล:</b> ขนาดภาพกะทัดรัด สบายตา ไม่เปลืองความจุเครื่อง ใช้งานง่ายบนมือถือทุกรุ่น</li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.8.5 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-purple-500/15 border border-emerald-500/30 space-y-2">
                     <div class="flex items-center justify-between font-bold text-emerald-600 dark:text-emerald-400 text-sm">
                         <span>⚡ v5.8.5 (คลังจำเมนูอัจฉริยะ Smart Cloud Memory & ความเร็วแสง)</span>
@@ -2559,6 +2573,22 @@
                             <li>หากเป็นเมนูสั่งพิเศษ เช่น ไม่เอามัน หรือหวานน้อย สามารถพิมพ์โน้ตบอก AI ได้ในขั้นตอนถัดไป</li>
                         </ul>
                     </div>
+
+                    <!-- RECENT PHOTO DISHES (Visual Recents / Quick Tap) -->
+                    <div id="aiSnapRecentDishesSection" class="hidden pt-3 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                <span>📸</span> <span>จานที่เคยสแกนล่าสุด (แตะเพื่อใช้ซ้ำ)</span>
+                            </span>
+                            <button type="button" onclick="clearAiSnapRecentDishes()"
+                                class="text-[11px] text-slate-400 hover:text-rose-500 transition cursor-pointer">
+                                ล้างประวัติ
+                            </button>
+                        </div>
+                        <div id="aiSnapRecentDishesList" class="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- STATE 2: Image Preview & Confirmation -->
@@ -2962,19 +2992,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.5"></script>
+    <script src="food-db.js?v=5.8.6"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.5"></script>
+    <script src="health-tips.js?v=5.8.6"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.5"></script>
+    <script src="ai-snap.js?v=5.8.6"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.5"></script>
+    <script src="app.js?v=5.8.6"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.5"></script>
+    <script type="module" src="firebase-sync.js?v=5.8.6"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

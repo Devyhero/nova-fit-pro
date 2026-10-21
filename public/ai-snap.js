@@ -305,6 +305,7 @@ function openAiSnapModal(initialTab = 'photo') {
     // Check 3: Ready to upload & take photo
     else {
         elUpload?.classList.remove('hidden');
+        renderAiSnapRecentDishes();
     }
 
     switchAiModalTab(initialTab);
@@ -678,9 +679,161 @@ function saveAiAnalyzedMeal() {
     if (window.triggerCloudSync) window.triggerCloudSync(false);
     recordAiScanAuditLog({ foodName: name, cal, p, c, f, servingSize: newLogItem.servingSize });
 
+    const rawThumb = _currentAiImageBase64 ? `data:${_currentAiImageMime};base64,${_currentAiImageBase64}` : '';
+    saveToRecentPhotos({
+        foodName: name,
+        cal,
+        p,
+        c,
+        f,
+        servingSize: newLogItem.servingSize,
+        ingredients: _currentAiAnalyzedData?.ingredients || [],
+        healthyTip: _currentAiAnalyzedData?.healthyTip || ''
+    }, rawThumb);
+
     closeAiSnapModal();
     if (window.showToast) {
         window.showToast(`📸 บันทึก "${name}" (${cal} kcal) ด้วย AI สำเร็จแล้ว!`);
+    }
+}
+
+// ==========================================
+// Visual Photo Recents Engine (v5.8.6)
+// ==========================================
+const RECENT_PHOTOS_STORAGE_KEY = 'novafit_recent_photos';
+
+function renderAiSnapRecentDishes() {
+    const section = document.getElementById('aiSnapRecentDishesSection');
+    const container = document.getElementById('aiSnapRecentDishesList');
+    if (!section || !container) return;
+
+    let recents = [];
+    try {
+        const raw = localStorage.getItem(RECENT_PHOTOS_STORAGE_KEY);
+        if (raw) recents = JSON.parse(raw) || [];
+    } catch (e) {}
+
+    if (!Array.isArray(recents) || recents.length === 0) {
+        section.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    section.classList.remove('hidden');
+    container.innerHTML = recents.map(dish => {
+        const safeName = (dish.foodName || 'เมนูอาหาร').replace(/'/g, "\\'");
+        const safeId = (dish.id || '').replace(/'/g, "\\'");
+        const imgThumb = dish.thumb
+            ? `<img src="${dish.thumb}" alt="${safeName}" class="w-full h-18 object-cover rounded-xl mb-1.5 shadow-2xs">`
+            : `<div class="w-full h-18 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 flex items-center justify-center text-2xl mb-1.5">🍱</div>`;
+
+        return `
+            <div onclick="selectRecentAiSnapDish('${safeId}')"
+                class="min-w-[130px] max-w-[145px] p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xs active:scale-95 transition-all cursor-pointer shrink-0 flex flex-col justify-between group">
+                <div>
+                    ${imgThumb}
+                    <div class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition" title="${safeName}">
+                        ${dish.foodName}
+                    </div>
+                    <div class="text-[10px] text-slate-400 truncate">${dish.servingSize || '1 ที่'}</div>
+                </div>
+                <div class="pt-1.5 mt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+                    <span class="text-xs font-black text-purple-600 dark:text-purple-400">${dish.cal} kcal</span>
+                    <span class="text-[10px] font-semibold text-blue-500">P:${dish.p}g</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function selectRecentAiSnapDish(dishId) {
+    let recents = [];
+    try {
+        const raw = localStorage.getItem(RECENT_PHOTOS_STORAGE_KEY);
+        if (raw) recents = JSON.parse(raw) || [];
+    } catch (e) {}
+
+    const found = recents.find(r => r.id === dishId);
+    if (!found) return;
+
+    _currentAiAnalyzedData = found;
+
+    // Switch to Result View directly!
+    document.getElementById('aiSnapUploadState')?.classList.add('hidden');
+    document.getElementById('aiSnapPreviewState')?.classList.add('hidden');
+    document.getElementById('aiSnapLoadingState')?.classList.add('hidden');
+    renderAiAnalysisResult(found, false);
+
+    if (window.showToast) {
+        window.showToast(`📸 โหลดข้อมูล "${found.foodName}" จากจานที่เคยสแกนแล้ว (ฟรี Token)`);
+    }
+}
+
+function clearAiSnapRecentDishes() {
+    localStorage.removeItem(RECENT_PHOTOS_STORAGE_KEY);
+    renderAiSnapRecentDishes();
+}
+
+function saveToRecentPhotos(dishData, rawDataUrl) {
+    if (!dishData || !dishData.foodName) return;
+    try {
+        let recents = [];
+        const raw = localStorage.getItem(RECENT_PHOTOS_STORAGE_KEY);
+        if (raw) {
+            try { recents = JSON.parse(raw) || []; } catch (e) {}
+        }
+
+        recents = recents.filter(r => r.foodName !== dishData.foodName);
+
+        const newEntry = {
+            id: 'recent_' + Date.now().toString(36),
+            foodName: dishData.foodName,
+            cal: Math.round(Number(dishData.cal) || 0),
+            p: Math.round(Number(dishData.p) || 0),
+            c: Math.round(Number(dishData.c) || 0),
+            f: Math.round(Number(dishData.f) || 0),
+            servingSize: dishData.servingSize || '1 ที่',
+            ingredients: Array.isArray(dishData.ingredients) ? dishData.ingredients : [],
+            healthyTip: dishData.healthyTip || '',
+            thumb: '',
+            savedAt: Date.now()
+        };
+
+        if (rawDataUrl && rawDataUrl.startsWith('data:image')) {
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const size = 120;
+                    let w = img.width, h = img.height;
+                    if (w > h) {
+                        h = Math.round((h * size) / w);
+                        w = size;
+                    } else {
+                        w = Math.round((w * size) / h);
+                        h = size;
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    newEntry.thumb = canvas.toDataURL('image/jpeg', 0.6);
+                    recents.unshift(newEntry);
+                    if (recents.length > 6) recents = recents.slice(0, 6);
+                    localStorage.setItem(RECENT_PHOTOS_STORAGE_KEY, JSON.stringify(recents));
+                };
+                img.src = rawDataUrl;
+                return;
+            } catch (canvasErr) {
+                console.warn('Canvas thumbnail generation error:', canvasErr);
+            }
+        }
+
+        recents.unshift(newEntry);
+        if (recents.length > 6) recents = recents.slice(0, 6);
+        localStorage.setItem(RECENT_PHOTOS_STORAGE_KEY, JSON.stringify(recents));
+    } catch (err) {
+        console.warn('saveToRecentPhotos error:', err);
     }
 }
 
@@ -1598,6 +1751,10 @@ window.triggerAiCameraInput = triggerAiCameraInput;
 window.resetAiSnapImage = resetAiSnapImage;
 window.analyzeAiPhoto = analyzeAiPhoto;
 window.saveAiAnalyzedMeal = saveAiAnalyzedMeal;
+window.renderAiSnapRecentDishes = renderAiSnapRecentDishes;
+window.selectRecentAiSnapDish = selectRecentAiSnapDish;
+window.clearAiSnapRecentDishes = clearAiSnapRecentDishes;
+window.saveToRecentPhotos = saveToRecentPhotos;
 window.promptEditGeminiApiKey = promptEditGeminiApiKey;
 window.updateAiSnapQuotaDisplay = updateAiSnapQuotaDisplay;
 window.loginWithGoogleFromAiSnap = loginWithGoogleFromAiSnap;

@@ -225,6 +225,7 @@ function renderAdminOverview() {
 
     // Render In-Depth Analytics & Peak Hours (v5.7.0)
     renderInDepthAnalytics(allUsersData);
+    if (window.loadAdminAiCacheStats) window.loadAdminAiCacheStats();
 }
 
 function renderInDepthAnalytics(users) {
@@ -891,6 +892,7 @@ window.switchAdminTab = function (tabId) {
     if (tabId === 'system_ai') {
         if (window.loadAdminGeminiApiKey) window.loadAdminGeminiApiKey();
         if (window.loadAdminAiScanLogs) window.loadAdminAiScanLogs();
+        if (window.loadAdminAiCacheStats) window.loadAdminAiCacheStats();
     }
 };
 
@@ -1712,5 +1714,83 @@ window.loadAdminAiScanLogs = async function () {
     } catch (err) {
         console.error('Failed to load AI scan logs:', err);
         tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-500 text-xs">⚠️ เกิดข้อผิดพลาดในการโหลดประวัติ: ${err.message}</td></tr>`;
+    }
+};
+
+// ==========================================
+// Admin AI Smart Food Cache & Token Savings Engine (v5.8.6)
+// ==========================================
+window.loadAdminAiCacheStats = async function () {
+    const elTokensSaved = document.getElementById('statAiTokensSaved');
+    const elCacheHitsSummary = document.getElementById('statAiCacheHitsSummary');
+    const elUniqueFoods = document.getElementById('statCachedUniqueFoods');
+    const elHitsTotal = document.getElementById('statCacheHitsTotal');
+    const elTokensEst = document.getElementById('statEstimatedTokensSaved');
+    const topDishesList = document.getElementById('topCachedDishesList');
+
+    try {
+        const cacheRef = collection(db, 'ai_food_cache');
+        const snap = await getDocs(cacheRef);
+
+        if (snap.empty) {
+            if (elTokensSaved) elTokensSaved.textContent = '0';
+            if (elCacheHitsSummary) elCacheHitsSummary.textContent = 'ดึงผลจาก Cache ฟรี 0 ครั้ง';
+            if (elUniqueFoods) elUniqueFoods.textContent = '0 รายการ';
+            if (elHitsTotal) elHitsTotal.textContent = '0 ครั้ง';
+            if (elTokensEst) elTokensEst.textContent = '0 Tokens';
+            if (topDishesList) topDishesList.innerHTML = '<div class="text-slate-400 text-xs py-2">ยังไม่มีเมนูในคลังแคช</div>';
+            return;
+        }
+
+        const items = [];
+        let totalHits = 0;
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const hits = Number(d.hitCount) || 1;
+            totalHits += hits;
+            items.push({
+                id: docSnap.id,
+                foodName: d.summaryTitle || d.rawQuery || d.key || docSnap.id,
+                hits: hits,
+                totalCal: d.totalCal || 0,
+                lastAccessedAt: d.lastAccessedAt || d.cachedAt
+            });
+        });
+
+        const tokensSavedCount = totalHits * 1200;
+
+        if (elTokensSaved) elTokensSaved.textContent = tokensSavedCount.toLocaleString();
+        if (elCacheHitsSummary) elCacheHitsSummary.textContent = `ประหยัดแล้ว ${totalHits.toLocaleString()} ครั้ง (~${tokensSavedCount.toLocaleString()} Tokens)`;
+        if (elUniqueFoods) elUniqueFoods.textContent = `${snap.size.toLocaleString()} รายการ`;
+        if (elHitsTotal) elHitsTotal.textContent = `${totalHits.toLocaleString()} ครั้ง`;
+        if (elTokensEst) elTokensEst.textContent = `${tokensSavedCount.toLocaleString()} Tokens`;
+
+        items.sort((a, b) => b.hits - a.hits);
+        const top5 = items.slice(0, 5);
+
+        if (topDishesList) {
+            topDishesList.innerHTML = top5.map((d, idx) => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/60 dark:border-slate-600/60">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold text-[10px] flex items-center justify-center shrink-0">
+                            ${idx + 1}
+                        </span>
+                        <div class="min-w-0">
+                            <span class="font-bold text-slate-800 dark:text-slate-100 truncate block">${escapeAdminHtml(d.foodName)}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${d.totalCal} kcal</span>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            ⚡ ${d.hits.toLocaleString()} ครั้ง
+                        </span>
+                        <div class="text-[10px] text-slate-400">~${(d.hits * 1200).toLocaleString()} tokens</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.warn('Failed to load AI cache stats:', err);
+        if (topDishesList) topDishesList.innerHTML = `<div class="text-slate-400 text-xs py-2">ไม่สามารถดึงข้อมูลแคชได้: ${err.message}</div>`;
     }
 };
