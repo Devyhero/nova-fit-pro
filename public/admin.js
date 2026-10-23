@@ -2461,6 +2461,7 @@ window.sendAdminPushBroadcast = async function () {
     }
 
     try {
+        let broadcastDocId = null;
         if (typeof db !== 'undefined' && db) {
             const newDoc = await addDoc(collection(db, 'push_broadcasts'), {
                 audience: audience,
@@ -2469,7 +2470,27 @@ window.sendAdminPushBroadcast = async function () {
                 sentAt: new Date().toISOString(),
                 sentBy: currentUser?.email || 'admin'
             });
+            broadcastDocId = newDoc.id;
             seenAdminBroadcastIds.add(newDoc.id);
+        }
+
+        // Call Cloud Functions v2 endpoint to dispatch native Web Push across all locked / background devices
+        let cfResult = null;
+        try {
+            const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: title,
+                    body: body,
+                    audience: audience,
+                    broadcastId: broadcastDocId
+                })
+            });
+            cfResult = await cfRes.json();
+            console.log("Cloud Function broadcast dispatch result:", cfResult);
+        } catch (cfErr) {
+            console.warn("Cloud Function push dispatch note:", cfErr);
         }
 
         // Also trigger on current browser device if permitted
@@ -2478,7 +2499,8 @@ window.sendAdminPushBroadcast = async function () {
         }
 
         if (statusMsg) {
-            statusMsg.textContent = '✓ ส่งการแจ้งเตือนบรอดคาสต์เรียบร้อยแล้ว!';
+            const countInfo = cfResult?.stats?.delivered ? ` (ส่งถึง ${cfResult.stats.delivered} เครื่องเรียบร้อย)` : '';
+            statusMsg.textContent = `✓ ส่งการแจ้งเตือนบรอดคาสต์เรียบร้อยแล้ว!${countInfo}`;
             statusMsg.className = 'p-2.5 rounded-xl text-[11px] font-semibold text-center bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
             statusMsg.classList.remove('hidden');
             setTimeout(() => statusMsg.classList.add('hidden'), 5000);

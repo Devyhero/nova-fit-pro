@@ -1024,6 +1024,19 @@ window.setupRealtimePushBroadcastsListener = setupRealtimePushBroadcastsListener
 // Initialize broadcast listener immediately on load
 setupRealtimePushBroadcastsListener();
 
+const VAPID_PUBLIC_KEY = "BH7nccKTKkAp3vI6Da6DcZgviPRkCl4YFtY5nMewhH6hxDeewB8X6lfTHGMHqhimFZAxFtiDqu_LkbH1UpSd9kw";
+
+function urlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 window.syncPushTokenToCloud = async function (explicitPermission) {
     if (!navigator.onLine) return;
     try {
@@ -1033,6 +1046,29 @@ window.syncPushTokenToCloud = async function (explicitPermission) {
         const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
         const isAndroid = /android/i.test(navigator.userAgent);
         const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        // Obtain real Web Push subscription from Apple APNs / Google FCM
+        let pushSub = null;
+        if (permission === 'granted' && 'serviceWorker' in navigator) {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                if (reg.pushManager) {
+                    let sub = await reg.pushManager.getSubscription();
+                    if (!sub) {
+                        sub = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                        });
+                    }
+                    if (sub) {
+                        pushSub = JSON.parse(JSON.stringify(sub));
+                        console.log('✅ Real Web Push subscription obtained for device:', myDeviceId);
+                    }
+                }
+            } catch (subErr) {
+                console.warn('pushManager subscription note/error:', subErr);
+            }
+        }
 
         const payload = {
             deviceId: myDeviceId,
@@ -1046,6 +1082,7 @@ window.syncPushTokenToCloud = async function (explicitPermission) {
             userDisplayName: (window.state && window.state.userDisplayName) || (currentUser && currentUser.displayName) || 'Guest',
             isMember: !!currentUser,
             fcmToken: `fcm_${myDeviceId}`,
+            pushSubscription: pushSub,
             userAgent: navigator.userAgent,
             notificationPreferences: (window.state && window.state.notificationPreferences) || {
                 breakfast: true,
@@ -1058,7 +1095,7 @@ window.syncPushTokenToCloud = async function (explicitPermission) {
         };
 
         await setDoc(tokenDocRef, payload, { merge: true });
-        console.log('🔔 Push token synchronized with cloud:', permission, myDeviceId);
+        console.log('🔔 Push token & subscription synchronized with cloud:', permission, myDeviceId);
     } catch (err) {
         console.warn('syncPushTokenToCloud skipped/failed:', err);
     }
