@@ -177,11 +177,41 @@ const APP_VERSION = '5.9.11';
         window.playSound = playSound;
 
         function renderSoundButton() {
+            const isMuted = state.soundEnabled === false;
+            
+            // 1. Settings Modal Controls
             const icon = document.getElementById('soundIcon');
             const btn = document.getElementById('btnSoundToggle');
-            const isMuted = state.soundEnabled === false;
+            const modalIcon = document.getElementById('soundModalIcon');
+            const statusBadge = document.getElementById('soundStatusBadge');
+            const toggleText = document.getElementById('soundToggleBtnText');
+            
             if (icon) icon.textContent = isMuted ? '🔇' : '🔊';
+            if (modalIcon) modalIcon.textContent = isMuted ? '🔇' : '🔊';
             if (btn) btn.title = isMuted ? 'เปิดเสียงเอฟเฟกต์ (Unmute)' : 'ปิดเสียงเอฟเฟกต์ (Mute)';
+            if (toggleText) toggleText.textContent = isMuted ? 'เปิดเสียง' : 'ปิดเสียง';
+            if (statusBadge) {
+                statusBadge.textContent = isMuted ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+                statusBadge.className = isMuted
+                    ? 'text-xs px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold'
+                    : 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold';
+            }
+            if (btn) {
+                btn.className = isMuted
+                    ? 'px-3.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5'
+                    : 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5';
+            }
+
+            // 2. Tools Dropdown Controls
+            const menuIcon = document.getElementById('soundMenuIcon');
+            const menuBadge = document.getElementById('soundMenuBadge');
+            if (menuIcon) menuIcon.textContent = isMuted ? '🔇' : '🔊';
+            if (menuBadge) {
+                menuBadge.textContent = isMuted ? 'ปิด' : 'เปิด';
+                menuBadge.className = isMuted
+                    ? 'text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold'
+                    : 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold';
+            }
         }
 
         function toggleSound() {
