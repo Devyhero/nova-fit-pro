@@ -1530,6 +1530,68 @@ server.listen(PORT, async () => {
             throw new Error('Test 36: Mobile Header, Profile Edit and PNG Frames integration failed: ' + JSON.stringify(v596Test));
         }
 
+        // Test 37: Nova Chef App Preloader, Action Micro-Loader & Modal-Floating High-Z Toast System (v5.9.7)
+        console.log('--- Test 37: Nova Chef Preloader, Mini Loader & High-Z Toast ---');
+        const v597Test = await evalJs(`(() => {
+            // 1. Toast Container Elevated Stacking
+            const toastContainer = document.getElementById('toastContainer');
+            const hasHighZ = toastContainer && toastContainer.className.includes('z-[100000]');
+            const isCenteredMobile = toastContainer && toastContainer.className.includes('left-1/2');
+
+            // 2. Toast Generation
+            window.showToast('✨ ทดสอบ Toast v5.9.7');
+            const hasToastEl = toastContainer && toastContainer.children.length > 0;
+
+            // 3. App Preloader & Dismissal
+            const preloader = document.getElementById('novaAppPreloader');
+            const hasPreloader = !!preloader;
+            const preloaderZ = preloader && preloader.className.includes('z-[99999]');
+            const phraseEl = document.getElementById('preloaderPhrase');
+            const hasPhrase = !!phraseEl;
+            window.dismissAppPreloader();
+
+            // 4. Action Micro-Loader
+            const miniLoader = document.getElementById('novaMiniLoader');
+            const hasMiniLoader = !!miniLoader;
+            window.showMiniLoader('🔄 กำลังทดสอบระบบซิงค์...');
+            const miniLoaderVisible = miniLoader && !miniLoader.classList.contains('hidden');
+            const miniText = document.getElementById('miniLoaderText')?.textContent;
+            window.hideMiniLoader();
+
+            // 5. Version Alignment
+            const appVersion = window.APP_VERSION;
+            const toolsBadge = document.getElementById('toolsVersionBadge')?.textContent;
+
+            return {
+                hasHighZ,
+                isCenteredMobile,
+                hasToastEl,
+                hasPreloader,
+                preloaderZ,
+                hasPhrase,
+                hasMiniLoader,
+                miniLoaderVisible,
+                miniText,
+                appVersion,
+                toolsBadge
+            };
+        })()`);
+        console.log('v5.9.7 Features verified:', v597Test);
+
+        if (!v597Test.hasHighZ ||
+            !v597Test.isCenteredMobile ||
+            !v597Test.hasToastEl ||
+            !v597Test.hasPreloader ||
+            !v597Test.preloaderZ ||
+            !v597Test.hasPhrase ||
+            !v597Test.hasMiniLoader ||
+            !v597Test.miniLoaderVisible ||
+            v597Test.miniText !== '🔄 กำลังทดสอบระบบซิงค์...' ||
+            v597Test.appVersion !== '5.9.7' ||
+            !v597Test.toolsBadge?.includes('v5.9.7')) {
+            throw new Error('Test 37: Preloader, Mini Loader and High-Z Toast failed: ' + JSON.stringify(v597Test));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

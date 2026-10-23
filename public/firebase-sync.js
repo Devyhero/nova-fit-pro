@@ -521,6 +521,7 @@ window.saveProfileConfiguredToCloud = async function () {
 };
 
 window.handleGoogleLogin = async function () {
+    if (window.showMiniLoader) window.showMiniLoader('กำลังเชื่อมต่อ Google...');
     try {
         await signInWithPopup(auth, googleProvider);
     } catch (err) {
@@ -530,12 +531,15 @@ window.handleGoogleLogin = async function () {
         } else if (err.code !== 'auth/popup-closed-by-user') {
             alert('การเข้าสู่ระบบไม่สำเร็จ: ' + (err.message || err.code));
         }
+    } finally {
+        if (window.hideMiniLoader) window.hideMiniLoader();
     }
 };
 window.loginWithGoogle = window.handleGoogleLogin;
 
 window.handleUserLogout = async function () {
     if (!confirm('ต้องการออกจากระบบใช่หรือไม่? (ข้อมูลในเครื่องยังคงอยู่)')) return;
+    if (window.showMiniLoader) window.showMiniLoader('กำลังออกจากระบบ...');
     try {
         if (unsubscribeSnapshot) {
             unsubscribeSnapshot();
@@ -547,6 +551,8 @@ window.handleUserLogout = async function () {
         if (window.showToast) window.showToast('🚪 ออกจากระบบเรียบร้อย');
     } catch (err) {
         console.error('Logout error:', err);
+    } finally {
+        if (window.hideMiniLoader) window.hideMiniLoader();
     }
 };
 
@@ -559,6 +565,7 @@ window.manualCloudSync = async function (silent = false) {
         if (!silent) alert('ขณะนี้ออฟไลน์อยู่ ข้อมูลถูกบันทึกในเครื่องเรียบร้อยแล้ว เมื่อต่อเน็ตจะซิงค์ให้อัตโนมัติครับ');
         return;
     }
+    if (!silent && window.showMiniLoader) window.showMiniLoader('กำลังซิงค์ข้อมูล Cloud...');
     try {
         const dropdown = document.getElementById('userDropdown');
         if (dropdown) dropdown.classList.add('hidden');
@@ -583,6 +590,8 @@ window.manualCloudSync = async function (silent = false) {
         if (!silent && window.showToast) window.showToast('✓ ซิงค์ข้อมูลกับ Cloud สำเร็จแล้ว!');
     } catch (err) {
         if (!silent) alert('ไม่สามารถซิงค์ได้: ' + (err.message || err));
+    } finally {
+        if (!silent && window.hideMiniLoader) window.hideMiniLoader();
     }
 };
 
@@ -933,6 +942,7 @@ window.exportUserDataBackup = function () {
 };
 
 window.restoreUserDataBackup = function (jsonString) {
+    if (window.showMiniLoader) window.showMiniLoader('กำลังนำเข้าข้อมูลสำรอง...');
     try {
         const parsed = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
         if (!parsed || typeof parsed !== 'object') throw new Error('ไฟล์ข้อมูลไม่ถูกต้อง');
@@ -947,5 +957,9 @@ window.restoreUserDataBackup = function (jsonString) {
     } catch (e) {
         alert('กู้คืนข้อมูลไม่สำเร็จ: ' + e.message);
         return false;
+    } finally {
+        setTimeout(() => {
+            if (window.hideMiniLoader) window.hideMiniLoader();
+        }, 400);
     }
 };

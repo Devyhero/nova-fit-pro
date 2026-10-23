@@ -536,13 +536,27 @@
                             </h3>
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
-                        <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.6
+                        <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
+                            Current Version: v5.9.7
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.7 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-indigo-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">👨‍🍳 v5.9.7 (Nova Chef App Preloader, Action Micro-Loader Engine & Modal-Floating High-Z Toast Architecture)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🍳 NovaFit Chef App Preloader (Initial Splash Engine):</b> เพิ่มคอมโพเนนต์ <code>#novaAppPreloader</code> สไตล์ Nova Chef พร้อมวงแหวนโคจรวัตถุดิบอาหาร (<code>animate-orbit-ring</code>), แอนิเมชันมาสคอตเด้งดึ๋ง (<code>animate-mascot-bounce</code>), แถบความคืบหน้าเรืองแสง และระบบสลับข้อความทักทายอัตโนมัติ (Dynamic Health Quotes) พร้อมฟังก์ชัน <code>dismissAppPreloader()</code> ที่มี Graceful Fade-Out (0.5s) และ Safety Fallback Timeout (4.0s)</li>
+                                <li><b>⏳ Nova Action Micro-Loader System:</b> เพิ่มโมดอล <code>#novaMiniLoader</code> พร้อมฟังก์ชัน <code>window.showMiniLoader(message)</code> และ <code>window.hideMiniLoader()</code> เชื่อมต่อไปยัง Google Sign-In, Sign-Out, Manual Cloud Sync, และ Backup Restore เพื่อแสดงผลสถานะการทำงานระดับ async แบบเรียลไทม์</li>
+                                <li><b>💬 Modal-Floating Toast Notification Stacking:</b> ปรับระดับ z-index ของ <code>#toastContainer</code> จาก <code>z-50</code> ขึ้นสู่ <code>z-[100000]</code> พร้อมปรับพิกัดให้อยู่กึ่งกลางหน้าจอมือถือ (<code>left-1/2 -translate-x-1/2</code>) แก้ไขปัญหาข้อความแจ้งเตือนถูกหน้าต่าง Modal (เช่น Profile Wardrobe) บดบังอย่างสิ้นเชิง</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.7 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.6 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-amber-500/5 to-indigo-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

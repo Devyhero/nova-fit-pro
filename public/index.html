@@ -218,10 +218,77 @@
             pointer-events: none;
             z-index: 2;
         }
+
+        /* NovaFit Preloader & Action Loader Animations (v5.9.7) */
+        @keyframes mascotBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-12px) scale(1.04); }
+        }
+        @keyframes orbitRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulseProgress {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+        .animate-mascot-bounce { animation: mascotBounce 1.5s infinite ease-in-out; }
+        .animate-orbit-ring { animation: orbitRotate 8s infinite linear; }
+        .animate-progress-glow { animation: pulseProgress 1.3s infinite ease-in-out; }
     </style>
 </head>
 
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 pb-16">
+
+    <!-- NovaFit Chef App Preloader (v5.9.7) -->
+    <div id="novaAppPreloader" class="fixed inset-0 z-[99999] bg-slate-950 text-white flex flex-col items-center justify-center p-4 transition-all duration-500 select-none overflow-hidden">
+        <!-- Ambient Glow -->
+        <div class="absolute w-80 h-80 bg-gradient-to-tr from-emerald-500/25 via-cyan-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative flex flex-col items-center text-center space-y-4 max-w-xs transition-all duration-500">
+            <div class="space-y-0.5">
+                <h1 class="text-3xl font-black tracking-tight text-white flex items-center justify-center gap-1.5">
+                    <span class="text-emerald-400">NovaFit</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">PRO</span>
+                </h1>
+                <p class="text-xs text-slate-400 font-medium">เพื่อนคู่คิดสุขภาพ & โภชนาการของคุณ</p>
+            </div>
+
+            <!-- Central Stage with Orbit -->
+            <div class="relative w-44 h-44 flex items-center justify-center my-2">
+                <!-- Orbiting Ring with Food -->
+                <div class="absolute inset-0 rounded-full border border-emerald-500/20 animate-orbit-ring pointer-events-none">
+                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,0.9)]">🍳</span>
+                    <span class="absolute top-1/2 -right-3.5 -translate-y-1/2 text-2xl drop-shadow-[0_0_10px_rgba(56,189,248,0.9)]">💧</span>
+                    <span class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-2xl drop-shadow-[0_0_10px_rgba(52,211,153,0.9)]">🥦</span>
+                    <span class="absolute top-1/2 -left-3.5 -translate-y-1/2 text-2xl drop-shadow-[0_0_10px_rgba(251,146,60,0.9)]">🥑</span>
+                </div>
+
+                <!-- Mascot Avatar (Nova Chef) -->
+                <div class="relative w-28 h-28 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-1.5 shadow-[0_0_35px_rgba(16,185,129,0.5)] animate-mascot-bounce flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
+                        <span class="text-lg -mb-1 animate-pulse">👨‍🍳</span>
+                        <span class="text-4xl">🤖</span>
+                        <div class="flex gap-4 -mt-1 opacity-80">
+                            <span class="w-2 h-1 bg-pink-400 rounded-full"></span>
+                            <span class="w-2 h-1 bg-pink-400 rounded-full"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-48 h-2 bg-slate-800 rounded-full overflow-hidden relative shadow-inner">
+                <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-300 rounded-full w-full animate-progress-glow"></div>
+            </div>
+
+            <!-- Dynamic Witty Subtitle -->
+            <p id="preloaderPhrase" class="text-xs font-medium text-slate-300 min-h-[1.5rem] flex items-center justify-center">
+                🍳 กำลังอุ่นกระทะและเตรียมสูตรอาหาร...
+            </p>
+        </div>
+    </div>
 
     <!-- Floating New Version Update Alert Banner -->
     <div id="newVersionBanner"
@@ -241,8 +308,35 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <!-- Nova Compact Action Micro-Loader Modal (v5.9.7) -->
+    <div id="novaMiniLoader" class="hidden fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-auto">
+        <div class="relative p-5 rounded-3xl bg-slate-900/95 border border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex flex-col items-center text-center space-y-3 max-w-[170px] select-none">
+            <!-- Central Animated Mascot with Neon Spinner Ring -->
+            <div class="relative w-20 h-20 flex items-center justify-center">
+                <!-- Neon Spinner Orbit Ring -->
+                <div class="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-400 border-r-cyan-400 animate-spin"></div>
+                <div class="absolute inset-2 rounded-full border border-emerald-500/20"></div>
+
+                <!-- Bouncing Nova Mascot with Chef Hat -->
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-0.5 shadow-lg animate-mascot-bounce flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-slate-900 flex flex-col items-center justify-center overflow-hidden">
+                        <span class="text-xs -mb-0.5 animate-pulse">👨‍🍳</span>
+                        <span class="text-2xl">🤖</span>
+                        <div class="flex gap-2.5 -mt-0.5 opacity-80">
+                            <span class="w-1.5 h-1 bg-pink-400 rounded-full"></span>
+                            <span class="w-1.5 h-1 bg-pink-400 rounded-full"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Loading Caption -->
+            <span id="miniLoaderText" class="text-xs font-bold text-emerald-300 leading-tight">กำลังประมวลผล...</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container (v5.9.7: Elevated to z-[100000] and centered on mobile to float over all modals) -->
+    <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100000] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Celebration Confetti Canvas (v5.9.3) -->
     <canvas id="celebrationConfettiCanvas" class="hidden fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
@@ -493,7 +587,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.6)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.7)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -1377,12 +1471,36 @@
             <div class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
                 <!-- What's New Automatic Banner on First Visit -->
                 <div id="whatsNewAlert"
-                    class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
+                    class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.6!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.7!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.6 -->
+                <!-- Latest Release: v5.9.7 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>👨‍🍳</span> v5.9.7 (แอนิเมชันเปิดแอป Nova Chef & ตัวแจ้งเตือนแบบลอยตัวอัจฉริยะ)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">👨‍🍳</span>
+                            <span><b>เชฟโนวาต้อนรับเข้าสู่แอป (App Preloader):</b> เพลิดเพลินกับมาสคอตเชฟโนวาสุดน่ารักพร้อมหมุนวนเมนูสุขภาพและคำคมอารมณ์ดีขณะเริ่มต้นเปิดแอป ลื่นไหลสบายตา</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">⏳</span>
+                            <span><b>แอนิเมชันกำลังประมวลผล (Action Loader):</b> แสดงสถานะการเชื่อมต่อและซิงค์ข้อมูลอย่างชัดเจน มั่นใจได้ในทุกการทำงาน</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-purple-500">💬</span>
+                            <span><b>กล่องข้อความแจ้งเตือนลอยเด่นชัด (High-Priority Toasts):</b> ปรับตำแหน่งการแจ้งเตือนให้อยู่ตรงกลางบนมือถือและลอยเหนือหน้าต่างทุกบาน เห็นผลลัพธ์การบันทึกชัดเจนทันที</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.6 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-amber-500/10 to-indigo-500/10 border border-purple-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
@@ -3571,19 +3689,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.6"></script>
+    <script src="food-db.js?v=5.9.7"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.6"></script>
+    <script src="health-tips.js?v=5.9.7"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.6"></script>
+    <script src="ai-snap.js?v=5.9.7"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.6"></script>
+    <script src="app.js?v=5.9.7"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.6"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.7"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

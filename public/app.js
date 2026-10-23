@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.6';
+const APP_VERSION = '5.9.7';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -763,6 +763,75 @@ const APP_VERSION = '5.9.6';
             el.textContent = msg;
             container.appendChild(el);
             setTimeout(() => { el.remove(); }, 2200);
+        }
+
+        function showMiniLoader(message = 'กำลังประมวลผล...') {
+            const loader = document.getElementById('novaMiniLoader');
+            const textEl = document.getElementById('miniLoaderText');
+            if (!loader) return;
+            if (textEl && message) textEl.textContent = message;
+            loader.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                loader.classList.remove('opacity-0');
+                loader.classList.add('opacity-100');
+            });
+        }
+
+        function hideMiniLoader() {
+            const loader = document.getElementById('novaMiniLoader');
+            if (!loader || loader.classList.contains('hidden')) return;
+            loader.classList.remove('opacity-100');
+            loader.classList.add('opacity-0');
+            setTimeout(() => {
+                if (loader.classList.contains('opacity-0')) {
+                    loader.classList.add('hidden');
+                }
+            }, 250);
+        }
+
+        // NovaFit Chef App Preloader (v5.9.7)
+        const PRELOADER_PHRASES = [
+            '🍳 กำลังอุ่นกระทะและเตรียมสูตรอาหาร...',
+            '🥑 กำลังจัดสรรคาร์บ โปรตีน ไขมัน ให้เป๊ะ...',
+            '💪 กำลังตวงโปรตีนให้กล้ามแน่นๆ...',
+            '💧 กำลังเตรียมน้ำดื่มเติมความสดชื่น...',
+            '✨ พร้อมเสิร์ฟสุขภาพดีให้คุณแล้ว!'
+        ];
+        let _preloaderPhraseIndex = 0;
+        let _preloaderTimer = null;
+        let _preloaderDismissed = false;
+
+        function initAppPreloader() {
+            const phraseEl = document.getElementById('preloaderPhrase');
+            if (phraseEl) {
+                _preloaderTimer = setInterval(() => {
+                    if (_preloaderDismissed) return;
+                    _preloaderPhraseIndex = (_preloaderPhraseIndex + 1) % PRELOADER_PHRASES.length;
+                    phraseEl.textContent = PRELOADER_PHRASES[_preloaderPhraseIndex];
+                }, 1800);
+            }
+            // Hard safety fallback: automatically dismiss after 4 seconds
+            setTimeout(() => {
+                dismissAppPreloader();
+            }, 4000);
+        }
+
+        function dismissAppPreloader() {
+            if (_preloaderDismissed) return;
+            _preloaderDismissed = true;
+            if (_preloaderTimer) {
+                clearInterval(_preloaderTimer);
+                _preloaderTimer = null;
+            }
+            const preloader = document.getElementById('novaAppPreloader');
+            if (!preloader) return;
+            preloader.style.opacity = '0';
+            preloader.style.pointerEvents = 'none';
+            preloader.style.transform = 'scale(0.97)';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+                preloader.classList.add('hidden');
+            }, 520);
         }
 
         function applyTheme() {
@@ -5331,12 +5400,27 @@ const APP_VERSION = '5.9.6';
         renderAll();
         checkFirstVisitProfilePrompt();
         checkFirstVisitVersionNotes();
+        initAppPreloader();
+
+        // Smooth preloader dismissal after initial setup
+        if (document.readyState === 'complete') {
+            setTimeout(dismissAppPreloader, 900);
+        } else {
+            window.addEventListener('load', () => {
+                setTimeout(dismissAppPreloader, 900);
+            });
+        }
+
         // Expose globals for Firebase Module integration
         window.state = state;
         window.APP_VERSION = APP_VERSION;
         window.STORAGE_KEY = STORAGE_KEY;
         window.renderAll = renderAll;
         window.showToast = showToast;
+        window.showMiniLoader = showMiniLoader;
+        window.hideMiniLoader = hideMiniLoader;
+        window.dismissAppPreloader = dismissAppPreloader;
+        window.initAppPreloader = initAppPreloader;
         window.saveState = saveState;
         window.toggleToolsMenu = toggleToolsMenu;
         window.toggleCardSection = toggleCardSection;
@@ -6581,3 +6665,6 @@ window.renderWardrobeModal = renderWardrobeModal;
 window.handleAvatarPhotoSelected = handleAvatarPhotoSelected;
 window.saveProfileDisplayName = saveProfileDisplayName;
 window.removeCustomAvatarPhoto = removeCustomAvatarPhoto;
+window.showMiniLoader = showMiniLoader;
+window.hideMiniLoader = hideMiniLoader;
+window.dismissAppPreloader = dismissAppPreloader;
