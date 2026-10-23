@@ -1,4 +1,4 @@
-const APP_VERSION = '5.8.6';
+const APP_VERSION = '5.9.3';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -31,6 +31,9 @@ const APP_VERSION = '5.8.6';
         var _companionDismissTimer = null;
         var _companionCheckDebounce = null;
         var _currentCompanionNudgeId = null;
+        var _currentCompanionConfig = null;
+        var _milestoneDismissTimer = null;
+        var _confettiAnimationId = null;
 
         let state = {
             version: APP_VERSION,
@@ -997,22 +1000,32 @@ const APP_VERSION = '5.8.6';
                 return false;
             };
 
-            // If combos tab is selected, render combo cards directly
+            // If combos tab is selected, render combo cards directly (v5.9.1 Mobile-First Polish)
             if (state.selectedCategory === 'combos') {
                 const combos = state.mealCombos || [];
                 const targetMealCfg = MEAL_CONFIG[state.activeMeal] || MEAL_CONFIG.breakfast;
+                const headerHtml = `
+                    <div class="col-span-1 sm:col-span-2 flex items-center justify-between pb-1 gap-2 min-w-0">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold truncate">📦 เซ็ตอาหารประจำ (${combos.length} เซ็ต)</span>
+                        <button type="button" onclick="openMealComboEditor(null)"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer active:scale-95">
+                            <span>+ สร้างเซ็ตใหม่</span>
+                        </button>
+                    </div>
+                `;
                 if (combos.length === 0) {
                     listContainer.innerHTML = `
-                        <div class="col-span-2 text-center py-8 space-y-2">
+                        ${headerHtml}
+                        <div class="col-span-1 sm:col-span-2 text-center py-8 px-3 space-y-2 bg-slate-50/50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
                             <span class="text-3xl block">📦</span>
                             <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">ยังไม่มีเซ็ตอาหารประจำที่บันทึกไว้</p>
-                            <p class="text-xs text-slate-400">กดปุ่ม <b>[📦 เซฟเซ็ต]</b> ที่หัวมื้ออาหารในตารางบันทึกรายวันเพื่อเซฟมื้อโปรดได้ทันทีครับ</p>
+                            <p class="text-xs text-slate-400">กดปุ่ม <b>[+ สร้างเซ็ตใหม่]</b> ด้านบน หรือกด <b>[📦 เซฟเซ็ต]</b> ที่หัวมื้ออาหารเพื่อสร้างเซ็ตโปรดได้ทันทีครับ</p>
                         </div>
                     `;
                     return;
                 }
 
-                listContainer.innerHTML = combos.map(combo => {
+                const cardsHtml = combos.map(combo => {
                     const totalCal = Math.round(combo.items.reduce((s, x) => s + x.cal, 0));
                     const totalP = Math.round(combo.items.reduce((s, x) => s + x.p, 0) * 10) / 10;
                     const totalC = Math.round(combo.items.reduce((s, x) => s + x.c, 0) * 10) / 10;
@@ -1021,40 +1034,48 @@ const APP_VERSION = '5.8.6';
                     const itemsPreview = combo.items.map(x => `${x.name}${x.portion && x.portion !== 1 ? ` (x${x.portion})` : ''}`).join(', ');
 
                     return `
-                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:border-purple-500/50 transition shadow-xs flex flex-col justify-between gap-3 group">
-                            <div class="space-y-1.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-1.5 font-bold text-sm text-slate-800 dark:text-slate-100">
-                                        <span class="text-base">📦</span>
-                                        <span class="truncate">${combo.name}</span>
+                        <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:border-purple-500/50 transition shadow-xs flex flex-col justify-between gap-2.5">
+                            <div class="space-y-1.5 min-w-0">
+                                <div class="flex items-center justify-between gap-1.5 min-w-0">
+                                    <div class="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 min-w-0 flex-1">
+                                        <span class="text-base shrink-0">📦</span>
+                                        <span class="truncate" title="${combo.name}">${combo.name}</span>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
-                                        <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                                        <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 whitespace-nowrap">
                                             ${mealCfg.icon} ${mealCfg.name}
                                         </span>
-                                        <button onclick="deleteMealCombo('${combo.id}', event)" class="text-slate-400 hover:text-rose-500 p-1 text-xs" title="ลบเซ็ตนี้">
+                                        <button type="button" onclick="deleteMealCombo('${combo.id}', event)" class="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center text-xs transition cursor-pointer" title="ลบเซ็ตนี้">
                                             🗑️
                                         </button>
                                     </div>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                                    ${itemsPreview} (${combo.items.length} รายการ)
+                                <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                    ${itemsPreview} <span class="font-semibold text-slate-400 dark:text-slate-500">(${combo.items.length} รายการ)</span>
                                 </p>
-                                <div class="flex items-center gap-2 text-xs font-semibold pt-1">
-                                    <span class="text-emerald-500 font-bold">${totalCal} kcal</span>
-                                    <span class="text-blue-500 dark:text-blue-400">P:${totalP}g</span>
-                                    <span class="text-amber-500 dark:text-amber-400">C:${totalC}g</span>
-                                    <span class="text-rose-500 dark:text-rose-400">F:${totalF}g</span>
+                                <div class="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs font-semibold pt-0.5">
+                                    <span class="text-emerald-500 font-bold whitespace-nowrap">${totalCal} kcal</span>
+                                    <span class="text-blue-500 dark:text-blue-400 whitespace-nowrap">P:${totalP}g</span>
+                                    <span class="text-amber-500 dark:text-amber-400 whitespace-nowrap">C:${totalC}g</span>
+                                    <span class="text-rose-500 dark:text-rose-400 whitespace-nowrap">F:${totalF}g</span>
                                 </div>
                             </div>
 
-                            <button onclick="applyMealCombo('${combo.id}')"
-                                class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5">
-                                <span>⚡ ใส่เข้า${targetMealCfg.name} (${combo.items.length} รายการ)</span>
-                            </button>
+                            <div class="flex items-center gap-1.5 pt-1 min-w-0">
+                                <button type="button" onclick="openMealComboEditor('${combo.id}', event)"
+                                    class="h-8.5 px-2.5 sm:px-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold text-xs transition flex items-center justify-center gap-1 shrink-0 whitespace-nowrap cursor-pointer active:scale-95">
+                                    <span>✏️ แก้ไข</span>
+                                </button>
+                                <button type="button" onclick="applyMealCombo('${combo.id}')"
+                                    class="h-8.5 flex-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5 whitespace-nowrap truncate cursor-pointer active:scale-95">
+                                    <span>⚡ ใส่เข้า${targetMealCfg.name}</span>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
+
+                listContainer.innerHTML = headerHtml + cardsHtml;
                 return;
             }
 
@@ -1515,18 +1536,33 @@ const APP_VERSION = '5.8.6';
             const avgCal = daysWithLogs > 0 ? Math.round(totalCal7Days / daysWithLogs) : 0;
             avgText.textContent = `เฉลี่ย: ${avgCal.toLocaleString()} kcal/วัน`;
 
-            // Weight Trend Analysis for 7 Days (SVG Polyline)
+            // Weight Trend Analysis for 7 Days (SVG Polyline) - With Carry-Forward (v5.9.0)
             const trendBadge = document.getElementById('weeklyWeightTrendBadge');
             const trendContainer = document.getElementById('weekWeightTrendContainer');
 
-            const weightsWithIdx = daysData
-                .map((d, idx) => ({ idx, weight: d.dayWeight ? parseFloat(d.dayWeight) : null, iso: d.iso, dayNum: d.dayNum }))
-                .filter(w => w.weight !== null && !isNaN(w.weight) && w.weight > 0);
+            const weightsWithIdx = daysData.map((d, idx) => {
+                const directW = (state.weightsByDate && state.weightsByDate[d.iso]) ? parseFloat(state.weightsByDate[d.iso]) : null;
+                if (directW !== null && !isNaN(directW) && directW > 0) {
+                    return { idx, weight: directW, isExact: true, iso: d.iso, dayNum: d.dayNum };
+                }
+                const eff = getEffectiveWeight(d.iso);
+                const effW = (eff && eff.weight) ? parseFloat(eff.weight) : null;
+                return {
+                    idx,
+                    weight: (effW !== null && !isNaN(effW) && effW > 0) ? effW : null,
+                    isExact: false,
+                    sourceDate: eff ? eff.sourceDate : null,
+                    iso: d.iso,
+                    dayNum: d.dayNum
+                };
+            }).filter(w => w.weight !== null && !isNaN(w.weight) && w.weight > 0);
+
+            const exactWeights = weightsWithIdx.filter(w => w.isExact);
 
             if (trendBadge) {
-                if (weightsWithIdx.length >= 2) {
-                    const firstW = weightsWithIdx[0].weight;
-                    const lastW = weightsWithIdx[weightsWithIdx.length - 1].weight;
+                if (exactWeights.length >= 2) {
+                    const firstW = exactWeights[0].weight;
+                    const lastW = exactWeights[exactWeights.length - 1].weight;
                     const diffW = Math.round((lastW - firstW) * 10) / 10;
                     if (diffW < 0) {
                         trendBadge.className = 'px-2 py-0.5 rounded-full font-bold text-xs bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
@@ -1538,12 +1574,16 @@ const APP_VERSION = '5.8.6';
                         trendBadge.className = 'px-2 py-0.5 rounded-full font-bold text-xs bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30';
                         trendBadge.innerHTML = `⚖️ นน. สัปดาห์นี้: คงที่ (±0.0 กก.)`;
                     }
-                } else if (weightsWithIdx.length === 1) {
+                } else if (exactWeights.length === 1) {
+                    trendBadge.className = 'px-2 py-0.5 rounded-full font-bold text-xs bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30';
+                    trendBadge.innerHTML = `⚖️ นน. สัปดาห์นี้: ${exactWeights[0].weight} กก.`;
+                } else if (weightsWithIdx.length > 0) {
+                    const lastEff = weightsWithIdx[weightsWithIdx.length - 1];
                     trendBadge.className = 'px-2 py-0.5 rounded-full font-bold text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-600';
-                    trendBadge.innerHTML = `⚖️ นน. ล่าสุด: ${weightsWithIdx[0].weight} กก.`;
+                    trendBadge.innerHTML = `⚖️ นน. อ้างอิง: ${lastEff.weight} กก. (ใช้น้ำหนักเดิม)`;
                 } else {
                     trendBadge.className = 'px-2 py-0.5 rounded-full font-bold text-xs bg-slate-100 dark:bg-slate-700 text-slate-400 border border-slate-200 dark:border-slate-600';
-                    trendBadge.innerHTML = `⚖️ ยังไม่มีบันทึก นน. 7 วันนี้`;
+                    trendBadge.innerHTML = `⚖️ ยังไม่มีบันทึก นน.`;
                 }
             }
 
@@ -1558,22 +1598,33 @@ const APP_VERSION = '5.8.6';
                     const points = weightsWithIdx.map(w => {
                         const x = w.idx * 50 + 25;
                         const y = Math.round(34 - ((w.weight - minW) / rangeW) * 22);
-                        return { x, y, weight: w.weight, idx: w.idx };
+                        return { x, y, weight: w.weight, idx: w.idx, isExact: w.isExact };
                     });
 
                     const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
 
-                    const dotsSvg = points.map(p => `
-                        <g>
-                            <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#0284c7" stroke="#ffffff" stroke-width="1.5" />
-                            <text x="${p.x}" y="${Math.max(10, p.y - 6)}" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0284c7">${p.weight}</text>
-                        </g>
-                    `).join('');
+                    const dotsSvg = points.map(p => {
+                        if (p.isExact) {
+                            return `
+                                <g>
+                                    <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#0284c7" stroke="#ffffff" stroke-width="1.5" />
+                                    <text x="${p.x}" y="${Math.max(10, p.y - 6)}" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0284c7">${p.weight}</text>
+                                </g>
+                            `;
+                        } else {
+                            return `
+                                <g>
+                                    <circle cx="${p.x}" cy="${p.y}" r="2.5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="2,2" />
+                                    <text x="${p.x}" y="${Math.max(10, p.y - 6)}" text-anchor="middle" font-size="7.5" font-weight="normal" fill="#94a3b8">${p.weight}</text>
+                                </g>
+                            `;
+                        }
+                    }).join('');
 
                     trendContainer.innerHTML = `
                         <div class="px-2 py-1.5 rounded-xl bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/15 space-y-1">
                             <div class="flex items-center justify-between text-[11px] text-sky-600 dark:text-sky-400 font-semibold px-1">
-                                <span>📈 แนวโน้มน้ำหนักตัว (บันทึก ${weightsWithIdx.length}/7 วัน)</span>
+                                <span>📈 แนวโน้มน้ำหนักตัว (${exactWeights.length > 0 ? `ชั่งจริง ${exactWeights.length}/7 วัน · วันอื่นใช้น้ำหนักเดิม` : `ใช้น้ำหนักเดิม ${weightsWithIdx[weightsWithIdx.length - 1].weight} กก.`})</span>
                                 <span>${minW.toFixed(1)} - ${maxW.toFixed(1)} กก.</span>
                             </div>
                             <svg viewBox="0 0 350 44" class="w-full h-11 overflow-visible">
@@ -1592,19 +1643,21 @@ const APP_VERSION = '5.8.6';
                     const p = weightsWithIdx[0];
                     trendContainer.innerHTML = `
                         <div class="p-2 rounded-xl bg-slate-100/60 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-center text-xs text-slate-400 flex items-center justify-between">
-                            <span>⚖️ บันทึกแล้ว 1 วัน (${p.weight} กก.) ชั่งเพิ่มอีก 1 วันเพื่อแสดงกราฟเส้นแนวโน้ม</span>
-                            <button onclick="switchBodyTab('weight')" class="text-sky-500 hover:underline font-bold text-xs">+ บันทึก นน.</button>
+                            <span>⚖️ น้ำหนัก ${p.weight} กก. (ชั่งสัปดาห์ละครั้งได้สบายๆ ระบบใช้น้ำหนักเดิมให้อัตโนมัติ)</span>
+                            <button onclick="focusWeightInputToday()" class="text-sky-500 hover:underline font-bold text-xs">+ อัปเดต นน.</button>
                         </div>
                     `;
                 } else {
                     trendContainer.innerHTML = `
                         <div class="p-2 rounded-xl bg-slate-100/40 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700/60 text-center text-xs text-slate-400 flex items-center justify-between">
-                            <span>⚖️ ชั่งน้ำหนักเพื่อดูกราฟเส้นแนวโน้มคู่กับแคลอรีที่ทาน</span>
-                            <button onclick="switchBodyTab('weight')" class="text-emerald-500 hover:underline font-bold text-xs">+ บันทึก นน. วันนี้</button>
+                            <span>⚖️ ชั่งน้ำหนักสัปดาห์ละครั้งเพื่อดูกราฟแนวโน้ม</span>
+                            <button onclick="focusWeightInputToday()" class="text-emerald-500 hover:underline font-bold text-xs">+ บันทึก นน. วันนี้</button>
                         </div>
                     `;
                 }
             }
+
+            checkWeeklyWeighInNudge();
 
             const maxBarHeightPx = 60;
 
@@ -1777,6 +1830,11 @@ const APP_VERSION = '5.8.6';
             // Render Smart Food Recommendations (Uses cache unless macros changed or user clicked Reshuffle)
             renderSmartRecommendations(remCal, remP, remC, remF, forceReshuffle);
 
+            // Check Milestone Celebrations (Confetti & Celebration Beats)
+            if (typeof checkMilestoneCelebrations === 'function') {
+                checkMilestoneCelebrations();
+            }
+
             // Render Logged Meals List (Grouped by 4 Meals: เช้า, เที่ยง, เย็น, ของว่าง)
             const listEl = document.getElementById('mealListContainer');
             if (meals.length === 0) {
@@ -1887,19 +1945,19 @@ const APP_VERSION = '5.8.6';
                                 </div>
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <button type="button" onclick="copyMealFromYesterday('${key}')"
-                                        class="text-xs px-2 py-1 rounded-lg border font-medium transition text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 shadow-xs"
+                                        class="text-xs px-2 py-1 rounded-lg border font-medium transition text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 shadow-xs whitespace-nowrap active:scale-95"
                                         title="คัดลอกเฉพาะ${group.name}จากเมื่อวาน">
                                         📋 เมื่อวาน
                                     </button>
                                     ${items.length > 0 ? `
                                         <button type="button" onclick="saveMealAsCombo('${key}')"
-                                            class="text-xs px-2 py-1 rounded-lg border font-medium transition text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 shadow-xs"
+                                            class="text-xs px-2 py-1 rounded-lg border font-medium transition text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 shadow-xs whitespace-nowrap active:scale-95"
                                             title="เซฟรายการใน${group.name}นี้เป็นเซ็ตประจำ">
                                             📦 เซฟเซ็ต
                                         </button>
                                     ` : ''}
                                     <button type="button" onclick="setActiveMeal('${key}'); showToast('เลือกมื้อ ${group.name} สำหรับบันทึกแล้ว');"
-                                        class="text-xs px-2.5 py-1 rounded-lg border font-medium transition ${isActive
+                                        class="text-xs px-2.5 py-1 rounded-lg border font-medium transition whitespace-nowrap active:scale-95 ${isActive
                             ? 'bg-emerald-500 text-white border-emerald-500 font-bold shadow-xs'
                             : 'bg-white dark:bg-slate-800 text-slate-500 hover:border-emerald-500/40'
                         }">
@@ -2055,6 +2113,455 @@ const APP_VERSION = '5.8.6';
                 }
             });
         }
+
+        // ==========================================
+        // MEAL COMBOS MANAGER & WEEKLY WEIGHT (v5.9.0)
+        // ==========================================
+        let _editingComboId = null;
+        let _editingComboItems = [];
+
+        function checkWeeklyWeighInNudge() {
+            const banner = document.getElementById('weeklyWeighInNudgeBanner');
+            if (!banner) return;
+
+            const dates = Object.keys(state.weightsByDate || {})
+                .filter(d => Number(state.weightsByDate[d]) > 0)
+                .sort();
+
+            const todayStr = getTodayStr();
+            const todayRecorded = state.weightsByDate && Number(state.weightsByDate[todayStr]) > 0;
+            if (todayRecorded) {
+                banner.classList.add('hidden');
+                return;
+            }
+
+            let daysSinceLast = 999;
+            let lastDateStr = null;
+            if (dates.length > 0) {
+                lastDateStr = dates[dates.length - 1];
+                const lastDate = new Date(lastDateStr + 'T00:00:00');
+                const todayDate = new Date(todayStr + 'T00:00:00');
+                daysSinceLast = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+            }
+
+            if (daysSinceLast >= 7) {
+                banner.classList.remove('hidden');
+                const textSpan = document.getElementById('weeklyWeighInNudgeText');
+                if (textSpan) {
+                    textSpan.textContent = dates.length > 0
+                        ? `ครบ 1 สัปดาห์แล้ว! (ชั่งครั้งล่าสุดเมื่อ ${daysSinceLast} วันก่อน) มาอัปเดตน้ำหนักล่าสุดกันครับ`
+                        : `มาเริ่มบันทึกน้ำหนักตัวสัปดาห์ละครั้ง เพื่อติดตามผลลัพธ์และคำนวณแคลอรีแม่นยำขึ้นครับ`;
+                }
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function focusWeightInputToday() {
+            switchBodyTab('weight');
+            const card = document.getElementById('card_body');
+            const section = document.getElementById('section_body');
+            if (section && section.classList.contains('hidden')) {
+                toggleCardSection('section_body');
+            }
+            const input = document.getElementById('inDailyWeight');
+            if (input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                input.focus();
+                input.select();
+            }
+        }
+
+        function openMealComboEditor(comboId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            _editingComboId = comboId;
+            const modal = document.getElementById('mealComboEditModal');
+            if (!modal) return;
+
+            const titleEl = document.getElementById('comboEditModalTitle');
+            const nameInput = document.getElementById('comboEditName');
+            const mealSelect = document.getElementById('comboEditMeal');
+
+            if (comboId) {
+                const combo = (state.mealCombos || []).find(c => c.id === comboId);
+                if (!combo) return;
+                _editingComboItems = JSON.parse(JSON.stringify(combo.items || []));
+                if (titleEl) titleEl.textContent = `✏️ จัดการเซ็ต: ${combo.name}`;
+                if (nameInput) nameInput.value = combo.name;
+                if (mealSelect) mealSelect.value = combo.meal || 'breakfast';
+            } else {
+                _editingComboItems = [];
+                if (titleEl) titleEl.textContent = '✨ สร้างเซ็ตอาหารประจำใหม่';
+                if (nameInput) nameInput.value = 'เซ็ตอาหารประจำของฉัน';
+                if (mealSelect) mealSelect.value = state.activeMeal || 'breakfast';
+            }
+
+            populateComboFoodSelectDropdown();
+            clearComboFoodSearch();
+            renderComboEditorItems();
+            modal.classList.remove('hidden');
+        }
+
+        function closeMealComboEditor() {
+            const modal = document.getElementById('mealComboEditModal');
+            if (modal) modal.classList.add('hidden');
+            _editingComboId = null;
+            _editingComboItems = [];
+        }
+
+
+        function getAllAvailableFoodsList() {
+            const allFoods = [];
+            const seen = new Set();
+
+            (state.customPresets || []).forEach(f => {
+                if (f && f.name && !seen.has(f.name.toLowerCase())) {
+                    seen.add(f.name.toLowerCase());
+                    allFoods.push({ name: f.name, cal: f.calories, p: f.protein, c: f.carbs, f: f.fat, cat: 'เมนูส่วนตัว' });
+                }
+            });
+
+            (FOOD_DATABASE.categories || []).forEach(cat => {
+                (cat.foods || []).forEach(f => {
+                    if (f && f.name && !seen.has(f.name.toLowerCase())) {
+                        seen.add(f.name.toLowerCase());
+                        allFoods.push({ name: f.name, cal: f.calories, p: f.protein, c: f.carbs, f: f.fat, cat: cat.name });
+                    }
+                });
+            });
+
+            return allFoods;
+        }
+
+        function onComboFoodSearchInput(rawQuery) {
+            const q = (rawQuery || '').trim().toLowerCase();
+            const resultsContainer = document.getElementById('comboFoodSearchResults');
+            const clearBtn = document.getElementById('comboFoodSearchClearBtn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+            if (!resultsContainer) return;
+
+            if (!q) {
+                resultsContainer.classList.add('hidden');
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            const allFoods = getAllAvailableFoodsList();
+            const qNorm = q.replace(/ราเมง/g, 'ราเมน');
+
+            const matches = allFoods.filter(f => {
+                const text = (f.name + ' ' + (f.cat || '')).toLowerCase();
+                const textNorm = text.replace(/ราเมง/g, 'ราเมน');
+                return text.includes(q) || textNorm.includes(qNorm);
+            }).slice(0, 20);
+
+            if (matches.length === 0) {
+                resultsContainer.classList.remove('hidden');
+                resultsContainer.innerHTML = `
+                    <div class="py-3 text-center text-xs text-slate-400">
+                        ไม่พบเมนู "${rawQuery}" ในคลัง (สามารถพิมพ์กรอกด้านล่างเพื่อเพิ่มเองได้ครับ)
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = matches.map(f => {
+                const safeFoodStr = encodeURIComponent(JSON.stringify(f));
+                return `
+                    <div onclick="addFoodObjectToComboEditor('${safeFoodStr}')"
+                        class="p-2 rounded-xl hover:bg-purple-500/10 active:bg-purple-500/20 cursor-pointer flex items-center justify-between gap-2 border border-slate-100 dark:border-slate-700/60 transition group">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400">${f.name}</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">${f.cat}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                                <span class="text-emerald-500 font-semibold">${f.cal} kcal</span>
+                                <span>P:${f.p}g</span>
+                                <span>C:${f.c}g</span>
+                                <span>F:${f.f}g</span>
+                            </div>
+                        </div>
+                        <button type="button" class="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[10px] shrink-0 pointer-events-none shadow-2xs whitespace-nowrap">
+                            + เพิ่ม
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearComboFoodSearch() {
+            const input = document.getElementById('comboFoodSearchInput');
+            if (input) {
+                input.value = '';
+            }
+            onComboFoodSearchInput('');
+        }
+
+        function addFoodObjectToComboEditor(encodedFood) {
+            try {
+                const food = JSON.parse(decodeURIComponent(encodedFood));
+                _editingComboItems.push({
+                    name: food.name,
+                    portion: 1,
+                    baseCal: food.cal,
+                    baseP: food.p,
+                    baseC: food.c,
+                    baseF: food.f,
+                    cal: food.cal,
+                    p: food.p,
+                    c: food.c,
+                    f: food.f
+                });
+                renderComboEditorItems();
+                clearComboFoodSearch();
+                showToast(`✓ เพิ่ม "${food.name}" เข้าเซ็ตแล้ว`);
+            } catch (e) {
+                console.error('Error adding food to combo:', e);
+            }
+        }
+
+        function quickAddChipToCombo(foodName) {
+            const allFoods = getAllAvailableFoodsList();
+            const food = allFoods.find(f => f.name.toLowerCase() === foodName.toLowerCase()) || allFoods.find(f => f.name.includes(foodName));
+            if (food) {
+                addFoodObjectToComboEditor(encodeURIComponent(JSON.stringify(food)));
+            } else {
+                showToast(`ไม่พบเมนู ${foodName}`);
+            }
+        }
+
+        function populateComboFoodSelectDropdown() {
+            const select = document.getElementById('comboAddFoodSelect');
+            if (!select) return;
+
+            const allFoods = [];
+            const seen = new Set();
+
+            (state.customPresets || []).forEach(f => {
+                if (!seen.has(f.name)) {
+                    seen.add(f.name);
+                    allFoods.push({ name: f.name, cal: f.calories, p: f.protein, c: f.carbs, f: f.fat, cat: 'เมนูส่วนตัว' });
+                }
+            });
+
+            (FOOD_DATABASE.categories || []).forEach(cat => {
+                (cat.foods || []).forEach(f => {
+                    if (!seen.has(f.name)) {
+                        seen.add(f.name);
+                        allFoods.push({ name: f.name, cal: f.calories, p: f.protein, c: f.carbs, f: f.fat, cat: cat.name });
+                    }
+                });
+            });
+
+            select.innerHTML = '<option value="">-- เลือกเมนูจากคลังอาหาร --</option>' + allFoods.map(f => `
+                <option value="${encodeURIComponent(JSON.stringify(f))}">${f.name} (${f.cal} kcal · P:${f.p}g) [${f.cat}]</option>
+            `).join('');
+        }
+
+        function addSelectedFoodToComboEditor() {
+            const select = document.getElementById('comboAddFoodSelect');
+            if (!select || !select.value) return alert('กรุณาเลือกเมนูจากคลังอาหารครับ');
+            try {
+                const food = JSON.parse(decodeURIComponent(select.value));
+                _editingComboItems.push({
+                    name: food.name,
+                    portion: 1,
+                    baseCal: food.cal,
+                    baseP: food.p,
+                    baseC: food.c,
+                    baseF: food.f,
+                    cal: food.cal,
+                    p: food.p,
+                    c: food.c,
+                    f: food.f
+                });
+                renderComboEditorItems();
+                select.value = '';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function addManualFoodToComboEditor() {
+            const inName = document.getElementById('comboManualFoodName');
+            const inCal = document.getElementById('comboManualFoodCal');
+            const inP = document.getElementById('comboManualFoodP');
+            const inC = document.getElementById('comboManualFoodC');
+            const inF = document.getElementById('comboManualFoodF');
+
+            const name = (inName?.value || '').trim();
+            if (!name) return alert('กรุณากรอกชื่อเมนูอาหารครับ');
+
+            const p = parseFloat(inP?.value) || 0;
+            const c = parseFloat(inC?.value) || 0;
+            const f = parseFloat(inF?.value) || 0;
+            const calInput = parseFloat(inCal?.value);
+            const cal = (!isNaN(calInput) && calInput > 0) ? Math.round(calInput) : Math.round(p * 4 + c * 4 + f * 9);
+
+            _editingComboItems.push({
+                name,
+                portion: 1,
+                baseCal: cal,
+                baseP: p,
+                baseC: c,
+                baseF: f,
+                cal,
+                p,
+                c,
+                f
+            });
+
+            if (inName) inName.value = '';
+            if (inCal) inCal.value = '';
+            if (inP) inP.value = '';
+            if (inC) inC.value = '';
+            if (inF) inF.value = '';
+
+            renderComboEditorItems();
+        }
+
+        function removeComboEditorItem(idx) {
+            _editingComboItems.splice(idx, 1);
+            renderComboEditorItems();
+        }
+
+        function adjustComboEditorItemPortion(idx, delta) {
+            if (!_editingComboItems[idx]) return;
+            const it = _editingComboItems[idx];
+            let current = it.portion || 1;
+            let next = Math.max(0.5, Math.round((current + delta) * 10) / 10);
+            it.portion = next;
+            it.cal = Math.round(it.baseCal * next);
+            it.p = Math.round(it.baseP * next * 10) / 10;
+            it.c = Math.round(it.baseC * next * 10) / 10;
+            it.f = Math.round(it.baseF * next * 10) / 10;
+            renderComboEditorItems();
+        }
+
+        function renderComboEditorItems() {
+            const container = document.getElementById('comboEditItemsContainer');
+            const summaryEl = document.getElementById('comboEditSummaryStrip');
+            const countBadge = document.getElementById('comboEditCountBadge');
+            if (!container) return;
+
+            if (countBadge) countBadge.textContent = `${_editingComboItems.length} รายการ`;
+
+            let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+            _editingComboItems.forEach(it => {
+                totalCal += (it.cal || 0);
+                totalP += (it.p || 0);
+                totalC += (it.c || 0);
+                totalF += (it.f || 0);
+            });
+            totalP = Math.round(totalP * 10) / 10;
+            totalC = Math.round(totalC * 10) / 10;
+            totalF = Math.round(totalF * 10) / 10;
+
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-bold gap-1 px-1">
+                        <span class="text-slate-600 dark:text-slate-300 whitespace-nowrap">สารอาหารรวมในเซ็ต:</span>
+                        <div class="flex items-center flex-wrap gap-2 text-xs">
+                            <span class="text-emerald-500 font-bold whitespace-nowrap">${totalCal} kcal</span>
+                            <span class="text-blue-500 whitespace-nowrap">P:${totalP}g</span>
+                            <span class="text-amber-500 whitespace-nowrap">C:${totalC}g</span>
+                            <span class="text-rose-500 whitespace-nowrap">F:${totalF}g</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (_editingComboItems.length === 0) {
+                container.innerHTML = `
+                    <div class="py-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                        ยังไม่มีเมนูในเซ็ตนี้ เลือกเมนูด้านล่างเพื่อเพิ่มเข้าเซ็ตได้เลยครับ
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = _editingComboItems.map((it, idx) => `
+                <div class="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/70 flex items-center justify-between gap-2 min-w-0">
+                    <div class="min-w-0 flex-1">
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${it.name}</div>
+                        <div class="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">${it.cal} kcal</span>
+                            <span class="whitespace-nowrap">P:${it.p}g</span>
+                            <span class="whitespace-nowrap">C:${it.c}g</span>
+                            <span class="whitespace-nowrap">F:${it.f}g</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="flex items-center border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-800 text-xs">
+                            <button type="button" onclick="adjustComboEditorItemPortion(${idx}, -0.5)" class="w-6 h-6 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold cursor-pointer">-</button>
+                            <span class="px-1.5 font-bold text-slate-700 dark:text-slate-200 text-[10px] sm:text-[11px] whitespace-nowrap">x${it.portion || 1}</span>
+                            <button type="button" onclick="adjustComboEditorItemPortion(${idx}, 0.5)" class="w-6 h-6 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold cursor-pointer">+</button>
+                        </div>
+                        <button type="button" onclick="removeComboEditorItem(${idx})" class="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center text-xs transition cursor-pointer" title="ลบออกจากเซ็ต">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveMealComboEditor() {
+            const nameInput = document.getElementById('comboEditName');
+            const mealSelect = document.getElementById('comboEditMeal');
+            const name = (nameInput?.value || '').trim();
+            const meal = mealSelect?.value || 'breakfast';
+
+            if (!name) return alert('กรุณาตั้งชื่อเซ็ตอาหารครับ');
+            if (_editingComboItems.length === 0) return alert('กรุณาเพิ่มรายการอาหารอย่างน้อย 1 รายการในเซ็ตครับ');
+
+            if (!Array.isArray(state.mealCombos)) state.mealCombos = [];
+
+            if (_editingComboId) {
+                const idx = state.mealCombos.findIndex(c => c.id === _editingComboId);
+                if (idx >= 0) {
+                    state.mealCombos[idx] = {
+                        ...state.mealCombos[idx],
+                        name,
+                        meal,
+                        items: _editingComboItems
+                    };
+                    showToast(`✓ อัปเดตเซ็ต "${name}" เรียบร้อยแล้ว`);
+                }
+            } else {
+                const newCombo = {
+                    id: 'combo_' + Date.now(),
+                    name,
+                    meal,
+                    items: _editingComboItems
+                };
+                state.mealCombos.push(newCombo);
+                showToast(`📦 สร้างเซ็ต "${name}" เรียบร้อยแล้ว!`);
+            }
+
+            saveState();
+            closeMealComboEditor();
+            renderFoodDatabaseExplorer();
+        }
+
+        window.openMealComboEditor = openMealComboEditor;
+        window.onComboFoodSearchInput = onComboFoodSearchInput;
+        window.clearComboFoodSearch = clearComboFoodSearch;
+        window.addFoodObjectToComboEditor = addFoodObjectToComboEditor;
+        window.quickAddChipToCombo = quickAddChipToCombo;
+        window.closeMealComboEditor = closeMealComboEditor;
+        window.addSelectedFoodToComboEditor = addSelectedFoodToComboEditor;
+        window.addManualFoodToComboEditor = addManualFoodToComboEditor;
+        window.removeComboEditorItem = removeComboEditorItem;
+        window.adjustComboEditorItemPortion = adjustComboEditorItemPortion;
+        window.saveMealComboEditor = saveMealComboEditor;
+        window.focusWeightInputToday = focusWeightInputToday;
+        window.checkWeeklyWeighInNudge = checkWeeklyWeighInNudge;
+
 
         // ==========================================
         // SUPPLEMENT & VITAMIN CHECKLIST (v5.6.6)
@@ -3337,6 +3844,15 @@ const APP_VERSION = '5.8.6';
             const elapsedHours = Math.round((elapsedMs / (3600 * 1000)) * 10) / 10;
 
             state.fasting.isFasting = false;
+            if (typeof triggerCelebrationConfetti === 'function') {
+                triggerCelebrationConfetti();
+                showMilestoneBeatCard({
+                    icon: '⏱️',
+                    title: 'พิชิตเป้าหมาย Fasting สำเร็จ!',
+                    subtitle: `อดอาหารได้ครบ ${elapsedHours} ชม. ตามเป้าหมายเรียบร้อยแล้ว`,
+                    detail: 'ระบบเผาผลาญปรับตัวและดึงไขมันสะสมมาใช้ได้อย่างเต็มที่ ร่างกายพักผ่อนเต็มอิ่ม! ✨'
+                });
+            }
             state.fasting.endTime = Date.now();
             if (!state.fasting.history) state.fasting.history = [];
             state.fasting.history.unshift({
@@ -4626,7 +5142,8 @@ function copyYesterdayActiveMeal() {
 }
 
 // ==========================================
-// Living App Companion Engine (v5.8.4)
+// ==========================================
+// Living App Companion Engine (v5.9.2)
 // "แอพมีชีวิต" - Smart In-App Companionship & Empathy Nudges
 // ==========================================
 
@@ -4635,14 +5152,126 @@ var CHEERFUL_DAILY_QUOTES = [
     { icon: '🥑', msg: 'สุขภาพดีไม่ได้สร้างได้ในวันเดียว แต่สร้างได้ในทุกคำที่เราเลือกทานในวันนี้ สู้ๆ น้า! 💖' },
     { icon: '🚀', msg: 'ความมีวินัยของคุณวันนี้น่าชื่นชมมาก ไม่ว่าเป้าหมายคืออะไร คุณทำสำเร็จแน่นอน! ⭐' },
     { icon: '💧', msg: 'อย่าลืมจิบน้ำเรื่อยๆ ระหว่างวันนะ จะช่วยให้สมองปลอดโปร่งและสดชื่นตลอดวันเลย 🧠' },
-    { icon: '🥗', msg: 'เลือกทานอาหารที่มีประโยชน์ให้ร่างกายวันนี้ ร่างกายจะขอบคุณคุณไปอีกนานเลยนะ 🥦' }
+    { icon: '🥗', msg: 'เลือกทานอาหารที่มีประโยชน์ให้ร่างกายวันนี้ ร่างกายจะขอบคุณคุณไปอีกนานเลยนะ 🥦' },
+    { icon: '✨', msg: 'ความก้าวหน้าทีละนิดในทุกๆ วัน เมื่อรวมกันจะสร้างความเปลี่ยนแปลงที่ยิ่งใหญ่ เป็นกำลังใจให้เสมอครับ! 🌟' },
+    { icon: '🎯', msg: 'ไม่ต้องสมบูรณ์แบบทุกวัน แค่ไม่หยุดพัฒนาตัวเอง คุณก็เก่งขึ้นกว่าเมื่อวานแล้ว ลุยกันต่อเลย! 🏃' },
+    { icon: '🌱', msg: 'การดูแลตัวเองคือการลงทุนที่คุ้มค่าที่สุด ทานให้อิ่ม นอนให้อุ่น และใจดีกับตัวเองเยอะๆ นะครับ 💖' },
+    { icon: '☀️', msg: 'เริ่มต้นวันใหม่ด้วยรอยยิ้มและพลังบวก วันนี้ขอให้เป็นวันที่สดใสและทานของอร่อยที่มีประโยชน์นะ! 🍳' },
+    { icon: '🔥', msg: 'วินัยคือสะพานเชื่อมระหว่างเป้าหมายกับความสำเร็จ และวันนี้คุณกำลังก้าวข้ามสะพานนั้นอยู่นะ สุดยอดมาก! 🏆' },
+    { icon: '🌿', msg: 'ฟังเสียงร่างกายตัวเอง ทานเมื่อหิว อิ่มพอดี และเลือกสิ่งดีๆ ให้ตัวเอง คุณทำได้ดีมากๆ แล้วครับ 💚' },
+    { icon: '💖', msg: 'ไม่ว่าเมื่อวานจะเป็นอย่างไร วันนี้คือโอกาสใหม่เสมอ ยิ้มรับวันใหม่แล้วไปพิชิตเป้าหมายกันเถอะ! 🌈' }
 ];
+
+// Rich Message Pool for Dynamic Living Companion (5-6 distinct variations per category)
+var COMPANION_MESSAGE_TEMPLATES = {
+    missing_breakfast: [
+        '🥺 ใกล้เที่ยงแล้วยังไม่เห็นมื้อเช้าเลย... งานยุ่งจนลืมทานหรือยังไม่ได้กรอกเอ่ย? แวะเติมพลังงานหน่อยนะค้าบบ 🍳',
+        '☀️ มื้อเช้าคือสวิตช์เปิดระบบเผาผลาญของวันนะ! อย่าปล่อยให้ท้องร้อง รีบเติมอาหารดีๆ ให้ร่างกายกันครับ 🥪',
+        '🍳 งานกองโตแค่ไหนก็อย่าลืมดูแลตัวเองน้า มีเวลาสัก 5 นาที แวะทานอะไรรองท้องหน่อยนะ เป็นห่วงครับ! 🥛',
+        '🍞 กองทัพต้องเดินด้วยท้อง! แวะเติมคาร์บเชิงซ้อนกับโปรตีนยามเช้า สมองจะได้แล่นและมีพลังลุยงานต่อนะ ✨',
+        '☕ เช้านี้แวะทานอะไรหรือยังเอ่ย? ถ้าทานแล้วอย่าลืมกดบันทึกไว้น้า เราจะได้ช่วยคำนวณเป้าหมายให้เป๊ะๆ! 🥑',
+        '🥑 เติมพลังงานดีๆ มื้อแรกของวันกันครับ สุขภาพที่ดีเริ่มได้ตั้งแต่คำแรกของวันเลยนะ สู้ๆ! 💖'
+    ],
+    missing_lunch: [
+        '🍱 บ่ายแล้วนะ งานยุ่งจนลืมทานข้าวเที่ยงรึเปล่า? พักสายตาจากงานแล้วแวะทานของอร่อยๆ เติมพลังหน่อยนะ! 🥗',
+        '🍲 ถึงเวลาพักเบรกแล้ว! วางงานลงสักครู่แล้วไปทานมื้อเที่ยงอร่อยๆ กัน ร่างกายต้องการพลังงานช่วงบ่ายนะค้าบ 🍛',
+        '🍛 อย่าปล่อยให้ระดับน้ำตาลตกน้า แวะเติมพลังมื้อกลางวันกันครับ ร่างกายจะได้สดชื่น ไม่เพลียช่วงบ่าย! ☀️',
+        '🥗 มื้อเที่ยงคือช่วงเติมพลังหลักของวันเลย! ลองเลือกโปรตีนดีๆ กับผักสดสักจาน แล้วบันทึกลงแอปได้เลยน้า 🍗',
+        '🍜 พักเบรกยืดเส้นยืดสาย แล้วแวะทานมื้อเที่ยงกันครับ ทานของอร่อยแล้วมีแรงลุยงานช่วงบ่ายแน่นอน! 🚀',
+        '🍱 ถ้าทานข้าวเที่ยงเรียบร้อยแล้ว อย่าลืมแวะมากดบันทึกน้า ระบบกำลังรออัปเดตสารอาหารให้คุณอยู่ครับ 🥦'
+    ],
+    missing_dinner: [
+        '🌙 ค่ำแล้วน้า วันนี้ทานมื้อเย็นหรือยังเอ่ย? อย่าปล่อยให้ท้องหิวจนนอนไม่หลับนะค้าบบ 🍲',
+        '🍲 เลิกงานแล้ว แวะทานมื้อค่ำเพื่อฟื้นฟูร่างกายกันครับ เน้นโปรตีนย่อยง่ายและผัก จะช่วยให้นอนหลับสบายนะ 🥗',
+        '🌜 วันนี้ใช้พลังงานมาทั้งวันแล้ว ให้รางวัลร่างกายด้วยมื้อค่ำที่มีประโยชน์กันเถอะ อิ่มท้องกำลังดี หลับสบาย 😴',
+        '🥣 ค่ำนี้อย่าอดอาหารเย็นเลยน้า เลือกเมนูเบาๆ ย่อยง่าย ร่างกายจะได้นำสารอาหารไปซ่อมแซมส่วนที่สึกหรอคืนนี้ครับ 🐟',
+        '🌛 มื้อเย็นทานอะไรดีเอ่ย? ทานแล้วอย่าลืมแวะมาติ๊กบันทึกนะ จะได้รู้ว่าวันนี้ปิดจ็อบแคลอรีไปเท่าไหร่แล้ว 📝',
+        '🥗 วันนี้เหนื่อยมาทั้งวัน ขอบคุณตัวเองด้วยอาหารดีๆ สักมื้อ แล้วพักผ่อนให้เต็มที่นะค้าบ 🌙'
+    ],
+    water_near_target: [
+        '🥤 สู้ๆ นะ! ดื่มน้ำไปแล้ว {currentGlasses}/{targetGlasses} แก้ว ({currentWaterMl} ml) ใกล้ถึงเป้าหมายแล้ว อีกแค่ {remainingGlasses} แก้วเท่านั้น! ✨',
+        '💧 อีกนิดเดียวจริงๆ! เหลืออีกแค่ {remainingGlasses} แก้วก็จะครบโควตาน้ำวันนี้แล้ว จิบเพิ่มอีกแก้วแล้วฉลองกันเลย! 👏',
+        '🧊 ใกล้พิชิตเป้าหมายน้ำดื่มแล้วนะ! ผิวพรรณชุ่มชื้น ไตและตับทำงานแฮปปี้สุดๆ ดื่มอีกนิดเดียวสู้ๆ ค้าบ 🌊',
+        '🌊 เก่งมากๆ! ดื่มไปเกิน 75% ของวันแล้ว เติมน้ำอีกแก้วตอนนี้ ร่างกายสดชื่นตื่นตัวพร้อมลุยต่อแน่นอน 🧠',
+        '🚰 ดื่มน้ำได้สม่ำเสมอดีมากเลย อีกเพียง {remainingGlasses} แก้วก็จะแตะเป้า 100% แล้ว คว้าชัยชนะกันครับ! 🏆'
+    ],
+    water_goal_completed: [
+        '🎉 ยอดเยี่ยมไปเลย! ดื่มน้ำครบ {currentGlasses}/{targetGlasses} แก้ว ({currentWaterMl} ml) ตามเป้าของวันนี้แล้ว ร่างกายสดชื่น ผิวพรรณสดใส ขอบคุณมากนะ! 💙',
+        '🏆 ชนะเลิศเรื่องดื่มน้ำวันนี้! ดื่มครบ {currentGlasses} แก้วแล้ว เซลล์ในร่างกายสดชื่น ระบบเผาผลาญทำงานเต็มสูบ! ✨',
+        '💙 สุขภาพดีเริ่มต้นที่น้ำเปล่า! วันนี้คุณดื่มน้ำครบเป้าหมายแล้ว มีวินัยยอดเยี่ยมมาก ขอปรบมือให้ดังๆ เลยครับ 👏',
+        '✨ ร่างกายของคุณวันนี้ต้องรักคุณมากแน่ๆ! ดื่มน้ำครบเป้า {targetGlasses} แก้วเรียบร้อย ผิวใส สมองไบรท์แน่นอน 🧠',
+        '🌊 ภารกิจดื่มน้ำวันนี้สำเร็จ 100%! รักษาระดับความมีวินัยแบบนี้ไว้นะครับ สุดยอดไปเลย! 🌟'
+    ],
+    water_afternoon_warning: [
+        '🥺 บ่ายสองแล้วน้า วันนี้ดื่มน้ำไปแค่ {currentGlasses} แก้วเอง อย่าลืมจิบน้ำเติมความสดชื่นและช่วยให้สมองปลอดโปร่งหน่อยนะค้าบ 💧',
+        '💧 รู้สึกง่วงเพลียช่วงบ่ายรึเปล่า? บางทีร่างกายอาจจะแค่ขาดน้ำนะ แวะจิบน้ำเย็นๆ สักแก้ว แก้ง่วงได้ดีเลย! 🧊',
+        '🧊 ช่วงบ่ายเซลล์ต้องการน้ำหล่อเลี้ยงนะค้าบ อย่าปล่อยให้คอแห้ง หยิบแก้วน้ำข้างตัวมาจิบสักนิดกันเถอะ 🥤',
+        '⚠️ ระดับน้ำในร่างกายตอนนี้ยังต่ำอยู่น้า แวะเติมน้ำเปล่า 1 แก้ว ช่วยให้เลือดไหลเวียนดีและทำงานต่อได้ลื่นไหลขึ้นครับ 🧠',
+        '🌊 พักสายตาจากหน้าจอ 1 นาที แล้วแวะไปเติมน้ำใส่แก้วกันครับ ร่างกายต้องการความชุ่มชื่นอยู่น้า 🚰'
+    ],
+    cal_near_target: [
+        '🔥 อีกนิดเดียว! วันนี้ทานไป {currentCal} / {targetCal} kcal ใกล้ครบเป้าหมายพอดีเป๊ะ (เหลืออีก {calGap} kcal) รักษาสมดุลได้เก่งมากๆ! 👏',
+        '🎯 จัดสรรแคลอรีได้ยอดเยี่ยมมาก! เหลือช่องว่างอีกเพียง {calGap} kcal จะแตะเป้าหมายพอดี มีวินัยสุดๆ เลยครับ ⭐',
+        '⚖️ การคุมอาหารวันนี้ใกล้ถึงเส้นชัยแล้ว ทานไป {currentCal} kcal ใกล้เคียงเป้าหมายแบบมืออาชีพ นับถือในความตั้งใจเลย! 💖',
+        '✨ แคลอรีวันนี้บาลานซ์ได้สวยงามมาก เหลือโควตาเบาๆ อีก {calGap} kcal จะหาของว่างเล็กๆ หรือปิดจ็อบแค่นี้ก็ยอดเยี่ยมครับ 🥑',
+        '🚀 ใกล้แตะเป้าหมายพลังงานของวันนี้แล้ว ({currentCal}/{targetCal} kcal) วางแผนอาหารได้ดีมาก สุขภาพดีอยู่ไม่ไกลเกินเอื้อม! 🌟'
+    ],
+    cal_perfect_hit: [
+        '🎯 สุดยอดมาก! วันนี้ควบคุมแคลอรีได้ {currentCal} / {targetCal} kcal ครบตามเป้าหมายของร่างกายพอดีเป๊ะ มีวินัยระดับมือโปรเลย! ⭐',
+        '🏆 Perfect Hit! คุณคุมแคลอรีได้ตรงเป้า {targetCal} kcal พอดีเป๊ะ นี่คือตัวอย่างของความสม่ำเสมอที่แท้จริง! 👏',
+        '🌟 วันนี้การจัดสรรพลังงานของคุณได้คะแนนเต็ม 100! แคลอรีลงล็อกเป๊ะ ร่างกายกำลังก้าวสู่เป้าหมายอย่างมั่นคงครับ 🚀',
+        '💯 ปรบมือรัวๆ ให้เลย! วันนี้ควบคุมแคลอรีได้แม่นยำมาก ({currentCal} kcal) ไม่ขาดไม่เกิน ผลลัพธ์ที่ดีย่อมมาจากวินัยแบบนี้แหละ! 💪',
+        '🎉 เป๊ะปังที่สุด! แคลอรีวันนี้แตะเป้าหมาย {targetCal} kcal ได้อย่างสวยงาม วันนี้คุณทำสำเร็จไปอีกหนึ่งก้าวแล้วครับ! 🌈'
+    ],
+    protein_strong_nudge: [
+        '💪 โปรตีนวันนี้แน่นมาก! ได้ไปแล้ว {currentP}g / {targetP}g กล้ามเนื้อได้รับการซ่อมแซมและเติบโตอย่างเต็มที่แน่นอน! 🥩',
+        '🥩 โปรตีนเกิน 85% ของเป้าแล้ว! ซ่อมแซมกล้ามเนื้อและช่วยให้อิ่มนาน คุมน้ำหนักได้ง่ายขึ้นเยอะเลย เก่งมากครับ! ⚡',
+        '⚡ สายฟิตตัวจริง! วันนี้เติมโปรตีนไปแล้ว {currentP}g กล้ามเนื้อแน่น ระบบเผาผลาญทำงานฟิตปั๋งแน่นอน! 🏋️‍♂️',
+        '🍗 เติมโปรตีนได้ถึงใจมากวันนี้ ({currentP}/{targetP}g) ร่างกายได้รับสารอาหารจำเป็นไปฟื้นฟูอย่างเต็มที่ ยอดเยี่ยมที่สุด! 🌟',
+        '🍳 โปรตีนแน่นเปรี๊ยะ! การเลือกทานอาหารโปรตีนสูงช่วยคงมวลกล้ามเนื้อและเร่งการเผาผลาญได้ดีเยี่ยม ทำต่อไปนะค้าบ! 💥'
+    ]
+};
+
+// Anti-repetition Random Message Selector
+function getVariedCompanionMessage(categoryKey, vars = {}) {
+    const pool = COMPANION_MESSAGE_TEMPLATES[categoryKey];
+    if (!pool || pool.length === 0) return '';
+    
+    let history = {};
+    try {
+        const raw = sessionStorage.getItem('novafit_companion_msg_history');
+        if (raw) history = JSON.parse(raw);
+    } catch(e) {}
+    
+    const lastUsed = history[categoryKey] !== undefined ? history[categoryKey] : -1;
+    let availableIndices = [];
+    for (let i = 0; i < pool.length; i++) {
+        if (i !== lastUsed) availableIndices.push(i);
+    }
+    if (availableIndices.length === 0) {
+        availableIndices = [0];
+    }
+    
+    const chosenIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    history[categoryKey] = chosenIdx;
+    try {
+        sessionStorage.setItem('novafit_companion_msg_history', JSON.stringify(history));
+    } catch(e) {}
+    
+    let text = pool[chosenIdx];
+    // Replace placeholders
+    Object.keys(vars).forEach(k => {
+        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(vars[k]));
+    });
+    return text;
+}
 
 function showLivingCompanionNudge(config) {
     const bubble = document.getElementById('livingCompanionBubble');
     if (!bubble) return;
 
     _currentCompanionNudgeId = config.id;
+    _currentCompanionConfig = config;
     const mascotIcon = document.getElementById('companionMascotIcon');
     const catEl = document.getElementById('companionNudgeCategory');
     const msgEl = document.getElementById('companionNudgeMessage');
@@ -4669,6 +5298,18 @@ function showLivingCompanionNudge(config) {
             };
             actionArea.appendChild(btn);
         }
+
+        // Quick Reshuffle Button: "🎲 สุ่มข้อความอื่น"
+        const reshuffleBtn = document.createElement('button');
+        reshuffleBtn.type = 'button';
+        reshuffleBtn.className = 'px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-bold text-[11px] transition active:scale-95 cursor-pointer flex items-center gap-1 border border-purple-500/20';
+        reshuffleBtn.innerHTML = '<span>🎲</span> <span>สุ่มข้อความอื่น</span>';
+        reshuffleBtn.title = 'สุ่มดูข้อความรูปแบบอื่นในหมวดนี้';
+        reshuffleBtn.onclick = () => {
+            reshuffleCurrentCompanionNudge();
+        };
+        actionArea.appendChild(reshuffleBtn);
+
         const thanksBtn = document.createElement('button');
         thanksBtn.type = 'button';
         thanksBtn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-[11px] transition cursor-pointer';
@@ -4702,6 +5343,221 @@ function showLivingCompanionNudge(config) {
     _companionDismissTimer = setTimeout(() => {
         dismissLivingCompanionNudge();
     }, duration);
+}
+
+
+// ==========================================
+// Celebration Confetti Cannon & Milestone Beats Engine (v5.9.3)
+// Lightweight 60fps Canvas Confetti & Milestone Reward System
+// ==========================================
+
+function reshuffleCurrentCompanionNudge() {
+    if (!_currentCompanionConfig) return;
+    const msgEl = document.getElementById('companionNudgeMessage');
+    if (!msgEl) return;
+
+    msgEl.classList.add('opacity-0', 'scale-95');
+    setTimeout(() => {
+        let newMsg = '';
+        if (_currentCompanionConfig.categoryKey) {
+            newMsg = getVariedCompanionMessage(_currentCompanionConfig.categoryKey, _currentCompanionConfig.vars || {});
+        } else {
+            const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+            newMsg = q.msg;
+        }
+        msgEl.textContent = newMsg;
+        msgEl.classList.remove('opacity-0', 'scale-95');
+
+        clearTimeout(_companionDismissTimer);
+        _companionDismissTimer = setTimeout(() => {
+            dismissLivingCompanionNudge();
+        }, 11000);
+    }, 140);
+}
+
+function triggerCelebrationConfetti(duration = 2800) {
+    const canvas = document.getElementById('celebrationConfettiCanvas');
+    if (!canvas) return;
+
+    // Haptic vibration feedback on mobile devices
+    try {
+        if (navigator.vibrate) navigator.vibrate([40, 60, 90]);
+    } catch(e) {}
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.classList.remove('hidden');
+
+    const colors = ['#10b981', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#f43f5e', '#fbbf24'];
+    const particleCount = Math.min(85, Math.floor(window.innerWidth / 10));
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: window.innerWidth * 0.5 + (Math.random() - 0.5) * window.innerWidth * 0.75,
+            y: window.innerHeight * 0.35 + (Math.random() - 0.5) * 80,
+            w: Math.random() * 8 + 5,
+            h: Math.random() * 6 + 4,
+            vx: (Math.random() - 0.5) * 15,
+            vy: Math.random() * -12 - 5,
+            gravity: 0.35 + Math.random() * 0.15,
+            drag: 0.985,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 14,
+            opacity: 1,
+            shape: Math.random() > 0.35 ? 'rect' : 'circle'
+        });
+    }
+
+    const startTime = Date.now();
+    cancelAnimationFrame(_confettiAnimationId);
+
+    function frame() {
+        const elapsed = Date.now() - startTime;
+        if (elapsed > duration) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.add('hidden');
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= p.drag;
+            p.rotation += p.rotationSpeed;
+            if (elapsed > duration - 800) {
+                p.opacity = Math.max(0, 1 - (elapsed - (duration - 800)) / 800);
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+
+            if (p.shape === 'rect') {
+                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        });
+
+        _confettiAnimationId = requestAnimationFrame(frame);
+    }
+
+    _confettiAnimationId = requestAnimationFrame(frame);
+}
+
+function showMilestoneBeatCard(config) {
+    const banner = document.getElementById('milestoneCelebrationBanner');
+    if (!banner) return;
+
+    const iconEl = document.getElementById('milestoneIcon');
+    const titleEl = document.getElementById('milestoneTitle');
+    const subEl = document.getElementById('milestoneSubtitle');
+    const detailEl = document.getElementById('milestoneDetail');
+
+    if (iconEl) iconEl.textContent = config.icon || '🎉';
+    if (titleEl) titleEl.textContent = config.title || 'ยินดีด้วย! พิชิตเป้าหมายสำเร็จ';
+    if (subEl) subEl.textContent = config.subtitle || '';
+    if (detailEl) detailEl.textContent = config.detail || '';
+
+    banner.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        banner.classList.remove('-translate-y-12', 'opacity-0');
+        banner.classList.add('translate-y-0', 'opacity-100');
+    });
+
+    clearTimeout(_milestoneDismissTimer);
+    _milestoneDismissTimer = setTimeout(() => {
+        dismissMilestoneCelebration();
+    }, config.duration || 8500);
+}
+
+function dismissMilestoneCelebration() {
+    clearTimeout(_milestoneDismissTimer);
+    const banner = document.getElementById('milestoneCelebrationBanner');
+    if (!banner) return;
+    banner.classList.remove('translate-y-0', 'opacity-100');
+    banner.classList.add('-translate-y-12', 'opacity-0');
+    setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 400);
+}
+
+function checkMilestoneCelebrations() {
+    const today = getTodayStr();
+    if (state.selectedDate !== today) return;
+
+    const targets = getCalculatedTargets();
+    const todayLogs = (state.logsByDate && state.logsByDate[today]) || [];
+    const currentCal = Math.round(todayLogs.reduce((s, x) => s + (Number(x.cal) || 0), 0));
+    const currentP = Math.round(todayLogs.reduce((s, x) => s + (Number(x.p) || 0), 0) * 10) / 10;
+    const targetCal = Math.round(targets.totalCal);
+    const targetP = Math.round(targets.pGram);
+
+    const currentGlasses = (state.waterByDate && state.waterByDate[today]) || 0;
+    const targetGlasses = targets.waterTargetGlasses || 8;
+
+    const sessionKey = `novafit_celebrated_milestones_${today}`;
+    let celebrated = [];
+    try {
+        celebrated = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+    } catch(e) {}
+
+    // 1. Water milestone: 100%+
+    if (targetGlasses > 0 && currentGlasses >= targetGlasses && !celebrated.includes('water')) {
+        celebrated.push('water');
+        try { sessionStorage.setItem(sessionKey, JSON.stringify(celebrated)); } catch(e) {}
+        triggerCelebrationConfetti();
+        showMilestoneBeatCard({
+            icon: '🎉',
+            title: 'พิชิตเป้าหมายดื่มน้ำครบ 100%!',
+            subtitle: `ดื่มครบ ${currentGlasses}/${targetGlasses} แก้ว (${currentGlasses * 250} ml) เรียบร้อย`,
+            detail: 'เซลล์ในร่างกายสดชื่น ผิวพรรณเปล่งปลั่ง ระบบเผาผลาญทำงานเต็มประสิทธิภาพ! 💧',
+            duration: 8500
+        });
+        return;
+    }
+
+    // 2. Protein milestone: 100%+
+    if (targetP > 0 && currentP >= targetP && todayLogs.length > 0 && !celebrated.includes('protein')) {
+        celebrated.push('protein');
+        try { sessionStorage.setItem(sessionKey, JSON.stringify(celebrated)); } catch(e) {}
+        triggerCelebrationConfetti();
+        showMilestoneBeatCard({
+            icon: '💪',
+            title: 'โปรตีนแตะเป้า 100% สำเร็จ!',
+            subtitle: `เติมโปรตีนได้ ${currentP}g / ${targetP}g ครบตามเป้าหมายของร่างกาย`,
+            detail: 'กล้ามเนื้อได้รับการซ่อมแซมอย่างเต็มที่ อิ่มนาน และช่วยเร่งระบบเผาผลาญ! 🥩',
+            duration: 8500
+        });
+        return;
+    }
+
+    // 3. Calorie Perfect Hit: 98% - 105%
+    const calRatio = targetCal > 0 ? (currentCal / targetCal) : 0;
+    if (calRatio >= 0.98 && calRatio <= 1.05 && todayLogs.length > 0 && !celebrated.includes('calorie')) {
+        celebrated.push('calorie');
+        try { sessionStorage.setItem(sessionKey, JSON.stringify(celebrated)); } catch(e) {}
+        triggerCelebrationConfetti();
+        showMilestoneBeatCard({
+            icon: '🎯',
+            title: 'Perfect Calorie Day!',
+            subtitle: `จัดสรรพลังงานได้ ${currentCal} / ${targetCal} kcal ตรงเป้าหมายเป๊ะ`,
+            detail: 'การควบคุมพลังงานที่แม่นยำจะสร้างผลลัพธ์การเปลี่ยนแปลงที่ยอดเยี่ยม! ⭐',
+            duration: 8500
+        });
+        return;
+    }
 }
 
 function dismissLivingCompanionNudge() {
@@ -4764,12 +5620,15 @@ function checkLivingAppNudges(force = false) {
 
     // ── TRIGGER 1: Missing Breakfast (10:30 - 12:45) ──
     if (timeDecimal >= 10.5 && timeDecimal < 12.8 && !hasBreakfast && !shownList.includes('missing_breakfast')) {
+        const msg = getVariedCompanionMessage('missing_breakfast');
         showLivingCompanionNudge({
             id: 'missing_breakfast',
+            categoryKey: 'missing_breakfast',
+            categoryKey: 'missing_breakfast',
             icon: '🥺',
             category: 'ห่วงใยสุขภาพยามเช้า',
             avatarGradient: 'bg-gradient-to-tr from-amber-500 to-rose-400',
-            message: '🥺 ใกล้เที่ยงแล้วยังไม่เห็นมื้อเช้าเลย... งานยุ่งจนลืมทานหรือยังไม่ได้กรอกเอ่ย? แวะเติมพลังงานหน่อยนะค้าบบ 🍳',
+            message: msg,
             actionText: '🍳 บันทึกมื้อเช้า',
             actionFn: () => {
                 state.activeMeal = 'breakfast';
@@ -4783,12 +5642,15 @@ function checkLivingAppNudges(force = false) {
 
     // ── TRIGGER 2: Missing Lunch (13:30 - 15:45) ──
     if (timeDecimal >= 13.5 && timeDecimal < 15.8 && !hasLunch && !shownList.includes('missing_lunch')) {
+        const msg = getVariedCompanionMessage('missing_lunch');
         showLivingCompanionNudge({
             id: 'missing_lunch',
+            categoryKey: 'missing_lunch',
+            categoryKey: 'missing_lunch',
             icon: '🍱',
             category: 'พักเติมพลังยามบ่าย',
             avatarGradient: 'bg-gradient-to-tr from-orange-500 to-amber-400',
-            message: '🍱 บ่ายแล้วนะ งานยุ่งจนลืมทานข้าวเที่ยงรึเปล่า? พักสายตาจากงานแล้วแวะทานของอร่อยๆ เติมพลังหน่อยนะ! 🥗',
+            message: msg,
             actionText: '🥗 บันทึกมื้อเที่ยง',
             actionFn: () => {
                 state.activeMeal = 'lunch';
@@ -4802,12 +5664,15 @@ function checkLivingAppNudges(force = false) {
 
     // ── TRIGGER 3: Missing Dinner (19:30 - 21:45) ──
     if (timeDecimal >= 19.5 && timeDecimal < 21.8 && !hasDinner && !shownList.includes('missing_dinner')) {
+        const msg = getVariedCompanionMessage('missing_dinner');
         showLivingCompanionNudge({
             id: 'missing_dinner',
+            categoryKey: 'missing_dinner',
+            categoryKey: 'missing_dinner',
             icon: '🌙',
             category: 'มื้อค่ำเพื่อสุขภาพ',
             avatarGradient: 'bg-gradient-to-tr from-indigo-500 to-purple-400',
-            message: '🌙 ค่ำแล้วน้า วันนี้ทานมื้อเย็นหรือยังเอ่ย? อย่าปล่อยให้ท้องหิวจนนอนไม่หลับนะค้าบบ 🍲',
+            message: msg,
             actionText: '🍲 บันทึกมื้อเย็น',
             actionFn: () => {
                 state.activeMeal = 'dinner';
@@ -4823,12 +5688,22 @@ function checkLivingAppNudges(force = false) {
     const waterRatio = targetGlasses > 0 ? (currentGlasses / targetGlasses) : 0;
     if (waterRatio >= 0.75 && waterRatio < 1.0 && !shownList.includes('water_near_target')) {
         const remainingGlasses = targetGlasses - currentGlasses;
+        const msg = getVariedCompanionMessage('water_near_target', {
+            currentGlasses,
+            targetGlasses,
+            currentWaterMl: currentWaterMl.toLocaleString(),
+            remainingGlasses
+        });
         showLivingCompanionNudge({
             id: 'water_near_target',
+            categoryKey: 'water_near_target',
+            vars: { currentGlasses, targetGlasses, currentWaterMl: currentWaterMl.toLocaleString(), remainingGlasses },
+            categoryKey: 'water_near_target',
+            vars: { currentGlasses, targetGlasses, currentWaterMl: currentWaterMl.toLocaleString(), remainingGlasses },
             icon: '🥤',
             category: 'ดื่มน้ำเพื่อสุขภาพ',
             avatarGradient: 'bg-gradient-to-tr from-cyan-500 to-blue-400',
-            message: `🥤 สู้ๆ นะ! ดื่มน้ำไปแล้ว ${currentGlasses}/${targetGlasses} แก้ว (${currentWaterMl.toLocaleString()} ml) ใกล้ถึงเป้าหมายแล้ว อีกแค่ ${remainingGlasses} แก้วเท่านั้น! ✨`,
+            message: msg,
             actionText: '+ ดื่มน้ำ 1 แก้ว',
             actionFn: () => {
                 adjustWater(1);
@@ -4839,24 +5714,38 @@ function checkLivingAppNudges(force = false) {
 
     // ── TRIGGER 5: Water Goal Completed (100%+) ──
     if (waterRatio >= 1.0 && !shownList.includes('water_goal_completed')) {
+        const msg = getVariedCompanionMessage('water_goal_completed', {
+            currentGlasses,
+            targetGlasses,
+            currentWaterMl: currentWaterMl.toLocaleString()
+        });
         showLivingCompanionNudge({
             id: 'water_goal_completed',
+            categoryKey: 'water_goal_completed',
+            vars: { currentGlasses, targetGlasses, currentWaterMl: currentWaterMl.toLocaleString() },
+            categoryKey: 'water_goal_completed',
+            vars: { currentGlasses, targetGlasses, currentWaterMl: currentWaterMl.toLocaleString() },
             icon: '🎉',
             category: 'พิชิตเป้าหมายดื่มน้ำ',
             avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-cyan-400',
-            message: `🎉 ยอดเยี่ยมไปเลย! ดื่มน้ำครบ ${currentGlasses}/${targetGlasses} แก้ว (${currentWaterMl.toLocaleString()} ml) ตามเป้าของวันนี้แล้ว ร่างกายสดชื่น ผิวพรรณสดใส ขอบคุณมากนะ! 💙`
+            message: msg
         });
         return;
     }
 
     // ── TRIGGER 6: Afternoon Dehydration Warning (14:00+ and water < 35%) ──
     if (timeDecimal >= 14.0 && waterRatio < 0.35 && !shownList.includes('water_afternoon_warning')) {
+        const msg = getVariedCompanionMessage('water_afternoon_warning', { currentGlasses });
         showLivingCompanionNudge({
             id: 'water_afternoon_warning',
+            categoryKey: 'water_afternoon_warning',
+            vars: { currentGlasses },
+            categoryKey: 'water_afternoon_warning',
+            vars: { currentGlasses },
             icon: '💧',
             category: 'เตือนจิบน้ำเพื่อความสดชื่น',
             avatarGradient: 'bg-gradient-to-tr from-blue-500 to-indigo-400',
-            message: `🥺 บ่ายสองแล้วน้า วันนี้ดื่มน้ำไปแค่ ${currentGlasses} แก้วเอง อย่าลืมจิบน้ำเติมความสดชื่นและช่วยให้สมองปลอดโปร่งหน่อยนะค้าบ 💧`,
+            message: msg,
             actionText: '+ จิบน้ำ 1 แก้ว',
             actionFn: () => {
                 adjustWater(1);
@@ -4869,24 +5758,41 @@ function checkLivingAppNudges(force = false) {
     const calRatio = targetCal > 0 ? (currentCal / targetCal) : 0;
     if (calRatio >= 0.85 && calRatio < 1.0 && !shownList.includes('cal_near_target')) {
         const calGap = targetCal - currentCal;
+        const msg = getVariedCompanionMessage('cal_near_target', {
+            currentCal,
+            targetCal,
+            calGap
+        });
         showLivingCompanionNudge({
             id: 'cal_near_target',
+            categoryKey: 'cal_near_target',
+            vars: { currentCal, targetCal, calGap },
+            categoryKey: 'cal_near_target',
+            vars: { currentCal, targetCal, calGap },
             icon: '🔥',
             category: 'ใกล้ถึงเป้าหมายแคลอรี',
             avatarGradient: 'bg-gradient-to-tr from-amber-500 to-emerald-400',
-            message: `🔥 อีกนิดเดียว! วันนี้ทานไป ${currentCal} / ${targetCal} kcal ใกล้ครบเป้าหมายพอดีเป๊ะ (เหลืออีก ${calGap} kcal) รักษาสมดุลได้เก่งมากๆ! 👏`
+            message: msg
         });
         return;
     }
 
     // ── TRIGGER 8: Calories Perfect Hit (100% - 105%) ──
     if (calRatio >= 1.0 && calRatio <= 1.05 && !shownList.includes('cal_perfect_hit')) {
+        const msg = getVariedCompanionMessage('cal_perfect_hit', {
+            currentCal,
+            targetCal
+        });
         showLivingCompanionNudge({
             id: 'cal_perfect_hit',
+            categoryKey: 'cal_perfect_hit',
+            vars: { currentCal, targetCal },
+            categoryKey: 'cal_perfect_hit',
+            vars: { currentCal, targetCal },
             icon: '🎯',
             category: 'Perfect Calorie Day!',
             avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-teal-400',
-            message: `🎯 สุดยอดมาก! วันนี้ควบคุมแคลอรีได้ ${currentCal} / ${targetCal} kcal ครบตามเป้าหมายของร่างกายพอดีเป๊ะ มีวินัยระดับมือโปรเลย! ⭐`
+            message: msg
         });
         return;
     }
@@ -4894,12 +5800,20 @@ function checkLivingAppNudges(force = false) {
     // ── TRIGGER 9: Protein Target Strong (≥ 85% of target) ──
     const pRatio = targetP > 0 ? (currentP / targetP) : 0;
     if (pRatio >= 0.85 && !shownList.includes('protein_strong_nudge')) {
+        const msg = getVariedCompanionMessage('protein_strong_nudge', {
+            currentP,
+            targetP
+        });
         showLivingCompanionNudge({
             id: 'protein_strong_nudge',
+            categoryKey: 'protein_strong_nudge',
+            vars: { currentP, targetP },
+            categoryKey: 'protein_strong_nudge',
+            vars: { currentP, targetP },
             icon: '💪',
             category: 'โปรตีนแน่นเสริมสร้างกล้ามเนื้อ',
             avatarGradient: 'bg-gradient-to-tr from-purple-500 to-indigo-400',
-            message: `💪 โปรตีนวันนี้แน่นมาก! ได้ไปแล้ว ${currentP}g / ${targetP}g กล้ามเนื้อได้รับการซ่อมแซมและเติบโตอย่างเต็มที่แน่นอน! 🥩`
+            message: msg
         });
         return;
     }
@@ -4936,43 +5850,58 @@ function triggerTestCompanionNudge(type) {
 
     switch (type) {
         case 'water_near':
+            const wnMsg = getVariedCompanionMessage('water_near_target', {
+                currentGlasses: Math.max(1, tGlasses - 1),
+                targetGlasses: tGlasses,
+                currentWaterMl: (Math.max(1, tGlasses - 1) * 250).toLocaleString(),
+                remainingGlasses: 1
+            });
             showLivingCompanionNudge({
                 id: 'test_water_near',
                 icon: '🥤',
                 category: 'ดื่มน้ำเพื่อสุขภาพ',
                 avatarGradient: 'bg-gradient-to-tr from-cyan-500 to-blue-400',
-                message: `🥤 สู้ๆ นะ! ดื่มน้ำไปแล้ว 6/${tGlasses} แก้ว ใกล้ถึงเป้าหมายแล้ว อีกแค่แก้วเดียวเท่านั้น! ✨`,
+                message: wnMsg,
                 actionText: '+ ดื่มน้ำ 1 แก้ว',
                 actionFn: () => adjustWater(1)
             });
             break;
         case 'water_full':
+            const wfMsg = getVariedCompanionMessage('water_goal_completed', {
+                currentGlasses: tGlasses,
+                targetGlasses: tGlasses,
+                currentWaterMl: (tGlasses * 250).toLocaleString()
+            });
             showLivingCompanionNudge({
                 id: 'test_water_full',
                 icon: '🎉',
                 category: 'พิชิตเป้าหมายดื่มน้ำ',
                 avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-cyan-400',
-                message: `🎉 ยอดเยี่ยมไปเลย! ดื่มน้ำครบ ${tGlasses}/${tGlasses} แก้ว (${tGlasses * 250} ml) ตามเป้าของวันนี้แล้ว ร่างกายสดชื่น ผิวพรรณสดใส ขอบคุณมากนะ! 💙`
+                message: wfMsg
             });
             break;
         case 'water_afternoon':
+            const waMsg = getVariedCompanionMessage('water_afternoon_warning', {
+                currentGlasses: 2
+            });
             showLivingCompanionNudge({
                 id: 'test_water_afternoon',
                 icon: '💧',
                 category: 'เตือนจิบน้ำเพื่อความสดชื่น',
                 avatarGradient: 'bg-gradient-to-tr from-blue-500 to-indigo-400',
-                message: `🥺 บ่ายสองแล้วน้า วันนี้ดื่มน้ำไปนิดเดียวเอง อย่าลืมจิบน้ำเติมความสดชื่นและช่วยให้สมองปลอดโปร่งหน่อยนะค้าบ 💧`,
+                message: waMsg,
                 actionText: '+ จิบน้ำ 1 แก้ว',
                 actionFn: () => adjustWater(1)
             });
             break;
         case 'missing_bf':
+            const mbfMsg = getVariedCompanionMessage('missing_breakfast');
             showLivingCompanionNudge({
                 id: 'test_missing_bf',
                 icon: '🥺',
                 category: 'ห่วงใยสุขภาพยามเช้า',
                 avatarGradient: 'bg-gradient-to-tr from-amber-500 to-rose-400',
-                message: '🥺 ใกล้เที่ยงแล้วยังไม่เห็นมื้อเช้าเลย... งานยุ่งจนลืมทานหรือยังไม่ได้กรอกเอ่ย? แวะเติมพลังงานหน่อยนะค้าบบ 🍳',
+                message: mbfMsg,
                 actionText: '🍳 บันทึกมื้อเช้า',
                 actionFn: () => {
                     state.activeMeal = 'breakfast';
@@ -4981,12 +5910,13 @@ function triggerTestCompanionNudge(type) {
             });
             break;
         case 'missing_lunch':
+            const mlMsg = getVariedCompanionMessage('missing_lunch');
             showLivingCompanionNudge({
                 id: 'test_missing_lunch',
                 icon: '🍱',
                 category: 'พักเติมพลังยามบ่าย',
                 avatarGradient: 'bg-gradient-to-tr from-orange-500 to-amber-400',
-                message: '🍱 บ่ายแล้วนะ งานยุ่งจนลืมทานข้าวเที่ยงรึเปล่า? พักสายตาจากงานแล้วแวะทานของอร่อยๆ เติมพลังหน่อยนะ! 🥗',
+                message: mlMsg,
                 actionText: '🥗 บันทึกมื้อเที่ยง',
                 actionFn: () => {
                     state.activeMeal = 'lunch';
@@ -4995,12 +5925,13 @@ function triggerTestCompanionNudge(type) {
             });
             break;
         case 'missing_dinner':
+            const mdMsg = getVariedCompanionMessage('missing_dinner');
             showLivingCompanionNudge({
                 id: 'test_missing_dinner',
                 icon: '🌙',
                 category: 'มื้อค่ำเพื่อสุขภาพ',
                 avatarGradient: 'bg-gradient-to-tr from-indigo-500 to-purple-400',
-                message: '🌙 ค่ำแล้วน้า วันนี้ทานมื้อเย็นหรือยังเอ่ย? อย่าปล่อยให้ท้องหิวจนนอนไม่หลับนะค้าบบ 🍲',
+                message: mdMsg,
                 actionText: '🍲 บันทึกมื้อเย็น',
                 actionFn: () => {
                     state.activeMeal = 'dinner';
@@ -5009,30 +5940,45 @@ function triggerTestCompanionNudge(type) {
             });
             break;
         case 'cal_near':
+            const curC = Math.round(tCal * 0.92);
+            const cnMsg = getVariedCompanionMessage('cal_near_target', {
+                currentCal: curC,
+                targetCal: tCal,
+                calGap: tCal - curC
+            });
             showLivingCompanionNudge({
                 id: 'test_cal_near',
                 icon: '🔥',
                 category: 'ใกล้ถึงเป้าหมายแคลอรี',
                 avatarGradient: 'bg-gradient-to-tr from-amber-500 to-emerald-400',
-                message: `🔥 อีกนิดเดียว! วันนี้ทานไป ${Math.round(tCal * 0.9)} / ${tCal} kcal ใกล้ครบเป้าหมายพอดีเป๊ะ (เหลืออีก ${Math.round(tCal * 0.1)} kcal) รักษาสมดุลได้เก่งมากๆ! 👏`
+                message: cnMsg
             });
             break;
         case 'cal_perfect':
+            const cpMsg = getVariedCompanionMessage('cal_perfect_hit', {
+                currentCal: tCal,
+                targetCal: tCal
+            });
             showLivingCompanionNudge({
                 id: 'test_cal_perfect',
                 icon: '🎯',
                 category: 'Perfect Calorie Day!',
                 avatarGradient: 'bg-gradient-to-tr from-emerald-500 to-teal-400',
-                message: `🎯 สุดยอดมาก! วันนี้ควบคุมแคลอรีได้ ${tCal} / ${tCal} kcal ครบตามเป้าหมายของร่างกายพอดีเป๊ะ มีวินัยระดับมือโปรเลย! ⭐`
+                message: cpMsg
             });
             break;
         case 'protein':
+            const curP = Math.round(tP * 0.9);
+            const pMsg = getVariedCompanionMessage('protein_strong_nudge', {
+                currentP: curP,
+                targetP: tP
+            });
             showLivingCompanionNudge({
                 id: 'test_protein',
                 icon: '💪',
                 category: 'โปรตีนแน่นเสริมสร้างกล้ามเนื้อ',
                 avatarGradient: 'bg-gradient-to-tr from-purple-500 to-indigo-400',
-                message: `💪 โปรตีนวันนี้แน่นมาก! ได้ไปแล้ว ${Math.round(tP * 0.9)}g / ${tP}g กล้ามเนื้อได้รับการซ่อมแซมและเติบโตอย่างเต็มที่แน่นอน! 🥩`
+                message: pMsg
             });
             break;
         case 'cheerful':
@@ -5096,3 +6042,8 @@ window.checkLivingAppNudges = checkLivingAppNudges;
 window.openCompanionTestModal = openCompanionTestModal;
 window.closeCompanionTestModal = closeCompanionTestModal;
 window.triggerTestCompanionNudge = triggerTestCompanionNudge;
+window.triggerCelebrationConfetti = triggerCelebrationConfetti;
+window.showMilestoneBeatCard = showMilestoneBeatCard;
+window.dismissMilestoneCelebration = dismissMilestoneCelebration;
+window.reshuffleCurrentCompanionNudge = reshuffleCurrentCompanionNudge;
+window.checkMilestoneCelebrations = checkMilestoneCelebrations;

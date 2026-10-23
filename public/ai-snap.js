@@ -601,6 +601,9 @@ function renderAiAnalysisResult(result, isDemo = false) {
     const activeMeal = (window.state && window.state.activeMeal) || 'breakfast';
     const selectMeal = document.getElementById('aiResMealSelect');
     if (selectMeal) selectMeal.value = activeMeal;
+
+    updateAiSnapFavButton(result.foodName || '');
+    updateAiSnapCustomButton(result.foodName || '');
 }
 
 // Record AI Scan Event to Firestore for Admin Audit & Quota Analytics
@@ -695,6 +698,183 @@ function saveAiAnalyzedMeal() {
     if (window.showToast) {
         window.showToast(`📸 บันทึก "${name}" (${cal} kcal) ด้วย AI สำเร็จแล้ว!`);
     }
+}
+
+
+// ==========================================
+// AI SNAP FAVORITES & CUSTOM FOOD LOGIC (v5.9.0)
+// ==========================================
+function addCurrentAiSnapToFavorites() {
+    const inName = document.getElementById('aiResFoodName');
+    const name = inName ? inName.value.trim() : (_currentAiAnalyzedData?.foodName || '');
+    if (!name) return;
+    if (!window.state) return;
+    if (!Array.isArray(window.state.favorites)) window.state.favorites = [];
+
+    const isFav = window.state.favorites.includes(name);
+    if (isFav) {
+        window.state.favorites = window.state.favorites.filter(x => x !== name);
+        if (window.showToast) window.showToast(`นำ "${name}" ออกจากเมนูโปรดแล้ว`);
+    } else {
+        window.state.favorites.push(name);
+        if (window.showToast) window.showToast(`⭐ บันทึก "${name}" เข้าเมนูโปรดแล้ว!`);
+    }
+    if (window.saveState) window.saveState();
+    if (window.renderFoodDatabaseExplorer) window.renderFoodDatabaseExplorer();
+    updateAiSnapFavButton(name);
+}
+
+function updateAiSnapFavButton(name) {
+    const btn = document.getElementById('btnAiSnapAddFav');
+    if (!btn || !window.state) return;
+    const isFav = Array.isArray(window.state.favorites) && window.state.favorites.includes(name);
+    if (isFav) {
+        btn.innerHTML = '<span>★</span> <span>อยู่ในเมนูโปรดแล้ว</span>';
+        btn.className = 'flex-1 py-2 px-2.5 rounded-xl bg-amber-500 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1 cursor-pointer';
+    } else {
+        btn.innerHTML = '<span>☆</span> <span>เพิ่มเป็นเมนูโปรด</span>';
+        btn.className = 'flex-1 py-2 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition flex items-center justify-center gap-1 cursor-pointer';
+    }
+}
+
+function addCurrentAiSnapToCustomFood() {
+    const inName = document.getElementById('aiResFoodName');
+    const inCal = document.getElementById('aiResCal');
+    const inP = document.getElementById('aiResP');
+    const inC = document.getElementById('aiResC');
+    const inF = document.getElementById('aiResF');
+    const txtServing = document.getElementById('aiResServing');
+
+    const name = inName ? inName.value.trim() : (_currentAiAnalyzedData?.foodName || '');
+    if (!name) return;
+    if (!window.state) return;
+    if (!Array.isArray(window.state.customPresets)) window.state.customPresets = [];
+
+    const cal = Math.round(Number(inCal?.value) || 0);
+    const p = Math.round(Number(inP?.value) || 0);
+    const c = Math.round(Number(inC?.value) || 0);
+    const f = Math.round(Number(inF?.value) || 0);
+    const serving = (txtServing?.textContent || _currentAiAnalyzedData?.servingSize || '1 ที่').trim();
+
+    const existingIdx = window.state.customPresets.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
+    if (existingIdx >= 0) {
+        window.state.customPresets[existingIdx] = {
+            name,
+            servingSize: serving,
+            calories: cal,
+            protein: p,
+            carbs: c,
+            fat: f,
+            isCustom: true
+        };
+        if (window.showToast) window.showToast(`💾 อัปเดต "${name}" ในคลังอาหารแล้ว!`);
+    } else {
+        window.state.customPresets.push({
+            name,
+            servingSize: serving,
+            calories: cal,
+            protein: p,
+            carbs: c,
+            fat: f,
+            isCustom: true
+        });
+        if (window.showToast) window.showToast(`💾 บันทึก "${name}" ลงคลังอาหารเรียบร้อย!`);
+    }
+
+    if (window.saveState) window.saveState();
+    if (window.renderFoodDatabaseExplorer) window.renderFoodDatabaseExplorer();
+    updateAiSnapCustomButton(name);
+}
+
+function updateAiSnapCustomButton(name) {
+    const btn = document.getElementById('btnAiSnapAddCustom');
+    if (!btn || !window.state) return;
+    const exists = Array.isArray(window.state.customPresets) && window.state.customPresets.some(x => x.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+        btn.innerHTML = '<span>✓</span> <span>อยู่ในคลังอาหารแล้ว</span>';
+        btn.className = 'flex-1 py-2 px-2.5 rounded-xl bg-sky-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1 cursor-pointer';
+    } else {
+        btn.innerHTML = '<span>💾</span> <span>บันทึกลงคลังอาหาร</span>';
+        btn.className = 'flex-1 py-2 px-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 font-bold text-xs border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer';
+    }
+}
+
+function toggleAiVoiceItemFavorite(idx) {
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items || !_currentAiVoiceResult.items[idx]) return;
+    const item = _currentAiVoiceResult.items[idx];
+    const name = item.foodName;
+    if (!name || !window.state) return;
+    if (!Array.isArray(window.state.favorites)) window.state.favorites = [];
+
+    const i = window.state.favorites.indexOf(name);
+    if (i >= 0) {
+        window.state.favorites.splice(i, 1);
+        if (window.showToast) window.showToast(`นำ "${name}" ออกจากเมนูโปรดแล้ว`);
+    } else {
+        window.state.favorites.push(name);
+        if (window.showToast) window.showToast(`⭐ บันทึก "${name}" เข้าเมนูโปรดแล้ว!`);
+    }
+    if (window.saveState) window.saveState();
+    if (window.renderFoodDatabaseExplorer) window.renderFoodDatabaseExplorer();
+    renderAiVoiceItemsList();
+}
+
+function saveAiVoiceItemToCustomFood(idx) {
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items || !_currentAiVoiceResult.items[idx]) return;
+    const item = _currentAiVoiceResult.items[idx];
+    const name = item.foodName;
+    if (!name || !window.state) return;
+    if (!Array.isArray(window.state.customPresets)) window.state.customPresets = [];
+
+    const cal = Math.round(Number(item.cal) || 0);
+    const p = Math.round(Number(item.p) || 0);
+    const c = Math.round(Number(item.c) || 0);
+    const f = Math.round(Number(item.f) || 0);
+    const serving = item.servingSize || '1 ที่';
+
+    const existingIdx = window.state.customPresets.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
+    if (existingIdx >= 0) {
+        window.state.customPresets[existingIdx] = { name, servingSize: serving, calories: cal, protein: p, carbs: c, fat: f, isCustom: true };
+    } else {
+        window.state.customPresets.push({ name, servingSize: serving, calories: cal, protein: p, carbs: c, fat: f, isCustom: true });
+    }
+    if (window.showToast) window.showToast(`💾 บันทึก "${name}" ลงคลังอาหารส่วนตัวแล้ว!`);
+    if (window.saveState) window.saveState();
+    if (window.renderFoodDatabaseExplorer) window.renderFoodDatabaseExplorer();
+    renderAiVoiceItemsList();
+}
+
+function saveAllAiVoiceItemsToLibrary() {
+    if (!_currentAiVoiceResult || !_currentAiVoiceResult.items || _currentAiVoiceResult.items.length === 0) return;
+    if (!window.state) return;
+    if (!Array.isArray(window.state.favorites)) window.state.favorites = [];
+    if (!Array.isArray(window.state.customPresets)) window.state.customPresets = [];
+
+    let count = 0;
+    _currentAiVoiceResult.items.forEach(item => {
+        const name = item.foodName;
+        if (!name) return;
+        count++;
+        if (!window.state.favorites.includes(name)) {
+            window.state.favorites.push(name);
+        }
+        const cal = Math.round(Number(item.cal) || 0);
+        const p = Math.round(Number(item.p) || 0);
+        const c = Math.round(Number(item.c) || 0);
+        const f = Math.round(Number(item.f) || 0);
+        const serving = item.servingSize || '1 ที่';
+        const existingIdx = window.state.customPresets.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
+        if (existingIdx >= 0) {
+            window.state.customPresets[existingIdx] = { name, servingSize: serving, calories: cal, protein: p, carbs: c, fat: f, isCustom: true };
+        } else {
+            window.state.customPresets.push({ name, servingSize: serving, calories: cal, protein: p, carbs: c, fat: f, isCustom: true });
+        }
+    });
+
+    if (window.saveState) window.saveState();
+    if (window.renderFoodDatabaseExplorer) window.renderFoodDatabaseExplorer();
+    renderAiVoiceItemsList();
+    if (window.showToast) window.showToast(`⭐ บันทึกทั้ง ${count} เมนูเข้าเมนูโปรดและคลังอาหารเรียบร้อย!`);
 }
 
 // ==========================================
@@ -1635,24 +1815,42 @@ function renderAiVoiceItemsList() {
         const c = Math.round(Number(it.c) || 0);
         const f = Math.round(Number(it.f) || 0);
         const serving = it.servingSize || '1 ที่';
+        const isFav = Array.isArray(window.state?.favorites) && window.state.favorites.includes(it.foodName);
+        const inCustom = Array.isArray(window.state?.customPresets) && window.state.customPresets.some(x => x.name.toLowerCase() === (it.foodName || '').toLowerCase());
 
         return `
             <div class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex items-start justify-between gap-2 shadow-2xs">
                 <div class="min-w-0 flex-1">
-                    <div class="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">${it.foodName}</div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-slate-800 dark:text-slate-100 text-xs">${it.foodName}</span>
+                        ${isFav ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold">⭐ โปรด</span>' : ''}
+                        ${inCustom ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold">💾 ในคลัง</span>' : ''}
+                    </div>
                     <div class="text-[10px] text-slate-400 mt-0.5">ขนาดเสิร์ฟ: ${serving}</div>
-                    <div class="flex items-center gap-2 mt-1.5 text-[11px] flex-wrap">
+                    <div class="flex items-center gap-2 mt-1 text-[11px] flex-wrap">
                         <span class="font-black text-purple-600 dark:text-purple-400">${cal} kcal</span>
                         <span class="text-rose-500 font-semibold text-[10px]">P:${p}g</span>
                         <span class="text-amber-500 font-semibold text-[10px]">C:${c}g</span>
                         <span class="text-sky-500 font-semibold text-[10px]">F:${f}g</span>
                     </div>
                 </div>
-                <button type="button" onclick="removeAiVoiceResultItem(${idx})"
-                    class="w-6 h-6 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition flex items-center justify-center shrink-0 cursor-pointer"
-                    title="ลบรายการนี้ออก">
-                    ✕
-                </button>
+                <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                    <button type="button" onclick="toggleAiVoiceItemFavorite(${idx})"
+                        class="p-1 rounded-lg ${isFav ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-700'} text-xs font-bold transition cursor-pointer"
+                        title="${isFav ? 'นำออกจากเมนูโปรด' : 'เพิ่มเป็นเมนูโปรด'}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
+                    <button type="button" onclick="saveAiVoiceItemToCustomFood(${idx})"
+                        class="p-1 rounded-lg ${inCustom ? 'text-sky-500 bg-sky-500/10' : 'text-slate-400 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-slate-700'} text-xs font-bold transition cursor-pointer"
+                        title="${inCustom ? 'อยู่ในคลังอาหารแล้ว (กดอัปเดต)' : 'บันทึกลงคลังอาหาร'}">
+                        💾
+                    </button>
+                    <button type="button" onclick="removeAiVoiceResultItem(${idx})"
+                        class="w-6 h-6 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition flex items-center justify-center shrink-0 cursor-pointer"
+                        title="ลบรายการนี้ออก">
+                        ✕
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
@@ -1786,3 +1984,11 @@ window.saveAiVoiceAnalyzedMeals = saveAiVoiceAnalyzedMeals;
 window.resetAiVoiceState = resetAiVoiceState;
 window.getCurrentAiVoiceResult = () => _currentAiVoiceResult;
 
+
+window.addCurrentAiSnapToFavorites = addCurrentAiSnapToFavorites;
+window.addCurrentAiSnapToCustomFood = addCurrentAiSnapToCustomFood;
+window.updateAiSnapFavButton = updateAiSnapFavButton;
+window.updateAiSnapCustomButton = updateAiSnapCustomButton;
+window.toggleAiVoiceItemFavorite = toggleAiVoiceItemFavorite;
+window.saveAiVoiceItemToCustomFood = saveAiVoiceItemToCustomFood;
+window.saveAllAiVoiceItemsToLibrary = saveAllAiVoiceItemsToLibrary;

@@ -194,9 +194,13 @@ function updateAuthUI(user) {
     }
 
     const adminLink = document.getElementById('btnAdminDashboard');
+    const adminSection = document.getElementById('adminToolsSection');
     const isAdmin = user && user.email && ['benznova01@gmail.com', 'parinya6969@gmail.com'].includes(user.email.toLowerCase());
     if (adminLink) {
         adminLink.classList.toggle('hidden', !isAdmin);
+    }
+    if (adminSection) {
+        adminSection.classList.toggle('hidden', !isAdmin);
     }
 }
 

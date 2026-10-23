@@ -1097,8 +1097,8 @@ window.renderHealthTipsModalList = function (query) {
                         <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">${t.category}</span>
                     </div>
                 </div>
-                <button type="button" onclick="shareTipToClipboard('${t.id}')" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-600 transition" title="คัดลอกข้อความเพื่อแชร์">
-                    📋 แชร์
+                <button type="button" onclick="openHealthTipCardModal('${t.id}')" class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="แชร์การ์ดรูปภาพสวยๆ">
+                    <span>📸</span> <span>แชร์การ์ด</span>
                 </button>
             </div>
             <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">${t.summary}</p>
@@ -1110,17 +1110,385 @@ window.renderHealthTipsModalList = function (query) {
     `).join('');
 };
 
-window.shareTipToClipboard = function (tipId) {
-    const tip = window.healthTipsEngine.tips.find(t => t.id === tipId);
+window.formatHealthTipShareText = function (tip) {
+    if (!tip) return '';
+    const icon = tip.icon || '💡';
+    const title = tip.title || 'เกร็ดความรู้สุขภาพ';
+    const summary = tip.summary ? tip.summary.trim() : '';
+    const detail = tip.detail ? tip.detail.trim() : '';
+    return `${icon} ${title}\n\n${summary}\n${detail}\n\n✨ ที่มาจากเว็บ NovaFit by BenzNova`;
+};
+
+
+// ==========================================
+// HEALTH TIP RETINA CANVAS CARD GENERATOR (v5.9.1)
+// ==========================================
+function roundRectTip(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+}
+
+function wrapThaiCanvasText(ctx, text, maxWidth) {
+    if (!text) return [];
+    let segments = [];
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        try {
+            const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+            segments = Array.from(segmenter.segment(text), s => s.segment);
+        } catch (e) {
+            segments = text.includes(' ') ? text.split(' ') : text.split('');
+        }
+    } else {
+        segments = text.includes(' ') ? text.split(' ') : text.split('');
+    }
+
+    const lines = [];
+    let currentLine = '';
+
+    for (let i = 0; i < segments.length; i++) {
+        const testLine = currentLine + segments[i];
+        if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = segments[i];
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+    return lines;
+}
+
+window.renderHealthTipCard = async function (tip) {
+    const canvas = document.getElementById('healthTipCardCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 1080;
+    const H = 1420;
+    canvas.width = W;
+    canvas.height = H;
+
+    const activeTip = tip || window._activeTipForCard || window._sessionHealthTip;
+    if (!activeTip) return;
+
+    if (document.fonts && document.fonts.ready) {
+        try { await document.fonts.ready; } catch (e) { }
+    }
+
+    // 1. Dark Background with subtle ambient gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#070b12');
+    bgGrad.addColorStop(0.5, '#0f172a');
+    bgGrad.addColorStop(1, '#070b12');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Ambient Glow Top-Right (Amber / Orange)
+    const glow1 = ctx.createRadialGradient(880, 160, 20, 880, 160, 520);
+    glow1.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
+    glow1.addColorStop(0.7, 'rgba(249, 115, 22, 0.08)');
+    glow1.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = glow1;
+    ctx.fillRect(350, 0, W - 350, 700);
+
+    // Ambient Glow Bottom-Left (Emerald)
+    const glow2 = ctx.createRadialGradient(200, 1260, 20, 200, 1260, 520);
+    glow2.addColorStop(0, 'rgba(16, 185, 129, 0.20)');
+    glow2.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 750, 750, 670);
+
+    // Outer Border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 2;
+    roundRectTip(ctx, 28, 28, W - 56, H - 56, 36, false, true);
+
+    // 2. Header: Logo & Branding
+    const logoGrad = ctx.createLinearGradient(60, 60, 120, 120);
+    logoGrad.addColorStop(0, '#f59e0b');
+    logoGrad.addColorStop(0.5, '#10b981');
+    logoGrad.addColorStop(1, '#6366f1');
+    ctx.fillStyle = logoGrad;
+    roundRectTip(ctx, 60, 60, 56, 56, 16, true, false);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✨', 88, 88);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = 'bold 30px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('NovaFit Pro', 132, 88);
+
+    ctx.font = '19px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Daily Health & Nutrition Insight', 132, 114);
+
+    // Category Badge at Top-Right
+    const catText = activeTip.category || 'โภชนาการ & สุขภาพ';
+    ctx.font = 'bold 20px "Kanit", "Noto Sans Thai", sans-serif';
+    const catMetrics = ctx.measureText(catText);
+    const catBadgeW = catMetrics.width + 36;
+    const catBadgeX = W - 60 - catBadgeW;
+    const catBadgeY = 66;
+
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.lineWidth = 1.5;
+    roundRectTip(ctx, catBadgeX, catBadgeY, catBadgeW, 44, 22, true, true);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText(catText, catBadgeX + 18, catBadgeY + 29);
+
+    // 3. Hero Icon (Large glowing circle container)
+    const iconX = W / 2;
+    const iconY = 240;
+
+    const iconGlow = ctx.createRadialGradient(iconX, iconY, 20, iconX, iconY, 100);
+    iconGlow.addColorStop(0, 'rgba(245, 158, 11, 0.30)');
+    iconGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = iconGlow;
+    ctx.beginPath();
+    ctx.arc(iconX, iconY, 100, 0, Math.PI * 2);
+    ctx.fill();
+
+    const iconBgGrad = ctx.createLinearGradient(iconX - 65, iconY - 65, iconX + 65, iconY + 65);
+    iconBgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+    iconBgGrad.addColorStop(1, 'rgba(255, 255, 255, 0.03)');
+    ctx.fillStyle = iconBgGrad;
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.40)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(iconX, iconY, 65, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '72px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(activeTip.icon || '💡', iconX, iconY);
+
+    // 4. Headline Title (Centered)
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 42px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#ffffff';
+
+    const titleLines = wrapThaiCanvasText(ctx, activeTip.title, 880);
+    let titleY = 360;
+    titleLines.forEach(line => {
+        ctx.fillText(line, W / 2, titleY);
+        titleY += 54;
+    });
+
+    // 5. Content Frosted Glass Card Box
+    const cardX = 64;
+    const cardY = Math.max(titleY + 20, 460);
+    const cardW = W - 128;
+    const cardH = 1210 - cardY;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+    ctx.lineWidth = 1.5;
+    roundRectTip(ctx, cardX, cardY, cardW, cardH, 30, true, true);
+
+    const innerPad = 44;
+    const contentMaxW = cardW - innerPad * 2;
+    let textCursorY = cardY + 54;
+
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 30px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('💡 ใจความสำคัญ:', cardX + innerPad, textCursorY);
+    textCursorY += 46;
+
+    ctx.font = '28px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#f8fafc';
+    const summaryLines = wrapThaiCanvasText(ctx, activeTip.summary || '', contentMaxW);
+    summaryLines.forEach(line => {
+        ctx.fillText(line, cardX + innerPad, textCursorY);
+        textCursorY += 46;
+    });
+
+    textCursorY += 24;
+
+    // Subtle divider
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + innerPad, textCursorY);
+    ctx.lineTo(cardX + cardW - innerPad, textCursorY);
+    ctx.stroke();
+    textCursorY += 38;
+
+    ctx.font = 'bold 24px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('📖 รายละเอียดและคำแนะนำ:', cardX + innerPad, textCursorY);
+    textCursorY += 40;
+
+    ctx.font = '24px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    const detailLines = wrapThaiCanvasText(ctx, activeTip.detail || '', contentMaxW);
+    detailLines.forEach(line => {
+        ctx.fillText(line, cardX + innerPad, textCursorY);
+        textCursorY += 40;
+    });
+
+    // Tags
+    const tags = Array.isArray(activeTip.tags) ? activeTip.tags : [];
+    if (tags.length > 0) {
+        let tagX = cardX + innerPad;
+        const tagY = cardY + cardH - 34;
+        ctx.font = 'bold 19px "Kanit", "Noto Sans Thai", sans-serif';
+        tags.slice(0, 4).forEach(tag => {
+            const tagStr = `#${tag}`;
+            const tMetrics = ctx.measureText(tagStr);
+            const tagW = tMetrics.width + 22;
+            if (tagX + tagW < cardX + cardW - innerPad) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+                roundRectTip(ctx, tagX, tagY - 24, tagW, 32, 8, true, false);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(tagStr, tagX + 11, tagY);
+                tagX += tagW + 10;
+            }
+        });
+    }
+
+    // 6. Footer Credit Section (NO URL!)
+    const footerY = 1275;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(120, footerY);
+    ctx.lineTo(W - 120, footerY);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 30px "Kanit", "Noto Sans Thai", sans-serif';
+    const creditGrad = ctx.createLinearGradient(W / 2 - 200, footerY, W / 2 + 200, footerY);
+    creditGrad.addColorStop(0, '#f59e0b');
+    creditGrad.addColorStop(0.5, '#10b981');
+    creditGrad.addColorStop(1, '#38bdf8');
+    ctx.fillStyle = creditGrad;
+    ctx.fillText('✨ ที่มาจากเว็บ NovaFit by BenzNova', W / 2, footerY + 54);
+
+    ctx.font = '20px "Kanit", "Noto Sans Thai", sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('Healthy Nutrition & Fitness Tracker', W / 2, footerY + 88);
+};
+
+window.openHealthTipCardModal = function (tipOrId) {
+    let tip = null;
+    if (typeof tipOrId === 'string' && window.healthTipsEngine && window.healthTipsEngine.tips) {
+        tip = window.healthTipsEngine.tips.find(t => t.id === tipOrId);
+    } else if (tipOrId && typeof tipOrId === 'object') {
+        tip = tipOrId;
+    } else {
+        tip = window._sessionHealthTip || (window.healthTipsEngine && window.healthTipsEngine.getRandomTip());
+    }
     if (!tip) return;
-    const shareText = `💡 เกร็ดความรู้สุขภาพจาก NovaFit Pro:\n${tip.icon} ${tip.title}\n\n${tip.summary}\n${tip.detail}\n\nติดตามสุขภาพของคุณได้ที่: https://fitmacro-pro-benz.web.app`;
+
+    window._activeTipForCard = tip;
+    const modal = document.getElementById('healthTipCardModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    window.renderHealthTipCard(tip);
+};
+
+window.closeHealthTipCardModal = function () {
+    const modal = document.getElementById('healthTipCardModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.downloadHealthTipCard = function () {
+    const canvas = document.getElementById('healthTipCardCanvas');
+    if (!canvas) return;
+    const tip = window._activeTipForCard || window._sessionHealthTip;
+    const safeTitle = (tip?.title || 'health-tip').replace(/[^a-zA-Z0-9ก-๙]/g, '_').slice(0, 30);
+
+    canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `novafit-${safeTitle}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        if (typeof showToast === 'function') showToast('⬇️ ดาวน์โหลดการ์ดรูปภาพเรียบร้อยแล้ว!');
+    }, 'image/png');
+};
+
+window.shareHealthTipCardNative = async function () {
+    const canvas = document.getElementById('healthTipCardCanvas');
+    if (!canvas) return;
+    const tip = window._activeTipForCard || window._sessionHealthTip;
+    const title = tip ? `${tip.icon || '💡'} ${tip.title}` : 'เกร็ดความรู้สุขภาพ NovaFit';
+    const shareText = window.formatHealthTipShareText(tip);
+
+    if (!navigator.canShare || !navigator.share) {
+        window.downloadHealthTipCard();
+        return;
+    }
+
+    canvas.toBlob(async blob => {
+        if (!blob) return;
+        try {
+            const file = new File([blob], `novafit-tip-${Date.now()}.png`, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: title,
+                    text: `${title}\n\n✨ ที่มาจากเว็บ NovaFit by BenzNova`,
+                    files: [file]
+                });
+                if (typeof showToast === 'function') showToast('📤 แชร์การ์ดรูปภาพสำเร็จแล้ว!');
+            } else {
+                await navigator.share({
+                    title: title,
+                    text: shareText
+                });
+                window.downloadHealthTipCard();
+            }
+        } catch (e) {
+            if (e && e.name === 'AbortError') return;
+            window.downloadHealthTipCard();
+        }
+    }, 'image/png');
+};
+
+window.copyHealthTipCardText = function () {
+    const tip = window._activeTipForCard || window._sessionHealthTip;
+    const shareText = window.formatHealthTipShareText(tip);
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareText).then(() => {
-            if (typeof showToast === 'function') showToast('📋 คัดลอกเกร็ดความรู้ไปยังคลิปบอร์ดแล้ว!');
+            if (typeof showToast === 'function') showToast('📋 คัดลอกข้อความพร้อมเครดิตลงคลิปบอร์ดแล้ว!');
         }).catch(() => {
             alert(shareText);
         });
     } else {
         alert(shareText);
     }
+};
+
+window.shareHealthTip = function (tipOrId) {
+    window.openHealthTipCardModal(tipOrId);
+};
+
+window.shareTipToClipboard = function (tipId) {
+    window.shareHealthTip(tipId);
 };

@@ -157,6 +157,35 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- Celebration Confetti Canvas (v5.9.3) -->
+    <canvas id="celebrationConfettiCanvas" class="hidden fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- Milestone Celebration Banner (v5.9.3 - Top-center Celebration Beats) -->
+    <div id="milestoneCelebrationBanner" class="hidden fixed top-5 inset-x-4 sm:inset-x-auto sm:right-6 sm:max-w-md z-50 transition-all duration-500 transform -translate-y-12 opacity-0 pointer-events-auto">
+        <div class="relative p-4 rounded-3xl bg-slate-900/95 text-white backdrop-blur-xl border border-emerald-500/30 shadow-2xl space-y-2.5 overflow-hidden">
+            <div id="milestoneGlowBg" class="absolute -top-12 -left-12 w-32 h-32 bg-emerald-500/25 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="relative flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span id="milestoneIcon" class="text-3xl animate-bounce">🎉</span>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">⭐ MILESTONE COMPLETED</span>
+                        <h3 id="milestoneTitle" class="font-extrabold text-sm sm:text-base leading-tight text-white">...</h3>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissMilestoneCelebration()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center text-xs font-bold transition cursor-pointer" title="ปิดการแจ้งเตือน">✕</button>
+            </div>
+            <div class="relative bg-white/10 dark:bg-black/30 rounded-2xl p-2.5 space-y-1 text-xs">
+                <div id="milestoneSubtitle" class="font-bold text-emerald-300 text-xs">...</div>
+                <p id="milestoneDetail" class="text-slate-300 text-[11px] leading-relaxed">...</p>
+            </div>
+            <div class="relative flex items-center justify-end gap-2 pt-0.5">
+                <button type="button" onclick="dismissMilestoneCelebration()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer">
+                    ยอดเยี่ยมมาก! ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Living Companion Nudge Bubble (เพื่อนคู่คิด Nova Companion - แอพมีชีวิต v5.8.4) -->
     <div id="livingCompanionBubble" class="hidden fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-40 transition-all duration-300 transform translate-y-6 opacity-0 pointer-events-auto">
         <div class="relative p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-emerald-500/40 dark:border-emerald-500/50 shadow-2xl space-y-2">
@@ -331,7 +360,7 @@
                         </button>
 
                         <div class="border-t border-slate-100 dark:border-slate-700/80 my-1 pt-1.5 px-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            แชร์ & รายงาน
+                            แชร์ & เครื่องมือ
                         </div>
                         <button onclick="openShareCardModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-teal-500/10 text-teal-600 dark:text-teal-400 font-medium flex items-center gap-2 transition">
@@ -341,39 +370,19 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-2 transition">
                             <span>📋</span> คัดลอกสรุปส่ง LINE
                         </button>
-                        <button onclick="openDailyReportModal(); toggleToolsMenu();"
+                        <button onclick="openHealthTipsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
-                            <span>🔔</span> เช็กสรุปเป้าวันนี้
+                            <span>💡</span> คลังเกร็ดความรู้สุขภาพ
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.8.6)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.3)
                         </button>
                         <button onclick="openUserNotificationsModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between transition">
                             <span class="flex items-center gap-2"><span>📨</span> ข้อความโดย BenzNova</span>
                             <span id="toolsUnreadNotifBadge" class="hidden text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-500 text-white">0</span>
                         </button>
-                        <button onclick="openHealthTipsModal(); toggleToolsMenu();"
-                            class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition">
-                            <span>💡</span> คลังเกร็ดความรู้สุขภาพ
-                        </button>
-                        <button id="btnAiSnapTools" onclick="openAiSnapModal('photo'); toggleToolsMenu();"
-                            class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition">
-                            <span>📸</span> สแกนภาพถ่าย AI (AI Snap & Log)
-                        </button>
-                        <button id="btnAiVoiceTools" onclick="openAiSnapModal('voice'); toggleToolsMenu();"
-                            class="w-full text-left px-2.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 transition">
-                            <span>💬</span> พิมพ์สั่งอาหารด้วย AI (Smart Text Log)
-                        </button>
-                        <button id="btnCompanionTestTools" onclick="openCompanionTestModal(); toggleToolsMenu();"
-                            class="w-full text-left px-2.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-2 transition">
-                            <span>🤖</span> ลองคุยกับเพื่อนคู่คิด (Test Companion)
-                        </button>
-                        <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
-                            class="hidden w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
-                            <span>🛡️</span> แดชบอร์ดผู้ดูแล (Admin)
-                        </a>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
                             <span>📱</span> ติดตั้งแอปลงมือถือ (PWA)
@@ -395,6 +404,22 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-rose-500/10 text-rose-500 font-medium flex items-center gap-2 transition">
                             <span>🗑️</span> รีเซ็ตข้อมูลทั้งหมด
                         </button>
+
+                        <!-- Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
+                        <div id="adminToolsSection" class="hidden border-t border-slate-100 dark:border-slate-700/80 my-1 pt-1.5 space-y-1">
+                            <div class="px-2.5 text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center justify-between">
+                                <span>เครื่องมือแอดมิน</span>
+                                <span class="text-[9px] bg-purple-500/15 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-full font-bold">ADMIN ONLY</span>
+                            </div>
+                            <button id="btnCompanionTestTools" onclick="openCompanionTestModal(); toggleToolsMenu();"
+                                class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition">
+                                <span>🤖</span> ทดสอบเพื่อนคู่คิด (Test Companion)
+                            </button>
+                            <a id="btnAdminDashboard" href="admin.html" onclick="toggleToolsMenu();"
+                                class="w-full text-left px-2.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 transition border border-purple-500/30">
+                                <span>🛡️</span> แดชบอร์ดผู้ดูแล (Admin)
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -613,10 +638,13 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="shuffleHealthTip()" class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-xs transition active:scale-95 flex items-center gap-1" title="สุ่มเกร็ดความรู้เรื่องอื่นๆ">
+                            <button type="button" onclick="shuffleHealthTip()" class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-xs transition active:scale-95 flex items-center gap-1 cursor-pointer" title="สุ่มเกร็ดความรู้เรื่องอื่นๆ">
                                 <span>🎲</span> <span class="hidden sm:inline">สุ่มเรื่องใหม่</span>
                             </button>
-                            <button type="button" onclick="openHealthTipsModal()" class="px-2 py-1 rounded-xl bg-white/80 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-600 transition" title="ดูคลังเกร็ดความรู้ทั้งหมด">
+                            <button type="button" onclick="shareHealthTip()" class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-xs transition active:scale-95 flex items-center gap-1 cursor-pointer" title="แชร์เกร็ดความรู้">
+                                <span>📤</span> <span class="hidden sm:inline">แชร์</span>
+                            </button>
+                            <button type="button" onclick="openHealthTipsModal()" class="px-2 py-1 rounded-xl bg-white/80 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-600 transition cursor-pointer" title="ดูคลังเกร็ดความรู้ทั้งหมด">
                                 <span>📖</span>
                             </button>
                         </div>
@@ -1084,6 +1112,20 @@
                         </button>
                     </div>
 
+                    <!-- Weekly Weight Update Nudge Banner (NEW v5.9.3) -->
+                    <div id="weeklyWeighInNudgeBanner" class="hidden p-3 rounded-2xl bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-purple-500/10 border border-sky-500/30 flex items-center justify-between gap-3 text-xs shadow-xs">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="text-xl shrink-0">⚖️</span>
+                            <div class="min-w-0">
+                                <span class="font-bold text-sky-800 dark:text-sky-300 block text-xs">อัปเดตน้ำหนักประจำสัปดาห์</span>
+                                <span id="weeklyWeighInNudgeText" class="text-slate-600 dark:text-slate-300 text-[11px] block truncate">ครบ 1 สัปดาห์แล้ว! มาบันทึกน้ำหนักล่าสุดกันครับ</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="focusWeightInputToday()" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shrink-0 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap">
+                            + ชั่งน้ำหนัก
+                        </button>
+                    </div>
+
                     <!-- 7-Day Interactive Weight Trend Polyline SVG -->
                     <div id="weekWeightTrendContainer" class="w-full overflow-hidden"></div>
 
@@ -1225,10 +1267,66 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.8.6!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.3!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.8.6 -->
+                <!-- Latest Release: v5.9.3 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-pink-500/10 to-emerald-500/10 border border-amber-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                            <span>🎊</span> v5.9.3 (เอฟเฟกต์เฉลิมฉลอง Celebration Confetti & Milestone Beats)
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">ล่าสุด</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">🎊</span>
+                            <span><b>เอฟเฟกต์เฉลิมฉลอง (Celebration Confetti):</b> พลุกระดาษแอนิเมชันสวยงาม 60fps และการ์ดแสดงความยินดีทันทีที่ดื่มน้ำครบ 100%, โปรตีนถึงเป้า, หรือแคลอรีลงล็อกเป๊ะ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-purple-500">🎲</span>
+                            <span><b>ปุ่มสุ่มเพื่อนคู่คิดทันใจ:</b> แตะปุ่ม 'สุ่มข้อความอื่น' บนบับเบิ้ลเพื่อนคู่คิด เพื่อสุ่มดูข้อความให้กำลังใจใหม่ได้ทันที</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🤖</span>
+                            <span><b>เพื่อนคู่คิด Nova มีชีวิตหลากสไตล์:</b> คลังข้อความกว่า 50+ ข้อความ ครบ 10 สถานการณ์ พร้อมระบบสุ่มไม่ซ้ำเดิม</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.3 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-sky-500/10 to-emerald-500/10 border border-purple-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                            <span>🚀</span> v5.9.3 (จัดการเซ็ตประจำ กราฟน้ำหนักต่อเนื่อง & แชร์เกร็ดความรู้)
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400">ล่าสุด</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">⭐</span>
+                            <span><b>บันทึกเมนูจาก AI เข้าเมนูโปรด & คลัง:</b> สแกนหรือพิมพ์สั่ง AI แล้วแตะเพิ่มเป็นเมนูโปรดหรือบันทึกลงคลังอาหารได้ทันที</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-purple-500">🍱</span>
+                            <span><b>จัดการเซ็ตประจำ (Meal Combos Manager):</b> ปรับแต่ง เพิ่ม/ลบ เมนูและขนาดเสิร์ฟในแต่ละเซ็ตได้อย่างอิสระ หรือสร้างเซ็ตใหม่ได้ทันที</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-sky-500">📈</span>
+                            <span><b>กราฟแนวโน้มน้ำหนักต่อเนื่อง (Carry-Forward):</b> วันที่ไม่ได้ชั่งน้ำหนัก ระบบจะดึงน้ำหนักเดิมมาแสดงให้ต่อเนื่อง กราฟไม่ขาดตอน</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">📅</span>
+                            <span><b>แจ้งเตือนชั่งน้ำหนักประจำสัปดาห์:</b> การ์ดสะกิดเตือนอัปเดตน้ำหนักสัปดาห์ละครั้ง เพื่อความแม่นยำในการคำนวณแคลอรี</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">📤</span>
+                            <span><b>แชร์เกร็ดความรู้สุขภาพ:</b> ปุ่มแชร์เกร็ดความรู้โภชนาการ พร้อมเครดิต "ที่มาจากเว็บ NovaFit by BenzNova"</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.8.6 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 space-y-2">
                     <div class="flex items-center justify-between font-bold text-purple-600 dark:text-purple-400 text-sm">
                         <span>📸 v5.8.6 (จานที่สแกนล่าสุด & ค้นหาเมนูอัจฉริยะ)</span>
@@ -1787,6 +1885,56 @@
                 <button type="button" onclick="closeChangelogModal()"
                     class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition">
                     ปิดหน้าต่างนี้ (เรียบร้อย)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Tip Visual Card Share Modal (NEW v5.9.1) -->
+    <div id="healthTipCardModal"
+        class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl space-y-3.5 animate-pop my-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white text-base shadow-sm shrink-0">
+                        💡
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">การ์ดรูปภาพเกร็ดความรู้สุขภาพ</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400 truncate">ขนาด 1080×1420 px สำหรับแชร์ลง IG Story / โพสต์โซเชียล</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeHealthTipCardModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-base transition cursor-pointer shrink-0">✕</button>
+            </div>
+
+            <!-- Card Preview Box with Retina Canvas -->
+            <div class="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950/80 p-2.5 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <canvas id="healthTipCardCanvas" width="1080" height="1420"
+                    class="w-full max-w-[280px] sm:max-w-[320px] h-auto rounded-xl shadow-xl border border-slate-700/40"></canvas>
+                <span class="text-[10px] text-slate-400">✨ รูปภาพระดับ HD 1080×1420 px สไตล์พรีเมียม</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+                <div class="flex items-center gap-1.5 flex-wrap flex-1">
+                    <button type="button" onclick="shareHealthTipCardNative()" id="btnShareTipCardNative"
+                        class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer whitespace-nowrap">
+                        <span>📸</span> <span>แชร์เข้า IG / แชท</span>
+                    </button>
+                    <button type="button" onclick="downloadHealthTipCard()"
+                        class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap active:scale-95">
+                        <span>⬇️</span> <span class="hidden xs:inline">เซฟรูป</span>
+                    </button>
+                    <button type="button" onclick="copyHealthTipCardText()"
+                        class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap active:scale-95"
+                        title="คัดลอกเฉพาะข้อความ">
+                        <span>📋</span> <span class="hidden xs:inline">ข้อความ</span>
+                    </button>
+                </div>
+                <button type="button" onclick="closeHealthTipCardModal()"
+                    class="py-2 px-3 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-medium text-center cursor-pointer">
+                    ปิด
                 </button>
             </div>
         </div>
@@ -2698,6 +2846,18 @@
                         </select>
                     </div>
 
+                    <!-- Quick Save to Favorites or Custom Food (NEW v5.9.3) -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" id="btnAiSnapAddFav" onclick="addCurrentAiSnapToFavorites()"
+                            class="flex-1 py-2 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition flex items-center justify-center gap-1 cursor-pointer">
+                            <span>☆</span> <span>เพิ่มเป็นเมนูโปรด</span>
+                        </button>
+                        <button type="button" id="btnAiSnapAddCustom" onclick="addCurrentAiSnapToCustomFood()"
+                            class="flex-1 py-2 px-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 font-bold text-xs border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer">
+                            <span>💾</span> <span>บันทึกลงคลังอาหาร</span>
+                        </button>
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="flex items-center gap-2 pt-1">
                         <button type="button" onclick="resetAiSnapImage()"
@@ -2825,7 +2985,12 @@
                             <div class="space-y-2">
                                 <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between">
                                     <span>รายการอาหารที่ตรวจพบ:</span>
-                                    <span id="aiVoiceItemCountText" class="text-slate-400 font-normal">0 รายการ</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" onclick="saveAllAiVoiceItemsToLibrary()" class="text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold flex items-center gap-0.5 cursor-pointer">
+                                            <span>⭐+💾</span> <span>บันทึกทั้งหมดเข้าคลัง</span>
+                                        </button>
+                                        <span id="aiVoiceItemCountText" class="text-slate-400 font-normal">0 รายการ</span>
+                                    </div>
                                 </div>
                                 <div id="aiVoiceItemsListContainer" class="space-y-2 max-h-56 overflow-y-auto pr-0.5">
                                     <!-- Populated dynamically via JS -->
@@ -2987,24 +3152,147 @@
                     class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/60 hover:bg-pink-500/10 text-left border border-slate-200/60 dark:border-slate-600 flex items-center gap-2 font-medium cursor-pointer transition">
                     <span>🌈</span> <span>สุ่มคำให้กำลังใจประจำวัน</span>
                 </button>
+
+                <span class="text-[10px] font-bold text-amber-500 uppercase tracking-wider block pt-2">เอฟเฟกต์เฉลิมฉลอง:</span>
+                <button type="button" onclick="triggerCelebrationConfetti(); showMilestoneBeatCard({icon: '🎉', title: 'พิชิตเป้าหมายดื่มน้ำครบ 100%!', subtitle: 'ดื่มครบ 8/8 แก้ว (2,000 ml) เรียบร้อย', detail: 'เซลล์ในร่างกายสดชื่น ผิวพรรณเปล่งปลั่ง ระบบเผาผลาญทำงานเต็มประสิทธิภาพ! 💧'}); closeCompanionTestModal();"
+                    class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-pink-500/15 to-purple-500/15 hover:from-amber-500/25 hover:to-purple-500/25 text-left border border-amber-500/30 flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300 cursor-pointer transition">
+                    <span>🎊</span> <span>ทดสอบเอฟเฟกต์พลุฉลอง (Test Confetti)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meal Combo Editor Modal (v5.9.3 - Mobile Optimized) -->
+    <div id="mealComboEditModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col space-y-3 animate-scale-up overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2.5 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <span class="text-xl sm:text-2xl shrink-0">🍱</span>
+                    <h3 id="comboEditModalTitle" class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">จัดการเซ็ตอาหารประจำ</h3>
+                </div>
+                <button type="button" onclick="closeMealComboEditor()" class="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-base transition cursor-pointer shrink-0">✕</button>
+            </div>
+
+            <!-- Body (Scrollable) -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <!-- Combo Name & Target Meal -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div class="sm:col-span-2 space-y-1">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">ชื่อเซ็ตอาหาร:</label>
+                        <input type="text" id="comboEditName" placeholder="เช่น เซ็ตมื้อเช้าคลีน" class="w-full bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">มื้อประจำ:</label>
+                        <select id="comboEditMeal" class="w-full bg-slate-50 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold focus:outline-none focus:border-purple-500">
+                            <option value="breakfast">🌅 มื้อเช้า</option>
+                            <option value="lunch">☀️ มื้อเที่ยง</option>
+                            <option value="dinner">🌙 มื้อเย็น</option>
+                            <option value="snack">🍎 ของว่าง</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Current Items Section -->
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                        <span>รายการอาหารในเซ็ต:</span>
+                        <span id="comboEditCountBadge" class="text-purple-600 dark:text-purple-400">0 รายการ</span>
+                    </div>
+                    <div id="comboEditItemsContainer" class="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div id="comboEditSummaryStrip" class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20"></div>
+                </div>
+
+                <!-- Add Food to Combo Section -->
+                <div class="p-3 rounded-2xl bg-slate-100/70 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-600 space-y-2.5">
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                        <span>➕</span> <span>เพิ่มเมนูเข้าเซ็ตนี้:</span>
+                    </span>
+
+                    <!-- Smart Instant Search (Mobile-First) -->
+                    <div class="space-y-1.5">
+                        <div class="relative">
+                            <input type="text" id="comboFoodSearchInput"
+                                placeholder="🔍 พิมพ์ค้นหาเมนูในคลัง... (เช่น อกไก่, ข้าวสวย, ไข่ต้ม)"
+                                oninput="onComboFoodSearchInput(this.value)"
+                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500 pr-8">
+                            <button type="button" id="comboFoodSearchClearBtn" onclick="clearComboFoodSearch()"
+                                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Real-time Search Results Dropdown -->
+                        <div id="comboFoodSearchResults" class="hidden space-y-1 max-h-40 overflow-y-auto p-1.5 bg-white dark:bg-slate-800 rounded-xl border border-purple-500/30 shadow-md">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Quick Popular Food Suggestion Chips -->
+                        <div class="flex items-center gap-1 overflow-x-auto pb-0.5 pt-0.5 text-[11px] no-scrollbar">
+                            <span class="text-slate-400 shrink-0 text-[10px]">เมนูฮิต:</span>
+                            <button type="button" onclick="quickAddChipToCombo('อกไก่ต้ม')" class="px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium shrink-0 whitespace-nowrap cursor-pointer active:scale-95">+ อกไก่ต้ม</button>
+                            <button type="button" onclick="quickAddChipToCombo('ไข่ต้ม')" class="px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium shrink-0 whitespace-nowrap cursor-pointer active:scale-95">+ ไข่ต้ม</button>
+                            <button type="button" onclick="quickAddChipToCombo('ข้าวสวย')" class="px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium shrink-0 whitespace-nowrap cursor-pointer active:scale-95">+ ข้าวสวย</button>
+                            <button type="button" onclick="quickAddChipToCombo('ไข่ดาว')" class="px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium shrink-0 whitespace-nowrap cursor-pointer active:scale-95">+ ไข่ดาว</button>
+                            <button type="button" onclick="quickAddChipToCombo('สลัดผักรวม')" class="px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium shrink-0 whitespace-nowrap cursor-pointer active:scale-95">+ สลัดผัก</button>
+                        </div>
+                    </div>
+
+                    <!-- Option A: Choose from Library Dropdown (Alternative) -->
+                    <div class="flex items-center gap-1.5 min-w-0 pt-1 border-t border-slate-200/60 dark:border-slate-600/60">
+                        <select id="comboAddFoodSelect" class="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:border-purple-500 truncate">
+                            <option value="">-- หรือเลือกจากรายการทั้งหมดในคลัง --</option>
+                        </select>
+                        <button type="button" onclick="addSelectedFoodToComboEditor()" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition shrink-0 whitespace-nowrap cursor-pointer active:scale-95">
+                            + เพิ่ม
+                        </button>
+                    </div>
+
+                    <!-- Option B: Manual Food Input -->
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-600 space-y-1.5">
+                        <span class="text-[11px] text-slate-400 block font-medium">หรือกรอกเมนูใหม่เอง:</span>
+                        <input type="text" id="comboManualFoodName" placeholder="ชื่อเมนูอาหาร..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-purple-500">
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <input type="number" id="comboManualFoodCal" placeholder="แคล" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-1.5 py-1 text-xs text-center focus:outline-none focus:border-purple-500" title="แคลอรี">
+                            <input type="number" id="comboManualFoodP" placeholder="P(g)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-1.5 py-1 text-xs text-center focus:outline-none focus:border-purple-500" title="โปรตีน">
+                            <input type="number" id="comboManualFoodC" placeholder="C(g)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-1.5 py-1 text-xs text-center focus:outline-none focus:border-purple-500" title="คาร์บ">
+                            <input type="number" id="comboManualFoodF" placeholder="F(g)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-1.5 py-1 text-xs text-center focus:outline-none focus:border-purple-500" title="ไขมัน">
+                        </div>
+                        <button type="button" onclick="addManualFoodToComboEditor()" class="w-full py-1.5 rounded-xl bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95">
+                            <span>+ เพิ่มเมนูนี้เข้าเซ็ต</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-700 shrink-0">
+                <button type="button" onclick="closeMealComboEditor()" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-xs transition cursor-pointer whitespace-nowrap">
+                    ยกเลิก
+                </button>
+                <button type="button" onclick="saveMealComboEditor()" class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 whitespace-nowrap">
+                    <span>💾</span> <span>บันทึกเซ็ตอาหาร</span>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.8.6"></script>
+    <script src="food-db.js?v=5.9.3"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.8.6"></script>
+    <script src="health-tips.js?v=5.9.3"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.8.6"></script>
+    <script src="ai-snap.js?v=5.9.3"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.8.6"></script>
+    <script src="app.js?v=5.9.3"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.8.6"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.3"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
