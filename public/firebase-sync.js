@@ -19,6 +19,7 @@ import {
     collection,
     query,
     orderBy,
+    limit,
     updateDoc,
     addDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
@@ -971,6 +972,48 @@ window.restoreUserDataBackup = function (jsonString) {
 // ==========================================
 // 🔔 WEB PUSH & FCM TOKEN SYNCHRONIZATION (v5.9.9)
 // ==========================================
+let unsubscribeBroadcasts = null;
+const sessionStartTime = new Date(Date.now() - 5000).toISOString();
+
+function setupRealtimePushBroadcastsListener() {
+    if (unsubscribeBroadcasts) {
+        unsubscribeBroadcasts();
+        unsubscribeBroadcasts = null;
+    }
+
+    try {
+        const broadcastsCol = collection(db, 'push_broadcasts');
+        const q = query(broadcastsCol, orderBy('sentAt', 'desc'), limit(5));
+
+        unsubscribeBroadcasts = onSnapshot(q, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const data = change.doc.data();
+                    if (data && data.sentAt && data.sentAt >= sessionStartTime) {
+                        const audience = data.audience || 'all';
+                        const isMember = !!currentUser;
+                        if (audience === 'google' && !isMember) return;
+                        if (audience === 'guest' && isMember) return;
+
+                        console.log('📢 Received real-time push broadcast:', data.title);
+                        if (window.testLocalNotification) {
+                            window.testLocalNotification(data.title, data.body);
+                        }
+                    }
+                }
+            });
+        }, (err) => {
+            console.warn('Push broadcasts listener error:', err);
+        });
+    } catch (e) {
+        console.warn('Could not setup push broadcast listener:', e);
+    }
+}
+window.setupRealtimePushBroadcastsListener = setupRealtimePushBroadcastsListener;
+
+// Initialize broadcast listener immediately on load
+setupRealtimePushBroadcastsListener();
+
 window.syncPushTokenToCloud = async function (explicitPermission) {
     if (!navigator.onLine) return;
     try {

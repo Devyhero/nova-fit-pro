@@ -2681,11 +2681,15 @@
                                 <p class="text-xs text-slate-400">เตือนมื้อเที่ยง มื้อเย็น และเตือนเซฟสตรีค รองรับสั่นเตือนบน Apple Watch & สมาร์ตวอทช์</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span id="pushStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">กำลังตรวจสอบ...</span>
                             <button type="button" id="btnTogglePush" onclick="togglePushNotificationPermission()"
                                 class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer">
                                 เปิดแจ้งเตือน
+                            </button>
+                            <button type="button" id="btnTestWatchDelay" onclick="testLocalNotification('NovaFit Pro 🥑', '🔔 ทดสอบสำเร็จ! สั่นเตือนบน Apple Watch & สมาร์ตวอทช์เรียบร้อย', 3)"
+                                class="hidden px-3.5 py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1">
+                                <span>⌚</span> <span>สั่นเตือนบน Watch (3 วิ)</span>
                             </button>
                         </div>
                     </div>

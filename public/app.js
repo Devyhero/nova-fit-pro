@@ -873,6 +873,11 @@ const APP_VERSION = '5.9.9';
                 }
             }
 
+            const btnWatch = document.getElementById('btnTestWatchDelay');
+            if (btnWatch) {
+                btnWatch.classList.toggle('hidden', perm !== 'granted');
+            }
+
             if (perm === 'granted' || perm === 'denied') {
                 dismissPushPrompt(false);
             }
@@ -949,31 +954,53 @@ const APP_VERSION = '5.9.9';
             }, 3000);
         }
 
-        function testLocalNotification(customTitle, customBody) {
+        async function testLocalNotification(customTitle, customBody, delaySeconds = 0) {
             const title = customTitle || 'NovaFit Pro 🥑';
             const body = customBody || '🔔 ทดสอบการแจ้งเตือน! พร้อมสั่นเตือนบนข้อมือ Apple Watch & สมาร์ตวอทช์ของคุณ';
 
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.ready.then((reg) => {
-                    reg.showNotification(title, {
-                        body: body,
-                        icon: 'icon-192.png',
-                        badge: 'favicon-32x32.png',
-                        vibrate: [120, 60, 120],
-                        tag: 'novafit-test-notification',
-                        renotify: true,
-                        data: { url: './' }
-                    });
-                }).catch((e) => {
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification(title, { body, icon: 'icon-192.png' });
+            if (delaySeconds > 0) {
+                if (window.showToast) {
+                    window.showToast(`⏱️ จะส่งแจ้งเตือนใน ${delaySeconds} วิ... รีบล็อคหน้าจอเพื่อดูบน Apple Watch!`, 4000);
+                }
+                await new Promise(r => setTimeout(r, delaySeconds * 1000));
+            }
+
+            const options = {
+                body: body,
+                icon: 'icon-192.png',
+                badge: 'favicon-32x32.png',
+                vibrate: [120, 60, 120],
+                tag: 'novafit-notification-' + Date.now(),
+                renotify: true,
+                data: { url: './' }
+            };
+
+            // Priority 1: Service Worker Registration showNotification (Works on iOS 16.4+ PWA & Android)
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    if (reg && reg.showNotification) {
+                        await reg.showNotification(title, options);
+                        console.log('✅ ServiceWorker showNotification delivered:', title);
+                        return;
                     }
-                });
-            } else if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(title, {
-                    body: body,
-                    icon: 'icon-192.png'
-                });
+                } catch (err) {
+                    console.warn('ServiceWorker showNotification failed:', err);
+                }
+            }
+
+            // Priority 2: Fallback for Desktop browsers supporting new Notification() (Never call on iOS)
+            const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (!isIos && 'Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(title, {
+                        body: body,
+                        icon: 'icon-192.png'
+                    });
+                    console.log('✅ Desktop new Notification delivered:', title);
+                } catch (err) {
+                    console.warn('Desktop new Notification failed:', err);
+                }
             }
         }
 

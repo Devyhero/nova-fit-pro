@@ -2468,29 +2468,28 @@ window.testLocalNotification = async function (title = 'NovaFit Pro 🥑', body 
     }
     try {
         if ('serviceWorker' in navigator) {
-            const reg = await navigator.serviceWorker.getRegistration();
+            const reg = await navigator.serviceWorker.ready;
             if (reg && reg.showNotification) {
-                reg.showNotification(title, {
+                await reg.showNotification(title, {
                     body: body,
                     icon: 'icon-192.png',
                     badge: 'favicon-32x32.png',
                     vibrate: [120, 60, 120],
-                    tag: 'novafit-test-notification',
-                    renotify: true
+                    tag: 'novafit-test-notification-' + Date.now(),
+                    renotify: true,
+                    data: { url: './' }
                 });
                 return;
             }
         }
-        new Notification(title, {
-            body: body,
-            icon: 'icon-192.png'
-        });
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (!isIos) {
+            new Notification(title, {
+                body: body,
+                icon: 'icon-192.png'
+            });
+        }
     } catch (e) {
         console.warn('testLocalNotification fallback:', e);
-        try {
-            new Notification(title, { body: body, icon: 'icon-192.png' });
-        } catch (err) {
-            console.warn('Fallback Notification constructor also failed:', err);
-        }
     }
 };
