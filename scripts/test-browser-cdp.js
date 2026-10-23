@@ -1742,6 +1742,7 @@ server.listen(PORT, async () => {
             const fnSaveSched = typeof window.saveAdminPushSchedule === 'function';
             const fnSendBroadcast = typeof window.sendAdminPushBroadcast === 'function';
             const fnGenAi = typeof window.generateAiPushMessage === 'function';
+            const fnTestSlotNow = typeof window.testPushSlotNow === 'function';
 
             return {
                 hasTabBtn,
@@ -1757,7 +1758,8 @@ server.listen(PORT, async () => {
                 hasBroadcastInputs,
                 fnSaveSched,
                 fnSendBroadcast,
-                fnGenAi
+                fnGenAi,
+                fnTestSlotNow
             };
         })()`);
         console.log('Admin Push Hub verified:', adminPushTest);
@@ -1775,7 +1777,8 @@ server.listen(PORT, async () => {
             !adminPushTest.hasBroadcastInputs ||
             !adminPushTest.fnSaveSched ||
             !adminPushTest.fnSendBroadcast ||
-            !adminPushTest.fnGenAi) {
+            !adminPushTest.fnGenAi ||
+            !adminPushTest.fnTestSlotNow) {
             throw new Error('Test 39 Part B: Admin Push Hub failed: ' + JSON.stringify(adminPushTest));
         }
 

@@ -2252,9 +2252,14 @@ window.renderAdminPushSlots = function () {
                     <span class="flex items-center gap-1">
                         <span>💬 คลังข้อความสุ่ม (${messages.length})</span>
                     </span>
-                    <button type="button" onclick="generateAiPushMessage('${key}')" class="text-[11px] px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20 transition flex items-center gap-1 cursor-pointer active:scale-95">
-                        <span>🤖 ให้ AI คิดข้อความ</span>
-                    </button>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="testPushSlotNow('${key}')" class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30 transition flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs" title="ยิงแจ้งเตือนสุ่มข้อความของช่วงเวลานี้ไปยังมือถือทันที">
+                            <span>⚡ ยิงทดสอบช่วงนี้</span>
+                        </button>
+                        <button type="button" onclick="generateAiPushMessage('${key}')" class="text-[11px] px-2 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20 transition flex items-center gap-1 cursor-pointer active:scale-95">
+                            <span>🤖 ให้ AI คิดข้อความ</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Messages List -->
@@ -2394,6 +2399,56 @@ window.generateAiPushMessage = async function (slotKey) {
     _adminPushSlotsData[slotKey].messages.push(generatedText);
     window.renderAdminPushSlots();
     alert(`✨ AI สร้างข้อความสำเร็จ:\n"${generatedText}"\n\nเพิ่มลงในคลังข้อความสุ่มเรียบร้อยแล้ว!`);
+};
+
+window.testPushSlotNow = async function (slotKey) {
+    const slot = _adminPushSlotsData[slotKey];
+    if (!slot) return;
+
+    const messages = Array.isArray(slot.messages) && slot.messages.length > 0 ? slot.messages : [];
+    let chosenMessage = '';
+
+    if (messages.length > 0) {
+        chosenMessage = messages[Math.floor(Math.random() * messages.length)];
+    } else {
+        const fallbackPool = {
+            breakfast: 'อรุณสวัสดิ์! อาหารเช้าแสนอร่อยรออยู่ อย่าลืมบันทึกแคลลง NovaFit กันนะครับ 🥞',
+            lunch: 'เที่ยงแล้ว! แวะพักทานข้าวให้อร่อย แล้วบันทึกมื้อเที่ยงกันนะ 🍲',
+            dinner: 'มื้อเย็นวันนี้เน้นโปรตีนและผักใบเขียว ย่อยง่าย สบายท้องก่อนนอน 🥗',
+            streak_saver: '🔥 อย่าปล่อยให้สถิติ Streak หลุดลอย! เข้ามาบันทึกอาหาร 1 อย่างตอนนี้เลย',
+            hydration_weigh: '💧 ร่างกายต้องการน้ำ! จิบน้ำสักแก้วตอนนี้เพื่อกระตุ้นการเผาผลาญ 💦'
+        };
+        chosenMessage = fallbackPool[slotKey] || 'อย่าลืมดูแลสุขภาพและบันทึกอาหารกับ NovaFit Pro นะครับ 🥑';
+    }
+
+    const slotTitle = slot.title || slotKey;
+    const slotIcon = slot.icon || '⏰';
+    const pushTitle = `${slotIcon} ${slotTitle}`;
+
+    if (!confirm(`ยิงแจ้งเตือนทดสอบช่วงเวลา "${slotTitle}" ทันที?\n\nข้อความสุ่มที่จะส่ง:\n"${chosenMessage}"\n\n(ระบบจะส่ง Web Push ไปยังมือถือทุกเครื่องที่ลงทะเบียน)`)) {
+        return;
+    }
+
+    try {
+        const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: pushTitle,
+                body: chosenMessage,
+                audience: "all",
+                slot: slotKey
+            })
+        });
+        const cfResult = await cfRes.json();
+        console.log(`Slot [${slotKey}] test push result:`, cfResult);
+
+        const count = cfResult?.stats?.delivered || 0;
+        alert(`✅ ยิงแจ้งเตือนทดสอบช่วงเวลา "${slotTitle}" สำเร็จ!\n\nหัวข้อ: "${pushTitle}"\nข้อความ: "${chosenMessage}"\nส่งถึง: ${count} เครื่องเรียบร้อยแล้วครับ 🥑`);
+    } catch (err) {
+        console.error(`Failed to test slot [${slotKey}]:`, err);
+        alert(`❌ ส่งทดสอบไม่สำเร็จ: ` + err.message);
+    }
 };
 
 window.saveAdminPushSchedule = async function () {
