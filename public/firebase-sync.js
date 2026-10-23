@@ -156,6 +156,8 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         userNotifications = [];
         updateNotificationBadge(0);
+        // Phase 1: Trigger Guest Session heartbeat sync
+        syncGuestSession();
     }
 
     if (window.updateAiSnapQuotaDisplay) {
@@ -322,8 +324,75 @@ function setupRealtimeCloudListener(user) {
     });
 }
 
+// ==========================================
+// GUEST SESSION HEARTBEAT & ACTIVITY TRACKING (v5.9.4 Phase 1)
+// ==========================================
+let guestSyncTimer = null;
+let lastGuestSyncTime = 0;
+
+async function syncGuestSession(force = false) {
+    if (currentUser) return; // Only track unauthenticated visitors
+    if (!navigator.onLine) return;
+
+    const now = Date.now();
+    // Throttle automatic heartbeats to at most once every 30 seconds unless force=true
+    if (!force && (now - lastGuestSyncTime < 30000)) return;
+
+    clearTimeout(guestSyncTimer);
+    guestSyncTimer = setTimeout(async () => {
+        if (currentUser || !navigator.onLine) return;
+        try {
+            const guestDocRef = doc(db, 'guest_sessions', myDeviceId);
+            const todayStr = (window.getTodayStr && window.getTodayStr()) || new Date().toISOString().split('T')[0];
+            const currentState = window.state || {};
+            const mealsToday = (currentState.logsByDate && currentState.logsByDate[todayStr]) || [];
+            const waterToday = (currentState.waterByDate && currentState.waterByDate[todayStr]) || 0;
+            const workoutsToday = (currentState.workoutsByDate && currentState.workoutsByDate[todayStr]) || [];
+            const calToday = mealsToday.reduce((sum, m) => sum + (Number(m.cal) || 0), 0);
+
+            let firstSeen = localStorage.getItem('novafit_first_seen');
+            if (!firstSeen) {
+                firstSeen = new Date().toISOString();
+                try { localStorage.setItem('novafit_first_seen', firstSeen); } catch (e) { }
+            }
+
+            const guestPayload = {
+                deviceId: myDeviceId,
+                isGuest: true,
+                provider: 'guest',
+                displayName: `ผู้ใช้ทั่วไป (${platformName})`,
+                platform: platformName,
+                deviceCategory: deviceCategory,
+                pwa: !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches),
+                firstSeen: firstSeen,
+                updatedAt: new Date().toISOString(),
+                lastActive: new Date().toISOString(),
+                clientVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.9.4'),
+                state: currentState,
+                stats: {
+                    mealsCountToday: mealsToday.length,
+                    calToday: calToday,
+                    waterGlassesToday: waterToday,
+                    workoutsCountToday: workoutsToday.length,
+                    streakDays: Number(currentState.streakDays) || 1
+                }
+            };
+
+            await setDoc(guestDocRef, guestPayload, { merge: true });
+            lastGuestSyncTime = Date.now();
+            console.log('📡 Guest session heartbeat recorded for device:', myDeviceId);
+        } catch (err) {
+            console.warn('Guest session sync failed quietly:', err);
+        }
+    }, force ? 100 : 2000);
+}
+window.syncGuestSession = syncGuestSession;
+
 window.triggerCloudSync = function (showSuccessToast = false) {
-    if (!currentUser) return;
+    if (!currentUser) {
+        syncGuestSession();
+        return;
+    }
     if (isCloudSyncLocked) {
         console.warn('triggerCloudSync paused: Waiting for initial cloud snapshot to merge.');
         return;

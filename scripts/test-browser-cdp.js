@@ -1217,6 +1217,68 @@ server.listen(PORT, async () => {
             throw new Error('Universal search failed to retrieve and display cached meal!');
         }
 
+        // Test 34: Guest Activity Tracking & Admin User Segment Filtering (Phase 1 - v5.9.4)
+        console.log('--- Test 34: Guest Activity Tracking & Admin User Segment Filtering (Phase 1) ---');
+        const guestTrackingTest = await evalJs(`(() => {
+            const hasGuestFn = typeof window.syncGuestSession === 'function';
+            const hasFrame = window.state && window.state.prestigeFrame === 'novice';
+            const hasStreak = window.state && typeof window.state.streakDays === 'number';
+            return { hasGuestFn, hasFrame, hasStreak };
+        })()`);
+        console.log('Guest session & Prestige Frame foundation verified:', guestTrackingTest);
+        if (!guestTrackingTest.hasGuestFn || !guestTrackingTest.hasFrame || !guestTrackingTest.hasStreak) {
+            throw new Error('Guest tracking function or prestige frame state schema missing!');
+        }
+
+        // Test Admin User Type Filtering
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
+        let isAdminReady = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isAdminReady = await evalJs('typeof window.setUserTypeFilter === "function" && typeof window.renderAdminOverview === "function" && !!document.getElementById("btnFilterUserGuest")');
+                if (isAdminReady) break;
+            } catch (e) {}
+        }
+        console.log('Admin page loaded for guest filter test:', isAdminReady);
+        const adminGuestFilterTest = await evalJs(`(() => {
+            const btnAll = document.getElementById('btnFilterUserAll');
+            const btnGoogle = document.getElementById('btnFilterUserGoogle');
+            const btnGuest = document.getElementById('btnFilterUserGuest');
+            const hasFilterFn = typeof window.setUserTypeFilter === 'function';
+
+            // Simulate mixed user dataset
+            window.allUsersData = [
+                { uid: 'u_goog_1', isGuest: false, displayName: 'สมชาย รักดี', email: 'somchai@gmail.com', updatedAt: new Date().toISOString() },
+                { uid: 'guest_dev_1', isGuest: true, displayName: 'ผู้ใช้ทั่วไป (iOS)', platform: 'iOS', updatedAt: new Date().toISOString() }
+            ];
+            window.renderAdminOverview();
+            
+            // Check counts
+            const totalText = document.getElementById('countFilterAll').textContent;
+            const googleText = document.getElementById('countFilterGoogle').textContent;
+            const guestText = document.getElementById('countFilterGuest').textContent;
+
+            // Trigger filter guest
+            window.setUserTypeFilter('guest');
+            const tbodyHtml = document.getElementById('usersTableBody').innerHTML;
+            const hasGuestRow = tbodyHtml.includes('ผู้ใช้ทั่วไป (iOS)') && tbodyHtml.includes('⚪ Guest');
+            const noGoogleRow = !tbodyHtml.includes('somchai@gmail.com');
+
+            return {
+                buttonsExist: !!(btnAll && btnGoogle && btnGuest && hasFilterFn),
+                totalText,
+                googleText,
+                guestText,
+                hasGuestRow,
+                noGoogleRow
+            };
+        })()`);
+        console.log('Admin Guest & Google Filter verified:', adminGuestFilterTest);
+        if (!adminGuestFilterTest.buttonsExist || !adminGuestFilterTest.hasGuestRow || !adminGuestFilterTest.noGoogleRow) {
+            throw new Error('Admin guest user filtering failed!');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

@@ -47,5 +47,12 @@ service cloud.firestore {
       allow create, update: if request.auth != null;
       allow delete: if isAdmin();
     }
+
+    // Guest & Unauthenticated Visitor Activity Tracking (Phase 1):
+    // Allows unauthenticated visitors to heartbeat/record their own device stats; verified Admin can read & delete
+    match /guest_sessions/{deviceId} {
+      allow create, update: if request.resource.data.deviceId == deviceId;
+      allow read, delete: if isAdmin();
+    }
   }
 }

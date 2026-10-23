@@ -113,7 +113,7 @@
                         <span class="text-base">👤</span>
                     </div>
                     <div id="statTotalUsers" class="text-2xl font-black text-slate-800 dark:text-slate-100">0</div>
-                    <div class="text-[11px] text-emerald-500 font-medium">ลงทะเบียนใน Cloud Firestore</div>
+                    <div id="statUsersBreakdown" class="text-[11px] text-emerald-500 font-medium">0 สมาชิก Google + 0 ผู้ใช้ทั่วไป</div>
                 </div>
 
                 <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
@@ -122,7 +122,7 @@
                         <span class="text-base">🔥</span>
                     </div>
                     <div id="statActiveToday" class="text-2xl font-black text-purple-600 dark:text-purple-400">0</div>
-                    <div class="text-[11px] text-purple-500 font-medium">บันทึกข้อมูลในวันนี้</div>
+                    <div id="statActiveBreakdown" class="text-[11px] text-purple-500 font-medium">บันทึกข้อมูลในวันนี้</div>
                 </div>
 
                 <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-1">
@@ -182,9 +182,23 @@
             <div id="tabView_users" class="space-y-4">
                 <!-- Search & Filters -->
                 <div class="flex flex-wrap items-center justify-between gap-2.5">
-                    <div class="relative w-full sm:w-80">
-                        <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" placeholder="🔍 ค้นหาชื่อ หรือ อีเมลผู้ใช้..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
-                        <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto flex-1">
+                        <div class="relative w-full sm:w-72">
+                            <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" placeholder="🔍 ค้นหาชื่อ หรือ อีเมลผู้ใช้..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
+                            <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                        </div>
+                        <!-- User Type Segment Filter (Phase 1) -->
+                        <div class="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shrink-0">
+                            <button type="button" id="btnFilterUserAll" onclick="setUserTypeFilter('all')" class="px-2.5 py-1 rounded-lg font-bold bg-white dark:bg-slate-700 shadow-xs text-purple-600 dark:text-purple-400 transition cursor-pointer">
+                                ทั้งหมด (<span id="countFilterAll">0</span>)
+                            </button>
+                            <button type="button" id="btnFilterUserGoogle" onclick="setUserTypeFilter('google')" class="px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer">
+                                🔵 Google (<span id="countFilterGoogle">0</span>)
+                            </button>
+                            <button type="button" id="btnFilterUserGuest" onclick="setUserTypeFilter('guest')" class="px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer">
+                                ⚪ Guest (<span id="countFilterGuest">0</span>)
+                            </button>
+                        </div>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="openBroadcastMessageModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5">
@@ -514,12 +528,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.8.6
+                            Current Version: v5.9.4
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.4 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">👥 v5.9.4 (Guest Sessions Heartbeat, Segmented User Analytics & Prestige Frame Schema - Phase 1)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>👥 สถาปัตยกรรม Guest Session Heartbeat:</b> เชื่อมต่อคอลเลกชัน <code>guest_sessions</code> จัดเก็บสถิติผู้ใช้งานทั่วไปที่ไม่ได้ล็อกอิน Google อิงตาม Device ID ถาวร พร้อมจำแนกอุปกรณ์ (iOS / Android / Desktop) และ PWA Status แบบ Zero-Friction</li>
+                                <li><b>🛡️ ยกระดับ Firestore Security Rules:</b> อนุญาตให้ Guest บันทึก Heartbeat ได้เฉพาะ Device ID ของตนเอง และล็อกสิทธิ์การอ่านข้อมูลสถิติ Guest ทั้งหมดให้เฉพาะ Admin ที่ผ่านการตรวจสอบสิทธิ์เท่านั้น</li>
+                                <li><b>🎛️ ระบบ Segmented User Filtering ในหน้า Admin:</b> เพิ่มปุ่มสลับกรองดูผู้ใช้แยกกลุ่ม [ทั้งหมด] [🔵 Google] [⚪ Guest] พร้อม KPI Card แสดงสัดส่วนผู้ใช้ Google และ Guest แบบเรียลไทม์</li>
+                                <li><b>🏆 วางรากฐาน Prestige Frame Schema (5 Tiers):</b> กำหนดค่าเริ่มต้น <code>state.prestigeFrame</code> และ <code>state.streakDays</code> ใน <code>ensureStateIntegrity()</code> พร้อมรองรับระบบกรอบโปรไฟล์ Novice, Bronze, Silver, Gold, Diamond ในระยะที่ 2</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.8.6 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

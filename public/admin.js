@@ -117,22 +117,45 @@ window.handleAdminSignOut = async function () {
     }
 };
 
-// Fetch All Users from Cloud Firestore
+// Fetch All Users & Guest Sessions from Cloud Firestore (Phase 1)
 window.loadAllUserData = async function () {
     const refreshIcon = document.getElementById('refreshIcon');
     if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
     try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
+        const [usersSnap, guestsSnap] = await Promise.all([
+            getDocs(collection(db, 'users')),
+            getDocs(collection(db, 'guest_sessions')).catch(err => {
+                console.warn('Failed to load guest_sessions collection:', err);
+                return { forEach: () => {} };
+            })
+        ]);
+
         allUsersData = [];
 
-        querySnapshot.forEach((docSnap) => {
+        usersSnap.forEach((docSnap) => {
             allUsersData.push({
                 uid: docSnap.id,
+                isGuest: false,
+                provider: 'google',
                 ...docSnap.data()
             });
         });
 
+        guestsSnap.forEach((docSnap) => {
+            const data = docSnap.data();
+            allUsersData.push({
+                uid: docSnap.id,
+                deviceId: docSnap.id,
+                isGuest: true,
+                provider: 'guest',
+                displayName: data.displayName || `ผู้ใช้ทั่วไป (${data.platform || 'Device'})`,
+                email: data.convertedEmail ? `แปลงเป็น: ${data.convertedEmail}` : 'ผู้ใช้ทั่วไป (ไม่ระบุตัวตน)',
+                ...data
+            });
+        });
+
+        window.allUsersData = allUsersData;
         renderAdminOverview();
     } catch (err) {
         console.error('Failed to load users data:', err);
@@ -142,11 +165,22 @@ window.loadAllUserData = async function () {
     }
 };
 
+window.renderAdminOverview = renderAdminOverview;
 function renderAdminOverview() {
+    if (Array.isArray(window.allUsersData) && window.allUsersData.length > 0) {
+        allUsersData = window.allUsersData;
+    } else {
+        window.allUsersData = allUsersData;
+    }
     const todayStr = getTodayStr();
 
     let totalUsers = allUsersData.length;
+    let googleUsersCount = allUsersData.filter(u => !u.isGuest).length;
+    let guestUsersCount = allUsersData.filter(u => !!u.isGuest).length;
+
     let activeToday = 0;
+    let activeGoogleToday = 0;
+    let activeGuestToday = 0;
     let totalMealsToday = 0;
     let totalWaterToday = 0;
 
@@ -166,6 +200,11 @@ function renderAdminOverview() {
 
         if (isUpdatedToday || mealsToday.length > 0 || waterToday > 0 || workoutsToday.length > 0) {
             activeToday++;
+            if (user.isGuest) {
+                activeGuestToday++;
+            } else {
+                activeGoogleToday++;
+            }
         }
 
         totalMealsToday += mealsToday.length;
@@ -204,15 +243,33 @@ function renderAdminOverview() {
         }
     });
 
-    // Update KPIs
+    // Update KPIs (Phase 1: Google + Guest breakdown)
     document.getElementById('statTotalUsers').textContent = totalUsers.toLocaleString();
+    const statUsersBrk = document.getElementById('statUsersBreakdown');
+    if (statUsersBrk) {
+        statUsersBrk.textContent = `🔵 ${googleUsersCount.toLocaleString()} สมาชิก Google + ⚪ ${guestUsersCount.toLocaleString()} ผู้ใช้ทั่วไป`;
+    }
+
     document.getElementById('statActiveToday').textContent = activeToday.toLocaleString();
+    const statActBrk = document.getElementById('statActiveBreakdown');
+    if (statActBrk) {
+        statActBrk.textContent = `🔵 ${activeGoogleToday} สมาชิก + ⚪ ${activeGuestToday} ผู้ใช้ทั่วไปวันนี้`;
+    }
+
     document.getElementById('statTotalMeals').textContent = totalMealsToday.toLocaleString();
     document.getElementById('statTotalWater').textContent = totalWaterToday.toLocaleString();
     document.getElementById('userCountBadge').textContent = totalUsers;
 
-    // Render Users Table
-    renderUsersTable(allUsersData);
+    // Filter count badges
+    const cntAll = document.getElementById('countFilterAll');
+    if (cntAll) cntAll.textContent = totalUsers;
+    const cntG = document.getElementById('countFilterGoogle');
+    if (cntG) cntG.textContent = googleUsersCount;
+    const cntGuest = document.getElementById('countFilterGuest');
+    if (cntGuest) cntGuest.textContent = guestUsersCount;
+
+    // Render Users Table using active filters
+    applyUserFilters();
 
     // Render Top Foods
     renderTopFoods(foodCountMap);
@@ -677,9 +734,12 @@ function renderUsersTableSlice() {
     tbody.innerHTML = pageItems.map(u => {
         const state = u.state || {};
         const p = state.profile || {};
-        const photo = u.photoURL || 'icon.svg';
-        const name = u.displayName || 'ผู้ใช้ทั่วไป';
-        const email = u.email || 'ไม่มีอีเมล';
+        const isGuest = !!u.isGuest;
+        const photo = isGuest ? 'icon.svg' : (u.photoURL || 'icon.svg');
+        const name = u.displayName || (isGuest ? 'ผู้ใช้ทั่วไป (Guest)' : 'ผู้ใช้ Google');
+        const email = isGuest 
+            ? `📱 Guest Session (${u.platform || 'อุปกรณ์'}${u.pwa ? ' • PWA' : ''})` 
+            : (u.email || 'ไม่มีอีเมล');
         const weight = p.weight ? `${p.weight} kg` : '-';
         const targetCal = p.weight ? Math.round(10 * p.weight + 6.25 * (p.height || 170) - 5 * (p.age || 30) + (p.gender === 'female' ? -161 : 5)) : 2000;
 
@@ -688,6 +748,9 @@ function renderUsersTableSlice() {
         const waterToday = (state.waterByDate && state.waterByDate[todayStr]) || 0;
 
         const updatedStr = u.updatedAt ? formatTimeAgo(new Date(u.updatedAt)) : 'ยังไม่มีประวัติ';
+        const typeBadge = isGuest
+            ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold">⚪ Guest</span>`
+            : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-bold">🔵 Google</span>`;
 
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
@@ -695,8 +758,11 @@ function renderUsersTableSlice() {
                     <div class="flex items-center gap-2.5">
                         <img src="${photo}" class="w-8 h-8 rounded-full border border-purple-500/30 object-cover" onerror="this.src='icon.svg'">
                         <div>
-                            <div class="font-bold text-slate-800 dark:text-slate-100">${name}</div>
-                            <div class="text-[11px] text-slate-400">${email}</div>
+                            <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                <span>${name}</span>
+                                ${typeBadge}
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-mono">${email}</div>
                         </div>
                     </div>
                 </td>
@@ -713,10 +779,16 @@ function renderUsersTableSlice() {
                 </td>
                 <td class="py-3 px-4 text-right">
                     <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                        <button type="button" onclick="openSendMessageModal('${u.uid}', '${(name || '').replace(/'/g, "\\'")}', '${(email || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 font-bold transition shadow-xs text-xs flex items-center gap-1">
+                        ${!isGuest ? `
+                        <button type="button" onclick="openSendMessageModal('${u.uid}', '${(name || '').replace(/'/g, "\\'")}', '${(email || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 font-bold transition shadow-xs text-xs flex items-center gap-1 cursor-pointer">
                             💬 ส่งข้อความ
                         </button>
-                        <button type="button" onclick="inspectUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition shadow-xs text-xs">
+                        ` : `
+                        <span title="ผู้ใช้ทั่วไปไม่มีกล่องจดหมายส่วนตัว" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium border border-slate-200 dark:border-slate-700">
+                            💬 เฉพาะ Google
+                        </span>
+                        `}
+                        <button type="button" onclick="inspectUser('${u.uid}')" class="px-2.5 py-1.5 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition shadow-xs text-xs cursor-pointer">
                             👁️ ส่องไดอารี่
                         </button>
                     </div>
@@ -856,20 +928,55 @@ function renderCustomPresetsSlice() {
     });
 }
 
-window.filterUsersList = function (query) {
-    const q = (query || '').trim().toLowerCase();
-    if (!q) {
-        renderUsersTable(allUsersData);
-        return;
-    }
+let _currentUserTypeFilter = 'all';
 
-    const filtered = allUsersData.filter(u => {
-        const name = (u.displayName || '').toLowerCase();
-        const email = (u.email || '').toLowerCase();
-        return name.includes(q) || email.includes(q);
+window.setUserTypeFilter = function (type) {
+    _currentUserTypeFilter = type;
+    const btnAll = document.getElementById('btnFilterUserAll');
+    const btnGoogle = document.getElementById('btnFilterUserGoogle');
+    const btnGuest = document.getElementById('btnFilterUserGuest');
+
+    [btnAll, btnGoogle, btnGuest].forEach(btn => {
+        if (!btn) return;
+        btn.className = 'px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer';
     });
 
+    const activeBtn = type === 'google' ? btnGoogle : type === 'guest' ? btnGuest : btnAll;
+    if (activeBtn) {
+        activeBtn.className = 'px-2.5 py-1 rounded-lg font-bold bg-white dark:bg-slate-700 shadow-xs text-purple-600 dark:text-purple-400 transition cursor-pointer';
+    }
+
+    applyUserFilters();
+};
+
+function applyUserFilters() {
+    if (Array.isArray(window.allUsersData) && window.allUsersData.length > 0) {
+        allUsersData = window.allUsersData;
+    }
+    const q = (document.getElementById('adminUserSearch')?.value || '').trim().toLowerCase();
+    let filtered = allUsersData;
+
+    if (_currentUserTypeFilter === 'google') {
+        filtered = filtered.filter(u => !u.isGuest);
+    } else if (_currentUserTypeFilter === 'guest') {
+        filtered = filtered.filter(u => !!u.isGuest);
+    }
+
+    if (q) {
+        filtered = filtered.filter(u => {
+            const name = (u.displayName || '').toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            const device = (u.platform || '').toLowerCase();
+            return name.includes(q) || email.includes(q) || device.includes(q);
+        });
+    }
+
     renderUsersTable(filtered);
+}
+window.applyUserFilters = applyUserFilters;
+
+window.filterUsersList = function (query) {
+    applyUserFilters();
 };
 
 window.switchAdminTab = function (tabId) {

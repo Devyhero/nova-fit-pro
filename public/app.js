@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.3';
+const APP_VERSION = '5.9.4';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -238,6 +238,8 @@ const APP_VERSION = '5.9.3';
             if (!state.bodyTab) state.bodyTab = 'weight';
             if (!state.weightsByDate || typeof state.weightsByDate !== 'object') state.weightsByDate = {};
             if (!state.workoutsByDate || typeof state.workoutsByDate !== 'object') state.workoutsByDate = {};
+            if (typeof state.streakDays !== 'number' || state.streakDays < 1) state.streakDays = 1;
+            if (!state.prestigeFrame) state.prestigeFrame = 'novice';
         }
 
         function saveState() {
