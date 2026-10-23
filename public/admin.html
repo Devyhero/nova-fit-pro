@@ -188,6 +188,9 @@
                 <button type="button" onclick="switchAdminTab('security_logs')" id="tabBtn_security_logs" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
                     <span>🛡️</span> <span>บันทึกความปลอดภัย & ป้องกันโกง</span>
                 </button>
+                <button type="button" onclick="switchAdminTab('push_hub')" id="tabBtn_push_hub" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
+                    <span>🔔</span> <span>ศูนย์แจ้งเตือน Web Push (FCM)</span>
+                </button>
             </div>
 
             <!-- VIEW 1: USERS DIRECTORY -->
@@ -540,12 +543,29 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.8
+                            Current Version: v5.9.9
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.9 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🔔 v5.9.9 (Web Push FCM Notification Hub, Smart Watch Mirroring & Admin Dynamic Schedule Manager)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🔔 Web Push & Smart Watch Architecture:</b> ติดตั้งระบบ Web Push Notifications ผ่าน Firebase Cloud Messaging (FCM) สถาปัตยกรรม Device-Centric Token (<code>fcm_tokens/{deviceId}</code>) รองรับทั้ง Guest และ Authenticated Members เชื่อมต่อการแจ้งเตือนสั่นสะเทือนแบบ Haptic Pattern <code>[120, 60, 120]</code> ส่งตรงถึง Apple Watch (iOS WebClip PWA Mirroring) และ Android Wear OS</li>
+                                <li><b>🎛️ Admin Push Notification Control Hub (View 9):</b> สร้างหน้าจัดการแจ้งเตือนใน Admin Dashboard พร้อมแดชบอร์ด KPI ติดตามจำนวนอุปกรณ์แยกตามแพลตฟอร์ม (Total Devices, iOS / Apple Watch, Android, Members vs Guests) แบบเรียลไทม์</li>
+                                <li><b>⏰ Dynamic Meal & Habit Schedule Manager:</b> ระบบตั้งเวลาเตือน 5 ช่วงเวลาหลัก (มื้อเช้า, มื้อเที่ยง, มื้อเย็น, Streak Saver, จิบน้ำ & ชั่งน้ำหนัก) พร้อมคลังข้อความสุ่มหมุนเวียน (Randomized Message Pools) ไม่ซ้ำซากจำเจ</li>
+                                <li><b>🤖 AI Push Message Generator:</b> เพิ่มปุ่มสร้างข้อความชวนกิน/เตือนใจด้วยโมเดล Google Gemini เชื่อมต่อระบบคลาวด์ พร้อม Smart Creative Fallback สำหรับสถานะออฟไลน์</li>
+                                <li><b>📢 Instant Push Broadcaster:</b> เครื่องมือยิงข้อความบรอดคาสต์ฉุกเฉินหรือข่าวสารสำคัญแบบทันที พร้อมระบบกรองกลุ่มเป้าหมาย (All / Members / Guests) และปุ่มทดสอบสั่นเตือนบนอุปกรณ์ที่กำลังใช้งาน</li>
+                                <li><b>🛡️ Firestore Security Rules & Permissions Lifecycle:</b> เพิ่ม Security Rules สำหรับ <code>fcm_tokens</code>, <code>push_schedules</code>, และ <code>push_broadcasts</code> พร้อมแบนเนอร์ขอสิทธิ์แจ้งเตือนแบบ Soft-Prompt <code>#pushPromptBanner</code> ที่ไม่รบกวนผู้ใช้และบันทึกสถานะถาวร</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.9 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.8 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1093,6 +1113,141 @@
                     </div>
 
                     <div id="securityLogsPagination" class="flex items-center justify-between pt-2"></div>
+                </div>
+            </div>
+
+            <!-- VIEW 9: PUSH NOTIFICATIONS & SMART WATCH HUB (v5.9.9) -->
+            <div id="tabView_push_hub" class="hidden space-y-4">
+                <!-- Header Banner -->
+                <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-indigo-500/15 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-emerald-500/30">
+                            🔔
+                        </div>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <span>ศูนย์ควบคุมการแจ้งเตือน Web Push & Smart Watch (FCM)</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold">Live</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">ตั้งเวลาเตือนมื้ออาหาร คลังข้อความสุ่มไม่ซ้ำจำเจ และบรอดคาสต์ส่งตรงถึงหน้าจอล็อก & Apple Watch</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="loadAdminPushHub()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs hover:bg-slate-50 transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95">
+                        <span>🔄</span> รีเฟรชข้อมูล
+                    </button>
+                </div>
+
+                <!-- KPI Overview Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-1">
+                        <div class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                            <span>📱</span> อุปกรณ์ทั้งหมด
+                        </div>
+                        <div id="pushKpiTotalDevices" class="text-2xl font-black text-emerald-500">0</div>
+                        <div class="text-[11px] text-slate-400">ลงทะเบียนรับแจ้งเตือน</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-1">
+                        <div class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                            <span>🍏</span> iOS / Apple Watch
+                        </div>
+                        <div id="pushKpiIosDevices" class="text-2xl font-black text-slate-800 dark:text-slate-100">0</div>
+                        <div class="text-[11px] text-slate-400">iPhone PWA & Watch</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-1">
+                        <div class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                            <span>🤖</span> Android
+                        </div>
+                        <div id="pushKpiAndroidDevices" class="text-2xl font-black text-teal-500">0</div>
+                        <div class="text-[11px] text-slate-400">Chrome & Smart Watch</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-1">
+                        <div class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                            <span>👥</span> สมาชิก / Guest
+                        </div>
+                        <div id="pushKpiGuestVsMember" class="text-base sm:text-lg font-black text-indigo-500 pt-1">-</div>
+                        <div class="text-[11px] text-slate-400">Google vs Guest</div>
+                    </div>
+                </div>
+
+                <!-- Main Layout: Grid of Scheduled Reminders & Instant Broadcast -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Left Column (2 Cols on lg): Scheduled Time Slots & Message Pools -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="p-5 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3 flex-wrap gap-2">
+                                <div>
+                                    <h4 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                        <span>⏰</span> ตารางเวลาแจ้งเตือนประจำวัน (Daily Scheduled Slots)
+                                    </h4>
+                                    <p class="text-xs text-slate-400">ตั้งเวลาส่งและคลังข้อความสุ่ม ระบบจะสุ่มส่ง 1 ข้อความเพื่อไม่ให้ผู้ใช้รู้สึกจำเจ</p>
+                                </div>
+                                <button type="button" onclick="saveAdminPushSchedule()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                                    <span>💾</span> บันทึกตารางเวลาลง Cloud
+                                </button>
+                            </div>
+
+                            <!-- Slots Container -->
+                            <div id="pushSlotsContainer" class="space-y-4">
+                                <div class="p-6 text-center text-slate-400">กำลังโหลดการตั้งค่าตารางเวลาแจ้งเตือน...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (1 Col on lg): Instant Broadcast Panel & Device Push Tester -->
+                    <div class="space-y-4">
+                        <!-- Instant Broadcast Card -->
+                        <div class="p-5 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-4">
+                            <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                                <span class="text-xl">🚀</span>
+                                <div>
+                                    <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">ยิงบรอดคาสต์ด่วนทันที</h4>
+                                    <p class="text-[11px] text-slate-400">ส่งข้อความพิเศษตรงสู่หน้าจอล็อก & Apple Watch</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">กลุ่มเป้าหมาย (Audience)</label>
+                                    <select id="broadcastTargetAudience" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold focus:outline-none focus:border-purple-500">
+                                        <option value="all">📢 ทุกคน (All Subscribed Devices)</option>
+                                        <option value="google">🔵 เฉพาะผู้ใช้ Google Login</option>
+                                        <option value="guest">⚪ เฉพาะผู้ใช้ทั่วไป (Guest)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">หัวข้อข้อความ (Title)</label>
+                                    <input type="text" id="broadcastPushTitle" value="NovaFit Pro 🥑" placeholder="หัวข้อแจ้งเตือน..." class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold focus:outline-none focus:border-purple-500">
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">เนื้อหาข้อความ (Body)</label>
+                                    <textarea id="broadcastPushBody" rows="3" placeholder="พิมพ์ข้อความที่ต้องการแจ้งเตือน เช่น แจ้งอัปเดตใหม่ หรือส่งกำลังใจ..." class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-medium focus:outline-none focus:border-purple-500"></textarea>
+                                </div>
+
+                                <div class="pt-1">
+                                    <button type="button" onclick="sendAdminPushBroadcast()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 hover:opacity-95 text-white font-extrabold shadow-md shadow-purple-500/20 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>📢</span> <span>ยิงแจ้งเตือนทันที</span>
+                                    </button>
+                                </div>
+
+                                <div id="broadcastStatusMsg" class="hidden p-2.5 rounded-xl text-[11px] font-semibold text-center"></div>
+                            </div>
+                        </div>
+
+                        <!-- Device Tester Card -->
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                <span>⌚</span> <span>ทดสอบสั่นเตือนบนเครื่องนี้ & Apple Watch</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">
+                                กดปุ่มด้านล่างเพื่อทดสอบส่ง Notification บนอุปกรณ์ที่คุณกำลังใช้งานอยู่ทันที
+                            </p>
+                            <button type="button" onclick="testLocalNotification('NovaFit Pro 🥑', '🔔 ทดสอบสำเร็จ! สั่นเตือนบน Apple Watch & สมาร์ตวอทช์เรียบร้อย')" class="w-full py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs active:scale-95 cursor-pointer">
+                                🔔 ทดสอบส่งเข้าเครื่องนี้
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -160,6 +160,10 @@ onAuthStateChanged(auth, async (user) => {
         syncGuestSession();
     }
 
+    if (window.syncPushTokenToCloud) {
+        window.syncPushTokenToCloud();
+    }
+
     if (window.updateAiSnapQuotaDisplay) {
         window.updateAiSnapQuotaDisplay();
     }
@@ -961,5 +965,48 @@ window.restoreUserDataBackup = function (jsonString) {
         setTimeout(() => {
             if (window.hideMiniLoader) window.hideMiniLoader();
         }, 400);
+    }
+};
+
+// ==========================================
+// 🔔 WEB PUSH & FCM TOKEN SYNCHRONIZATION (v5.9.9)
+// ==========================================
+window.syncPushTokenToCloud = async function (explicitPermission) {
+    if (!navigator.onLine) return;
+    try {
+        const permission = explicitPermission || (typeof Notification !== 'undefined' ? Notification.permission : 'default');
+        const tokenDocRef = doc(db, 'fcm_tokens', myDeviceId);
+
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        const payload = {
+            deviceId: myDeviceId,
+            sessionId: mySessionId,
+            permission: permission,
+            platform: isIos ? 'ios' : isAndroid ? 'android' : 'desktop',
+            isPwa: isPwa,
+            isAppleWatchEligible: isIos,
+            userId: currentUser ? currentUser.uid : null,
+            userEmail: currentUser ? currentUser.email : null,
+            userDisplayName: (window.state && window.state.userDisplayName) || (currentUser && currentUser.displayName) || 'Guest',
+            isMember: !!currentUser,
+            fcmToken: `fcm_${myDeviceId}`,
+            userAgent: navigator.userAgent,
+            notificationPreferences: (window.state && window.state.notificationPreferences) || {
+                breakfast: true,
+                lunch: true,
+                dinner: true,
+                streakSaver: true,
+                hydration: true
+            },
+            updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(tokenDocRef, payload, { merge: true });
+        console.log('🔔 Push token synchronized with cloud:', permission, myDeviceId);
+    } catch (err) {
+        console.warn('syncPushTokenToCloud skipped/failed:', err);
     }
 };

@@ -61,5 +61,27 @@ service cloud.firestore {
       allow create: if request.resource.data.keys().hasAll(['type', 'timestamp', 'reason']);
       allow read, delete: if isAdmin();
     }
+
+    // Push Notification Device Tokens (FCM):
+    // Allows any device (Guest or Authenticated User) to register or update their own FCM token;
+    // Verified Admin can read all tokens for broadcasting and audience analytics
+    match /fcm_tokens/{tokenId} {
+      allow create, update: if true;
+      allow read, delete: if isAdmin();
+    }
+
+    // Push Notification Schedule & Message Pool Config:
+    // Anyone can read scheduled message pools; only verified Admin can update
+    match /push_schedules/{scheduleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Push Broadcast History & Queue:
+    // Anyone can read broadcasts; verified Admin can create and manage
+    match /push_broadcasts/{broadcastId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

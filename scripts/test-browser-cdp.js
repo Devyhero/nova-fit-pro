@@ -1627,9 +1627,156 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.8' ||
-            !v598Test.toolsBadge?.includes('v5.9.8')) {
-            throw new Error('Test 38: Mascot logo, favicons, or v5.9.8 version alignment failed: ' + JSON.stringify(v598Test));
+            v598Test.appVersion !== '5.9.9' ||
+            !v598Test.toolsBadge?.includes('v5.9.9')) {
+            throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
+        }
+
+        // Test 39: Web Push Notifications (FCM), Smart Watch Mirroring & Admin Push Hub (v5.9.9)
+        console.log('--- Test 39: Web Push Notifications & Admin Push Hub (v5.9.9) ---');
+        // Part A: Client Push Notification UI & Lifecycle
+        const clientPushTest = await evalJs(`(() => {
+            const pushBanner = document.getElementById('pushPromptBanner');
+            const hasBanner = !!pushBanner;
+            const bannerMascot = pushBanner ? pushBanner.querySelector('img[src="icon-192.png"]') : null;
+            const hasBannerMascot = !!bannerMascot;
+
+            const fnGetState = typeof window.getPushPermissionState === 'function';
+            const fnRequest = typeof window.requestPushPermission === 'function';
+            const fnDismiss = typeof window.dismissPushPrompt === 'function';
+            const fnTestNotif = typeof window.testLocalNotification === 'function';
+            const fnToggle = typeof window.togglePushNotificationPermission === 'function';
+
+            // Test banner dismiss animation & hiding
+            if (fnDismiss) {
+                window.dismissPushPrompt(false);
+            }
+            const bannerDismissing = pushBanner && (pushBanner.classList.contains('opacity-0') || pushBanner.classList.contains('translate-y-20'));
+
+            // Check Profile Settings Drawer Push Toggle
+            const pushToggle = document.getElementById('btnTogglePush');
+            const hasPushToggle = !!pushToggle;
+
+            return {
+                hasBanner,
+                hasBannerMascot,
+                fnGetState,
+                fnRequest,
+                fnDismiss,
+                fnTestNotif,
+                fnToggle,
+                bannerDismissing,
+                hasPushToggle
+            };
+        })()`);
+        console.log('Client Push UI & Methods verified:', clientPushTest);
+
+        if (!clientPushTest.hasBanner ||
+            !clientPushTest.hasBannerMascot ||
+            !clientPushTest.fnGetState ||
+            !clientPushTest.fnRequest ||
+            !clientPushTest.fnDismiss ||
+            !clientPushTest.fnTestNotif ||
+            !clientPushTest.fnToggle ||
+            !clientPushTest.bannerDismissing ||
+            !clientPushTest.hasPushToggle) {
+            throw new Error('Test 39 Part A: Client Push Notification components failed: ' + JSON.stringify(clientPushTest));
+        }
+
+        // Part B: Admin Push Notification Control Hub
+        console.log('--- Test 39 Part B: Admin Push Notification Control Hub ---');
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
+        let isPushAdminReady = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isPushAdminReady = await evalJs('typeof window.switchAdminTab === "function" && !!document.getElementById("tabBtn_push_hub")');
+                if (isPushAdminReady) break;
+            } catch (e) {}
+        }
+
+        const adminPushTest = await evalJs(`(() => {
+            const tabBtn = document.getElementById('tabBtn_push_hub');
+            const hasTabBtn = !!tabBtn;
+
+            // Switch to push hub tab
+            window.switchAdminTab('push_hub');
+            const pushView = document.getElementById('tabView_push_hub');
+            const isPushViewVisible = pushView && !pushView.classList.contains('hidden');
+
+            // Check KPIs
+            const kpiTotal = document.getElementById('pushKpiTotalDevices');
+            const kpiIos = document.getElementById('pushKpiIosDevices');
+            const kpiAndroid = document.getElementById('pushKpiAndroidDevices');
+            const kpiGuestMember = document.getElementById('pushKpiGuestVsMember');
+            const hasKpis = !!(kpiTotal && kpiIos && kpiAndroid && kpiGuestMember);
+
+            // Check Slots Container
+            const slotsContainer = document.getElementById('pushSlotsContainer');
+            const hasSlotsContainer = !!slotsContainer;
+
+            // Render slots & verify default meal times
+            if (window.renderAdminPushSlots) {
+                window.renderAdminPushSlots();
+            }
+            const hasBreakfastSlot = slotsContainer && slotsContainer.innerHTML.includes('มื้อเช้า');
+            const hasLunchSlot = slotsContainer && slotsContainer.innerHTML.includes('มื้อเที่ยง');
+            const hasDinnerSlot = slotsContainer && slotsContainer.innerHTML.includes('มื้อเย็น');
+            const hasStreakSlot = slotsContainer && slotsContainer.innerHTML.includes('เตือนรักษาสถิติ');
+            const hasHydrationSlot = slotsContainer && slotsContainer.innerHTML.includes('เตือนจิบน้ำ');
+
+            // Test adding custom message to breakfast slot
+            const breakfastInput = document.getElementById('newMsgInput_breakfast');
+            if (breakfastInput && window.addPushSlotMessage) {
+                breakfastInput.value = 'ทดสอบข้อความมื้อเช้าพิเศษ 🥑';
+                window.addPushSlotMessage('breakfast');
+            }
+            const hasAddedMessage = slotsContainer && slotsContainer.innerHTML.includes('ทดสอบข้อความมื้อเช้าพิเศษ');
+
+            // Check broadcast controls
+            const audienceSelect = document.getElementById('broadcastTargetAudience');
+            const broadcastTitle = document.getElementById('broadcastPushTitle');
+            const broadcastBody = document.getElementById('broadcastPushBody');
+            const hasBroadcastInputs = !!(audienceSelect && broadcastTitle && broadcastBody);
+
+            const fnSaveSched = typeof window.saveAdminPushSchedule === 'function';
+            const fnSendBroadcast = typeof window.sendAdminPushBroadcast === 'function';
+            const fnGenAi = typeof window.generateAiPushMessage === 'function';
+
+            return {
+                hasTabBtn,
+                isPushViewVisible,
+                hasKpis,
+                hasSlotsContainer,
+                hasBreakfastSlot,
+                hasLunchSlot,
+                hasDinnerSlot,
+                hasStreakSlot,
+                hasHydrationSlot,
+                hasAddedMessage,
+                hasBroadcastInputs,
+                fnSaveSched,
+                fnSendBroadcast,
+                fnGenAi
+            };
+        })()`);
+        console.log('Admin Push Hub verified:', adminPushTest);
+
+        if (!adminPushTest.hasTabBtn ||
+            !adminPushTest.isPushViewVisible ||
+            !adminPushTest.hasKpis ||
+            !adminPushTest.hasSlotsContainer ||
+            !adminPushTest.hasBreakfastSlot ||
+            !adminPushTest.hasLunchSlot ||
+            !adminPushTest.hasDinnerSlot ||
+            !adminPushTest.hasStreakSlot ||
+            !adminPushTest.hasHydrationSlot ||
+            !adminPushTest.hasAddedMessage ||
+            !adminPushTest.hasBroadcastInputs ||
+            !adminPushTest.fnSaveSched ||
+            !adminPushTest.fnSendBroadcast ||
+            !adminPushTest.fnGenAi) {
+            throw new Error('Test 39 Part B: Admin Push Hub failed: ' + JSON.stringify(adminPushTest));
         }
 
         ws.close();

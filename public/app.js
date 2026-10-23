@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.8';
+const APP_VERSION = '5.9.9';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -832,6 +832,159 @@ const APP_VERSION = '5.9.8';
                 preloader.style.display = 'none';
                 preloader.classList.add('hidden');
             }, 520);
+        }
+
+        // ==========================================
+        // Web Push Notifications & FCM Engine (v5.9.9)
+        // ==========================================
+        function getPushPermissionState() {
+            if (!('Notification' in window)) return 'unsupported';
+            return Notification.permission;
+        }
+
+        function updatePushStatusUI() {
+            const perm = getPushPermissionState();
+            const badge = document.getElementById('pushStatusBadge');
+            const btn = document.getElementById('btnTogglePush');
+
+            if (badge) {
+                if (perm === 'granted') {
+                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold';
+                    badge.textContent = '✓ เปิดใช้งานแล้ว';
+                } else if (perm === 'denied') {
+                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold';
+                    badge.textContent = '✕ ปิดกั้นในเบราว์เซอร์';
+                } else if (perm === 'unsupported') {
+                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
+                    badge.textContent = 'ไม่รองรับ';
+                } else {
+                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold';
+                    badge.textContent = 'ยังไม่ได้เปิด';
+                }
+            }
+
+            if (btn) {
+                if (perm === 'granted') {
+                    btn.textContent = '🔔 ส่งข้อความทดสอบ';
+                    btn.className = 'px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer';
+                } else {
+                    btn.textContent = 'เปิดแจ้งเตือน';
+                    btn.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer';
+                }
+            }
+
+            if (perm === 'granted' || perm === 'denied') {
+                dismissPushPrompt(false);
+            }
+        }
+
+        async function requestPushPermission(isUserAction = true) {
+            if (!('Notification' in window)) {
+                if (isUserAction) alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน Web Push ครับ');
+                return false;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                updatePushStatusUI();
+
+                if (permission === 'granted') {
+                    dismissPushPrompt(false);
+                    if (isUserAction) {
+                        showToast('🎉 เปิดการแจ้งเตือนสำเร็จ! รองรับสั่นเตือนบน Apple Watch & สมาร์ตวอทช์');
+                    }
+                    if (window.syncPushTokenToCloud) {
+                        window.syncPushTokenToCloud();
+                    }
+                    return true;
+                } else if (permission === 'denied') {
+                    dismissPushPrompt(true);
+                    if (isUserAction) {
+                        alert('คุณได้ปฏิเสธการแจ้งเตือนไว้ สามารถไปเปิดใหม่ได้ที่ การตั้งค่าเบราว์เซอร์ > การแจ้งเตือน ครับ');
+                    }
+                    return false;
+                }
+            } catch (err) {
+                console.warn('Push permission request error:', err);
+                return false;
+            }
+        }
+
+        function requestPushPermissionFromBanner() {
+            requestPushPermission(true);
+        }
+
+        function dismissPushPrompt(recordDismiss = true) {
+            const banner = document.getElementById('pushPromptBanner');
+            if (!banner) return;
+            banner.classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 500);
+            if (recordDismiss) {
+                try {
+                    localStorage.setItem('novafit_push_dismissed', Date.now().toString());
+                } catch (e) {}
+            }
+        }
+
+        function checkPushPromptEligibility() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission !== 'default') return;
+
+            const lastDismiss = localStorage.getItem('novafit_push_dismissed');
+            if (lastDismiss) {
+                const daysAgo = (Date.now() - parseInt(lastDismiss, 10)) / (1000 * 60 * 60 * 24);
+                if (daysAgo < 5) return;
+            }
+
+            setTimeout(() => {
+                const banner = document.getElementById('pushPromptBanner');
+                if (banner && Notification.permission === 'default') {
+                    banner.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        banner.classList.remove('translate-y-20', 'opacity-0');
+                    });
+                }
+            }, 3000);
+        }
+
+        function testLocalNotification(customTitle, customBody) {
+            const title = customTitle || 'NovaFit Pro 🥑';
+            const body = customBody || '🔔 ทดสอบการแจ้งเตือน! พร้อมสั่นเตือนบนข้อมือ Apple Watch & สมาร์ตวอทช์ของคุณ';
+
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then((reg) => {
+                    reg.showNotification(title, {
+                        body: body,
+                        icon: 'icon-192.png',
+                        badge: 'favicon-32x32.png',
+                        vibrate: [120, 60, 120],
+                        tag: 'novafit-test-notification',
+                        renotify: true,
+                        data: { url: './' }
+                    });
+                }).catch((e) => {
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification(title, { body, icon: 'icon-192.png' });
+                    }
+                });
+            } else if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'icon-192.png'
+                });
+            }
+        }
+
+        function togglePushNotificationPermission() {
+            const perm = getPushPermissionState();
+            if (perm === 'granted') {
+                testLocalNotification();
+                showToast('🔔 ส่งข้อความทดสอบไปยังเครื่องของคุณแล้ว!');
+            } else {
+                requestPushPermission(true);
+            }
         }
 
         function applyTheme() {
@@ -5401,6 +5554,8 @@ const APP_VERSION = '5.9.8';
         checkFirstVisitProfilePrompt();
         checkFirstVisitVersionNotes();
         initAppPreloader();
+        updatePushStatusUI();
+        checkPushPromptEligibility();
 
         // Smooth preloader dismissal after initial setup
         if (document.readyState === 'complete') {
@@ -5421,6 +5576,14 @@ const APP_VERSION = '5.9.8';
         window.hideMiniLoader = hideMiniLoader;
         window.dismissAppPreloader = dismissAppPreloader;
         window.initAppPreloader = initAppPreloader;
+        window.getPushPermissionState = getPushPermissionState;
+        window.updatePushStatusUI = updatePushStatusUI;
+        window.requestPushPermission = requestPushPermission;
+        window.requestPushPermissionFromBanner = requestPushPermissionFromBanner;
+        window.dismissPushPrompt = dismissPushPrompt;
+        window.checkPushPromptEligibility = checkPushPromptEligibility;
+        window.testLocalNotification = testLocalNotification;
+        window.togglePushNotificationPermission = togglePushNotificationPermission;
         window.saveState = saveState;
         window.toggleToolsMenu = toggleToolsMenu;
         window.toggleCardSection = toggleCardSection;
@@ -6668,3 +6831,11 @@ window.removeCustomAvatarPhoto = removeCustomAvatarPhoto;
 window.showMiniLoader = showMiniLoader;
 window.hideMiniLoader = hideMiniLoader;
 window.dismissAppPreloader = dismissAppPreloader;
+window.getPushPermissionState = getPushPermissionState;
+window.updatePushStatusUI = updatePushStatusUI;
+window.requestPushPermission = requestPushPermission;
+window.requestPushPermissionFromBanner = requestPushPermissionFromBanner;
+window.dismissPushPrompt = dismissPushPrompt;
+window.checkPushPromptEligibility = checkPushPromptEligibility;
+window.testLocalNotification = testLocalNotification;
+window.togglePushNotificationPermission = togglePushNotificationPermission;

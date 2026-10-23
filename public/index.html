@@ -312,6 +312,39 @@
         </div>
     </div>
 
+    <!-- Floating Web Push Permission Prompt Banner (v5.9.9) -->
+    <div id="pushPromptBanner"
+        class="hidden fixed bottom-6 inset-x-3 sm:inset-x-auto sm:right-6 sm:max-w-md z-40 transition-all duration-500 transform translate-y-20 opacity-0 pointer-events-auto">
+        <div class="relative p-4 rounded-3xl bg-slate-900/95 text-white backdrop-blur-xl border border-emerald-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.5)] space-y-3 overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="relative flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl overflow-hidden ring-1 ring-emerald-400/40 shadow-md shrink-0 bg-slate-950">
+                    <img src="icon-192.png" alt="Nova Mascot" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">🔔 การแจ้งเตือนอัจฉริยะ</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">NEW</span>
+                    </div>
+                    <h3 class="font-extrabold text-sm leading-tight text-white mt-0.5">เปิดแจ้งเตือนมื้ออาหาร & สตรีค</h3>
+                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                        เตือนมื้อเที่ยง มื้อเย็น และเตือนรักษาสตรีคก่อนหมดวัน รองรับสั่นเตือนบน Apple Watch & สมาร์ตวอทช์
+                    </p>
+                </div>
+            </div>
+            <div class="relative flex items-center justify-end gap-2 pt-1">
+                <button type="button" onclick="dismissPushPrompt(true)"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/10 transition">
+                    ไว้ทีหลัง
+                </button>
+                <button type="button" onclick="requestPushPermissionFromBanner()"
+                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                    <span>🔔</span> <span>เปิดรับการแจ้งเตือน</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Nova Compact Action Micro-Loader Modal (v5.9.7) -->
     <div id="novaMiniLoader" class="hidden fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-auto">
         <div class="relative p-5 rounded-3xl bg-slate-900/95 border border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex flex-col items-center text-center space-y-3 max-w-[170px] select-none">
@@ -582,7 +615,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.8)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.9)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -1468,10 +1501,34 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.8!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.9!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.8 -->
+                <!-- Latest Release: v5.9.9 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🔔</span> v5.9.9 (ระบบแจ้งเตือนอัจฉริยะ สั่นเตือน Apple Watch & สมาร์ตวอทช์)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🔔</span>
+                            <span><b>ระบบแจ้งเตือนอัจฉริยะ (Web Push Notifications):</b> รับการแจ้งเตือนชวนทานอาหารมื้อสำคัญ เตือนจิบน้ำ และรักษาสถิติ Streak ได้ตรงเวลา</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-teal-500">⌚</span>
+                            <span><b>รองรับการสั่นเตือนบน Apple Watch & สมาร์ตวอทช์:</b> แจ้งเตือนส่งตรงถึงข้อมือ สะดวกสบาย ไม่พลาดทุกมื้อสำคัญแม้ปิดหน้าจอมือถือ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">💬</span>
+                            <span><b>ข้อความให้กำลังใจและชวนกินหลากหลาย:</b> ข้อความสลับหมุนเวียนสดใหม่ในแต่ละมื้อ เพิ่มความสนุกและแรงบันดาลใจในการดูแลสุขภาพ</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.8 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -2610,6 +2667,29 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 4. การแจ้งเตือน Web Push & Smart Watch (v5.9.9) -->
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700 space-y-3 col-span-1 lg:col-span-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl shrink-0">🔔</span>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <span>การแจ้งเตือนเตือนมื้ออาหาร & สตรีค</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold">FCM</span>
+                                </h3>
+                                <p class="text-xs text-slate-400">เตือนมื้อเที่ยง มื้อเย็น และเตือนเซฟสตรีค รองรับสั่นเตือนบน Apple Watch & สมาร์ตวอทช์</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="pushStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">กำลังตรวจสอบ...</span>
+                            <button type="button" id="btnTogglePush" onclick="togglePushNotificationPermission()"
+                                class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer">
+                                เปิดแจ้งเตือน
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -3708,19 +3788,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.8"></script>
+    <script src="food-db.js?v=5.9.9"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.8"></script>
+    <script src="health-tips.js?v=5.9.9"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.8"></script>
+    <script src="ai-snap.js?v=5.9.9"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.8"></script>
+    <script src="app.js?v=5.9.9"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.8"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.9"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

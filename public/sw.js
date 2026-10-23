@@ -1,5 +1,5 @@
-// NovaFit Pro Service Worker (v5.9.8)
-const CACHE_NAME = 'novafit-pro-v5.9.8-cache';
+// NovaFit Pro Service Worker (v5.9.9)
+const CACHE_NAME = 'novafit-pro-v5.9.9-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
@@ -122,6 +122,78 @@ self.addEventListener('fetch', (event) => {
 
             // Return cached response immediately if available; otherwise wait for network fetch
             return cachedResponse || fetchPromise;
+        })
+    );
+});
+
+// ==========================================
+// Web Push Notifications & Background FCM Engine (v5.9.9)
+// ==========================================
+self.addEventListener('push', (event) => {
+    let payload = {
+        title: 'NovaFit Pro 🥑',
+        body: 'อย่าลืมบันทึกอาหารและดูแลสุขภาพวันนี้นะครับ!',
+        icon: 'icon-192.png',
+        badge: 'favicon-32x32.png',
+        url: './',
+        tag: 'novafit-notification'
+    };
+
+    if (event.data) {
+        try {
+            const json = event.data.json();
+            if (json.notification) {
+                payload.title = json.notification.title || payload.title;
+                payload.body = json.notification.body || payload.body;
+                if (json.notification.icon) payload.icon = json.notification.icon;
+            } else {
+                payload.title = json.title || payload.title;
+                payload.body = json.body || payload.body;
+                if (json.icon) payload.icon = json.icon;
+                if (json.url) payload.url = json.url;
+            }
+            if (json.data) {
+                if (json.data.url) payload.url = json.data.url;
+                if (json.data.tag) payload.tag = json.data.tag;
+            }
+        } catch (e) {
+            payload.body = event.data.text() || payload.body;
+        }
+    }
+
+    const options = {
+        body: payload.body,
+        icon: payload.icon || 'icon-192.png',
+        badge: payload.badge || 'favicon-32x32.png',
+        vibrate: [120, 60, 120],
+        tag: payload.tag || 'novafit-reminder',
+        renotify: true,
+        data: {
+            url: payload.url || './',
+            timestamp: Date.now()
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(payload.title, options)
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const targetUrl = event.notification.data?.url || './';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                if (client.url.includes('index.html') || client.url.endsWith('/') || client.url.includes(targetUrl)) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
         })
     );
 });

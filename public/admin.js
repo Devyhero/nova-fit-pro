@@ -1010,7 +1010,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai', 'security_logs'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai', 'security_logs', 'push_hub'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {
@@ -1033,6 +1033,9 @@ window.switchAdminTab = function (tabId) {
     }
     if (tabId === 'security_logs') {
         if (window.loadAdminSecurityLogs) window.loadAdminSecurityLogs();
+    }
+    if (tabId === 'push_hub') {
+        if (window.loadAdminPushHub) window.loadAdminPushHub();
     }
 };
 
@@ -2096,3 +2099,398 @@ function updateSecurityCounters(logs) {
     if (elStreak) elStreak.textContent = streakTamper.toLocaleString();
 }
 window.updateSecurityCounters = updateSecurityCounters;
+
+// ==========================================
+// 🔔 PUSH NOTIFICATIONS & SMART WATCH HUB (v5.9.9)
+// ==========================================
+
+const DEFAULT_PUSH_SCHEDULES = {
+    breakfast: {
+        title: "มื้อเช้า (Breakfast)",
+        icon: "☀️",
+        time: "08:30",
+        enabled: true,
+        messages: [
+            "อรุณสวัสดิ์ครับ! เติมพลังมื้อเช้าแล้วอย่าลืมถ่ายรูป AI Snap บันทึกแคลอรีกันนะ 🥑",
+            "มื้อเช้าสำคัญที่สุด! เช็คโปรตีนให้พร้อมลุยงานวันนี้กันครับ 🍳",
+            "เช้านี้ทานอะไรดี? บันทึกง่ายๆ แค่พิมพ์บอกหรืออัปรูปอาหารเลย 🥐"
+        ]
+    },
+    lunch: {
+        title: "มื้อเที่ยง (Lunch)",
+        icon: "🍱",
+        time: "12:30",
+        enabled: true,
+        messages: [
+            "พักเที่ยงแล้ว! เติมพลังด้วยมื้ออร่อยแล้วมาบันทึกลง NovaFit กัน 🍱",
+            "เที่ยงแล้วทานอะไรเอ่ย? แวะมาเช็ค Macro คาร์บ-โปรตีนกันหน่อยนะ 🥗",
+            "เติมโปรตีนเน้นๆ มื้อเที่ยง แล้วจิบน้ำตาม 1 แก้วเพื่อความสดชื่นครับ 💧"
+        ]
+    },
+    dinner: {
+        title: "มื้อเย็น (Dinner)",
+        icon: "🥗",
+        time: "19:00",
+        enabled: true,
+        messages: [
+            "มื้อเย็นทานอะไรเอ่ย? มาเช็คยอดแคลอรีและโปรตีนประจำวันกัน 🥗",
+            "ปิดท้ายวันด้วยมื้อเย็นเบาๆ มีประโยชน์ อย่าลืมบันทึกอาหารกันนะ 🍲",
+            "สรุปยอดมื้อเย็นวันนี้ โปรตีนถึงเป้าหมายหรือยังเอ่ย? มาดูกัน 🥑"
+        ]
+    },
+    streak_saver: {
+        title: "เตือนรักษาสถิติ (Streak Saver)",
+        icon: "🔥",
+        time: "20:30",
+        enabled: true,
+        messages: [
+            "⚠️ วันนี้ยังไม่ได้บันทึกอาหารเลย! เข้ามาบันทึก 1 เมนูเพื่อรักษาสถิติ Streak ต่อเนื่องกันเถอะ 🔥",
+            "อย่าปล่อยให้ไฟมอด! บันทึกอาหารวันนี้เพื่อต่อสถิติ Streak และรับแต้ม Prestige ✨",
+            "ใกล้หมดวันแล้ว! แวะมาบันทึกน้ำหรืออาหารสักนิดเพื่อคงสถิติต่อเนื่องนะครับ 🚀"
+        ]
+    },
+    hydration_weigh: {
+        title: "เตือนจิบน้ำ & ชั่งน้ำหนัก (Hydration & Weight)",
+        icon: "💧",
+        time: "15:00",
+        enabled: true,
+        messages: [
+            "💧 ได้เวลาจิบน้ำแล้ว! อย่าลืมดื่มน้ำให้ครบ 8 แก้วเพื่อระบบเผาผลาญที่ดีนะ 💦",
+            "บ่ายแล้ว รู้สึกเหนื่อยล้าไหม? ดื่มน้ำเย็นๆ สักแก้วเรียกความสดชื่นกันครับ 🧊",
+            "⚖️ พรุ่งนี้เช้าอย่าลืมชั่งน้ำหนักหลังตื่นนอน เพื่ออัปเดตสถิติพัฒนาการที่แม่นยำนะ 📊"
+        ]
+    }
+};
+
+let _adminPushSlotsData = JSON.parse(JSON.stringify(DEFAULT_PUSH_SCHEDULES));
+let _adminPushDevicesList = [];
+
+window.loadAdminPushHub = async function () {
+    const kpiTotal = document.getElementById('pushKpiTotalDevices');
+    const kpiIos = document.getElementById('pushKpiIosDevices');
+    const kpiAndroid = document.getElementById('pushKpiAndroidDevices');
+    const kpiGuestVsMember = document.getElementById('pushKpiGuestVsMember');
+
+    // 1. Load registered FCM tokens
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const tokensSnap = await getDocs(collection(db, 'fcm_tokens'));
+            _adminPushDevicesList = [];
+            tokensSnap.forEach(d => {
+                _adminPushDevicesList.push({ id: d.id, ...d.data() });
+            });
+        }
+    } catch (err) {
+        console.warn('Could not load fcm_tokens from Firestore:', err);
+    }
+
+    const total = _adminPushDevicesList.length;
+    const iosCount = _adminPushDevicesList.filter(d => d.platform === 'ios' || d.isAppleWatchEligible).length;
+    const androidCount = _adminPushDevicesList.filter(d => d.platform === 'android').length;
+    const memberCount = _adminPushDevicesList.filter(d => d.isMember).length;
+    const guestCount = total - memberCount;
+
+    if (kpiTotal) kpiTotal.textContent = total.toLocaleString();
+    if (kpiIos) kpiIos.textContent = iosCount.toLocaleString();
+    if (kpiAndroid) kpiAndroid.textContent = androidCount.toLocaleString();
+    if (kpiGuestVsMember) kpiGuestVsMember.textContent = `${memberCount} / ${guestCount}`;
+
+    // 2. Load scheduled message slots
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const schedDoc = await getDoc(doc(db, 'push_schedules', 'main_schedule'));
+            if (schedDoc.exists() && schedDoc.data()?.slots) {
+                _adminPushSlotsData = { ...DEFAULT_PUSH_SCHEDULES, ...schedDoc.data().slots };
+            }
+        }
+    } catch (err) {
+        console.warn('Could not load push_schedules:', err);
+    }
+
+    window.renderAdminPushSlots();
+};
+
+window.renderAdminPushSlots = function () {
+    const container = document.getElementById('pushSlotsContainer');
+    if (!container) return;
+
+    let html = '';
+    for (const [key, slot] of Object.entries(_adminPushSlotsData)) {
+        const isEnabled = slot.enabled !== false;
+        const messages = Array.isArray(slot.messages) ? slot.messages : [];
+
+        html += `
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border ${isEnabled ? 'border-emerald-500/30 dark:border-emerald-500/20 shadow-xs' : 'border-slate-200 dark:border-slate-700 opacity-60'} transition">
+            <!-- Slot Header -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/60">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">${slot.icon || '⏰'}</span>
+                    <div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+                            <span>${escapeAdminHtml(slot.title || key)}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isEnabled ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}">
+                                ${isEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-400">ระบบจะสุ่มข้อความส่งไปยังผู้ใช้ในเวลาที่กำหนด</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-slate-500 flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="togglePushSlotEnabled('${key}')" class="rounded text-emerald-500 focus:ring-emerald-400">
+                        <span>เปิดส่ง</span>
+                    </label>
+                    <input type="time" value="${slot.time || '08:00'}" onchange="updatePushSlotTime('${key}', this.value)" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <!-- Messages Pool -->
+            <div class="pt-3 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
+                    <span class="flex items-center gap-1">
+                        <span>💬 คลังข้อความสุ่ม (${messages.length})</span>
+                    </span>
+                    <button type="button" onclick="generateAiPushMessage('${key}')" class="text-[11px] px-2 py-0.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20 transition flex items-center gap-1 cursor-pointer active:scale-95">
+                        <span>🤖 ให้ AI คิดข้อความ</span>
+                    </button>
+                </div>
+
+                <!-- Messages List -->
+                <div class="space-y-1.5" id="messagesList_${key}">
+                    ${messages.map((msg, idx) => `
+                        <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700/50 text-xs text-slate-700 dark:text-slate-200">
+                            <span class="break-words flex-1">${escapeAdminHtml(msg)}</span>
+                            <button type="button" onclick="removePushSlotMessage('${key}', ${idx})" class="p-1 text-slate-400 hover:text-rose-500 transition cursor-pointer" title="ลบข้อความนี้">
+                                🗑️
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Add New Message Row -->
+                <div class="flex gap-2 pt-1">
+                    <input type="text" id="newMsgInput_${key}" placeholder="พิมพ์ข้อความใหม่สำหรับสุ่มส่ง..." class="flex-1 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') addPushSlotMessage('${key}')">
+                    <button type="button" onclick="addPushSlotMessage('${key}')" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer">
+                        + เพิ่ม
+                    </button>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    container.innerHTML = html;
+};
+
+window.updatePushSlotTime = function (slotKey, timeVal) {
+    if (_adminPushSlotsData[slotKey]) {
+        _adminPushSlotsData[slotKey].time = timeVal;
+    }
+};
+
+window.togglePushSlotEnabled = function (slotKey) {
+    if (_adminPushSlotsData[slotKey]) {
+        _adminPushSlotsData[slotKey].enabled = !_adminPushSlotsData[slotKey].enabled;
+        window.renderAdminPushSlots();
+    }
+};
+
+window.removePushSlotMessage = function (slotKey, idx) {
+    if (_adminPushSlotsData[slotKey] && Array.isArray(_adminPushSlotsData[slotKey].messages)) {
+        _adminPushSlotsData[slotKey].messages.splice(idx, 1);
+        window.renderAdminPushSlots();
+    }
+};
+
+window.addPushSlotMessage = function (slotKey) {
+    const input = document.getElementById(`newMsgInput_${slotKey}`);
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!_adminPushSlotsData[slotKey].messages) {
+        _adminPushSlotsData[slotKey].messages = [];
+    }
+    _adminPushSlotsData[slotKey].messages.push(text);
+    input.value = '';
+    window.renderAdminPushSlots();
+};
+
+window.generateAiPushMessage = async function (slotKey) {
+    const slot = _adminPushSlotsData[slotKey];
+    if (!slot) return;
+
+    // Fallback creative pool if Gemini API not configured or offline
+    const smartCreativePool = {
+        breakfast: [
+            "อรุณสวัสดิ์! อาหารเช้าแสนอร่อยรออยู่ อย่าลืมบันทึกแคลลง NovaFit กันนะครับ 🥞",
+            "ตื่นมารับความสดชื่น! เติมโปรตีนมื้อเช้าให้พร้อมพิชิตเป้าหมายวันนี้ 🥑",
+            "พลังงานดีเริ่มที่มื้อเช้า! กด AI Snap ถ่ายรูปอาหารเช้าวันนี้กันเถอะ 📸",
+            "เช้านี้อย่าลืมชาร์จแบตให้ร่างกายด้วยมื้อเช้าที่มีประโยชน์นะครับ 🥪"
+        ],
+        lunch: [
+            "เที่ยงแล้ว! แวะพักทานข้าวให้อร่อย แล้วบันทึกมื้อเที่ยงกันนะ 🍲",
+            "ได้เวลาเติมพลังช่วงบ่าย! อย่าลืมคุมสัดส่วนคาร์บและโปรตีนให้เป๊ะนะ 🍱",
+            "มื้อเที่ยงจัดเต็มได้ แต่ระวังโซเดียมและของทอดกันหน่อยนะครับ 🥗",
+            "ทานมื้อเที่ยงอิ่มแล้ว อย่าลืมดื่มน้ำตาม 1 แก้วเพื่อความสดชื่นนะ 💧"
+        ],
+        dinner: [
+            "มื้อเย็นวันนี้เน้นโปรตีนและผักใบเขียว ย่อยง่าย สบายท้องก่อนนอน 🥗",
+            "จบวันอย่างสวยงาม! มาเช็คยอดแคลอรีรวมวันนี้ใน NovaFit กันเถอะ 🥑",
+            "มื้อเย็นเบาๆ มีประโยชน์ ช่วยให้นอนหลับสบายและฟื้นฟูกล้ามเนื้อนะ 🍲",
+            "วันนี้เก่งมากแล้ว! อย่าลืมบันทึกมื้อเย็นปิดท้ายวันเพื่อคงสถิตินะครับ 🌟"
+        ],
+        streak_saver: [
+            "🔥 อย่าปล่อยให้สถิติ Streak หลุดลอย! เข้ามาบันทึกอาหาร 1 อย่างตอนนี้เลย",
+            "ไฟลุกต่อเนื่อง! บันทึกอาหารวันนี้เพื่อคงสถิติ Streak และรับคะแนน Prestige 🏆",
+            "อีกนิดเดียว! เข้ามาเช็คอินและบันทึกอาหารก่อนเที่ยงคืนกันเถอะ ⏰",
+            "คุณทำได้ยอดเยี่ยมมาตลอด อย่าเพิ่งยอมแพ้ แวะมาบันทึกสถิติวันนี้กันนะ 💪"
+        ],
+        hydration_weigh: [
+            "💧 ร่างกายต้องการน้ำ! จิบน้ำสักแก้วตอนนี้เพื่อกระตุ้นการเผาผลาญ 💦",
+            "บ่ายแล้วอย่าลืมจิบน้ำระหว่างวัน เพื่อผิวพรรณสดใสและสมองปลอดโปร่ง 🧊",
+            "⚖️ พรุ่งนี้เช้าหลังตื่นนอน อย่าลืมขึ้นชั่งน้ำหนักเพื่อดูผลลัพธ์พัฒนาการนะ 📊",
+            "ดื่มน้ำให้ครบ 8 แก้วในวันนี้เพื่อสุขภาพที่ดีและไม่เหนื่อยล้าครับ 🚰"
+        ]
+    };
+
+    let generatedText = null;
+
+    // Try Gemini API if available
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'ai'));
+        const apiKey = snap.exists() ? snap.data()?.geminiApiKey : null;
+
+        if (apiKey) {
+            const prompt = `คุณคือผู้ช่วย AI ด้านสุขภาพและโภชนาการของ NovaFit Pro ช่วยคิดข้อความแจ้งเตือน Push Notification ภาษาไทย สั้นกระชับ สนุกสนาน มีชีวิตชีวา มีอิโมจิ ชวนติดตาม สำหรับช่วงเวลา "${slot.title}" ความยาว 1 ประโยค (ประมาณ 50-80 ตัวอักษร) เพื่อกระตุ้นให้ผู้ใช้ดูแลสุขภาพ บันทึกอาหาร หรือดื่มน้ำ โดยตอบเฉพาะตัวข้อความภาษาไทยเท่านั้น ไม่ต้องใส่เครื่องหมายคำพูด`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.8, maxOutputTokens: 100 }
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const aiResult = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                if (aiResult) generatedText = aiResult;
+            }
+        }
+    } catch (e) {
+        console.warn('Gemini push message generation fallback:', e);
+    }
+
+    if (!generatedText) {
+        const pool = smartCreativePool[slotKey] || smartCreativePool.breakfast;
+        generatedText = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    if (!_adminPushSlotsData[slotKey].messages) {
+        _adminPushSlotsData[slotKey].messages = [];
+    }
+    _adminPushSlotsData[slotKey].messages.push(generatedText);
+    window.renderAdminPushSlots();
+    alert(`✨ AI สร้างข้อความสำเร็จ:\n"${generatedText}"\n\nเพิ่มลงในคลังข้อความสุ่มเรียบร้อยแล้ว!`);
+};
+
+window.saveAdminPushSchedule = async function () {
+    try {
+        if (typeof db !== 'undefined' && db) {
+            await setDoc(doc(db, 'push_schedules', 'main_schedule'), {
+                slots: _adminPushSlotsData,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser?.email || 'admin'
+            }, { merge: true });
+        }
+        alert('✓ บันทึกตารางเวลาและคลังข้อความแจ้งเตือนลงระบบคลาวด์เรียบร้อยแล้ว!\nระบบจะนำข้อความเหล่านี้ไปสุ่มส่งตามเวลาที่กำหนด');
+    } catch (err) {
+        console.error('Failed to save push schedule:', err);
+        alert('❌ บันทึกไม่สำเร็จ: ' + err.message);
+    }
+};
+
+window.sendAdminPushBroadcast = async function () {
+    const audience = document.getElementById('broadcastTargetAudience')?.value || 'all';
+    const title = document.getElementById('broadcastPushTitle')?.value.trim();
+    const body = document.getElementById('broadcastPushBody')?.value.trim();
+    const statusMsg = document.getElementById('broadcastStatusMsg');
+
+    if (!title || !body) {
+        alert('กรุณากรอกหัวข้อและเนื้อหาข้อความก่อนส่งครับ');
+        return;
+    }
+
+    if (!confirm(`ยืนยันการยิงแจ้งเตือนทันทีไปยังผู้ใช้กลุ่ม "${audience}" ใช่หรือไม่?`)) {
+        return;
+    }
+
+    try {
+        if (typeof db !== 'undefined' && db) {
+            await addDoc(collection(db, 'push_broadcasts'), {
+                audience: audience,
+                title: title,
+                body: body,
+                sentAt: new Date().toISOString(),
+                sentBy: currentUser?.email || 'admin'
+            });
+        }
+
+        // Also trigger on current browser device if permitted
+        if (window.testLocalNotification) {
+            window.testLocalNotification(title, body);
+        }
+
+        if (statusMsg) {
+            statusMsg.textContent = '✓ ส่งการแจ้งเตือนบรอดคาสต์เรียบร้อยแล้ว!';
+            statusMsg.className = 'p-2.5 rounded-xl text-[11px] font-semibold text-center bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
+            statusMsg.classList.remove('hidden');
+            setTimeout(() => statusMsg.classList.add('hidden'), 5000);
+        }
+    } catch (err) {
+        console.error('Failed to send broadcast:', err);
+        alert('❌ ส่งแจ้งเตือนไม่สำเร็จ: ' + err.message);
+    }
+};
+
+window.testLocalNotification = async function (title = 'NovaFit Pro 🥑', body = '🔔 ทดสอบสำเร็จ! สั่นเตือนบน Apple Watch & สมาร์ตวอทช์เรียบร้อย') {
+    if (!('Notification' in window)) {
+        alert('เบราว์เซอร์นี้ไม่รองรับ Notification API ครับ');
+        return;
+    }
+    if (Notification.permission !== 'granted') {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+            alert('กรุณาอนุญาตการแจ้งเตือน (Allow Notifications) ก่อนทดสอบครับ');
+            return;
+        }
+    }
+    try {
+        if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (reg && reg.showNotification) {
+                reg.showNotification(title, {
+                    body: body,
+                    icon: 'icon-192.png',
+                    badge: 'favicon-32x32.png',
+                    vibrate: [120, 60, 120],
+                    tag: 'novafit-test-notification',
+                    renotify: true
+                });
+                return;
+            }
+        }
+        new Notification(title, {
+            body: body,
+            icon: 'icon-192.png'
+        });
+    } catch (e) {
+        console.warn('testLocalNotification fallback:', e);
+        try {
+            new Notification(title, { body: body, icon: 'icon-192.png' });
+        } catch (err) {
+            console.warn('Fallback Notification constructor also failed:', err);
+        }
+    }
+};
