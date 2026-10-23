@@ -1627,8 +1627,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.10' ||
-            !v598Test.toolsBadge?.includes('v5.9.10')) {
+            v598Test.appVersion !== '5.9.11' ||
+            !v598Test.toolsBadge?.includes('v5.9.11')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1780,6 +1780,83 @@ server.listen(PORT, async () => {
             !adminPushTest.fnGenAi ||
             !adminPushTest.fnTestSlotNow) {
             throw new Error('Test 39 Part B: Admin Push Hub failed: ' + JSON.stringify(adminPushTest));
+        }
+
+        // Test 40: In-App Web Audio API Sound Effects Synthesizer Engine (v5.9.11)
+        console.log('--- Test 40: Web Audio API Sound Effects Synthesizer Engine (v5.9.11) ---');
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/' });
+        let isMainAppReadyForSound = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isMainAppReadyForSound = await evalJs('typeof window.playSound === "function" && !!document.getElementById("btnSoundToggle")');
+                if (isMainAppReadyForSound) break;
+            } catch (e) {}
+        }
+
+        const soundTest = await evalJs(`(() => {
+            const btnSound = document.getElementById('btnSoundToggle');
+            const soundIcon = document.getElementById('soundIcon');
+            const hasBtn = !!btnSound;
+            const hasIcon = !!soundIcon;
+            const fnPlaySound = typeof window.playSound === 'function';
+            const fnToggleSound = typeof window.toggleSound === 'function';
+            const fnRenderSound = typeof window.renderSoundButton === 'function';
+            
+            // Check initial state
+            const initialIcon = soundIcon ? soundIcon.textContent.trim() : '';
+            
+            // Toggle to mute
+            if (fnToggleSound) window.toggleSound();
+            const iconAfterMute = soundIcon ? soundIcon.textContent.trim() : '';
+            const stateMuted = window.state ? window.state.soundEnabled === false : false;
+            
+            // Toggle back to unmute
+            if (fnToggleSound) window.toggleSound();
+            const iconAfterUnmute = soundIcon ? soundIcon.textContent.trim() : '';
+            const stateUnmuted = window.state ? window.state.soundEnabled === true : false;
+            
+            // Test synthesizer triggers (safely without crashing)
+            let playSoundPopOk = false;
+            let playSoundWaterOk = false;
+            try {
+                if (fnPlaySound) {
+                    window.playSound('pop');
+                    playSoundPopOk = true;
+                    window.playSound('water');
+                    playSoundWaterOk = true;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            return {
+                hasBtn,
+                hasIcon,
+                fnPlaySound,
+                fnToggleSound,
+                fnRenderSound,
+                initialIcon,
+                iconAfterMute,
+                stateMuted,
+                iconAfterUnmute,
+                stateUnmuted,
+                playSoundPopOk,
+                playSoundWaterOk
+            };
+        })()`);
+        console.log('Sound effects engine verified:', soundTest);
+
+        if (!soundTest.hasBtn ||
+            !soundTest.hasIcon ||
+            !soundTest.fnPlaySound ||
+            !soundTest.fnToggleSound ||
+            soundTest.iconAfterMute !== '🔇' ||
+            !soundTest.stateMuted ||
+            soundTest.iconAfterUnmute !== '🔊' ||
+            !soundTest.stateUnmuted ||
+            !soundTest.playSoundPopOk) {
+            throw new Error('Test 40: Sound effects synthesizer engine failed: ' + JSON.stringify(soundTest));
         }
 
         ws.close();

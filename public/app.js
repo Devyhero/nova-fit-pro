@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.10';
+const APP_VERSION = '5.9.11';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -38,6 +38,7 @@ const APP_VERSION = '5.9.10';
         let state = {
             version: APP_VERSION,
             theme: 'dark',
+            soundEnabled: true,
             settingsCollapsed: true,
             collapsedSections: {},
             customFormOpen: false,
@@ -83,6 +84,119 @@ const APP_VERSION = '5.9.10';
 
         // Cache for recommendations so clicking water or theme doesn't reshuffle
         let cachedRecommendations = [];
+
+        // ==========================================
+        // 🎵 In-App Sound Effects Engine (Web Audio Synthesizer)
+        // ==========================================
+        let _audioCtx = null;
+
+        function getAudioContext() {
+            if (!_audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                _audioCtx = new AudioCtxClass();
+            }
+            if (_audioCtx && _audioCtx.state === 'suspended') {
+                _audioCtx.resume();
+            }
+            return _audioCtx;
+        }
+
+        // Unlock audio context on initial user tap (iOS Safari requirement)
+        window.addEventListener('touchstart', () => getAudioContext(), { once: true, passive: true });
+        window.addEventListener('click', () => getAudioContext(), { once: true, passive: true });
+
+        function playSound(type = 'pop') {
+            if (state.soundEnabled === false) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'pop') {
+                    // Bright cute pop sound (Food logged / item added)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(540, now);
+                    osc.frequency.exponentialRampToValueAtTime(920, now + 0.08);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'water') {
+                    // Refreshing water droplet sound (Water intake)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(620, now);
+                    osc.frequency.exponentialRampToValueAtTime(1020, now + 0.06);
+                    osc.frequency.exponentialRampToValueAtTime(480, now + 0.16);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                } else if (type === 'celebrate') {
+                    // Cheerful celebratory 4-tone chime arpeggio (Milestones & Confetti)
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = ctx.createOscillator();
+                        const noteGain = ctx.createGain();
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        noteGain.gain.setValueAtTime(0.18, now + idx * 0.06);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.22);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(ctx.destination);
+                        noteOsc.start(now + idx * 0.06);
+                        noteOsc.stop(now + idx * 0.06 + 0.22);
+                    });
+                } else if (type === 'nudge') {
+                    // Sweet bubble chirp (Living Companion nudge)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(460, now);
+                    osc.frequency.exponentialRampToValueAtTime(690, now + 0.09);
+                    gain.gain.setValueAtTime(0.16, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                    osc.start(now);
+                    osc.stop(now + 0.14);
+                } else if (type === 'delete') {
+                    // Subtle soft click drop (Item deleted)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(340, now);
+                    osc.frequency.exponentialRampToValueAtTime(170, now + 0.08);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
+            } catch (err) {
+                console.warn('Audio synthesis note:', err);
+            }
+        }
+        window.playSound = playSound;
+
+        function renderSoundButton() {
+            const icon = document.getElementById('soundIcon');
+            const btn = document.getElementById('btnSoundToggle');
+            const isMuted = state.soundEnabled === false;
+            if (icon) icon.textContent = isMuted ? '🔇' : '🔊';
+            if (btn) btn.title = isMuted ? 'เปิดเสียงเอฟเฟกต์ (Unmute)' : 'ปิดเสียงเอฟเฟกต์ (Mute)';
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !(state.soundEnabled !== false);
+            saveState();
+            renderSoundButton();
+            if (state.soundEnabled) {
+                playSound('pop');
+                showToast('🔊 เปิดเสียงเอฟเฟกต์ในแอปเรียบร้อย');
+            } else {
+                showToast('🔇 ปิดเสียงเอฟเฟกต์ในแอปเรียบร้อย');
+            }
+        }
+        window.toggleSound = toggleSound;
+        window.renderSoundButton = renderSoundButton;
 
         // Deduplicate meal logs to resolve multi-device sync ghost duplication (e.g. 2261 -> 4311 kcal)
         function cleanDuplicateMealLogs(mealList) {
@@ -134,6 +248,7 @@ const APP_VERSION = '5.9.10';
                         ...state,
                         ...parsed,
                         version: APP_VERSION,
+                        soundEnabled: parsed.soundEnabled !== false,
                         collapsedSections: (parsed.collapsedSections && typeof parsed.collapsedSections === 'object') ? parsed.collapsedSections : {},
                         activeMeal: isNewDay ? 'breakfast' : (parsed.activeMeal || 'breakfast'),
                         selectedPortion: Number(parsed.selectedPortion) || 1,
@@ -1269,6 +1384,7 @@ const APP_VERSION = '5.9.10';
 
         function renderAll() {
             applyTheme();
+            renderSoundButton();
             renderSettingsCollapseState();
             const p = state.profile;
 
@@ -3889,6 +4005,7 @@ const APP_VERSION = '5.9.10';
             const dStr = state.selectedDate;
             const cur = state.waterByDate[dStr] || 0;
             state.waterByDate[dStr] = Math.max(0, cur + delta);
+            if (delta > 0) playSound('water'); else playSound('delete');
             saveState();
             const t = getCalculatedTargets();
             renderDateTrackerAndRecommendations(t, false);
@@ -3901,6 +4018,7 @@ const APP_VERSION = '5.9.10';
             const dStr = state.selectedDate;
             const cur = state.waterByDate[dStr] || 0;
             state.waterByDate[dStr] = (cur === glasses) ? glasses - 1 : glasses;
+            playSound('water');
             saveState();
             const t = getCalculatedTargets();
             renderDateTrackerAndRecommendations(t, false);
@@ -3975,6 +4093,7 @@ const APP_VERSION = '5.9.10';
             });
             state.lastAddedFoodName = name;
             saveState();
+            playSound('pop');
             renderAll();
             const mealName = MEAL_CONFIG[meal]?.name || 'มื้ออาหาร';
             const portionStr = portion !== 1 ? ` (x${portion})` : '';
@@ -4128,6 +4247,7 @@ const APP_VERSION = '5.9.10';
             const dStr = state.selectedDate;
             if (!state.logsByDate[dStr]) return;
             state.logsByDate[dStr] = state.logsByDate[dStr].filter(m => m.id && m.id !== id);
+            playSound('delete');
             if (window.triggerCloudSync) window.triggerCloudSync(false);
             saveState();
             renderAll();
@@ -6176,6 +6296,7 @@ function triggerCelebrationConfetti(duration = 2800) {
     try {
         if (navigator.vibrate) navigator.vibrate([40, 60, 90]);
     } catch(e) {}
+    playSound('celebrate');
 
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
