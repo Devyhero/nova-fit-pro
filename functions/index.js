@@ -29,7 +29,7 @@ exports.sendPushBroadcast = onRequest({
     }
 
     const { title, body, audience, broadcastId } = req.body || {};
-    const pushTitle = title || "NovaFit Pro 🥑";
+    const pushTitle = title || "🥑 บันทึกสุขภาพประจำวัน";
     const pushBody = body || "คุณมีการแจ้งเตือนใหม่จาก NovaFit Pro";
     const targetAudience = audience || "all";
 

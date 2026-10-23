@@ -2430,10 +2430,7 @@ function setupAdminPushBroadcastsListener() {
             snapshot.docChanges().forEach((change) => {
                 if (change.type === 'added' && !seenAdminBroadcastIds.has(change.doc.id)) {
                     seenAdminBroadcastIds.add(change.doc.id);
-                    const data = change.doc.data();
-                    if (data && window.testLocalNotification) {
-                        window.testLocalNotification(data.title, data.body);
-                    }
+                    // Single-source delivery: Cloud Functions v2 handles native push, so we do not double-notify here
                 }
             });
         }, (err) => {
@@ -2491,11 +2488,6 @@ window.sendAdminPushBroadcast = async function () {
             console.log("Cloud Function broadcast dispatch result:", cfResult);
         } catch (cfErr) {
             console.warn("Cloud Function push dispatch note:", cfErr);
-        }
-
-        // Also trigger on current browser device if permitted
-        if (window.testLocalNotification) {
-            window.testLocalNotification(title, body);
         }
 
         if (statusMsg) {

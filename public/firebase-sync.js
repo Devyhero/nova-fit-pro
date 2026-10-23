@@ -1005,10 +1005,8 @@ function setupRealtimePushBroadcastsListener() {
                         if (audience === 'google' && !isMember) return;
                         if (audience === 'guest' && isMember) return;
 
-                        console.log('📢 Received real-time push broadcast:', data.title, data.body);
-                        if (window.testLocalNotification) {
-                            window.testLocalNotification(data.title, data.body);
-                        }
+                        console.log('📢 Received real-time push broadcast (delivered natively via Web Push):', data.title, data.body);
+                        // Do not trigger testLocalNotification here: native Web Push from Cloud Functions handles delivery cleanly without duplicates
                     }
                 }
             });
