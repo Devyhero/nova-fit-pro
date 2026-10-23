@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaFit Pro - Admin Dashboard</title>
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <!-- Google Fonts: Inter & Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +100,7 @@
             <!-- Admin Welcome Banner -->
             <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-emerald-500/15 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <img id="adminPhoto" src="icon.svg" class="w-10 h-10 rounded-full border-2 border-purple-400 shadow-sm" alt="Admin">
+                    <img id="adminPhoto" src="icon-192.png" class="w-10 h-10 rounded-full border-2 border-purple-400 shadow-sm" alt="Admin">
                     <div>
                         <div class="text-xs text-purple-500 dark:text-purple-400 font-bold uppercase tracking-wider">ยินดีต้อนรับผู้ดูแลระบบ</div>
                         <div id="adminName" class="text-base font-bold text-slate-800 dark:text-slate-100">Benz Nova</div>
@@ -537,12 +540,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.7
+                            Current Version: v5.9.8
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.8 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🐱 v5.9.8 (High-Tech Avocado Cat Mascot, PWA Multi-Resolution Icons & Universal Favicon Ecosystem)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🐱 New Brand Mascot & High-Res App Assets:</b> อัปเกรดมาสคอตหลักของระบบเป็น "น้องแมวอโวคาโดสแกนเนอร์" (High-Tech Avocado Cat with AR HUD Scanner) สร้างไฟล์ความละเอียดสูงครอบคลุมทุกอุปกรณ์: <code>icon-512.png</code>, <code>icon-192.png</code>, <code>apple-touch-icon.png</code> (180x180), <code>favicon-32x32.png</code>, <code>favicon-16x16.png</code>, <code>favicon.ico</code> (Multi-size ICO) และ <code>icon.svg</code></li>
+                                <li><b>📱 PWA Web App Manifest Maskable Icon Architecture:</b> อัปเดตโครงสร้าง <code>manifest.json</code> เพิ่ม <code>purpose: "maskable"</code> และ <code>purpose: "any"</code> รองรับการแสดงผล Squircle/Circle Adaptive Icons บน Android OS อย่างสมบูรณ์แบบโดยไม่มีขอบขาวแปลกปลอม</li>
+                                <li><b>🌐 Universal Favicon & Mobile Header Integration:</b> เพิ่มแท็ก <code>&lt;link rel="icon"&gt;</code> และ <code>&lt;link rel="apple-touch-icon"&gt;</code> ใน <code>index.html</code> และ <code>admin.html</code> พร้อมปรับปรุงโลโก้ส่วนหัว (Header Logo Badge) ให้แสดงมาสคอตใหม่ชัดเจน คมชัดระดับ Retina</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.8 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.7 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-indigo-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1088,7 +1105,7 @@
         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
                 <div class="flex items-center gap-3">
-                    <img id="inspectUserPhoto" src="icon.svg" class="w-10 h-10 rounded-full border border-purple-400">
+                    <img id="inspectUserPhoto" src="icon-192.png" class="w-10 h-10 rounded-full border border-purple-400">
                     <div>
                         <h3 id="inspectUserName" class="font-bold text-base leading-tight">ชื่อผู้ใช้</h3>
                         <p id="inspectUserEmail" class="text-xs text-slate-400">email@example.com</p>

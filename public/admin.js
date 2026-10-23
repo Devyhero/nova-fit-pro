@@ -765,7 +765,7 @@ function renderUsersTableSlice() {
         const state = u.state || {};
         const p = state.profile || {};
         const isGuest = !!u.isGuest;
-        const photo = isGuest ? 'icon.svg' : (u.photoURL || 'icon.svg');
+        const photo = isGuest ? 'icon-192.png' : (u.photoURL || 'icon-192.png');
         const name = u.displayName || (isGuest ? 'ผู้ใช้ทั่วไป (Guest)' : 'ผู้ใช้ Google');
         const email = isGuest 
             ? `📱 Guest Session (${u.platform || 'อุปกรณ์'}${u.pwa ? ' • PWA' : ''})` 
@@ -786,7 +786,7 @@ function renderUsersTableSlice() {
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                 <td class="py-3 px-4">
                     <div class="flex items-center gap-2.5">
-                        <img src="${photo}" class="w-8 h-8 rounded-full border border-purple-500/30 object-cover" onerror="this.src='icon.svg'">
+                        <img src="${photo}" class="w-8 h-8 rounded-full border border-purple-500/30 object-cover" onerror="this.src='icon-192.png'">
                         <div>
                             <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                                 <span>${name}</span>
@@ -1049,7 +1049,7 @@ window.inspectUser = function (uid) {
 
     document.getElementById('inspectUserName').textContent = user.displayName || 'ผู้ใช้';
     document.getElementById('inspectUserEmail').textContent = user.email || uid;
-    document.getElementById('inspectUserPhoto').src = user.photoURL || 'icon.svg';
+    document.getElementById('inspectUserPhoto').src = user.photoURL || 'icon-192.png';
 
     const sumP = Math.round(mealsToday.reduce((s, m) => s + (m.p || 0), 0));
     const sumC = Math.round(mealsToday.reduce((s, m) => s + (m.c || 0), 0));
@@ -1744,7 +1744,7 @@ function renderAiScanLogsSlice() {
             ? new Date(tsMs).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
             : '';
 
-        const userPhoto = d.userPhoto || 'icon.svg';
+        const userPhoto = d.userPhoto || 'icon-192.png';
         const userName = d.userName || 'ผู้ใช้งาน';
         const userEmail = d.userEmail || '';
         const foodName = d.foodName || 'เมนูอาหาร';
@@ -1765,7 +1765,7 @@ function renderAiScanLogsSlice() {
                 </td>
                 <td class="py-2.5 px-3">
                     <div class="flex items-center gap-2">
-                        <img src="${userPhoto}" class="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 object-cover" onerror="this.src='icon.svg'">
+                        <img src="${userPhoto}" class="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 object-cover" onerror="this.src='icon-192.png'">
                         <div class="min-w-0">
                             <div class="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px] sm:max-w-[180px]">${userName}</div>
                             <div class="text-[10px] text-slate-400 truncate max-w-[130px] sm:max-w-[180px]">${userEmail}</div>

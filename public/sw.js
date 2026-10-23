@@ -1,5 +1,5 @@
-// NovaFit Pro Service Worker (v5.9.7)
-const CACHE_NAME = 'novafit-pro-v5.9.7-cache';
+// NovaFit Pro Service Worker (v5.9.8)
+const CACHE_NAME = 'novafit-pro-v5.9.8-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
@@ -13,6 +13,12 @@ const PRECACHE_ASSETS = [
     './admin.js',
     './manifest.json',
     './icon.svg',
+    './icon-192.png',
+    './icon-512.png',
+    './apple-touch-icon.png',
+    './favicon.ico',
+    './favicon-32x32.png',
+    './favicon-16x16.png',
     './version.json',
     './frames/frame-novice.png',
     './frames/frame-bronze.png',

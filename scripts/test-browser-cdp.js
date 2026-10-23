@@ -1586,10 +1586,50 @@ server.listen(PORT, async () => {
             !v597Test.hasPhrase ||
             !v597Test.hasMiniLoader ||
             !v597Test.miniLoaderVisible ||
-            v597Test.miniText !== '🔄 กำลังทดสอบระบบซิงค์...' ||
-            v597Test.appVersion !== '5.9.7' ||
-            !v597Test.toolsBadge?.includes('v5.9.7')) {
+            v597Test.miniText !== '🔄 กำลังทดสอบระบบซิงค์...') {
             throw new Error('Test 37: Preloader, Mini Loader and High-Z Toast failed: ' + JSON.stringify(v597Test));
+        }
+
+        // Test 38: Avocado Cat Mascot Logo, Mobile/Desktop Favicons & PWA Manifest Icons (v5.9.8)
+        console.log('--- Test 38: Avocado Cat Mascot Logo, Favicons & PWA Icons ---');
+        const v598Test = await evalJs(`(() => {
+            // 1. Header brand logo
+            const headerLogoImg = document.querySelector('header img[src="icon-192.png"]');
+            const hasHeaderLogo = !!headerLogoImg;
+
+            // 2. Favicons in document head
+            const appleIcon = document.querySelector('link[rel="apple-touch-icon"][href="apple-touch-icon.png"]');
+            const fav32 = document.querySelector('link[rel="icon"][sizes="32x32"][href="favicon-32x32.png"]');
+            const fav16 = document.querySelector('link[rel="icon"][sizes="16x16"][href="favicon-16x16.png"]');
+            const favIco = document.querySelector('link[rel="icon"][href="favicon.ico"]');
+            const manifestLink = document.querySelector('link[rel="manifest"][href="manifest.json"]');
+
+            // 3. Version alignment
+            const appVersion = window.APP_VERSION;
+            const toolsBadge = document.getElementById('toolsVersionBadge')?.textContent;
+
+            return {
+                hasHeaderLogo,
+                hasAppleIcon: !!appleIcon,
+                hasFav32: !!fav32,
+                hasFav16: !!fav16,
+                hasFavIco: !!favIco,
+                hasManifest: !!manifestLink,
+                appVersion,
+                toolsBadge
+            };
+        })()`);
+        console.log('v5.9.8 Features verified:', v598Test);
+
+        if (!v598Test.hasHeaderLogo ||
+            !v598Test.hasAppleIcon ||
+            !v598Test.hasFav32 ||
+            !v598Test.hasFav16 ||
+            !v598Test.hasFavIco ||
+            !v598Test.hasManifest ||
+            v598Test.appVersion !== '5.9.8' ||
+            !v598Test.toolsBadge?.includes('v5.9.8')) {
+            throw new Error('Test 38: Mascot logo, favicons, or v5.9.8 version alignment failed: ' + JSON.stringify(v598Test));
         }
 
         ws.close();

@@ -5,13 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NovaFit Pro - ระบบคำนวณและบันทึกสารอาหารอัจฉริยะ (Smart Macros)</title>
-    <!-- Web App Manifest & Service Worker -->
+    <!-- Web App Manifest & Mobile/Desktop Favicons -->
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NovaFit Pro">
-    <link rel="apple-touch-icon" href="icon.svg">
     <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -403,19 +407,10 @@
         class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80 sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                <!-- NovaFit Pro SVG Icon Badge -->
+                <!-- NovaFit Pro Mascot Logo Icon Badge -->
                 <div
-                    class="relative w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-500 via-cyan-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/25 ring-1 ring-white/20 transition-transform hover:scale-105 shrink-0">
-                    <svg class="w-5 h-5 sm:w-7 sm:h-7" viewBox="0 0 64 64" fill="none">
-                        <!-- Orbit Dash -->
-                        <circle cx="32" cy="32" r="23" stroke="rgba(255,255,255,0.3)" stroke-width="2"
-                            stroke-dasharray="4 4" />
-                        <!-- Nova Flare Star -->
-                        <path d="M32 9 C32 20 22 30 11 32 C22 34 32 44 32 55 C32 44 42 34 53 32 C42 30 32 20 32 9 Z"
-                            fill="#ffffff" />
-                        <!-- Golden Lightning Bolt Core -->
-                        <path d="M35 19 L25 33 H33 L29 45 L40 31 H32 Z" fill="#fde047" />
-                    </svg>
+                    class="relative w-9 h-9 sm:w-11 sm:h-11 rounded-2xl overflow-hidden ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-500/25 transition-transform hover:scale-105 shrink-0 bg-slate-900">
+                    <img src="icon-192.png" alt="NovaFit Pro Logo" class="w-full h-full object-cover">
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-1.5 sm:gap-2">
@@ -587,7 +582,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.7)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.8)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -1473,10 +1468,34 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.7!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.8!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.7 -->
+                <!-- Latest Release: v5.9.8 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🐱</span> v5.9.8 (ปรับโฉมไอคอนแอปและมาสคอตน้องแมวอโวคาโดล้ำยุค)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🐱</span>
+                            <span><b>มาสคอตใหม่ "น้องแมวอโวคาโดสแกนเนอร์":</b> ปรับโฉมไอคอนแอปใหม่หมดจด น่ารัก สดใส สื่อถึงความฉลาดและโภชนาการสุขภาพดี</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-teal-500">📱</span>
+                            <span><b>ไอคอนหน้าจอหลักมือถือ (Home Screen):</b> รองรับการติดตั้งลงหน้าจอมือถือทั้ง iOS และ Android คมชัด สวยงามระดับ Full HD</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">🌐</span>
+                            <span><b>ไอคอนบนแท็บเบราว์เซอร์และโลโก้หลัก (Favicon & Brand Logo):</b> แสดงสัญลักษณ์น้องแมวอโวคาโดบนหัวเว็บและแถบแท็บ มองเห็นง่ายและโดดเด่น</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.7 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -3689,19 +3708,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.7"></script>
+    <script src="food-db.js?v=5.9.8"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.7"></script>
+    <script src="health-tips.js?v=5.9.8"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.7"></script>
+    <script src="ai-snap.js?v=5.9.8"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.7"></script>
+    <script src="app.js?v=5.9.8"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.7"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.8"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
