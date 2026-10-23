@@ -543,12 +543,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.9
+                            Current Version: v5.9.10
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.10 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">📢 v5.9.10 (Real-time Cross-Device Cloud Push Broadcast, ServiceWorker Ready & Watch Delay Haptic Engine)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📢 Cross-Device Cloud Push Broadcast Listener:</b> ติดตั้ง <code>setupRealtimePushBroadcastsListener()</code> ใน <code>firebase-sync.js</code> ดักฟังการยิงข้อความบรอดคาสต์จากแอดมินแบบเรียลไทม์ผ่าน Firestore <code>push_broadcasts</code> ทำให้คอมพิวเตอร์และมือถือเชื่อมต่อสัญญาณถึงกันทันที</li>
+                                <li><b>⌚ Watch Lock-Screen Countdown Engine:</b> เพิ่มระบบนับถอยหลัง 3 วินาที (<code>delaySeconds</code>) และปุ่ม <code>#btnTestWatchDelay</code> เพื่อให้ผู้ใช้สามารถกดล็อคหน้าจอ iPhone ก่อนการแจ้งเตือนจะส่งผลให้ Apple Watch สั่นสะเทือนและส่งเสียงเตือนอย่างสมบูรณ์แบบ</li>
+                                <li><b>🛡️ iOS WebKit ServiceWorker Ready Alignment:</b> แก้ไขฟังก์ชัน <code>testLocalNotification()</code> ให้รอ <code>navigator.serviceWorker.ready</code> 100% และยกเลิกการเรียก <code>new Notification()</code> บน WebKit เพื่อป้องกัน TypeError บน iOS Safari PWA</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.10 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.9 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

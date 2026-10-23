@@ -615,7 +615,7 @@
                         </button>
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.9)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.10)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -1501,10 +1501,34 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.9!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.10!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.9 -->
+                <!-- Latest Release: v5.9.10 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>📢</span> v5.9.10 (ซิงค์แจ้งเตือนข้ามอุปกรณ์แบบเรียลไทม์ & สั่นเตือน Apple Watch)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">📢</span>
+                            <span><b>ซิงค์แจ้งเตือนข้ามอุปกรณ์แบบเรียลไทม์ (Cross-Device Cloud Broadcast):</b> แอดมินส่งข้อความจากคอมพิวเตอร์ แจ้งเตือนจะส่งตรงไปยังมือถือทุกเครื่องพร้อมกันทันที</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-teal-500">⌚</span>
+                            <span><b>สั่นเตือนบน Apple Watch & สมาร์ตวอทช์:</b> เพิ่มปุ่มนับถอยหลัง 3 วินาที ช่วยให้คุณล็อคหน้าจอเพื่อรับการแจ้งเตือนและสั่นเตือนบนข้อมือได้อย่างแม่นยำ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">⚡</span>
+                            <span><b>อัปเดตแคช Service Worker:</b> ปรับปรุงระบบซิงค์ไฟล์ให้ดึงข้อมูลคลาวด์ล่าสุดเสมอ ไม่ติดค้างแคชเดิม</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.9 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -3792,19 +3816,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.9"></script>
+    <script src="food-db.js?v=5.9.10"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.9"></script>
+    <script src="health-tips.js?v=5.9.10"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.9"></script>
+    <script src="ai-snap.js?v=5.9.10"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.9"></script>
+    <script src="app.js?v=5.9.10"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.9"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.10"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
