@@ -20,7 +20,8 @@ import {
     setDoc,
     query,
     orderBy,
-    limit
+    limit,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2411,6 +2412,39 @@ window.saveAdminPushSchedule = async function () {
     }
 };
 
+let isFirstAdminBroadcastSnapshot = true;
+const seenAdminBroadcastIds = new Set();
+
+function setupAdminPushBroadcastsListener() {
+    try {
+        const broadcastsCol = collection(db, 'push_broadcasts');
+        const q = query(broadcastsCol, orderBy('sentAt', 'desc'), limit(10));
+
+        onSnapshot(q, (snapshot) => {
+            if (isFirstAdminBroadcastSnapshot) {
+                snapshot.forEach(docSnap => seenAdminBroadcastIds.add(docSnap.id));
+                isFirstAdminBroadcastSnapshot = false;
+                return;
+            }
+
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added' && !seenAdminBroadcastIds.has(change.doc.id)) {
+                    seenAdminBroadcastIds.add(change.doc.id);
+                    const data = change.doc.data();
+                    if (data && window.testLocalNotification) {
+                        window.testLocalNotification(data.title, data.body);
+                    }
+                }
+            });
+        }, (err) => {
+            console.warn('Admin push broadcasts listener error:', err);
+        });
+    } catch (e) {
+        console.warn('Could not setup admin broadcast listener:', e);
+    }
+}
+setupAdminPushBroadcastsListener();
+
 window.sendAdminPushBroadcast = async function () {
     const audience = document.getElementById('broadcastTargetAudience')?.value || 'all';
     const title = document.getElementById('broadcastPushTitle')?.value.trim();
@@ -2428,13 +2462,14 @@ window.sendAdminPushBroadcast = async function () {
 
     try {
         if (typeof db !== 'undefined' && db) {
-            await addDoc(collection(db, 'push_broadcasts'), {
+            const newDoc = await addDoc(collection(db, 'push_broadcasts'), {
                 audience: audience,
                 title: title,
                 body: body,
                 sentAt: new Date().toISOString(),
                 sentBy: currentUser?.email || 'admin'
             });
+            seenAdminBroadcastIds.add(newDoc.id);
         }
 
         // Also trigger on current browser device if permitted

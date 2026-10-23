@@ -970,10 +970,11 @@ window.restoreUserDataBackup = function (jsonString) {
 };
 
 // ==========================================
-// 🔔 WEB PUSH & FCM TOKEN SYNCHRONIZATION (v5.9.9)
+// 🔔 WEB PUSH & FCM TOKEN SYNCHRONIZATION (v5.9.10)
 // ==========================================
 let unsubscribeBroadcasts = null;
-const sessionStartTime = new Date(Date.now() - 5000).toISOString();
+let isFirstBroadcastSnapshot = true;
+const seenBroadcastIds = new Set();
 
 function setupRealtimePushBroadcastsListener() {
     if (unsubscribeBroadcasts) {
@@ -983,19 +984,28 @@ function setupRealtimePushBroadcastsListener() {
 
     try {
         const broadcastsCol = collection(db, 'push_broadcasts');
-        const q = query(broadcastsCol, orderBy('sentAt', 'desc'), limit(5));
+        const q = query(broadcastsCol, orderBy('sentAt', 'desc'), limit(10));
 
         unsubscribeBroadcasts = onSnapshot(q, (snapshot) => {
+            if (isFirstBroadcastSnapshot) {
+                // First snapshot on connection: record all existing documents as seen so we don't spam
+                snapshot.forEach(docSnap => seenBroadcastIds.add(docSnap.id));
+                isFirstBroadcastSnapshot = false;
+                console.log('📡 Push broadcasts listener ready, indexed existing docs:', seenBroadcastIds.size);
+                return;
+            }
+
             snapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
+                if (change.type === 'added' && !seenBroadcastIds.has(change.doc.id)) {
+                    seenBroadcastIds.add(change.doc.id);
                     const data = change.doc.data();
-                    if (data && data.sentAt && data.sentAt >= sessionStartTime) {
+                    if (data) {
                         const audience = data.audience || 'all';
                         const isMember = !!currentUser;
                         if (audience === 'google' && !isMember) return;
                         if (audience === 'guest' && isMember) return;
 
-                        console.log('📢 Received real-time push broadcast:', data.title);
+                        console.log('📢 Received real-time push broadcast:', data.title, data.body);
                         if (window.testLocalNotification) {
                             window.testLocalNotification(data.title, data.body);
                         }
