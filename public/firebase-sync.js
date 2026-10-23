@@ -177,9 +177,12 @@ function updateAuthUI(user) {
     if (user) {
         if (btnLogin) btnLogin.classList.add('hidden');
         if (userPill) userPill.classList.remove('hidden');
-        if (userAvatar) userAvatar.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-        if (userName) userName.textContent = user.displayName ? user.displayName.split(' ')[0] : 'ผู้ใช้';
-        if (dropdownName) dropdownName.textContent = user.displayName || 'ผู้ใช้งาน NovaFit Pro';
+        const effectiveAvatar = (window.state && window.state.userAvatarUrl) || user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+        const effectiveName = (window.state && window.state.userDisplayName) || (user.displayName ? user.displayName.split(' ')[0] : 'ผู้ใช้');
+        const effectiveFullName = (window.state && window.state.userDisplayName) || user.displayName || 'ผู้ใช้งาน NovaFit Pro';
+        if (userAvatar) userAvatar.src = effectiveAvatar;
+        if (userName) userName.textContent = effectiveName;
+        if (dropdownName) dropdownName.textContent = effectiveFullName;
         if (dropdownEmail) dropdownEmail.textContent = user.email || '';
         if (cloudBadge) {
             cloudBadge.classList.remove('hidden');
@@ -367,14 +370,15 @@ async function syncGuestSession(force = false) {
                 deviceId: myDeviceId,
                 isGuest: true,
                 provider: 'guest',
-                displayName: `ผู้ใช้ทั่วไป (${platformName})`,
+                displayName: (currentState.userDisplayName ? `${currentState.userDisplayName} (${platformName})` : `ผู้ใช้ทั่วไป (${platformName})`),
+                avatarUrl: currentState.userAvatarUrl || '',
                 platform: platformName,
                 deviceCategory: deviceCategory,
                 pwa: !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches),
                 firstSeen: firstSeen,
                 updatedAt: new Date().toISOString(),
                 lastActive: new Date().toISOString(),
-                clientVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.9.5'),
+                clientVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.9.6'),
                 state: currentState,
                 stats: {
                     mealsCountToday: mealsToday.length,
@@ -395,6 +399,28 @@ async function syncGuestSession(force = false) {
     }, force ? 100 : 2000);
 }
 window.syncGuestSession = syncGuestSession;
+
+window.syncProfileDataToCloud = async function () {
+    try {
+        const customName = (window.state && window.state.userDisplayName) || '';
+        const customAvatar = (window.state && window.state.userAvatarUrl) || '';
+        if (currentUser && currentUser.uid) {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            await setDoc(userDocRef, {
+                customDisplayName: customName,
+                customAvatarUrl: customAvatar,
+                displayName: customName || currentUser.displayName,
+                photoURL: customAvatar || currentUser.photoURL,
+                updatedAt: new Date().toISOString(),
+                lastUpdatedBy: mySessionId
+            }, { merge: true });
+        } else {
+            syncGuestSession(true);
+        }
+    } catch (e) {
+        console.warn('syncProfileDataToCloud error:', e);
+    }
+};
 
 // ==========================================
 // 🛡️ SECURITY AUDIT & ANTI-CHEAT LOGGING (Phase 3)

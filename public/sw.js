@@ -1,5 +1,5 @@
-// NovaFit Pro Service Worker (v5.9.5)
-const CACHE_NAME = 'novafit-pro-v5.9.5-cache';
+// NovaFit Pro Service Worker (v5.9.6)
+const CACHE_NAME = 'novafit-pro-v5.9.6-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
@@ -13,7 +13,12 @@ const PRECACHE_ASSETS = [
     './admin.js',
     './manifest.json',
     './icon.svg',
-    './version.json'
+    './version.json',
+    './frames/frame-novice.png',
+    './frames/frame-bronze.png',
+    './frames/frame-silver.png',
+    './frames/frame-gold.png',
+    './frames/frame-diamond.png'
 ];
 
 // Listen for SKIP_WAITING message to activate immediately

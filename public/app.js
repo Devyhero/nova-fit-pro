@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.5';
+const APP_VERSION = '5.9.6';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -48,6 +48,8 @@ const APP_VERSION = '5.9.5';
             lastAddedFoodName: '',
             activeMeal: 'breakfast',
             profileConfigured: false,
+            userDisplayName: '',
+            userAvatarUrl: '',
             selectedPortion: 1,
             favorites: [],
             bodyTab: 'weight',
@@ -160,6 +162,8 @@ const APP_VERSION = '5.9.5';
                         },
                         profile: { ...state.profile, ...(parsed.profile || {}) },
                         profileConfigured: parsed.profileConfigured === true,
+                        userDisplayName: typeof parsed.userDisplayName === 'string' ? parsed.userDisplayName : '',
+                        userAvatarUrl: typeof parsed.userAvatarUrl === 'string' ? parsed.userAvatarUrl : '',
                         logsByDate: parsed.logsByDate || {},
                         waterByDate: parsed.waterByDate || {},
                         customPresets: parsed.customPresets || [],
@@ -272,6 +276,8 @@ const APP_VERSION = '5.9.5';
                 minDays: 0,
                 badgeEmoji: '⚪',
                 desc: 'ขอบเงินเมทัลลิกเรียบหรู มินิมอล สบายตา ได้ทันทีทุกคนเมื่อเริ่มต้นใช้งาน',
+                frameImg: 'frames/frame-novice.png',
+                effectClass: 'effect-novice',
                 frameClass: 'avatar-frame-novice',
                 colorBadge: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
             },
@@ -282,6 +288,8 @@ const APP_VERSION = '5.9.5';
                 minDays: 3,
                 badgeEmoji: '🌱',
                 desc: 'กรอบนีออนสีเขียวมรกตเรืองแสง พร้อมประกายใบไม้ธรรมชาติ สื่อถึงจุดเริ่มต้นของการมีวินัยสุขภาพ',
+                frameImg: 'frames/frame-bronze.png',
+                effectClass: 'effect-bronze',
                 frameClass: 'avatar-frame-bronze',
                 colorBadge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
             },
@@ -292,6 +300,8 @@ const APP_VERSION = '5.9.5';
                 minDays: 7,
                 badgeEmoji: '⚡',
                 desc: 'วงแหวนสีฟ้าไซยานอลตัดน้ำเงินคราม เปล่งประกายแสงความเร็วและดาววิบวับ สื่อถึงพลังงานและความคล่องตัว',
+                frameImg: 'frames/frame-silver.png',
+                effectClass: 'effect-silver',
                 frameClass: 'avatar-frame-silver',
                 colorBadge: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
             },
@@ -302,6 +312,8 @@ const APP_VERSION = '5.9.5';
                 minDays: 30,
                 badgeEmoji: '👑',
                 desc: 'เปลวไฟสีทองคำประกายส้มแอมเบอร์ลุกโชนอย่างสง่างาม 360° พร้อมมงกุฎแชมเปียน สื่อถึงการสร้างนิสัยและวินัยเหล็ก',
+                frameImg: 'frames/frame-gold.png',
+                effectClass: 'effect-gold',
                 frameClass: 'avatar-frame-gold',
                 colorBadge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
             },
@@ -312,6 +324,8 @@ const APP_VERSION = '5.9.5';
                 minDays: 100,
                 badgeEmoji: '💎',
                 desc: 'กรอบเพชรคอสมิกสีรุ้งเหลือบแสง (Holographic Iridescent) ประดับดาวประกายเพชร สื่อถึงระดับตำนานและผู้สนับสนุน VIP',
+                frameImg: 'frames/frame-diamond.png',
+                effectClass: 'effect-diamond',
                 frameClass: 'avatar-frame-diamond',
                 colorBadge: 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
             }
@@ -448,28 +462,50 @@ const APP_VERSION = '5.9.5';
             verifyAndSanitizeStreak();
             const activeTier = PRESTIGE_TIERS[state.prestigeFrame] || PRESTIGE_TIERS.novice;
             const streakCount = Number(state.streakDays) || 0;
+            const customAvatar = state.userAvatarUrl || '';
+            const customName = state.userDisplayName || '';
             
-            const userAvatarWrapper = document.getElementById('userAvatarWrapper');
-            const userAvatarBadge = document.getElementById('userAvatarBadge');
+            // Header: User (Google)
+            const userAvatarImg = document.getElementById('userAvatar');
+            const userAvatarFrame = document.getElementById('userAvatarFrame');
             const userStreakBadge = document.getElementById('userStreakBadgeCount');
-            if (userAvatarWrapper) {
-                userAvatarWrapper.className = `avatar-frame-box ${activeTier.frameClass}`;
+            const userNameEl = document.getElementById('userName');
+            const dropdownFullName = document.getElementById('dropdownUserFullName');
+            
+            if (userAvatarImg && customAvatar) {
+                userAvatarImg.src = customAvatar;
             }
-            if (userAvatarBadge) {
-                userAvatarBadge.textContent = activeTier.badgeEmoji;
+            if (userAvatarFrame) {
+                userAvatarFrame.src = activeTier.frameImg;
+                userAvatarFrame.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
             }
             if (userStreakBadge) {
                 userStreakBadge.textContent = streakCount;
             }
-
-            const guestAvatarWrapper = document.getElementById('guestAvatarWrapper');
-            const guestAvatarBadge = document.getElementById('guestAvatarBadge');
-            const guestStreakBadge = document.getElementById('guestStreakBadgeCount');
-            if (guestAvatarWrapper) {
-                guestAvatarWrapper.className = `avatar-frame-box ${activeTier.frameClass}`;
+            if (customName) {
+                if (userNameEl) userNameEl.textContent = customName;
+                if (dropdownFullName) dropdownFullName.textContent = customName;
             }
-            if (guestAvatarBadge) {
-                guestAvatarBadge.textContent = activeTier.badgeEmoji;
+
+            // Header: Guest
+            const guestAvatarImg = document.getElementById('guestAvatarImg');
+            const guestAvatarDefault = document.getElementById('guestAvatarDefault');
+            const guestAvatarFrame = document.getElementById('guestAvatarFrame');
+            const guestStreakBadge = document.getElementById('guestStreakBadgeCount');
+            
+            if (guestAvatarImg && guestAvatarDefault) {
+                if (customAvatar) {
+                    guestAvatarImg.src = customAvatar;
+                    guestAvatarImg.classList.remove('hidden');
+                    guestAvatarDefault.classList.add('hidden');
+                } else {
+                    guestAvatarImg.classList.add('hidden');
+                    guestAvatarDefault.classList.remove('hidden');
+                }
+            }
+            if (guestAvatarFrame) {
+                guestAvatarFrame.src = activeTier.frameImg;
+                guestAvatarFrame.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
             }
             if (guestStreakBadge) {
                 guestStreakBadge.textContent = streakCount;
@@ -485,6 +521,42 @@ const APP_VERSION = '5.9.5';
             const activeNameEl = document.getElementById('wardrobeActiveFrameName');
             if (activeNameEl) activeNameEl.textContent = `${activeTier.badgeEmoji} ${activeTier.name}`;
 
+            // 1. Profile Customizer Box in Modal
+            const previewAvatarImg = document.getElementById('wardrobePreviewAvatarImg');
+            const previewAvatarDef = document.getElementById('wardrobePreviewAvatarDefault');
+            const previewFrameImg = document.getElementById('wardrobePreviewFrameImg');
+            const displayNameInput = document.getElementById('wardrobeDisplayNameInput');
+            const btnRemoveAvatar = document.getElementById('btnRemoveCustomAvatar');
+
+            const currentAvatarSrc = state.userAvatarUrl || (document.getElementById('userAvatar') ? document.getElementById('userAvatar').src : '');
+
+            if (previewAvatarImg && previewAvatarDef) {
+                if (currentAvatarSrc && !currentAvatarSrc.includes('gravatar.com/avatar/?d=mp')) {
+                    previewAvatarImg.src = currentAvatarSrc;
+                    previewAvatarImg.classList.remove('hidden');
+                    previewAvatarDef.classList.add('hidden');
+                } else {
+                    previewAvatarImg.classList.add('hidden');
+                    previewAvatarDef.classList.remove('hidden');
+                }
+            }
+
+            if (previewFrameImg) {
+                previewFrameImg.src = activeTier.frameImg;
+                previewFrameImg.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
+            }
+
+            if (displayNameInput && state.userDisplayName !== undefined) {
+                if (document.activeElement !== displayNameInput) {
+                    displayNameInput.value = state.userDisplayName || '';
+                }
+            }
+
+            if (btnRemoveAvatar) {
+                btnRemoveAvatar.classList.toggle('hidden', !state.userAvatarUrl);
+            }
+
+            // 2. Tiers Showcase List with Real PNG Frames and Dynamic Animations
             const listEl = document.getElementById('wardrobeTiersList');
             if (!listEl) return;
 
@@ -518,13 +590,15 @@ const APP_VERSION = '5.9.5';
 
                 return `
                     <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${isActive ? 'border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'border-slate-200 dark:border-slate-700'} flex items-center gap-3 transition">
-                        <!-- Left: Avatar Preview with Frame & Ornament -->
+                        <!-- Left: Real PNG Frame Overlay with dynamic CSS Animation -->
                         <div class="shrink-0 p-1">
-                            <div class="avatar-frame-box ${tier.frameClass}">
-                                <div class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-base overflow-hidden">
-                                    <span>👤</span>
-                                </div>
-                                <span class="frame-ornament-badge">${tier.badgeEmoji}</span>
+                            <div class="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0">
+                                ${currentAvatarSrc && !currentAvatarSrc.includes('gravatar.com/avatar/?d=mp') ? `
+                                    <img src="${currentAvatarSrc}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover">
+                                ` : `
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs"><span>👤</span></div>
+                                `}
+                                <img src="${tier.frameImg}" class="absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${tier.effectClass}" alt="${tier.name}">
                             </div>
                         </div>
 
@@ -555,6 +629,77 @@ const APP_VERSION = '5.9.5';
                     </div>
                 `;
             }).join('');
+        }
+
+        function handleAvatarPhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ กรุณาเลือกไฟล์รูปภาพ');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const size = 256;
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    const minDim = Math.min(img.width, img.height);
+                    const sx = (img.width - minDim) / 2;
+                    const sy = (img.height - minDim) / 2;
+                    
+                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    
+                    state.userAvatarUrl = dataUrl;
+                    saveState();
+                    renderPrestigeFrames();
+                    renderWardrobeModal();
+                    showToast('📷 เปลี่ยนรูปโปรไฟล์สำเร็จแล้ว!');
+                    
+                    if (window.syncProfileDataToCloud) {
+                        window.syncProfileDataToCloud();
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function saveProfileDisplayName() {
+            const input = document.getElementById('wardrobeDisplayNameInput');
+            if (!input) return;
+            const newName = input.value.trim();
+            if (newName.length > 30) {
+                showToast('⚠️ ชื่อต้องมีความยาวไม่เกิน 30 ตัวอักษร');
+                return;
+            }
+            state.userDisplayName = newName;
+            saveState();
+            renderPrestigeFrames();
+            renderWardrobeModal();
+            showToast('✏️ บันทึกชื่อแสดงผลเรียบร้อยแล้ว!');
+            
+            if (window.syncProfileDataToCloud) {
+                window.syncProfileDataToCloud();
+            }
+        }
+
+        function removeCustomAvatarPhoto() {
+            state.userAvatarUrl = '';
+            saveState();
+            renderPrestigeFrames();
+            renderWardrobeModal();
+            showToast('ลบรูปภาพแล้ว กลับไปใช้รูปเริ่มต้น');
+            
+            if (window.syncProfileDataToCloud) {
+                window.syncProfileDataToCloud();
+            }
         }
 
         function showToast(msg) {
@@ -6379,3 +6524,6 @@ window.closePrestigeWardrobeModal = closePrestigeWardrobeModal;
 window.closePrestigeWardrobeModalOnBackdrop = closePrestigeWardrobeModalOnBackdrop;
 window.renderPrestigeFrames = renderPrestigeFrames;
 window.renderWardrobeModal = renderWardrobeModal;
+window.handleAvatarPhotoSelected = handleAvatarPhotoSelected;
+window.saveProfileDisplayName = saveProfileDisplayName;
+window.removeCustomAvatarPhoto = removeCustomAvatarPhoto;

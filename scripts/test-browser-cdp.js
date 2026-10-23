@@ -1434,6 +1434,102 @@ server.listen(PORT, async () => {
             throw new Error('Prestige Avatar Frame & Anti-Cheat Engine test failed!');
         }
 
+        // Test 36: Mobile Header Title Clearance, Custom Profile Picture & Name Edit, and Real PNG Prestige Frames with Dynamic Animations (v5.9.6)
+        console.log('--- Test 36: Profile Edit, Mobile Header Clearance & PNG Frame Animations ---');
+        const v596Test = await evalJs(`(() => {
+            // 1. Mobile Header title clearance
+            const userNameEl = document.getElementById('userName');
+            const hasMobileHiddenClass = userNameEl && userNameEl.classList.contains('hidden') && userNameEl.classList.contains('sm:inline');
+
+            // 2. Custom Display Name edit
+            const inputName = document.getElementById('wardrobeDisplayNameInput');
+            if (inputName) inputName.value = 'โค้ชเบนซ์ Nova';
+            window.saveProfileDisplayName();
+            const savedDisplayName = window.state.userDisplayName;
+            const headerDisplayName = userNameEl ? userNameEl.textContent : '';
+
+            // 3. Custom Avatar Photo
+            const sampleAvatar = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+            window.state.userAvatarUrl = sampleAvatar;
+            window.saveState();
+            window.renderPrestigeFrames();
+            window.renderWardrobeModal();
+
+            const guestImg = document.getElementById('guestAvatarImg');
+            const guestDef = document.getElementById('guestAvatarDefault');
+            const guestImgVisible = guestImg && !guestImg.classList.contains('hidden');
+            const guestDefHidden = guestDef && guestDef.classList.contains('hidden');
+
+            // Remove photo test
+            window.removeCustomAvatarPhoto();
+            const photoRemoved = window.state.userAvatarUrl === '';
+            const guestDefRestored = guestDef && !guestDef.classList.contains('hidden');
+
+            // 4. Real PNG Frame Overlays with dynamic animation effects
+            const noviceFrame = window.PRESTIGE_TIERS.novice.frameImg;
+            const noviceEffect = window.PRESTIGE_TIERS.novice.effectClass;
+            const bronzeFrame = window.PRESTIGE_TIERS.bronze.frameImg;
+            const bronzeEffect = window.PRESTIGE_TIERS.bronze.effectClass;
+            const goldFrame = window.PRESTIGE_TIERS.gold.frameImg;
+            const goldEffect = window.PRESTIGE_TIERS.gold.effectClass;
+
+            window.equipPrestigeFrame('novice');
+            const guestFrameEl = document.getElementById('guestAvatarFrame');
+            const guestFrameSrcNovice = guestFrameEl ? guestFrameEl.src : '';
+            const guestFrameClassNovice = guestFrameEl ? guestFrameEl.className : '';
+
+            window.equipPrestigeFrame('bronze');
+            const guestFrameSrcBronze = guestFrameEl ? guestFrameEl.src : '';
+            const guestFrameClassBronze = guestFrameEl ? guestFrameEl.className : '';
+
+            const wardrobeList = document.getElementById('wardrobeTiersList');
+            const hasPngImagesInList = wardrobeList && wardrobeList.innerHTML.includes('frames/frame-novice.png') && wardrobeList.innerHTML.includes('frames/frame-bronze.png');
+            const hasEffectsInList = wardrobeList && wardrobeList.innerHTML.includes('effect-novice') && wardrobeList.innerHTML.includes('effect-bronze');
+
+            return {
+                hasMobileHiddenClass,
+                savedDisplayName,
+                headerDisplayName,
+                guestImgVisible,
+                guestDefHidden,
+                photoRemoved,
+                guestDefRestored,
+                noviceFrame,
+                noviceEffect,
+                bronzeFrame,
+                bronzeEffect,
+                goldFrame,
+                goldEffect,
+                guestFrameSrcNovice,
+                guestFrameClassNovice,
+                guestFrameSrcBronze,
+                guestFrameClassBronze,
+                hasPngImagesInList,
+                hasEffectsInList
+            };
+        })()`);
+        console.log('v5.9.6 Features verified:', v596Test);
+
+        if (!v596Test.hasMobileHiddenClass ||
+            v596Test.savedDisplayName !== 'โค้ชเบนซ์ Nova' ||
+            v596Test.headerDisplayName !== 'โค้ชเบนซ์ Nova' ||
+            !v596Test.guestImgVisible ||
+            !v596Test.guestDefHidden ||
+            !v596Test.photoRemoved ||
+            !v596Test.guestDefRestored ||
+            v596Test.noviceFrame !== 'frames/frame-novice.png' ||
+            v596Test.noviceEffect !== 'effect-novice' ||
+            v596Test.bronzeFrame !== 'frames/frame-bronze.png' ||
+            v596Test.bronzeEffect !== 'effect-bronze' ||
+            !v596Test.guestFrameSrcNovice.includes('frames/frame-novice.png') ||
+            !v596Test.guestFrameClassNovice.includes('effect-novice') ||
+            !v596Test.guestFrameSrcBronze.includes('frames/frame-bronze.png') ||
+            !v596Test.guestFrameClassBronze.includes('effect-bronze') ||
+            !v596Test.hasPngImagesInList ||
+            !v596Test.hasEffectsInList) {
+            throw new Error('Test 36: Mobile Header, Profile Edit and PNG Frames integration failed: ' + JSON.stringify(v596Test));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

@@ -537,12 +537,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.5
+                            Current Version: v5.9.6
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.6 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-amber-500/5 to-indigo-500/10 border border-purple-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-purple-600 dark:text-purple-400 text-sm">🎨 v5.9.6 (Real PNG Prestige Frames, Dynamic CSS Glow Overlays, Client Canvas Avatar Compression & Profile Personalization)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🖼️ สถาปัตยกรรม High-Res PNG Frame Assets:</b> แปลงรูปกรอบเกียรติยศความละเอียดสูงเป็นไฟล์โปร่งใส PNG 512x512 ใน <code>public/frames/</code> พร้อมเจาะรูวงกลมตรงกลางแบบนุ่มนวล เพื่อให้รูปโปรไฟล์แสดงผลอย่างลงตัวและโดดเด่น</li>
+                                <li><b>⚡ Dynamic GPU Filter Animations:</b> ประยุกต์ใช้ CSS Keyframes แยกอิสระ 5 ระดับ (<code>sheenSweep</code>, <code>emeraldBreath</code>, <code>cyanStrike</code>, <code>flameFlicker</code>, <code>holoPrism</code>) ผ่านฮาร์ดแวร์เร่งความเร็ว 60fps ไม่มีสะดุด</li>
+                                <li><b>📷 ระบบบีบอัดภาพโปรไฟล์บนเบราว์เซอร์:</b> ฟังก์ชัน <code>handleAvatarPhotoSelected()</code> ครอปและย่อขนาดรูปผ่าน HTML5 Canvas เหลือ 256x256 JPEG เพื่อประหยัดพื้นที่จัดเก็บ LocalStorage และซิงค์ Firestore รวดเร็วทันใจ</li>
+                                <li><b>🔄 ซิงค์ข้อมูลโปรไฟล์ข้ามอุปกรณ์:</b> อัปเดตฟังก์ชัน <code>syncProfileDataToCloud()</code> ส่ง <code>userDisplayName</code> และ <code>userAvatarUrl</code> ทั้งฝั่งผู้ใช้ Google และ Guest Session พร้อมอัปเดต UI แบบเรียลไทม์</li>
+                                <li><b>📱 ปรับปรุง Header บนมือถือ:</b> ซ่อน <code>#userName</code> บนหน้าจอเล็ก (<code>hidden sm:inline</code>) ป้องกันปัญหาข้อความชื่อเบียดทับชื่อแอป NovaFit Pro สมบูรณ์แบบ 100%</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.5 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-indigo-500/10 border border-amber-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
