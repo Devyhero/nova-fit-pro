@@ -387,7 +387,9 @@ const APP_VERSION = '5.9.6';
             
             // Anti-cheat verification: streak cannot artificially exceed mathematically verified active days
             if (claimed > verified) {
-                if (window.recordSecurityAuditLog) {
+                // False-positive guard: Only log security audit if claimed streak is substantially higher (>= 2 days higher),
+                // not normal streak decay/expiration when user misses today or yesterday.
+                if (claimed >= 2 && claimed > verified + 1 && window.recordSecurityAuditLog) {
                     window.recordSecurityAuditLog({
                         type: 'STREAK_SPOOF_TAMPER',
                         reason: `Claimed streak (${claimed} days) exceeds verified consecutive meal days (${verified} days)`,
@@ -464,6 +466,8 @@ const APP_VERSION = '5.9.6';
             const streakCount = Number(state.streakDays) || 0;
             const customAvatar = state.userAvatarUrl || '';
             const customName = state.userDisplayName || '';
+            const googlePhoto = (window.currentUser && window.currentUser.photoURL) || '';
+            const effectiveAvatar = customAvatar || googlePhoto;
             
             // Header: User (Google)
             const userAvatarImg = document.getElementById('userAvatar');
@@ -472,19 +476,23 @@ const APP_VERSION = '5.9.6';
             const userNameEl = document.getElementById('userName');
             const dropdownFullName = document.getElementById('dropdownUserFullName');
             
-            if (userAvatarImg && customAvatar) {
-                userAvatarImg.src = customAvatar;
+            if (userAvatarImg) {
+                userAvatarImg.src = effectiveAvatar || 'https://www.gravatar.com/avatar/?d=mp';
             }
             if (userAvatarFrame) {
                 userAvatarFrame.src = activeTier.frameImg;
-                userAvatarFrame.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
+                userAvatarFrame.className = `absolute -inset-2 sm:-inset-2.5 w-[calc(100%+16px)] sm:w-[calc(100%+20px)] h-[calc(100%+16px)] sm:h-[calc(100%+20px)] max-w-none pointer-events-none select-none object-contain ${activeTier.effectClass}`;
             }
             if (userStreakBadge) {
                 userStreakBadge.textContent = streakCount;
             }
-            if (customName) {
-                if (userNameEl) userNameEl.textContent = customName;
-                if (dropdownFullName) dropdownFullName.textContent = customName;
+            if (userNameEl) {
+                const effectiveName = customName || (window.currentUser && window.currentUser.displayName ? window.currentUser.displayName.split(' ')[0] : 'ผู้ใช้');
+                userNameEl.textContent = effectiveName;
+            }
+            if (dropdownFullName) {
+                const effectiveFullName = customName || (window.currentUser && window.currentUser.displayName) || 'ผู้ใช้งาน NovaFit Pro';
+                dropdownFullName.textContent = effectiveFullName;
             }
 
             // Header: Guest
@@ -494,18 +502,19 @@ const APP_VERSION = '5.9.6';
             const guestStreakBadge = document.getElementById('guestStreakBadgeCount');
             
             if (guestAvatarImg && guestAvatarDefault) {
-                if (customAvatar) {
-                    guestAvatarImg.src = customAvatar;
+                if (effectiveAvatar) {
+                    guestAvatarImg.src = effectiveAvatar;
                     guestAvatarImg.classList.remove('hidden');
                     guestAvatarDefault.classList.add('hidden');
                 } else {
+                    guestAvatarImg.src = '';
                     guestAvatarImg.classList.add('hidden');
                     guestAvatarDefault.classList.remove('hidden');
                 }
             }
             if (guestAvatarFrame) {
                 guestAvatarFrame.src = activeTier.frameImg;
-                guestAvatarFrame.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
+                guestAvatarFrame.className = `absolute -inset-2 sm:-inset-2.5 w-[calc(100%+16px)] sm:w-[calc(100%+20px)] h-[calc(100%+16px)] sm:h-[calc(100%+20px)] max-w-none pointer-events-none select-none object-contain ${activeTier.effectClass}`;
             }
             if (guestStreakBadge) {
                 guestStreakBadge.textContent = streakCount;
@@ -528,7 +537,8 @@ const APP_VERSION = '5.9.6';
             const displayNameInput = document.getElementById('wardrobeDisplayNameInput');
             const btnRemoveAvatar = document.getElementById('btnRemoveCustomAvatar');
 
-            const currentAvatarSrc = state.userAvatarUrl || (document.getElementById('userAvatar') ? document.getElementById('userAvatar').src : '');
+            const googlePhoto = (window.currentUser && window.currentUser.photoURL) || '';
+            const currentAvatarSrc = state.userAvatarUrl || googlePhoto || '';
 
             if (previewAvatarImg && previewAvatarDef) {
                 if (currentAvatarSrc && !currentAvatarSrc.includes('gravatar.com/avatar/?d=mp')) {
@@ -536,6 +546,7 @@ const APP_VERSION = '5.9.6';
                     previewAvatarImg.classList.remove('hidden');
                     previewAvatarDef.classList.add('hidden');
                 } else {
+                    previewAvatarImg.src = '';
                     previewAvatarImg.classList.add('hidden');
                     previewAvatarDef.classList.remove('hidden');
                 }
@@ -543,7 +554,7 @@ const APP_VERSION = '5.9.6';
 
             if (previewFrameImg) {
                 previewFrameImg.src = activeTier.frameImg;
-                previewFrameImg.className = `absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${activeTier.effectClass}`;
+                previewFrameImg.className = `absolute -inset-5 sm:-inset-5.5 w-[calc(100%+40px)] sm:w-[calc(100%+44px)] h-[calc(100%+40px)] sm:h-[calc(100%+44px)] max-w-none pointer-events-none select-none object-contain ${activeTier.effectClass}`;
             }
 
             if (displayNameInput && state.userDisplayName !== undefined) {
@@ -556,7 +567,7 @@ const APP_VERSION = '5.9.6';
                 btnRemoveAvatar.classList.toggle('hidden', !state.userAvatarUrl);
             }
 
-            // 2. Tiers Showcase List with Real PNG Frames and Dynamic Animations
+            // 2. Tiers Showcase List with Real PNG Frames and Dynamic Animations (Outer Frame Architecture)
             const listEl = document.getElementById('wardrobeTiersList');
             if (!listEl) return;
 
@@ -590,15 +601,17 @@ const APP_VERSION = '5.9.6';
 
                 return `
                     <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${isActive ? 'border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'border-slate-200 dark:border-slate-700'} flex items-center gap-3 transition">
-                        <!-- Left: Real PNG Frame Overlay with dynamic CSS Animation -->
+                        <!-- Left: Real PNG Frame Overlay with dynamic CSS Animation (Outer Frame Architecture) -->
                         <div class="shrink-0 p-1">
-                            <div class="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0">
-                                ${currentAvatarSrc && !currentAvatarSrc.includes('gravatar.com/avatar/?d=mp') ? `
-                                    <img src="${currentAvatarSrc}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover">
-                                ` : `
-                                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs"><span>👤</span></div>
-                                `}
-                                <img src="${tier.frameImg}" class="absolute inset-0 w-full h-full pointer-events-none select-none object-contain ${tier.effectClass}" alt="${tier.name}">
+                            <div class="relative flex items-center justify-center shrink-0 my-0.5 mx-1.5">
+                                <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-800 shadow-xs">
+                                    ${currentAvatarSrc && !currentAvatarSrc.includes('gravatar.com/avatar/?d=mp') ? `
+                                        <img src="${currentAvatarSrc}" class="w-full h-full object-cover">
+                                    ` : `
+                                        <div class="w-full h-full text-white flex items-center justify-center font-bold text-xs"><span>👤</span></div>
+                                    `}
+                                </div>
+                                <img src="${tier.frameImg}" class="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)] max-w-none pointer-events-none select-none object-contain ${tier.effectClass}" alt="${tier.name}">
                             </div>
                         </div>
 
@@ -693,6 +706,47 @@ const APP_VERSION = '5.9.6';
         function removeCustomAvatarPhoto() {
             state.userAvatarUrl = '';
             saveState();
+            
+            const googlePhoto = (window.currentUser && window.currentUser.photoURL) || '';
+            const userAvatarImg = document.getElementById('userAvatar');
+            const guestAvatarImg = document.getElementById('guestAvatarImg');
+            const guestAvatarDefault = document.getElementById('guestAvatarDefault');
+            const previewAvatarImg = document.getElementById('wardrobePreviewAvatarImg');
+            const previewAvatarDef = document.getElementById('wardrobePreviewAvatarDefault');
+            const btnRemoveAvatar = document.getElementById('btnRemoveCustomAvatar');
+
+            if (userAvatarImg) {
+                userAvatarImg.src = googlePhoto || 'https://www.gravatar.com/avatar/?d=mp';
+            }
+
+            if (guestAvatarImg && guestAvatarDefault) {
+                if (googlePhoto) {
+                    guestAvatarImg.src = googlePhoto;
+                    guestAvatarImg.classList.remove('hidden');
+                    guestAvatarDefault.classList.add('hidden');
+                } else {
+                    guestAvatarImg.src = '';
+                    guestAvatarImg.classList.add('hidden');
+                    guestAvatarDefault.classList.remove('hidden');
+                }
+            }
+
+            if (previewAvatarImg && previewAvatarDef) {
+                if (googlePhoto) {
+                    previewAvatarImg.src = googlePhoto;
+                    previewAvatarImg.classList.remove('hidden');
+                    previewAvatarDef.classList.add('hidden');
+                } else {
+                    previewAvatarImg.src = '';
+                    previewAvatarImg.classList.add('hidden');
+                    previewAvatarDef.classList.remove('hidden');
+                }
+            }
+
+            if (btnRemoveAvatar) {
+                btnRemoveAvatar.classList.add('hidden');
+            }
+
             renderPrestigeFrames();
             renderWardrobeModal();
             showToast('ลบรูปภาพแล้ว กลับไปใช้รูปเริ่มต้น');
