@@ -62,6 +62,8 @@ onAuthStateChanged(auth, async (user) => {
     const errBox = document.getElementById('adminLoginError');
 
     if (!user) {
+        allUsersData = [];
+        window.allUsersData = [];
         if (authGate) authGate.classList.remove('hidden');
         if (panel) panel.classList.add('hidden');
         if (btnLogout) btnLogout.classList.add('hidden');
@@ -70,13 +72,35 @@ onAuthStateChanged(auth, async (user) => {
 
     const email = (user.email || '').toLowerCase();
     if (!ADMIN_EMAILS.includes(email)) {
+        allUsersData = [];
+        window.allUsersData = [];
         if (authGate) authGate.classList.remove('hidden');
         if (panel) panel.classList.add('hidden');
         if (btnLogout) btnLogout.classList.remove('hidden');
         if (errBox) {
             errBox.classList.remove('hidden');
-            errBox.innerHTML = `🚫 <b>การเข้าถึงถูกปฏิเสธ (403 Forbidden):</b> บัญชี <b>${email}</b> ไม่มีสิทธิ์เข้าถึงหน้านี้ กรุณาเข้าสู่ระบบด้วยบัญชีผู้ดูแลระบบ (benznova01@gmail.com)`;
+            errBox.innerHTML = `
+                <div class="space-y-2">
+                    <div>🚫 <b>การเข้าถึงถูกปฏิเสธ (403 Forbidden):</b> บัญชี <b>${email}</b> ไม่มีสิทธิ์เข้าถึงหน้านี้ สงวนสิทธิ์เฉพาะผู้ดูแลระบบเท่านั้น</div>
+                    <a href="index.html" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs shadow-xs hover:opacity-90 transition mt-1">
+                        <span>📱</span> <span>กลับสู่หน้าหลักสำหรับผู้ใช้งาน</span>
+                    </a>
+                </div>
+            `;
         }
+        // Log unauthorized admin panel breach attempt to Firestore security audit
+        try {
+            const logsCol = collection(db, 'security_audit_logs');
+            await addDoc(logsCol, {
+                type: 'UNAUTHORIZED_ADMIN_ACCESS_ATTEMPT',
+                reason: `Unauthorized Google account '${email}' attempted to access admin.html`,
+                timestamp: new Date().toISOString(),
+                userId: user.uid,
+                userEmail: email,
+                platform: navigator.platform || 'Unknown',
+                userAgent: navigator.userAgent || 'Unknown'
+            });
+        } catch (e) { }
         return;
     }
 
@@ -119,6 +143,12 @@ window.handleAdminSignOut = async function () {
 
 // Fetch All Users & Guest Sessions from Cloud Firestore (Phase 1)
 window.loadAllUserData = async function () {
+    // Security check: Only verified admin can load Firestore data
+    if (!window.allUsersData && (!currentUser || !ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase()))) {
+        console.warn('Unauthorized loadAllUserData rejected');
+        return;
+    }
+
     const refreshIcon = document.getElementById('refreshIcon');
     if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
@@ -2018,6 +2048,12 @@ window.loadAdminSecurityLogs = async function () {
         _currentSecurityLogs = [...window.allSecurityLogsData];
         updateSecurityCounters(_currentSecurityLogs);
         renderSecurityLogsSlice();
+        return;
+    }
+
+    // Security check: Only verified admin can load audit logs from Firestore
+    if (!currentUser || !ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase())) {
+        console.warn('Unauthorized loadAdminSecurityLogs rejected');
         return;
     }
 

@@ -34,6 +34,12 @@
         * {
             font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
+        /* Mobile-First: Prevent iOS Safari Auto-Zoom on Form Inputs */
+        @media screen and (max-width: 768px) {
+            input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]), textarea, select {
+                font-size: 16px !important;
+            }
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -1413,7 +1419,7 @@
                         <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                             <span>🏆</span> v5.9.5 (กรอบโปรไฟล์เกียรติยศ 5 ลำดับขั้น & ระบบวินัยสตรีค)
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">ล่าสุด</span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
                         <li class="flex items-start gap-1.5">
@@ -1437,7 +1443,7 @@
                         <span class="font-bold text-sm text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                             <span>👥</span> v5.9.4 (ระบบจดจำสถิติผู้ใช้งาน & รากฐานเกียรติยศ)
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">ก่อนหน้า</span>
+                        <span class="text-xs text-slate-400 font-mono">23 ต.ค. 2026</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
                         <li class="flex items-start gap-1.5">
@@ -1461,7 +1467,7 @@
                         <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                             <span>🎊</span> v5.9.3 (เอฟเฟกต์เฉลิมฉลอง Celebration Confetti & Milestone Beats)
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">ก่อนหน้า</span>
+                        <span class="text-xs text-slate-400 font-mono">22 ต.ค. 2026</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
                         <li class="flex items-start gap-1.5">
@@ -1485,7 +1491,7 @@
                         <span class="font-bold text-sm text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
                             <span>🚀</span> v5.9.3 (จัดการเซ็ตประจำ กราฟน้ำหนักต่อเนื่อง & แชร์เกร็ดความรู้)
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400">ล่าสุด</span>
+                        <span class="text-xs text-slate-400 font-mono">22 ต.ค. 2026</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
                         <li class="flex items-start gap-1.5">
@@ -2183,10 +2189,10 @@
 
     <!-- MODAL 4: Add Custom Supplement -->
     <div id="addSupplementModal"
-        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop-smooth"
+        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth"
         onclick="closeAddSupplementModalOnBackdrop(event)">
         <div onclick="event.stopPropagation()"
-            class="modal-sheet-panel bg-white dark:bg-slate-800 border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-[32px] sm:rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 my-0 sm:my-auto">
+            class="modal-sheet-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
                 <h3 class="font-bold text-base flex items-center gap-2">💊 เพิ่มวิตามิน / อาหารเสริม</h3>
                 <button type="button" onclick="closeAddSupplementModal()"
@@ -2235,10 +2241,10 @@
     
     <!-- MODAL 5: Quick Add Calorie & Protein (v5.3.0) -->
     <div id="quickAddModal"
-        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop-smooth"
+        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth"
         onclick="closeQuickAddOnBackdrop(event)">
         <div onclick="event.stopPropagation()"
-            class="modal-sheet-panel bg-white dark:bg-slate-800 border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-[32px] sm:rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 my-0 sm:my-auto">
+            class="modal-sheet-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">⚡</span>
@@ -2298,12 +2304,10 @@
     
     <!-- MODAL 6: Profile & Macro Settings Drawer (v5.3.0) -->
     <div id="profileSettingsModal"
-        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden modal-backdrop-smooth"
+        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-hidden modal-backdrop-smooth"
         onclick="closeProfileSettingsOnBackdrop(event)">
         <div onclick="event.stopPropagation()"
-            class="modal-sheet-panel relative bg-white dark:bg-slate-800 border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-[32px] sm:rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 my-0 sm:my-auto max-h-[92vh] flex flex-col">
-            <!-- iOS Drag Handle for mobile -->
-            <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto -mt-1 mb-1 sm:hidden"></div>
+            class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 my-auto max-h-[90vh] flex flex-col">
 
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
                 <div class="flex items-center gap-2.5">
@@ -2766,13 +2770,13 @@
 
     <!-- MODAL: AI Snap & Log (v5.6.6) -->
     <div id="aiSnapModal"
-        class="hidden fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop-smooth"
+        class="hidden fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth"
         onclick="closeAiSnapModalOnBackdrop(event)">
         <!-- Hidden file input for camera / file picker -->
         <input type="file" id="aiSnapFileInput" accept="image/*" class="hidden" onchange="handleAiPhotoSelected(event)">
 
         <div onclick="event.stopPropagation()"
-            class="modal-sheet-panel bg-white dark:bg-slate-800 border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-[32px] sm:rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 my-0 sm:my-auto max-h-[90vh] flex flex-col">
+            class="modal-sheet-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 my-auto max-h-[90vh] flex flex-col">
             
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
