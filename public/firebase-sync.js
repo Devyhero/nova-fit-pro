@@ -197,6 +197,13 @@ function updateAuthUI(user) {
 
     const adminLink = document.getElementById('btnAdminDashboard');
     const adminSection = document.getElementById('adminToolsSection');
+    const btnGuestWardrobe = document.getElementById('btnGuestWardrobe');
+    if (btnGuestWardrobe) {
+        btnGuestWardrobe.classList.toggle('hidden', !!user);
+    }
+    if (window.renderPrestigeFrames) {
+        window.renderPrestigeFrames();
+    }
     const isAdmin = user && user.email && ['benznova01@gmail.com', 'parinya6969@gmail.com'].includes(user.email.toLowerCase());
     if (adminLink) {
         adminLink.classList.toggle('hidden', !isAdmin);
@@ -367,14 +374,15 @@ async function syncGuestSession(force = false) {
                 firstSeen: firstSeen,
                 updatedAt: new Date().toISOString(),
                 lastActive: new Date().toISOString(),
-                clientVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.9.4'),
+                clientVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.9.5'),
                 state: currentState,
                 stats: {
                     mealsCountToday: mealsToday.length,
                     calToday: calToday,
                     waterGlassesToday: waterToday,
                     workoutsCountToday: workoutsToday.length,
-                    streakDays: Number(currentState.streakDays) || 1
+                    streakDays: Number(currentState.streakDays) || 0,
+                    prestigeFrame: currentState.prestigeFrame || 'novice'
                 }
             };
 
@@ -387,6 +395,32 @@ async function syncGuestSession(force = false) {
     }, force ? 100 : 2000);
 }
 window.syncGuestSession = syncGuestSession;
+
+// ==========================================
+// 🛡️ SECURITY AUDIT & ANTI-CHEAT LOGGING (Phase 3)
+// ==========================================
+window.recordSecurityAuditLog = async function (logData) {
+    if (!logData) return;
+    try {
+        const payload = {
+            type: logData.type || 'SUSPICIOUS_ACTIVITY',
+            reason: logData.reason || 'Unauthorized modification attempt',
+            timestamp: new Date().toISOString(),
+            deviceId: myDeviceId,
+            userId: currentUser ? currentUser.uid : 'guest',
+            userEmail: currentUser ? (currentUser.email || 'authenticated') : 'guest',
+            platform: platformName,
+            deviceCategory: deviceCategory,
+            details: logData.details || {},
+            userAgent: navigator.userAgent || 'unknown'
+        };
+        const logsCol = collection(db, 'security_audit_logs');
+        await addDoc(logsCol, payload);
+        console.warn('🛡️ Security audit incident recorded:', payload.type, payload.reason);
+    } catch (err) {
+        console.warn('Could not record security audit log to Firestore:', err);
+    }
+};
 
 window.triggerCloudSync = function (showSuccessToast = false) {
     if (!currentUser) {

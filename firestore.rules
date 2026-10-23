@@ -54,5 +54,12 @@ service cloud.firestore {
       allow create, update: if request.resource.data.deviceId == deviceId;
       allow read, delete: if isAdmin();
     }
+
+    // Security Audit Logs Collection (Phase 3 Anti-Cheat & Bot Protection):
+    // Allows logging suspicious tampering events; only verified Admin can read and manage
+    match /security_audit_logs/{logId} {
+      allow create: if request.resource.data.keys().hasAll(['type', 'timestamp', 'reason']);
+      allow read, delete: if isAdmin();
+    }
   }
 }

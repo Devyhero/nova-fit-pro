@@ -980,7 +980,7 @@ window.filterUsersList = function (query) {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai', 'security_logs'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {
@@ -1000,6 +1000,9 @@ window.switchAdminTab = function (tabId) {
         if (window.loadAdminGeminiApiKey) window.loadAdminGeminiApiKey();
         if (window.loadAdminAiScanLogs) window.loadAdminAiScanLogs();
         if (window.loadAdminAiCacheStats) window.loadAdminAiCacheStats();
+    }
+    if (tabId === 'security_logs') {
+        if (window.loadAdminSecurityLogs) window.loadAdminSecurityLogs();
     }
 };
 
@@ -1901,3 +1904,159 @@ window.loadAdminAiCacheStats = async function () {
         if (topDishesList) topDishesList.innerHTML = `<div class="text-slate-400 text-xs py-2">ไม่สามารถดึงข้อมูลแคชได้: ${err.message}</div>`;
     }
 };
+
+// ==========================================
+// 🛡️ SECURITY AUDIT & ANTI-CHEAT ENGINE (Phase 3)
+// ==========================================
+let _currentSecurityLogs = [];
+let _securityLogsCurrentPage = 1;
+let _securityLogsPageSize = 10;
+
+window._currentSecurityLogs = _currentSecurityLogs;
+
+function changeSecurityLogsPage(page) {
+    _securityLogsCurrentPage = page;
+    renderSecurityLogsSlice();
+}
+window.changeSecurityLogsPage = changeSecurityLogsPage;
+
+function changeSecurityLogsPageSize(newSize) {
+    _securityLogsPageSize = Number(newSize) || 10;
+    _securityLogsCurrentPage = 1;
+    renderSecurityLogsSlice();
+}
+window.changeSecurityLogsPageSize = changeSecurityLogsPageSize;
+
+function renderSecurityLogsSlice() {
+    const tbody = document.getElementById('securityLogsTableBody');
+    if (!tbody) return;
+
+    const logs = window.allSecurityLogsData || _currentSecurityLogs;
+    if (!logs || logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 text-xs">🛡️ ยังไม่พบเหตุการณ์น่าสงสัย ระบบปลอดภัยและทำงานปกติ 100%</td></tr>`;
+        renderPaginationControls({
+            containerId: 'securityLogsPagination',
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: _securityLogsPageSize,
+            onPageChange: 'changeSecurityLogsPage',
+            onPageSizeChange: 'changeSecurityLogsPageSize'
+        });
+        return;
+    }
+
+    const startIdx = (_securityLogsCurrentPage - 1) * _securityLogsPageSize;
+    const endIdx = startIdx + _securityLogsPageSize;
+    const pageItems = logs.slice(startIdx, endIdx);
+
+    tbody.innerHTML = pageItems.map(item => {
+        let typeBadge = '';
+        if (item.type === 'UNAUTHORIZED_PRESTIGE_EQUIP') {
+            typeBadge = '<span class="px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px]">⚠️ พยายามสวมกรอบผิดกฎ</span>';
+        } else if (item.type === 'STREAK_SPOOF_TAMPER') {
+            typeBadge = '<span class="px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-[10px]">🚫 ปลอมแปลงสตรีค</span>';
+        } else if (item.type === 'ILLEGAL_FRAME_DOWNGRADE') {
+            typeBadge = '<span class="px-2 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[10px]">⚡ ตรวจพบกรอบไม่ถูกต้อง</span>';
+        } else {
+            typeBadge = `<span class="px-2 py-0.5 rounded-full font-bold bg-slate-500/15 text-slate-600 dark:text-slate-400 text-[10px]">${escapeAdminHtml(item.type || 'UNKNOWN')}</span>`;
+        }
+
+        const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('th-TH', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        }) : '-';
+
+        const userIdentity = item.userEmail && item.userEmail !== 'guest' 
+            ? `<span class="font-bold text-slate-800 dark:text-slate-100">${escapeAdminHtml(item.userEmail)}</span>`
+            : `<span class="font-bold text-slate-500">⚪ ผู้ใช้ทั่วไป (${escapeAdminHtml(item.platform || 'อุปกรณ์')})</span>`;
+        const devId = item.deviceId ? `<div class="font-mono text-[10px] text-slate-400 truncate max-w-[140px]" title="${escapeAdminHtml(item.deviceId)}">${escapeAdminHtml(item.deviceId)}</div>` : '';
+
+        const reason = item.reason || 'ตรวจพบพฤติกรรมดัดแปลงข้อมูล';
+        let detailHtml = `<div class="font-medium text-slate-700 dark:text-slate-200">${escapeAdminHtml(reason)}</div>`;
+        if (item.details && typeof item.details === 'object') {
+            const keys = Object.keys(item.details);
+            if (keys.length > 0) {
+                const subText = keys.map(k => `${k}: ${item.details[k]}`).join(' | ');
+                detailHtml += `<div class="text-[10px] text-slate-400 font-mono mt-0.5">${escapeAdminHtml(subText)}</div>`;
+            }
+        }
+
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <td class="p-3 text-[11px] font-mono text-slate-400 whitespace-nowrap">${dateStr}</td>
+                <td class="p-3 whitespace-nowrap">${typeBadge}</td>
+                <td class="p-3 whitespace-nowrap">${userIdentity}${devId}</td>
+                <td class="p-3">${detailHtml}</td>
+                <td class="p-3 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px]">
+                        <span>🛡️</span> สกัดกั้น & รีเซ็ตสำเร็จ
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    renderPaginationControls({
+        containerId: 'securityLogsPagination',
+        totalItems: logs.length,
+        currentPage: _securityLogsCurrentPage,
+        pageSize: _securityLogsPageSize,
+        onPageChange: 'changeSecurityLogsPage',
+        onPageSizeChange: 'changeSecurityLogsPageSize'
+    });
+}
+window.renderSecurityLogsSlice = renderSecurityLogsSlice;
+
+window.loadAdminSecurityLogs = async function () {
+    const tbody = document.getElementById('securityLogsTableBody');
+    const elTotal = document.getElementById('countSecurityTotal');
+    const elFrame = document.getElementById('countSecurityFrameTamper');
+    const elStreak = document.getElementById('countSecurityStreakTamper');
+
+    // If mocked in test environment
+    if (window.allSecurityLogsData && Array.isArray(window.allSecurityLogsData)) {
+        _currentSecurityLogs = [...window.allSecurityLogsData];
+        updateSecurityCounters(_currentSecurityLogs);
+        renderSecurityLogsSlice();
+        return;
+    }
+
+    try {
+        if (typeof db === 'undefined' || !db) {
+            console.warn('Firestore db not available for security logs');
+            return;
+        }
+        const logsCol = collection(db, 'security_audit_logs');
+        const q = query(logsCol, orderBy('timestamp', 'desc'));
+        const snap = await getDocs(q);
+
+        _currentSecurityLogs = [];
+        snap.forEach(docSnap => {
+            _currentSecurityLogs.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        updateSecurityCounters(_currentSecurityLogs);
+        _securityLogsCurrentPage = 1;
+        renderSecurityLogsSlice();
+    } catch (err) {
+        console.warn('Could not load security logs:', err);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 text-xs">ไม่สามารถดึงบันทึกความปลอดภัยได้: ${escapeAdminHtml(err.message)}</td></tr>`;
+        }
+    }
+};
+
+function updateSecurityCounters(logs) {
+    const elTotal = document.getElementById('countSecurityTotal');
+    const elFrame = document.getElementById('countSecurityFrameTamper');
+    const elStreak = document.getElementById('countSecurityStreakTamper');
+
+    const total = logs.length;
+    const frameTamper = logs.filter(l => l.type === 'UNAUTHORIZED_PRESTIGE_EQUIP' || l.type === 'ILLEGAL_FRAME_DOWNGRADE').length;
+    const streakTamper = logs.filter(l => l.type === 'STREAK_SPOOF_TAMPER').length;
+
+    if (elTotal) elTotal.textContent = total.toLocaleString();
+    if (elFrame) elFrame.textContent = frameTamper.toLocaleString();
+    if (elStreak) elStreak.textContent = streakTamper.toLocaleString();
+}
+window.updateSecurityCounters = updateSecurityCounters;

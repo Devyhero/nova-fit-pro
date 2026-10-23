@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.4';
+const APP_VERSION = '5.9.5';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -238,22 +238,323 @@ const APP_VERSION = '5.9.4';
             if (!state.bodyTab) state.bodyTab = 'weight';
             if (!state.weightsByDate || typeof state.weightsByDate !== 'object') state.weightsByDate = {};
             if (!state.workoutsByDate || typeof state.workoutsByDate !== 'object') state.workoutsByDate = {};
-            if (typeof state.streakDays !== 'number' || state.streakDays < 1) state.streakDays = 1;
+            if (typeof state.streakDays !== 'number' || state.streakDays < 0) state.streakDays = 0;
             if (!state.prestigeFrame) state.prestigeFrame = 'novice';
+            verifyAndSanitizeStreak();
         }
 
         function saveState() {
             try {
+                verifyAndSanitizeStreak();
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
                 const badge = document.getElementById('saveBadge');
                 if (badge) badge.textContent = '✓ บันทึกแล้ว (' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ')';
                 window.state = state;
+                if (window.renderPrestigeFrames) {
+                    window.renderPrestigeFrames();
+                }
                 if (window.triggerCloudSync) {
                     window.triggerCloudSync();
                 }
             } catch (e) {
                 console.error('Failed to save state:', e);
             }
+        }
+
+        // ==========================================
+        // 🏆 PRESTIGE AVATAR FRAMES & ANTI-CHEAT ENGINE (Phase 2 & 3)
+        // ==========================================
+        const PRESTIGE_TIERS = {
+            novice: {
+                id: 'novice',
+                name: 'Novice',
+                title: '⚪ Novice (ระดับเริ่มต้น)',
+                minDays: 0,
+                badgeEmoji: '⚪',
+                desc: 'ขอบเงินเมทัลลิกเรียบหรู มินิมอล สบายตา ได้ทันทีทุกคนเมื่อเริ่มต้นใช้งาน',
+                frameClass: 'avatar-frame-novice',
+                colorBadge: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+            },
+            bronze: {
+                id: 'bronze',
+                name: 'Bronze Sprout',
+                title: '🟢 Bronze Sprout (ต้นกล้ามีวินัย • 3 วัน)',
+                minDays: 3,
+                badgeEmoji: '🌱',
+                desc: 'กรอบนีออนสีเขียวมรกตเรืองแสง พร้อมประกายใบไม้ธรรมชาติ สื่อถึงจุดเริ่มต้นของการมีวินัยสุขภาพ',
+                frameClass: 'avatar-frame-bronze',
+                colorBadge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+            },
+            silver: {
+                id: 'silver',
+                name: 'Silver Striker',
+                title: '🔵 Silver Striker (นักสู้สายฟ้า • 7 วัน)',
+                minDays: 7,
+                badgeEmoji: '⚡',
+                desc: 'วงแหวนสีฟ้าไซยานอลตัดน้ำเงินคราม เปล่งประกายแสงความเร็วและดาววิบวับ สื่อถึงพลังงานและความคล่องตัว',
+                frameClass: 'avatar-frame-silver',
+                colorBadge: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
+            },
+            gold: {
+                id: 'gold',
+                name: 'Gold Champion',
+                title: '🟡 Gold Champion (แชมเปียนไฟลุก • 30 วัน)',
+                minDays: 30,
+                badgeEmoji: '👑',
+                desc: 'เปลวไฟสีทองคำประกายส้มแอมเบอร์ลุกโชนอย่างสง่างาม 360° พร้อมมงกุฎแชมเปียน สื่อถึงการสร้างนิสัยและวินัยเหล็ก',
+                frameClass: 'avatar-frame-gold',
+                colorBadge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+            },
+            diamond: {
+                id: 'diamond',
+                name: 'Diamond Nova',
+                title: '🟣 Diamond Nova (เพชรนีออนโฮโลแกรม • VIP / 100 วัน)',
+                minDays: 100,
+                badgeEmoji: '💎',
+                desc: 'กรอบเพชรคอสมิกสีรุ้งเหลือบแสง (Holographic Iridescent) ประดับดาวประกายเพชร สื่อถึงระดับตำนานและผู้สนับสนุน VIP',
+                frameClass: 'avatar-frame-diamond',
+                colorBadge: 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
+            }
+        };
+
+        function calculateVerifiedStreak(logsByDate, todayStr) {
+            if (!logsByDate || typeof logsByDate !== 'object') return 0;
+            const hasMeals = (d) => Array.isArray(logsByDate[d]) && logsByDate[d].filter(m => m && m.name && String(m.name).trim() !== '').length >= 1;
+            
+            const today = new Date(todayStr + 'T00:00:00');
+            let current = new Date(today);
+            let streak = 0;
+            
+            if (hasMeals(todayStr)) {
+                streak = 1;
+                while (true) {
+                    current.setDate(current.getDate() - 1);
+                    const dStr = current.toISOString().split('T')[0];
+                    if (hasMeals(dStr)) {
+                        streak++;
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                current.setDate(current.getDate() - 1);
+                const yestStr = current.toISOString().split('T')[0];
+                if (hasMeals(yestStr)) {
+                    streak = 1;
+                    while (true) {
+                        current.setDate(current.getDate() - 1);
+                        const dStr = current.toISOString().split('T')[0];
+                        if (hasMeals(dStr)) {
+                            streak++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    streak = 0;
+                }
+            }
+            return streak;
+        }
+
+        function isFrameUnlocked(tierId, verifiedStreak, isVip) {
+            const tier = PRESTIGE_TIERS[tierId];
+            if (!tier) return false;
+            if (tierId === 'novice') return true;
+            if (tierId === 'diamond' && isVip) return true;
+            return (Number(verifiedStreak) || 0) >= tier.minDays;
+        }
+
+        function verifyAndSanitizeStreak() {
+            if (typeof state === 'undefined' || !state) return;
+            const todayStr = getTodayStr();
+            const verified = calculateVerifiedStreak(state.logsByDate, todayStr);
+            const claimed = Number(state.streakDays) || 0;
+            
+            // Anti-cheat verification: streak cannot artificially exceed mathematically verified active days
+            if (claimed > verified) {
+                if (window.recordSecurityAuditLog) {
+                    window.recordSecurityAuditLog({
+                        type: 'STREAK_SPOOF_TAMPER',
+                        reason: `Claimed streak (${claimed} days) exceeds verified consecutive meal days (${verified} days)`,
+                        details: { claimed, verified, todayStr }
+                    });
+                }
+                state.streakDays = verified;
+            } else {
+                state.streakDays = verified;
+            }
+            
+            // Verify active prestige frame legality
+            if (!PRESTIGE_TIERS[state.prestigeFrame] || !isFrameUnlocked(state.prestigeFrame, state.streakDays, state.isVip)) {
+                if (state.prestigeFrame !== 'novice' && window.recordSecurityAuditLog) {
+                    window.recordSecurityAuditLog({
+                        type: 'ILLEGAL_FRAME_DOWNGRADE',
+                        reason: `Active frame '${state.prestigeFrame}' was not legally unlocked by streak (${state.streakDays} days)`,
+                        details: { frame: state.prestigeFrame, verifiedStreak: state.streakDays }
+                    });
+                }
+                state.prestigeFrame = 'novice';
+            }
+        }
+
+        function openPrestigeWardrobeModal() {
+            verifyAndSanitizeStreak();
+            renderWardrobeModal();
+            openModalAnimated('prestigeWardrobeModal');
+        }
+
+        function closePrestigeWardrobeModal() {
+            closeModalAnimated('prestigeWardrobeModal');
+        }
+
+        function closePrestigeWardrobeModalOnBackdrop(e) {
+            if (e && e.target && e.target.id === 'prestigeWardrobeModal') {
+                closePrestigeWardrobeModal();
+            }
+        }
+
+        function equipPrestigeFrame(tierId) {
+            verifyAndSanitizeStreak();
+            const tier = PRESTIGE_TIERS[tierId];
+            if (!tier) return;
+            const verifiedStreak = calculateVerifiedStreak(state.logsByDate, getTodayStr());
+            const unlocked = isFrameUnlocked(tierId, verifiedStreak, state.isVip);
+            
+            if (!unlocked) {
+                if (window.recordSecurityAuditLog) {
+                    window.recordSecurityAuditLog({
+                        type: 'UNAUTHORIZED_PRESTIGE_EQUIP',
+                        reason: `User attempted to equip locked frame '${tierId}' (requires ${tier.minDays} days, user has ${verifiedStreak})`,
+                        details: { attemptedFrame: tierId, reqDays: tier.minDays, verifiedStreak, isVip: !!state.isVip }
+                    });
+                }
+                state.prestigeFrame = 'novice';
+                saveState();
+                renderPrestigeFrames();
+                renderWardrobeModal();
+                showToast(`⚠️ ยังไม่สามารถสวมใส่ได้ (ต้องการสตรีคต่อเนื่อง ${tier.minDays} วัน)`);
+                return;
+            }
+
+            state.prestigeFrame = tierId;
+            saveState();
+            renderPrestigeFrames();
+            renderWardrobeModal();
+            showToast(`✨ สวมใส่กรอบ ${tier.name} เรียบร้อยแล้ว!`);
+        }
+
+        function renderPrestigeFrames() {
+            verifyAndSanitizeStreak();
+            const activeTier = PRESTIGE_TIERS[state.prestigeFrame] || PRESTIGE_TIERS.novice;
+            const streakCount = Number(state.streakDays) || 0;
+            
+            const userAvatarWrapper = document.getElementById('userAvatarWrapper');
+            const userAvatarBadge = document.getElementById('userAvatarBadge');
+            const userStreakBadge = document.getElementById('userStreakBadgeCount');
+            if (userAvatarWrapper) {
+                userAvatarWrapper.className = `avatar-frame-box ${activeTier.frameClass}`;
+            }
+            if (userAvatarBadge) {
+                userAvatarBadge.textContent = activeTier.badgeEmoji;
+            }
+            if (userStreakBadge) {
+                userStreakBadge.textContent = streakCount;
+            }
+
+            const guestAvatarWrapper = document.getElementById('guestAvatarWrapper');
+            const guestAvatarBadge = document.getElementById('guestAvatarBadge');
+            const guestStreakBadge = document.getElementById('guestStreakBadgeCount');
+            if (guestAvatarWrapper) {
+                guestAvatarWrapper.className = `avatar-frame-box ${activeTier.frameClass}`;
+            }
+            if (guestAvatarBadge) {
+                guestAvatarBadge.textContent = activeTier.badgeEmoji;
+            }
+            if (guestStreakBadge) {
+                guestStreakBadge.textContent = streakCount;
+            }
+        }
+
+        function renderWardrobeModal() {
+            const streakCount = Number(state.streakDays) || 0;
+            const streakEl = document.getElementById('wardrobeCurrentStreakText');
+            if (streakEl) streakEl.textContent = `${streakCount} วัน`;
+
+            const activeTier = PRESTIGE_TIERS[state.prestigeFrame] || PRESTIGE_TIERS.novice;
+            const activeNameEl = document.getElementById('wardrobeActiveFrameName');
+            if (activeNameEl) activeNameEl.textContent = `${activeTier.badgeEmoji} ${activeTier.name}`;
+
+            const listEl = document.getElementById('wardrobeTiersList');
+            if (!listEl) return;
+
+            const tiers = Object.values(PRESTIGE_TIERS);
+            listEl.innerHTML = tiers.map(tier => {
+                const isUnlocked = isFrameUnlocked(tier.id, streakCount, state.isVip);
+                const isActive = state.prestigeFrame === tier.id;
+                const progressPct = tier.minDays === 0 ? 100 : Math.min(100, Math.round((streakCount / tier.minDays) * 100));
+                
+                let actionBtnHtml = '';
+                if (isActive) {
+                    actionBtnHtml = `
+                        <button type="button" disabled class="px-3.5 py-1.5 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/40 font-bold text-xs flex items-center gap-1 cursor-default">
+                            <span>✓</span> ใช้งานอยู่
+                        </button>
+                    `;
+                } else if (isUnlocked) {
+                    actionBtnHtml = `
+                        <button type="button" onclick="equipPrestigeFrame('${tier.id}')" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer">
+                            สวมใส่
+                        </button>
+                    `;
+                } else {
+                    const daysLeft = tier.minDays - streakCount;
+                    actionBtnHtml = `
+                        <button type="button" disabled class="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700/60 text-slate-400 font-bold text-xs flex items-center gap-1 cursor-not-allowed">
+                            <span>🔒</span> ขาดอีก ${daysLeft} วัน
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${isActive ? 'border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'border-slate-200 dark:border-slate-700'} flex items-center gap-3 transition">
+                        <!-- Left: Avatar Preview with Frame & Ornament -->
+                        <div class="shrink-0 p-1">
+                            <div class="avatar-frame-box ${tier.frameClass}">
+                                <div class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-base overflow-hidden">
+                                    <span>👤</span>
+                                </div>
+                                <span class="frame-ornament-badge">${tier.badgeEmoji}</span>
+                            </div>
+                        </div>
+
+                        <!-- Center: Info & Progress -->
+                        <div class="min-w-0 flex-1 space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${tier.title}</h4>
+                                ${isUnlocked ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tier.colorBadge}">ปลดล็อกแล้ว</span>` : ''}
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">${tier.desc}</p>
+                            ${tier.minDays > 0 ? `
+                                <div class="space-y-0.5 pt-0.5">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                        <span>ความคืบหน้า</span>
+                                        <span class="font-bold text-slate-600 dark:text-slate-300">${Math.min(streakCount, tier.minDays)} / ${tier.minDays} วัน (${progressPct}%)</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style="width: ${progressPct}%"></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Right: Action Button -->
+                        <div class="shrink-0">
+                            ${actionBtnHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function showToast(msg) {
@@ -623,6 +924,7 @@ const APP_VERSION = '5.9.4';
             if (window.renderDailyHealthTip) window.renderDailyHealthTip();
             if (window.checkDailyTipNotification) window.checkDailyTipNotification();
             updateVersionBadges();
+            renderPrestigeFrames();
             renderAllSectionCollapses();
             syncResponsiveLayout();
             if (typeof triggerLivingCompanionCheck === 'function') {
@@ -4305,10 +4607,11 @@ const APP_VERSION = '5.9.4';
             ctx.fillText(`📅 ${thaiDate}  •  ${dayTypeTag}`, 60, 150);
 
             // Weight Pill (if recorded)
+            let pillW = 0;
             if (recordedWeight) {
                 const wText = `⚖️ น้ำหนัก: ${recordedWeight} กก.`;
                 ctx.font = 'bold 18px Prompt, sans-serif';
-                const pillW = ctx.measureText(wText).width + 32;
+                pillW = ctx.measureText(wText).width + 32;
                 ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
                 ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
                 ctx.lineWidth = 1.5;
@@ -4317,6 +4620,21 @@ const APP_VERSION = '5.9.4';
                 ctx.textAlign = 'center';
                 ctx.fillText(wText, W - 60 - pillW / 2, 85);
             }
+
+            // Prestige Frame & Streak Badge on Share Card
+            const activeTier = PRESTIGE_TIERS[state.prestigeFrame] || PRESTIGE_TIERS.novice;
+            const streakCount = Number(state.streakDays) || 0;
+            const streakText = `🏆 ${activeTier.name} • 🔥 ${streakCount} วัน`;
+            ctx.font = 'bold 18px Prompt, sans-serif';
+            const sW = ctx.measureText(streakText).width + 32;
+            const sX = recordedWeight ? (W - 60 - pillW - 12 - sW) : (W - 60 - sW);
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.15)';
+            ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+            ctx.lineWidth = 1.5;
+            roundRect(ctx, sX, 60, sW, 46, 23, true, true);
+            ctx.fillStyle = '#c084fc';
+            ctx.textAlign = 'center';
+            ctx.fillText(streakText, sX + sW / 2, 85);
 
             // 3. Calorie Hero Container
             const heroX = 60, heroY = 175, heroW = 960, heroH = 265;
@@ -6049,3 +6367,15 @@ window.showMilestoneBeatCard = showMilestoneBeatCard;
 window.dismissMilestoneCelebration = dismissMilestoneCelebration;
 window.reshuffleCurrentCompanionNudge = reshuffleCurrentCompanionNudge;
 window.checkMilestoneCelebrations = checkMilestoneCelebrations;
+
+// Prestige Avatar Frames & Anti-Cheat Engine (Phase 2 & 3)
+window.PRESTIGE_TIERS = PRESTIGE_TIERS;
+window.calculateVerifiedStreak = calculateVerifiedStreak;
+window.verifyAndSanitizeStreak = verifyAndSanitizeStreak;
+window.isFrameUnlocked = isFrameUnlocked;
+window.equipPrestigeFrame = equipPrestigeFrame;
+window.openPrestigeWardrobeModal = openPrestigeWardrobeModal;
+window.closePrestigeWardrobeModal = closePrestigeWardrobeModal;
+window.closePrestigeWardrobeModalOnBackdrop = closePrestigeWardrobeModalOnBackdrop;
+window.renderPrestigeFrames = renderPrestigeFrames;
+window.renderWardrobeModal = renderWardrobeModal;

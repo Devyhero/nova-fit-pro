@@ -176,6 +176,9 @@
                 <button type="button" onclick="switchAdminTab('system_ai')" id="tabBtn_system_ai" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
                     <span>🤖</span> <span>จัดการ Gemini AI & Quota</span>
                 </button>
+                <button type="button" onclick="switchAdminTab('security_logs')" id="tabBtn_security_logs" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
+                    <span>🛡️</span> <span>บันทึกความปลอดภัย & ป้องกันโกง</span>
+                </button>
             </div>
 
             <!-- VIEW 1: USERS DIRECTORY -->
@@ -528,12 +531,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.4
+                            Current Version: v5.9.5
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.5 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-indigo-500/10 border border-amber-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-amber-600 dark:text-amber-400 text-sm">🏆 v5.9.5 (Prestige Avatar Frames 5 Tiers, Anti-Cheat Streak Engine & Security Audit Tab - Phase 2 & 3)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">23 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🏆 Prestige Avatar Frames Engine (5 ลำดับขั้น):</b> สร้างระบบกรอบรูปเกียรติยศ Novice, Bronze Sprout, Silver Striker, Gold Champion, Diamond Nova ด้วย GPU CSS Animations (Breathing Pulse, Electric Speed Ring, Conic Fire 360°, Holographic Shift) พร้อมโมดอลแต่งตัว Wardrobe</li>
+                                <li><b>🛡️ Anti-Cheat Consecutive Streak Validator:</b> ฟังก์ชัน <code>calculateVerifiedStreak()</code> คำนวณวันต่อเนื่องที่แท้จริงจาก <code>state.logsByDate</code> อิงจากวันที่มีอาหารจริงอย่างน้อย 1 รายการ กฎขยับได้ไม่เกิน +1 วัน/ปฏิทิน ป้องกันการยิงสคริปต์แฮกตัวเลขและ DevTools Spoofing 100%</li>
+                                <li><b>🔒 Unauthorized Equip Guard & Firestore Audit:</b> ป้องกันและรีเซ็ตการพยายามสวมใส่กรอบระดับสูงโดยที่สตรีคไม่ถึงเกณฑ์ พร้อมฟังก์ชัน <code>recordSecurityAuditLog()</code> ยิงบันทึกพฤติกรรมน่าสงสัยเข้าคอลเลกชัน <code>security_audit_logs</code></li>
+                                <li><b>📊 Admin Security Incident Monitoring Tab:</b> เพิ่มแท็บบันทึกความปลอดภัยในหน้า Admin Dashboard พร้อม KPI ตรวจจับการโกง, ตาราง Audit Logs แบบละเอียด, และระบบ Pagination Engine แบบไดนามิก</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.4 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-emerald-500/10 border border-purple-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -969,6 +986,61 @@
                             <div class="text-slate-400 text-xs py-2">กำลังโหลดข้อมูลแคช...</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- VIEW 8: SECURITY AUDIT & ANTI-CHEAT LOGS (Phase 3) -->
+            <div id="tabView_security_logs" class="hidden space-y-4">
+                <!-- Stat Counters -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+                        <div class="text-xs text-slate-400 font-medium">🛡️ เหตุการณ์น่าสงสัยทั้งหมด</div>
+                        <div id="countSecurityTotal" class="text-2xl font-black text-rose-500 mt-1">0</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+                        <div class="text-xs text-slate-400 font-medium">⚠️ พยายามสวมกรอบผิดกฎ</div>
+                        <div id="countSecurityFrameTamper" class="text-2xl font-black text-amber-500 mt-1">0</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+                        <div class="text-xs text-slate-400 font-medium">🚫 พยายามปลอมแปลงสตรีค</div>
+                        <div id="countSecurityStreakTamper" class="text-2xl font-black text-purple-500 mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- Security Table Card -->
+                <div class="p-4 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                            <h3 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <span>🛡️</span> บันทึกการตรวจสอบความปลอดภัย & ป้องกันการโกง (Anti-Cheat Audit Logs)
+                            </h3>
+                            <p class="text-xs text-slate-400">บันทึกอุปกรณ์และผู้ใช้ที่พยายามยิงสคริปต์ ดัดแปลงตัวเลขสตรีค หรือสวมกรอบโปรไฟล์โดยไม่ผ่านเกณฑ์</p>
+                        </div>
+                        <button type="button" onclick="loadAdminSecurityLogs()" class="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 font-bold text-xs hover:bg-purple-100 transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                            <span>🔄</span> รีเฟรชข้อมูล
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 text-[11px] font-bold uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                                <tr>
+                                    <th class="p-3 whitespace-nowrap">วันเวลา (Time)</th>
+                                    <th class="p-3 whitespace-nowrap">ประเภทเหตุการณ์ (Type)</th>
+                                    <th class="p-3 whitespace-nowrap">ผู้ใช้ / อุปกรณ์ (Device/User)</th>
+                                    <th class="p-3 whitespace-nowrap">รายละเอียด & สาเหตุ (Reason & Details)</th>
+                                    <th class="p-3 whitespace-nowrap text-center">สถานะป้องกัน (Defense)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="securityLogsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                <tr>
+                                    <td colspan="5" class="p-6 text-center text-slate-400">กำลังโหลดบันทึกความปลอดภัย...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="securityLogsPagination" class="flex items-center justify-between pt-2"></div>
                 </div>
             </div>
 

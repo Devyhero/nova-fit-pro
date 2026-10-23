@@ -1279,6 +1279,161 @@ server.listen(PORT, async () => {
             throw new Error('Admin guest user filtering failed!');
         }
 
+        console.log('--- Test 35: Prestige Avatar Frames, Verified Streak & Anti-Cheat Engine (Phase 2 & 3) ---');
+        // Part A: Test Admin Security Logs Tab (we are already on admin.html)
+        const adminSecurityTest = await evalJs(`(() => {
+            const hasTabBtn = !!document.getElementById('tabBtn_security_logs');
+            const hasTabView = !!document.getElementById('tabView_security_logs');
+            const hasTotalCounter = !!document.getElementById('countSecurityTotal');
+            const hasFrameCounter = !!document.getElementById('countSecurityFrameTamper');
+            const hasStreakCounter = !!document.getElementById('countSecurityStreakTamper');
+
+            // Switch to security_logs tab
+            window.switchAdminTab('security_logs');
+            const isTabActive = !document.getElementById('tabView_security_logs').classList.contains('hidden');
+
+            // Mock security logs data
+            window.allSecurityLogsData = [
+                {
+                    id: 'sec_test_1',
+                    type: 'UNAUTHORIZED_PRESTIGE_EQUIP',
+                    reason: 'User attempted to equip locked frame diamond without required streak (100 days)',
+                    timestamp: new Date().toISOString(),
+                    platform: 'iOS',
+                    deviceId: 'dev_iphone_tamper_1',
+                    userEmail: 'guest',
+                    details: { attemptedFrame: 'diamond', reqDays: 100, verifiedStreak: 2 }
+                },
+                {
+                    id: 'sec_test_2',
+                    type: 'STREAK_SPOOF_TAMPER',
+                    reason: 'Claimed streak (999 days) exceeds verified consecutive meal days (1 days)',
+                    timestamp: new Date().toISOString(),
+                    platform: 'Desktop',
+                    deviceId: 'dev_mac_hacker_2',
+                    userEmail: 'hacker@example.com',
+                    details: { claimed: 999, verified: 1 }
+                }
+            ];
+            window.loadAdminSecurityLogs();
+
+            const totalText = document.getElementById('countSecurityTotal').textContent;
+            const frameText = document.getElementById('countSecurityFrameTamper').textContent;
+            const streakText = document.getElementById('countSecurityStreakTamper').textContent;
+            const tbodyHtml = document.getElementById('securityLogsTableBody').innerHTML;
+
+            const hasUnauthorizedRow = tbodyHtml.includes('พยายามสวมกรอบผิดกฎ') && tbodyHtml.includes('diamond');
+            const hasStreakRow = tbodyHtml.includes('ปลอมแปลงสตรีค') && tbodyHtml.includes('hacker@example.com');
+            const hasDefenseBadge = tbodyHtml.includes('สกัดกั้น &amp; รีเซ็ตสำเร็จ') || tbodyHtml.includes('สกัดกั้น & รีเซ็ตสำเร็จ');
+
+            return {
+                elementsExist: hasTabBtn && hasTabView && hasTotalCounter && hasFrameCounter && hasStreakCounter,
+                isTabActive,
+                totalText,
+                frameText,
+                streakText,
+                hasUnauthorizedRow,
+                hasStreakRow,
+                hasDefenseBadge
+            };
+        })()`);
+        console.log('Admin Security Audit Tab verified:', adminSecurityTest);
+        if (!adminSecurityTest.elementsExist || !adminSecurityTest.isTabActive || !adminSecurityTest.hasUnauthorizedRow || !adminSecurityTest.hasStreakRow) {
+            throw new Error('Admin Security Audit verification failed!');
+        }
+
+        // Part B: Navigate back to Main App and test Streak Math & Anti-Cheat Guards
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/' });
+        let isMainAppReady = false;
+        for (let i = 0; i < 25; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                isMainAppReady = await evalJs('typeof window.calculateVerifiedStreak === "function" && typeof window.equipPrestigeFrame === "function" && !!document.getElementById("btnGuestWardrobe")');
+                if (isMainAppReady) break;
+            } catch (e) {}
+        }
+        console.log('Main app ready for Prestige Frame test:', isMainAppReady);
+
+        const prestigeEngineTest = await evalJs(`(() => {
+            const todayStr = window.getTodayStr();
+            const dObj = new Date(todayStr + 'T00:00:00');
+            dObj.setDate(dObj.getDate() - 1);
+            const yestStr = dObj.toISOString().split('T')[0];
+            dObj.setDate(dObj.getDate() - 1);
+            const day2Str = dObj.toISOString().split('T')[0];
+
+            // 1. Test mathematical streak calculation
+            const emptyLogs = {};
+            const streakZero = window.calculateVerifiedStreak(emptyLogs, todayStr);
+
+            const oneDayLogs = { [todayStr]: [{ name: 'อกไก่ต้ม', cal: 150 }] };
+            const streakOne = window.calculateVerifiedStreak(oneDayLogs, todayStr);
+
+            const twoDayLogs = {
+                [yestStr]: [{ name: 'ไข่ต้ม', cal: 75 }],
+                [todayStr]: [{ name: 'อกไก่ต้ม', cal: 150 }]
+            };
+            const streakTwo = window.calculateVerifiedStreak(twoDayLogs, todayStr);
+
+            const threeDayLogs = {
+                [day2Str]: [{ name: 'สลัด', cal: 120 }],
+                [yestStr]: [{ name: 'ไข่ต้ม', cal: 75 }],
+                [todayStr]: [{ name: 'อกไก่ต้ม', cal: 150 }]
+            };
+            const streakThree = window.calculateVerifiedStreak(threeDayLogs, todayStr);
+
+            // 2. Test Anti-Cheat: Spoof tampering rejection
+            window.state.streakDays = 999;
+            window.state.logsByDate = oneDayLogs;
+            window.verifyAndSanitizeStreak();
+            const sanitizedStreak = window.state.streakDays; // Must be clamped to 1!
+
+            // 3. Test Unauthorized Frame Equip Rejection
+            window.state.prestigeFrame = 'novice';
+            window.state.isVip = false;
+            window.equipPrestigeFrame('diamond'); // Requires 100 days
+            const frameAfterIllegalEquip = window.state.prestigeFrame; // Must NOT be diamond!
+
+            // 4. Test Legitimate Frame Unlock & Equip
+            window.state.logsByDate = threeDayLogs;
+            window.verifyAndSanitizeStreak();
+            window.equipPrestigeFrame('bronze'); // Requires 3 days
+            const frameAfterLegalEquip = window.state.prestigeFrame; // Must be bronze!
+
+            // 5. Test Wardrobe Modal opening & rendering
+            window.openPrestigeWardrobeModal();
+            const wardrobeModal = document.getElementById('prestigeWardrobeModal');
+            const wardrobeList = document.getElementById('wardrobeTiersList');
+            const isWardrobeOpen = !wardrobeModal.classList.contains('hidden');
+            const wardrobeHasBronze = wardrobeList.innerHTML.includes('Bronze Sprout') && wardrobeList.innerHTML.includes('ใช้งานอยู่');
+            window.closePrestigeWardrobeModal();
+
+            return {
+                streakZero,
+                streakOne,
+                streakTwo,
+                streakThree,
+                sanitizedStreak,
+                frameAfterIllegalEquip,
+                frameAfterLegalEquip,
+                isWardrobeOpen,
+                wardrobeHasBronze
+            };
+        })()`);
+        console.log('Prestige Engine & Anti-Cheat verified:', prestigeEngineTest);
+
+        if (prestigeEngineTest.streakZero !== 0 ||
+            prestigeEngineTest.streakOne !== 1 ||
+            prestigeEngineTest.streakTwo !== 2 ||
+            prestigeEngineTest.streakThree !== 3 ||
+            prestigeEngineTest.sanitizedStreak !== 1 ||
+            prestigeEngineTest.frameAfterIllegalEquip === 'diamond' ||
+            prestigeEngineTest.frameAfterLegalEquip !== 'bronze' ||
+            !prestigeEngineTest.isWardrobeOpen ||
+            !prestigeEngineTest.wardrobeHasBronze) {
+            throw new Error('Prestige Avatar Frame & Anti-Cheat Engine test failed!');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');
