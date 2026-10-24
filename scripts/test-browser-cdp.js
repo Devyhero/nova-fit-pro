@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.16' ||
-            !v598Test.toolsBadge?.includes('v5.9.16')) {
+            v598Test.appVersion !== '5.9.17' ||
+            !v598Test.toolsBadge?.includes('v5.9.17')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 

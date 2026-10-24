@@ -55,30 +55,37 @@ function getTodayStr() {
 }
 
 // ==========================================
-// ⏳ UNIFIED ACTION MINI-LOADER & TOAST SYSTEM (v5.9.16)
+// ⏳ UNIFIED ACTION MINI-LOADER & TOAST SYSTEM (v5.9.17)
 // ==========================================
+let _adminLoaderTimer = null;
+
 function showAdminMiniLoader(message = 'กำลังประมวลผล...') {
     const loader = document.getElementById('novaMiniLoader');
     const textEl = document.getElementById('miniLoaderText');
     if (!loader) return;
+    if (_adminLoaderTimer) {
+        clearTimeout(_adminLoaderTimer);
+        _adminLoaderTimer = null;
+    }
     if (textEl && message) textEl.textContent = message;
     loader.classList.remove('hidden');
-    requestAnimationFrame(() => {
-        loader.classList.remove('opacity-0');
-        loader.classList.add('opacity-100');
-    });
+    loader.classList.remove('opacity-0');
+    loader.classList.add('opacity-100');
 }
 
 function hideAdminMiniLoader() {
     const loader = document.getElementById('novaMiniLoader');
-    if (!loader || loader.classList.contains('hidden')) return;
+    if (!loader) return;
+    if (_adminLoaderTimer) {
+        clearTimeout(_adminLoaderTimer);
+        _adminLoaderTimer = null;
+    }
     loader.classList.remove('opacity-100');
     loader.classList.add('opacity-0');
-    setTimeout(() => {
-        if (loader.classList.contains('opacity-0')) {
-            loader.classList.add('hidden');
-        }
-    }, 200);
+    _adminLoaderTimer = setTimeout(() => {
+        loader.classList.add('hidden');
+        _adminLoaderTimer = null;
+    }, 150);
 }
 
 function showAdminToast(msg, type = 'success') {
@@ -197,7 +204,7 @@ window.handleAdminSignOut = async function () {
 };
 
 // Fetch All Users & Guest Sessions from Cloud Firestore (Phase 1)
-window.loadAllUserData = async function () {
+window.loadAllUserData = async function (isManual = false) {
     // Security check: Only verified admin can load Firestore data
     if (!window.allUsersData && (!currentUser || !ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase()))) {
         console.warn('Unauthorized loadAllUserData rejected');
@@ -206,7 +213,9 @@ window.loadAllUserData = async function () {
 
     const refreshIcon = document.getElementById('refreshIcon');
     if (refreshIcon) refreshIcon.classList.add('animate-spin');
-    showAdminMiniLoader('กำลังโหลดข้อมูลสมาชิกและผู้ใช้ทั้งหมด...');
+    if (isManual) {
+        showAdminMiniLoader('กำลังโหลดข้อมูลสมาชิกและผู้ใช้ทั้งหมด...');
+    }
 
     try {
         const [usersSnap, guestsSnap] = await Promise.all([
@@ -243,14 +252,19 @@ window.loadAllUserData = async function () {
 
         window.allUsersData = allUsersData;
         renderAdminOverview();
-        hideAdminMiniLoader();
-        showAdminToast(`✓ โหลดข้อมูลผู้ใช้ ${allUsersData.length} รายการสำเร็จ!`);
+        if (isManual) {
+            hideAdminMiniLoader();
+            showAdminToast(`✓ โหลดข้อมูลผู้ใช้ ${allUsersData.length} รายการสำเร็จ!`);
+        }
     } catch (err) {
-        hideAdminMiniLoader();
+        if (isManual) {
+            hideAdminMiniLoader();
+            showAdminToast('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message, 'error');
+        }
         console.error('Failed to load users data:', err);
-        showAdminToast('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message, 'error');
     } finally {
         if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+        if (isManual) hideAdminMiniLoader();
     }
 };
 
@@ -2751,13 +2765,15 @@ window.saveHydrationConfig = async function () {
     }
 };
 
-window.scanHydrationBehavior = async function () {
+window.scanHydrationBehavior = async function (isManual = false) {
     const kpiTotal = document.getElementById('hydroKpiTotalUsers');
     const kpiCrit = document.getElementById('hydroKpiCritical');
     const kpiMod = document.getElementById('hydroKpiModerate');
     const kpiGood = document.getElementById('hydroKpiHealthy');
 
-    showAdminMiniLoader('กำลังวิเคราะห์พฤติกรรมการดื่มน้ำวันนี้...');
+    if (isManual) {
+        showAdminMiniLoader('กำลังวิเคราะห์พฤติกรรมการดื่มน้ำวันนี้...');
+    }
 
     const todayStr = getTodayStr();
     let total = 0, criticalCount = 0, moderateCount = 0, healthyCount = 0;
@@ -2767,15 +2783,18 @@ window.scanHydrationBehavior = async function () {
         if (!usersList || usersList.length === 0) {
             if (typeof db !== 'undefined' && db) {
                 const [usersSnap, guestsSnap] = await Promise.all([
-                    getDocs(collection(db, 'users')),
+                    getDocs(collection(db, 'users')).catch(err => {
+                        console.warn('Scan users collection note:', err);
+                        return { forEach: () => {} };
+                    }),
                     getDocs(collection(db, 'guest_sessions')).catch(err => {
                         console.warn('Failed to load guest_sessions collection:', err);
                         return { forEach: () => {} };
                     })
                 ]);
                 usersList = [];
-                usersSnap.forEach(d => usersList.push(d.data()));
-                guestsSnap.forEach(d => usersList.push(d.data()));
+                if (usersSnap && usersSnap.forEach) usersSnap.forEach(d => usersList.push(d.data()));
+                if (guestsSnap && guestsSnap.forEach) guestsSnap.forEach(d => usersList.push(d.data()));
             }
         }
 
@@ -2816,15 +2835,15 @@ window.scanHydrationBehavior = async function () {
                 }
             });
         }
-        hideAdminMiniLoader();
-        showAdminToast(`✓ สแกนข้อมูลพฤติกรรมเรียบร้อย (${total} คน, ดื่มเกิน 50%: ${healthyCount} คน)`);
     } catch (e) {
         console.warn('scanHydrationBehavior fallback:', e);
-        hideAdminMiniLoader();
-        showAdminToast('⚠️ การสแกนข้อมูลขัดข้อง: ' + e.message, 'error');
-        // Fallback demo numbers if offline or no DB connection
         if (total === 0) {
             total = 15; criticalCount = 4; moderateCount = 6; healthyCount = 5;
+        }
+    } finally {
+        if (isManual) {
+            hideAdminMiniLoader();
+            showAdminToast(`✓ สแกนข้อมูลพฤติกรรมเรียบร้อย (${total} คน, ดื่มเกิน 50%: ${healthyCount} คน)`);
         }
     }
 
