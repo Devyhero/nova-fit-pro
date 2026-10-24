@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.18';
+const APP_VERSION = '5.9.19';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -576,36 +576,44 @@ const APP_VERSION = '5.9.18';
         }
 
         // ==========================================
-        // APP TOUR & INTERACTIVE GUIDE ENGINE (v5.9.12)
+        // APP TOUR & INTERACTIVE GUIDE ENGINE (v5.9.19)
         // ==========================================
         const TOUR_SLIDES = [
             {
                 icon: '🥑',
-                tag: 'สเต็ป 1 จาก 5 • ยินดีต้อนรับ',
+                tag: 'สเต็ป 1 จาก 6 • ยินดีต้อนรับ',
                 title: 'ยินดีต้อนรับสู่ NovaFit Pro!',
-                desc: 'เพื่อนคู่คิดด้านโภชนาการและการออกกำลังกาย ช่วยคุณคำนวณแคลอรีและสารอาหารหลัก (Macro) ให้เข้ากับเป้าหมายอย่างแม่นยำ',
+                desc: 'เพื่อนคู่คิดด้านโภชนาการและการออกกำลังกาย ช่วยคุณคำนวณแคลอรีและสารอาหารหลัก (Macro) รายบุคคลตามเป้าหมายอย่างแม่นยำ',
                 tipTitle: '💡 เคล็ดลับการเริ่มต้น',
-                tipContent: 'เริ่มตั้งค่าส่วนสูง น้ำหนัก และเป้าหมายของคุณได้ที่เมนู "⚙️ จัดการ" ➔ "ตั้งค่าข้อมูลร่างกาย & Macro"'
+                tipContent: 'เริ่มต้นด้วยการตั้งค่าส่วนสูง น้ำหนักตัว และเป้าหมายของคุณ เพื่อให้ระบบคำนวณ TDEE และสัดส่วนอาหารที่แม่นยำที่สุด'
+            },
+            {
+                icon: '📲',
+                tag: 'สเต็ป 2 จาก 6 • ติดตั้งลงหน้าจอโฮม',
+                title: 'วิธีติดตั้งลงหน้าจอโฮม (Home Screen)',
+                desc: 'เปิดใช้งานแบบเต็มหน้าจอ (Full Screen) เหมือนแอปจริงบนมือถือ รวดเร็ว ลื่นไหล ไม่เกะกะแถบเบราว์เซอร์ และรับแจ้งเตือนได้ดีที่สุด',
+                tipTitle: '📌 ขั้นตอนติดตั้งง่ายๆ ใน 2 วินาที',
+                tipContent: '<div class="space-y-1.5 text-[11px]"><div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60"><b class="text-emerald-600 dark:text-emerald-400">🍏 สำหรับ iPhone / iPad (Safari):</b><br>แตะปุ่มแชร์ <b>⎋ (Share)</b> ที่แถบล่าง ➔ เลื่อนลงเลือก <b>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen ➕)</b> ➔ แตะ "เพิ่ม"</div><div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60"><b class="text-sky-600 dark:text-sky-400">🤖 สำหรับ Android (Chrome):</b><br>แตะจุดสามจุด <b>⋮</b> มุมบนขวา ➔ เลือก <b>"ติดตั้งแอป" (Install)</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก ➕"</b></div></div><button type="button" onclick="handlePwaInstallClick()" class="w-full mt-2 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"><span>📲</span> <span>แตะเพื่อติดตั้งแอปลงเครื่องทันที</span></button>'
             },
             {
                 icon: '📸',
-                tag: 'สเต็ป 2 จาก 5 • สแกนอาหาร AI',
+                tag: 'สเต็ป 3 จาก 6 • สแกนอาหาร AI',
                 title: 'ถ่ายรูปอาหาร บันทึกแคลอรีทันใจ',
                 desc: 'แตะปุ่ม "📸 สแกนอาหารด้วย AI" เพื่อถ่ายรูปจานข้าวของคุณ AI อัจฉริยะจะช่วยประเมินชื่ออาหาร แคลอรี และสารอาหารให้ทันทีใน 2 วินาที',
-                tipTitle: '⚡ ระบบ Smart Food Cache',
-                tipContent: 'เมนูยอดฮิตกว่า 280+ รายการจะถูกค้นหาและจำค่าอัตโนมัติ ทำให้บันทึกได้เร็วปานสายฟ้าแลบ'
+                tipTitle: '⚡ คลังอาหารกว่า 280+ รายการ',
+                tipContent: 'สามารถค้นหาหรือแตะปุ่ม "+" เพื่อบันทึกอาหารไทยยอดฮิต หรือกด "➕ กรอกเพิ่มเมนูเอง" หากเป็นสูตรส่วนตัวของคุณ'
             },
             {
                 icon: '💧',
-                tag: 'สเต็ป 3 จาก 5 • จิบน้ำ & IF',
+                tag: 'สเต็ป 4 จาก 6 • จิบน้ำ & IF',
                 title: 'ติดตามการดื่มน้ำ & นาฬิกา IF',
-                desc: 'แตะ +250 มล. เมื่อดื่มน้ำเพื่อเติมหลอดความชุ่มชื้น พร้อมระบบจับเวลาทำ Intermittent Fasting (IF) นับถอยหลังช่วง Fasting และ Feasting แบบเรียลไทม์',
-                tipTitle: '🌊 สถิติน้ำ & ช่วงเวลาอดอาหาร',
-                tipContent: 'ระบบจำค่าการดื่มน้ำและเวลากดเริ่ม IF ไว้ในเครื่อง สามารถใช้งานต่อได้แม้ออฟไลน์'
+                desc: 'แตะ +250 มล. เมื่อดื่มน้ำเพื่อเติมหลอดความชุ่มชื้น พร้อมระบบจับเวลาทำ Intermittent Fasting (IF 16:8 ถึง 20:4) นับถอยหลังช่วง Fasting และ Feasting แบบเรียลไทม์',
+                tipTitle: '🔔 แจ้งเตือนเตือนจิบน้ำอัจฉริยะ',
+                tipContent: 'ระบบจะวิเคราะห์การดื่มน้ำช่วงบ่าย หากดื่มน้อยกว่า 50% จะมีข้อความส่งกำลังใจชวนจิบน้ำถึงหน้าจอล็อค'
             },
             {
                 icon: '🏆',
-                tag: 'สเต็ป 4 จาก 5 • สตรีค & กรอบโปรไฟล์',
+                tag: 'สเต็ป 5 จาก 6 • สตรีค & กรอบโปรไฟล์',
                 title: 'สะสมสตรีค & กรอบเกียรติยศ',
                 desc: 'บันทึกอาหารจริงทุกวันเพื่อสะสมสตรีคต่อเนื่อง ปลดล็อกกรอบโปรไฟล์ 5 ลำดับขั้น (เริ่มต้น ➔ ทองแดง ➔ เงิน ➔ ทอง ➔ เพชร) อวดความมีวินัยของคุณ',
                 tipTitle: '🛡️ ระบบป้องกันสตรีคปลอดภัย',
@@ -613,11 +621,11 @@ const APP_VERSION = '5.9.18';
             },
             {
                 icon: '🔔',
-                tag: 'สเต็ป 5 จาก 5 • แจ้งเตือนอัจฉริยะ',
+                tag: 'สเต็ป 6 จาก 6 • แจ้งเตือนอัจฉริยะ',
                 title: 'เชื่อมต่อแจ้งเตือน & สมาร์ตวอทช์',
                 desc: 'เปิดรับแจ้งเตือนเพื่อรับข้อความเตือนกินข้าวกลางวัน เย็น และเตือนเซฟสตรีค รองรับการสั่นเตือนบน Apple Watch & สมาร์ตวอทช์',
-                tipTitle: '🔊 เสียงเอฟเฟกต์ในแอป',
-                tipContent: 'สนุกขึ้นด้วยเสียง Pop ตอนบันทึกอาหาร และปรับเปิด/ปิดเสียงได้สะดวกในเมนูตั้งค่า'
+                tipTitle: '🔊 เสียงและระบบสั่น',
+                tipContent: 'สามารถเปิด/ปิดการแจ้งเตือนและเสียงเอฟเฟกต์ (Sound FX) ได้อย่างอิสระในเมนูปุ่ม "⚙️ จัดการ"'
             }
         ];
 
@@ -660,16 +668,11 @@ const APP_VERSION = '5.9.18';
                 btnNextText.textContent = isLast ? 'เริ่มใช้งานทันที! 🚀' : 'ถัดไป';
             }
 
-            // Update Dots
+            // Update Dots dynamically
             if (dotsContainer) {
-                const dots = dotsContainer.querySelectorAll('button');
-                dots.forEach((dot, idx) => {
-                    if (idx === currentTourSlideIndex) {
-                        dot.className = 'w-6 h-2 rounded-full bg-emerald-500 transition-all';
-                    } else {
-                        dot.className = 'w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700 transition-all';
-                    }
-                });
+                dotsContainer.innerHTML = TOUR_SLIDES.map((_, idx) => `
+                    <button type="button" onclick="goToTourSlide(${idx})" class="${idx === currentTourSlideIndex ? 'w-6 h-2 rounded-full bg-emerald-500 transition-all cursor-pointer' : 'w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700 transition-all cursor-pointer'}"></button>
+                `).join('');
             }
         }
 
@@ -689,13 +692,11 @@ const APP_VERSION = '5.9.18';
             if (window.saveTourSeenToCloud) {
                 window.saveTourSeenToCloud();
             }
-            // If user hasn't configured profile yet, prompt them right after tour
-            const hasProfilePrompted = localStorage.getItem('novafit_profile_prompted');
-            if (!hasProfilePrompted && !state.profileConfigured) {
-                localStorage.setItem('novafit_profile_prompted', 'true');
+            // If user hasn't configured profile yet, prompt them right after tour!
+            if (!state.profileConfigured) {
                 setTimeout(() => {
                     openProfileSettingsModal();
-                    showToast('⚙️ ขั้นตอนสุดท้าย: กรอกข้อมูลร่างกายเพื่อคำนวณเป้าหมายส่วนตัวของคุณ');
+                    showToast('⚙️ สเต็ปสำคัญ: กรอกข้อมูลร่างกายและกด "✓ บันทึกข้อมูลเรียบร้อย" เพื่อเริ่มใช้งาน');
                 }, 400);
             }
         }
@@ -740,6 +741,7 @@ const APP_VERSION = '5.9.18';
         window.nextTourSlide = nextTourSlide;
         window.prevTourSlide = prevTourSlide;
         window.goToTourSlide = goToTourSlide;
+        window.TOUR_SLIDES = TOUR_SLIDES;
 
         function equipPrestigeFrame(tierId) {
             verifyAndSanitizeStreak();
@@ -1160,27 +1162,17 @@ const APP_VERSION = '5.9.18';
 
             if (badge) {
                 if (perm === 'granted') {
-                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold';
-                    badge.textContent = '✓ เปิดใช้งานแล้ว';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold';
+                    badge.textContent = 'เปิด';
                 } else if (perm === 'denied') {
-                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold';
-                    badge.textContent = '✕ ปิดกั้นในเบราว์เซอร์';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold';
+                    badge.textContent = 'บล็อก';
                 } else if (perm === 'unsupported') {
-                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
                     badge.textContent = 'ไม่รองรับ';
                 } else {
-                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold';
-                    badge.textContent = 'ยังไม่ได้เปิด';
-                }
-            }
-
-            if (btn) {
-                if (perm === 'granted') {
-                    btn.textContent = '🔔 ส่งข้อความทดสอบ';
-                    btn.className = 'px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer';
-                } else {
-                    btn.textContent = 'เปิดแจ้งเตือน';
-                    btn.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
+                    badge.textContent = 'ปิด';
                 }
             }
 
@@ -6197,7 +6189,7 @@ function saveAndConfirmProfileSettings() {
 function checkFirstVisitProfilePrompt() {
     const tourSeen = localStorage.getItem('novafit_tour_seen');
     // 1. If brand new visitor hasn't seen the tour, show App Tour first!
-    if (!tourSeen && window._isFirstTimeVisitor) {
+    if (!tourSeen) {
         setTimeout(() => {
             openAppTourModal();
         }, 500);

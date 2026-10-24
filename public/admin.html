@@ -570,12 +570,28 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.18
+                            Current Version: v5.9.19
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.19 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">📲 v5.9.19 (PWA Home Screen Tour Guide, Decoupled Profile Modal, Preferences Reorganization & Admin Action Isolation)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📲 PWA Home Screen Installation Guide:</b> เพิ่มคำแนะนำติดตั้งแอปบนหน้าจอโฮมในสไลด์ที่ 2 ของ <code>TOUR_SLIDES</code> พร้อมแยกคำแนะนำสำหรับ iOS (Safari: Share ⎋ ➔ Add to Home Screen ➕) และ Android (Chrome: เมนู ⋮ ➔ ติดตั้งแอป) และปุ่มคำสั่งติดตั้งด่วน <code>handlePwaInstallClick()</code></li>
+                                <li><b>🥑 Dynamic 6-Slide Onboarding Engine:</b> อัปเกรดระบบทัวร์แนะนำแอปเป็น 6 สเต็ปอย่างครบถ้วน (TDEE/Macro, Home Screen, ถ่ายรูปอาหาร, บันทึกน้ำ/IF, สตรีค/กรอบเกียรติยศ, และการแจ้งเตือน) พร้อมระบบเรนเดอร์ Dot Indicator แบบไดนามิกตามจำนวนสไลด์จริง</li>
+                                <li><b>👤 Decoupled Profile Settings Modal:</b> แยกการตั้งค่าการแจ้งเตือนและระบบเสียงออกจาก <code>profileSettingsModal</code> ให้หน้าต่างมุ่งเน้นเฉพาะการตั้งค่าสรีระร่างกาย (เพศ, อายุ, ส่วนสูง, น้ำหนัก, กิจกรรม) และเป้าหมายสารอาหารหลัก (Protein/Carb/Fat) อย่างเป็นระเบียบและไม่รกตา</li>
+                                <li><b>⚙️ Structured Tools & Preferences Menu:</b> จัดระเบียบเมนูดร็อปดาวน์ <code>#toolsDropdownMenu</code> แบ่งออกเป็น 4 หมวดชัดเจน: 1. ร่างกาย & เป้าหมาย 2. ตั้งค่าแอป & การแจ้งเตือน (ย้ายการเปิดปิด Push และ Sound FX มาไว้ที่นี่) 3. แชร์ & ข้อมูล 4. เครื่องมือแอดมิน</li>
+                                <li><b>🛡️ Strict Administrative Action Isolation:</b> แยกปุ่มความเสี่ยงสูงระดับ Developer/Admin (รีเซ็ตข้อมูลทั้งหมด, นำเข้า/ส่งออก JSON, และทดสอบ Watch Companion) ออกจากมุมมองผู้ใช้งานทั่วไป นำไปจัดเก็บไว้ใน <code>#adminToolsSection</code> เพื่อให้เปิดแสดงเฉพาะผู้ดูแลระบบเท่านั้น</li>
+                                <li><b>🎯 Guaranteed First-Visit Profile Setup:</b> ปรับปรุง <code>checkFirstVisitProfilePrompt()</code> ให้เปิดทัวร์แนะนำแอปสำหรับผู้ใช้ใหม่ และเมื่อจบทัวร์จะเปิดหน้าต่างตั้งค่าร่างกายทันที รวมถึงเรียกเตือนให้ตั้งค่าร่างกายซ้ำในทุกการเข้าใช้งานจนกว่าจะกดยืนยัน (<code>state.profileConfigured === true</code>)</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.19 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.18 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

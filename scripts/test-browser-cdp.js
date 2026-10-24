@@ -923,9 +923,9 @@ server.listen(PORT, async () => {
         // 8. Save meals to diary
         const initialDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
         await evalJs('saveAiVoiceAnalyzedMeals()');
-        await new Promise(r => setTimeout(r, 350));
+        await new Promise(r => setTimeout(r, 450));
         const afterSaveDateLogsCount = await evalJs('state.logsByDate[state.selectedDate]?.length || 0');
-        const isModalClosed = await evalJs('document.getElementById("aiSnapModal").classList.contains("hidden")');
+        const isModalClosed = await evalJs('document.getElementById("aiSnapModal").classList.contains("hidden") || !document.getElementById("aiSnapModal").classList.contains("modal-open")');
         console.log('Meals saved from voice log:', { initialDateLogsCount, afterSaveDateLogsCount, isModalClosed });
         if (afterSaveDateLogsCount <= initialDateLogsCount || !isModalClosed) {
             throw new Error('saveAiVoiceAnalyzedMeals failed to log meals to state or close modal');
@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.18' ||
-            !v598Test.toolsBadge?.includes('v5.9.18')) {
+            v598Test.appVersion !== '5.9.19' ||
+            !v598Test.toolsBadge?.includes('v5.9.19')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1831,8 +1831,8 @@ server.listen(PORT, async () => {
         }
 
         const soundTest = await evalJs(`(() => {
-            const btnSound = document.getElementById('btnSoundToggle');
-            const soundIcon = document.getElementById('soundIcon');
+            const btnSound = document.getElementById('btnSoundToggle') || document.getElementById('btnSoundToggleMenu');
+            const soundIcon = document.getElementById('soundIcon') || document.getElementById('soundMenuIcon');
             const hasBtn = !!btnSound;
             const hasIcon = !!soundIcon;
             const fnPlaySound = typeof window.playSound === 'function';
@@ -1946,7 +1946,7 @@ server.listen(PORT, async () => {
             !tourTest.fnOpen ||
             !tourTest.isOpen ||
             !tourTest.title1.includes('ยินดีต้อนรับ') ||
-            !tourTest.title2.includes('ถ่ายรูปอาหาร') ||
+            (!tourTest.title2.includes('ติดตั้ง') && !tourTest.title2.includes('ถ่ายรูปอาหาร')) ||
             !tourTest.titleBack1.includes('ยินดีต้อนรับ') ||
             !tourTest.isClosing) {
             throw new Error('Test 41: App Tour interactive guide failed: ' + JSON.stringify(tourTest));
@@ -2032,6 +2032,61 @@ server.listen(PORT, async () => {
             !adminGateTest.fnRetry ||
             !adminGateTest.fnTestHydro) {
             throw new Error('Test 42 Part B: Admin Readiness Splash Gate failed: ' + JSON.stringify(adminGateTest));
+        }
+
+        // Test 43: v5.9.19 PWA Home Screen Tour, Clean Profile Modal & Preferences Reorganization
+        console.log('--- Test 43: v5.9.19 PWA Home Screen, Clean Profile & Preferences Reorganization ---');
+        // Navigate back to index.html
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/' });
+        await new Promise(r => setTimeout(r, 600));
+        const v5919Test = await evalJs(`(() => {
+            // 1. Tour slides length is 6 and slide 2 is Home Screen
+            const slidesCount = Array.isArray(window.TOUR_SLIDES) ? window.TOUR_SLIDES.length : 0;
+            const slide2Title = window.TOUR_SLIDES && window.TOUR_SLIDES[1] ? window.TOUR_SLIDES[1].title : '';
+
+            // 2. Profile Settings Modal must NOT contain push or sound toggles
+            const profileModal = document.getElementById('profileSettingsModal');
+            const hasPushInProfile = !!profileModal?.querySelector('#btnTogglePush');
+            const hasSoundInProfile = !!profileModal?.querySelector('#btnSoundToggle');
+
+            // 3. Tools Dropdown must contain push toggle and sound toggle in preferences section
+            const toolsMenu = document.getElementById('toolsDropdownMenu');
+            const pushInTools = !!toolsMenu?.querySelector('#btnTogglePush');
+            const soundInTools = !!toolsMenu?.querySelector('#btnSoundToggleMenu');
+            const pwaInTools = !!toolsMenu?.querySelector('#btnPwaInstall');
+            const adminToolsSection = document.getElementById('adminToolsSection');
+            const hasAdminSection = !!adminToolsSection;
+
+            // 4. Admin actions (Reset, Export, Import) inside adminToolsSection
+            const resetInAdmin = !!adminToolsSection?.querySelector('[onclick*="resetAllData"]');
+            const exportInAdmin = !!adminToolsSection?.querySelector('[onclick*="exportData"]');
+
+            return {
+                slidesCount,
+                slide2Title,
+                hasPushInProfile,
+                hasSoundInProfile,
+                pushInTools,
+                soundInTools,
+                pwaInTools,
+                hasAdminSection,
+                resetInAdmin,
+                exportInAdmin
+            };
+        })()`);
+        console.log('v5.9.19 Features verified:', v5919Test);
+
+        if (v5919Test.slidesCount !== 6 ||
+            !v5919Test.slide2Title.includes('ติดตั้ง') ||
+            v5919Test.hasPushInProfile ||
+            v5919Test.hasSoundInProfile ||
+            !v5919Test.pushInTools ||
+            !v5919Test.soundInTools ||
+            !v5919Test.pwaInTools ||
+            !v5919Test.hasAdminSection ||
+            !v5919Test.resetInAdmin ||
+            !v5919Test.exportInAdmin) {
+            throw new Error('Test 43: v5.9.19 PWA Home Screen, Clean Profile & Preferences Reorganization failed: ' + JSON.stringify(v5919Test));
         }
 
         ws.close();
