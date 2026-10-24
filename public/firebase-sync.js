@@ -134,7 +134,33 @@ async function fetchSystemAiConfig() {
     }
 }
 
-// Fetch System Mascot & AI Companion Configuration from Firestore (system_config/mascot) - v5.9.22
+// Fetch & Listen System Mascot & AI Companion Configuration from Firestore (system_config/mascot) - v5.9.23
+let unsubscribeMascotConfig = null;
+
+function setupRealtimeMascotConfigListener() {
+    if (unsubscribeMascotConfig) {
+        unsubscribeMascotConfig();
+        unsubscribeMascotConfig = null;
+    }
+
+    try {
+        const mascotDocRef = doc(db, 'system_config', 'mascot');
+        unsubscribeMascotConfig = onSnapshot(mascotDocRef, (snap) => {
+            if (snap.exists()) {
+                const mascotConfig = snap.data();
+                if (mascotConfig && typeof window.applyRemoteMascotConfig === 'function') {
+                    window.applyRemoteMascotConfig(mascotConfig);
+                }
+            }
+        }, (err) => {
+            console.warn('Realtime mascot config listener fallback or failed:', err);
+        });
+    } catch (err) {
+        console.warn('Failed to attach realtime mascot config listener:', err);
+    }
+}
+window.setupRealtimeMascotConfigListener = setupRealtimeMascotConfigListener;
+
 async function fetchSystemMascotConfig() {
     try {
         const snap = await getDoc(doc(db, 'system_config', 'mascot'));
@@ -149,6 +175,9 @@ async function fetchSystemMascotConfig() {
     }
 }
 window.fetchSystemMascotConfig = fetchSystemMascotConfig;
+
+// Initialize realtime listener immediately
+setupRealtimeMascotConfigListener();
 
 // Listen for authentication changes
 onAuthStateChanged(auth, async (user) => {
@@ -177,8 +206,8 @@ onAuthStateChanged(auth, async (user) => {
         syncGuestSession();
     }
 
-    // Always fetch mascot remote config (for both guest & logged in users)
-    fetchSystemMascotConfig();
+    // Always setup & fetch mascot remote config (for both guest & logged in users)
+    setupRealtimeMascotConfigListener();
 
     if (window.syncPushTokenToCloud) {
         window.syncPushTokenToCloud();

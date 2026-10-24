@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.22';
+const APP_VERSION = '5.9.23';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -853,6 +853,11 @@ const APP_VERSION = '5.9.22';
             }
             if (guestStreakBadge) {
                 guestStreakBadge.textContent = streakCount;
+            }
+
+            // Sync user avatar to companion chat history if rendered - v5.9.23
+            if (typeof window.refreshUserAvatarsInChat === 'function') {
+                window.refreshUserAvatarsInChat();
             }
         }
 

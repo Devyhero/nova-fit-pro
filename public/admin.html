@@ -570,14 +570,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.22
+                            Current Version: v5.9.23
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.22 -->
+                        <!-- Release: v5.9.23 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🥑 v5.9.23 (Dynamic Chat User Avatar & Real-time Mascot Configuration Listener)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>👤 Dynamic User Chat Avatar:</b> ปรับปรุง <code>appendUserMessage</code> ใน <code>mascot-companion.js</code> ให้ดึงรูปโปรไฟล์จริงของผู้ใช้จาก <code>state.userAvatarUrl</code> หรือ <code>window.currentUser.photoURL</code> มาแสดงเป็นอวาตาร์ทรงกลม (40x40px touch-safe) ในกล่องข้อความฝั่ง User พร้อม Graceful fallback และติดตั้ง <code>window.refreshUserAvatarsInChat()</code> อัปเดตรูปเดิมในแชตอัตโนมัติเมื่อผู้ใช้เปลี่ยนรูปโปรไฟล์ใน <code>renderPrestigeFrames()</code></li>
+                                <li><b>⚡ Real-Time Mascot Remote Sync (Zero Reload):</b> ปรับปรุงสถาปัตยกรรมการดึงค่าคอนฟิกจาก Cloud Firestore <code>system_config/mascot</code> ใน <code>firebase-sync.js</code> จากการอ่านแบบครั้งเดียว (<code>getDoc</code>) มาใช้ <code>onSnapshot</code> เพื่อให้คำสั่งเปิด/ปิดบอทจากหน้า Admin หรือการเปลี่ยนข้อความบรอดแคสต์ส่งผลทันทีต่อ Client ทุกเครื่องที่เปิดใช้งานอยู่ โดยไม่ต้องรีเฟรชหน้าเว็บหรือล็อกอินใหม่</li>
+                                <li><b>🛡️ Resilience & Local Fallback:</b> เพิ่มระบบ Safe Guard <code>applyRemoteMascotConfig()</code> เพื่อให้กรณีออฟไลน์หรือไม่มีสิทธิ์ Firestore rules ยังคงใช้ Local Config หรือ Fallback ได้อย่างไร้รอยต่อโดยไม่มี Unhandled Promise Rejection</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.23 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.22 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🥑 v5.9.22 (MeowNova Remote Control Hub, Dynamic Speech Broadcast & Zero-Token Governance)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>

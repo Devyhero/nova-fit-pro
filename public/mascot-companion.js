@@ -467,18 +467,46 @@
         }
     }
 
+    // Helper: Refresh rendered avatars in chat history if profile updated - v5.9.23
+    function refreshUserAvatarsInChat() {
+        const rows = document.querySelectorAll('#novaChatHistory .user-msg-row');
+        if (!rows || rows.length === 0) return;
+        const st = window.state || {};
+        const customAvatar = st.userAvatarUrl || '';
+        const googlePhoto = (window.currentUser && window.currentUser.photoURL) || '';
+        const effectiveAvatar = customAvatar || googlePhoto;
+        const avatarHtml = effectiveAvatar
+            ? `<img src="${escapeHtml(effectiveAvatar)}" alt="User" class="w-full h-full object-cover user-avatar-in-chat">`
+            : `<span>👤</span>`;
+
+        rows.forEach(r => {
+            const avatarBox = r.querySelector('div:last-child');
+            if (avatarBox) avatarBox.innerHTML = avatarHtml;
+        });
+    }
+
     function appendUserMessage(text) {
         const history = document.getElementById('novaChatHistory');
         if (!history) return;
 
+        // Fetch User Avatar (Custom Profile Photo, Google Photo, or Default) - v5.9.23
+        const st = window.state || {};
+        const customAvatar = st.userAvatarUrl || '';
+        const googlePhoto = (window.currentUser && window.currentUser.photoURL) || '';
+        const effectiveAvatar = customAvatar || googlePhoto;
+
+        const avatarHtml = effectiveAvatar
+            ? `<img src="${escapeHtml(effectiveAvatar)}" alt="User" class="w-full h-full object-cover user-avatar-in-chat">`
+            : `<span>👤</span>`;
+
         const row = document.createElement('div');
-        row.className = 'flex justify-end gap-2 animate-pop';
+        row.className = 'flex justify-end gap-2 animate-pop user-msg-row';
         row.innerHTML = `
             <div class="max-w-[80%] p-3 rounded-2xl rounded-tr-xs bg-emerald-500 text-white text-xs leading-relaxed shadow-sm font-medium">
                 ${escapeHtml(text)}
             </div>
-            <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs shrink-0 select-none">
-                👤
+            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs shrink-0 select-none overflow-hidden shadow-xs">
+                ${avatarHtml}
             </div>
         `;
         history.appendChild(row);
@@ -876,6 +904,8 @@
     window.generateSmartLocalAdvice = generateSmartLocalAdvice;
     window.applyRemoteMascotConfig = applyRemoteMascotConfig;
     window.getRemoteMascotConfig = getRemoteMascotConfig;
+    window.refreshUserAvatarsInChat = refreshUserAvatarsInChat;
+    window.appendUserMessage = appendUserMessage;
     window.initNovaMascotCompanion = initNovaMascotCompanion;
 
     // Auto-init when DOM ready

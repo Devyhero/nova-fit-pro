@@ -1630,8 +1630,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.22' ||
-            !v598Test.toolsBadge?.includes('v5.9.22')) {
+            v598Test.appVersion !== '5.9.23' ||
+            !v598Test.toolsBadge?.includes('v5.9.23')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2259,9 +2259,21 @@ server.listen(PORT, async () => {
             throw new Error('Test 45: Smart Time-Based Meal Selector failed: ' + JSON.stringify(smartMealTest));
         }
 
-        // Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22)
-        console.log('--- Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22) ---');
+        // Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22 - v5.9.23)
+        console.log('--- Test 46: MeowNova Remote Control Hub, Avatar & Zero-Token Policy (v5.9.23) ---');
         const remoteConfigTest = await evalJs(`(() => {
+            // Test User Avatar rendering in Chat
+            const chatHistory = document.getElementById('novaChatHistory');
+            if (window.state) {
+                window.state.userAvatarUrl = 'https://example.com/mock-avatar-user.jpg';
+            }
+            if (typeof window.appendUserMessage === 'function') {
+                window.appendUserMessage('ทดสอบข้อความพร้อมรูปโปรไฟล์จริง');
+            }
+            const lastMsg = chatHistory ? chatHistory.lastElementChild : null;
+            const userImg = lastMsg ? lastMsg.querySelector('img.user-avatar-in-chat') : null;
+            const hasUserAvatarImg = !!userImg && userImg.src.includes('mock-avatar-user.jpg');
+
             // 1. Test applyRemoteMascotConfig - kill switch
             if (typeof applyRemoteMascotConfig === 'function') {
                 applyRemoteMascotConfig({ enabled: false });
@@ -2296,6 +2308,7 @@ server.listen(PORT, async () => {
             }
 
             return {
+                hasUserAvatarImg,
                 containerHiddenOnKill,
                 pillHiddenOnKill,
                 broadcastWorks,
@@ -2305,12 +2318,13 @@ server.listen(PORT, async () => {
         })()`);
         console.log('MeowNova Remote Config verified:', remoteConfigTest);
 
-        if (!remoteConfigTest.containerHiddenOnKill ||
+        if (!remoteConfigTest.hasUserAvatarImg ||
+            !remoteConfigTest.containerHiddenOnKill ||
             !remoteConfigTest.pillHiddenOnKill ||
             !remoteConfigTest.broadcastWorks ||
             !remoteConfigTest.doseUpdated ||
             !remoteConfigTest.forceLocalUpdated) {
-            throw new Error('Test 46: MeowNova Remote Config failed: ' + JSON.stringify(remoteConfigTest));
+            throw new Error('Test 46: MeowNova Remote Config or User Avatar failed: ' + JSON.stringify(remoteConfigTest));
         }
 
         ws.close();
