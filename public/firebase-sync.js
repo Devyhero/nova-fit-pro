@@ -286,10 +286,20 @@ function setupRealtimeCloudListener(user) {
             isFirstSnapshot = false;
 
             const promptKey = 'novafit_profile_prompted_' + user.uid;
+            const tourKey = 'novafit_tour_seen_' + user.uid;
             const alreadyPrompted = localStorage.getItem(promptKey);
+            const tourAlreadySeen = localStorage.getItem(tourKey) || localStorage.getItem('novafit_tour_seen') || cloudData?.tourSeen;
             const hasExistingWeight = window.state?.profile?.weight && Number(window.state.profile.weight) > 0 && !window._isFirstTimeVisitor;
 
-            if (cloudData && !cloudData.profileConfigured && !alreadyPrompted && !hasExistingWeight) {
+            if (cloudData && !tourAlreadySeen && !alreadyPrompted && !hasExistingWeight) {
+                // Show App Tour first for new cloud member
+                localStorage.setItem(tourKey, 'true');
+                setTimeout(() => {
+                    if (window.openAppTourModal) {
+                        window.openAppTourModal();
+                    }
+                }, 400);
+            } else if (cloudData && !cloudData.profileConfigured && !alreadyPrompted && !hasExistingWeight) {
                 localStorage.setItem(promptKey, 'true');
                 setTimeout(() => {
                     if (window.openProfileSettingsModal) {
@@ -638,6 +648,20 @@ window.saveProfileConfiguredToCloud = async function () {
         console.log('✅ Saved profileConfigured: true to Firestore for user:', currentUser.uid);
     } catch (err) {
         console.warn('Failed to save profileConfigured to Firestore:', err);
+    }
+};
+
+window.saveTourSeenToCloud = async function () {
+    if (!currentUser) return;
+    try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userDocRef, {
+            tourSeen: true,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log('✅ Saved tourSeen: true to Firestore for user:', currentUser.uid);
+    } catch (err) {
+        console.warn('Failed to save tourSeen to Firestore:', err);
     }
 };
 

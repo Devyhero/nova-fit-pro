@@ -683,6 +683,21 @@ const APP_VERSION = '5.9.12';
         function closeAppTourModal() {
             closeModalAnimated('appTourModal');
             localStorage.setItem('novafit_tour_seen', 'true');
+            if (window.currentUser) {
+                localStorage.setItem('novafit_tour_seen_' + window.currentUser.uid, 'true');
+            }
+            if (window.saveTourSeenToCloud) {
+                window.saveTourSeenToCloud();
+            }
+            // If user hasn't configured profile yet, prompt them right after tour
+            const hasProfilePrompted = localStorage.getItem('novafit_profile_prompted');
+            if (!hasProfilePrompted && !state.profileConfigured) {
+                localStorage.setItem('novafit_profile_prompted', 'true');
+                setTimeout(() => {
+                    openProfileSettingsModal();
+                    showToast('⚙️ ขั้นตอนสุดท้าย: กรอกข้อมูลร่างกายเพื่อคำนวณเป้าหมายส่วนตัวของคุณ');
+                }, 400);
+            }
         }
 
         function closeAppTourModalOnBackdrop(e) {
@@ -6135,6 +6150,16 @@ function closeProfileSettingsModal() {
 }
 
 function checkFirstVisitProfilePrompt() {
+    const tourSeen = localStorage.getItem('novafit_tour_seen');
+    // 1. If brand new visitor hasn't seen the tour, show App Tour first!
+    if (!tourSeen && window._isFirstTimeVisitor) {
+        setTimeout(() => {
+            openAppTourModal();
+        }, 500);
+        return;
+    }
+
+    // 2. Otherwise fallback to standard profile prompt if profile not configured
     const hasPrompted = localStorage.getItem('novafit_profile_prompted');
     if (!hasPrompted && window._isFirstTimeVisitor) {
         localStorage.setItem('novafit_profile_prompted', 'true');
