@@ -53,7 +53,16 @@
     try {
         const cachedRemote = localStorage.getItem('novafit_system_mascot_config');
         if (cachedRemote) {
-            _remoteMascotConfig = { ..._remoteMascotConfig, ...JSON.parse(cachedRemote) };
+            const parsed = JSON.parse(cachedRemote);
+            const cachedModes = (parsed && typeof parsed.modes === 'object') ? parsed.modes : {};
+            _remoteMascotConfig = {
+                ..._remoteMascotConfig,
+                ...parsed,
+                modes: {
+                    ...(_remoteMascotConfig.modes || {}),
+                    ...cachedModes
+                }
+            };
         }
     } catch (e) { }
 
@@ -310,13 +319,60 @@
         const menu = document.getElementById('novaQuickMenu');
         if (!menu) return;
 
+        // Check if quick menu role is disabled by Admin
+        if (_remoteMascotConfig.modes?.quickMenu === false) {
+            menu.classList.add('hidden');
+            if (!forceClose) {
+                // If quick menu is disabled, tapping mascot can directly trigger greeting bubble or feedback
+                if (_remoteMascotConfig.modes?.floatingBubble !== false) {
+                    showNovaSpeechBubble();
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('🥑 เมนูลัดถูกปิดโดยผู้ดูแลระบบเมี้ยว');
+                }
+            }
+            return;
+        }
+
         const isHidden = menu.classList.contains('hidden');
         if (forceClose || !isHidden) {
             menu.classList.add('hidden');
         } else {
             hideNovaSpeechBubble();
+            // Sync visible quick action buttons according to feature modes
+            syncQuickMenuButtons();
             menu.classList.remove('hidden');
             playSfx('pop');
+        }
+    }
+
+    // Synchronize individual quick action buttons according to remote modes
+    function syncQuickMenuButtons() {
+        const waterBtn = document.getElementById('novaQuickActionWater');
+        const snapBtn = document.getElementById('novaQuickActionAiSnap');
+        const chatBtn = document.getElementById('novaQuickActionChat');
+        const doseSpan = document.getElementById('novaQuickWaterText');
+
+        if (doseSpan) {
+            const dose = _remoteMascotConfig.quickWaterDose || 250;
+            doseSpan.textContent = `+1 แก้วทันที (${dose}ml)`;
+        }
+
+        // If quickMenu itself is disabled, whole menu will be closed
+        if (_remoteMascotConfig.modes?.quickMenu === false) {
+            if (waterBtn) waterBtn.classList.add('hidden');
+            if (snapBtn) snapBtn.classList.add('hidden');
+        } else {
+            if (waterBtn) waterBtn.classList.remove('hidden');
+            if (snapBtn) snapBtn.classList.remove('hidden');
+        }
+
+        // AI Chat button inside quick menu
+        if (chatBtn) {
+            if (_remoteMascotConfig.modes?.aiChat === false) {
+                chatBtn.classList.add('hidden');
+            } else {
+                chatBtn.classList.remove('hidden');
+            }
         }
     }
 
@@ -463,7 +519,12 @@
         if (typeof window.closeModalAnimated === 'function') {
             window.closeModalAnimated('novaChatModal');
         } else {
-            document.getElementById('novaChatModal')?.classList.add('hidden');
+            const modal = document.getElementById('novaChatModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-open');
+                modal.style.display = 'none';
+            }
         }
     }
 
@@ -872,10 +933,34 @@
 
     function applyRemoteMascotConfig(cfg) {
         if (!cfg || typeof cfg !== 'object') return;
-        _remoteMascotConfig = { ..._remoteMascotConfig, ...cfg };
+        
+        // Deep merge modes to prevent partial overwrite bugs
+        const incomingModes = (cfg.modes && typeof cfg.modes === 'object') ? cfg.modes : {};
+        _remoteMascotConfig = {
+            ..._remoteMascotConfig,
+            ...cfg,
+            modes: {
+                ...(_remoteMascotConfig.modes || {}),
+                ...incomingModes
+            }
+        };
+
         try {
             localStorage.setItem('novafit_system_mascot_config', JSON.stringify(_remoteMascotConfig));
         } catch (e) { }
+
+        // Immediately enforce UI state based on updated modes
+        if (_remoteMascotConfig.modes?.floatingBubble === false) {
+            hideNovaSpeechBubble();
+        }
+        if (_remoteMascotConfig.modes?.quickMenu === false) {
+            toggleNovaQuickMenu(true);
+        }
+        if (_remoteMascotConfig.modes?.aiChat === false) {
+            closeNovaChatModal();
+        }
+        syncQuickMenuButtons();
+
         renderNovaMascot();
         renderMascotMenuBadge();
         updateChatQuotaUI();

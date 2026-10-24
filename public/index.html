@@ -692,7 +692,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.23)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.24)
                         </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
@@ -1576,11 +1576,35 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.23!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.24!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.23 -->
+                <!-- Latest Release: v5.9.24 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🥑</span> v5.9.24 (ระบบควบคุมบทบาท MeowNova แม่นยำ & ซิงค์เมนูลัดทันที)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">25 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🎭</span>
+                            <span><b>ควบคุมบทบาทมาสคอตแยกอิสระ:</b> เมื่อปิดบทบาทบับเบิ้ลลอย เมนูลัด หรือแชตจากหน้าแอดมิน ระบบจะซ่อนและปิดกั้นบทบาทนั้นบนหน้าจอทันทีแบบเรียลไทม์</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">⚡</span>
+                            <span><b>ซิงค์เมนูลัดฉับไว:</b> อัปเดตปุ่มในเมนูลัดของน้อง MeowNova อัตโนมัติตามสิทธิ์ที่เปิดใช้งาน โดยไม่ต้องรีโหลดหน้าเว็บ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">🛡️</span>
+                            <span><b>ป้องกันข้อผิดพลาดการผสานข้อมูล:</b> ปรับปรุงการบันทึกสถานะบทบาทให้แม่นยำ 100% ป้องกันการทับซ้อนของการตั้งค่า</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.23 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>🥑</span> v5.9.23 (รูปโปรไฟล์ในแชต MeowNova & อัปเดตการตั้งค่าบอททันใจ)
@@ -4166,22 +4190,22 @@
         <!-- Mascot Quick Action Menu (Role 2) -->
         <div id="novaQuickMenu" class="hidden flex flex-col items-end gap-2 mb-1 animate-pop">
             <!-- Action 1: +1 Glass of Water -->
-            <button type="button" onclick="quickAddWaterFromMascot()"
+            <button type="button" id="novaQuickActionWater" onclick="quickAddWaterFromMascot()"
                 class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-cyan-500 hover:bg-cyan-600 active:scale-95 text-white font-bold text-xs shadow-lg transition cursor-pointer">
-                <span>💧</span> <span>+1 แก้วทันที (250ml)</span>
+                <span>💧</span> <span id="novaQuickWaterText">+1 แก้วทันที (250ml)</span>
             </button>
             <!-- Action 2: Quick AI Food Scan -->
-            <button type="button" onclick="quickOpenAiSnapFromMascot()"
+            <button type="button" id="novaQuickActionAiSnap" onclick="quickOpenAiSnapFromMascot()"
                 class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs shadow-lg transition cursor-pointer">
                 <span>📸</span> <span>สแกนอาหาร (AI Snap)</span>
             </button>
             <!-- Action 3: AI Health Coach Chat -->
-            <button type="button" onclick="openNovaChatModal()"
+            <button type="button" id="novaQuickActionChat" onclick="openNovaChatModal()"
                 class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-bold text-xs shadow-lg transition cursor-pointer">
                 <span>💬</span> <span>ถามโค้ชเหมียวโนวา (AI Chat)</span>
             </button>
             <!-- Action 4: Minimize / Rest -->
-            <button type="button" onclick="minimizeNovaMascot()"
+            <button type="button" id="novaQuickActionMinimize" onclick="minimizeNovaMascot()"
                 class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-200/90 dark:bg-slate-700/90 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-bold text-[10px] shadow transition cursor-pointer">
                 <span>💤</span> <span>พักผ่อน / ย่อเก็บ</span>
             </button>
@@ -4293,22 +4317,22 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.23"></script>
+    <script src="food-db.js?v=5.9.24"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.23"></script>
+    <script src="health-tips.js?v=5.9.24"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.23"></script>
+    <script src="ai-snap.js?v=5.9.24"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.23"></script>
+    <script src="app.js?v=5.9.24"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.23"></script>
+    <script src="mascot-companion.js?v=5.9.24"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.23"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.24"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

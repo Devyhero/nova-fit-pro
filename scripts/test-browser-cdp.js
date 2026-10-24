@@ -1630,8 +1630,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.23' ||
-            !v598Test.toolsBadge?.includes('v5.9.23')) {
+            v598Test.appVersion !== '5.9.24' ||
+            !v598Test.toolsBadge?.includes('v5.9.24')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2093,6 +2093,13 @@ server.listen(PORT, async () => {
         // Test 44: v5.9.20 Nova Mascot Companion Engine, 4-Tier Guard & Quick Action Hub
         console.log('--- Test 44: v5.9.20 Nova Mascot Companion Engine & 4-Tier Guard ---');
         const mascotTest = await evalJs(`(() => {
+            // Ensure defaults in test session
+            if (typeof applyRemoteMascotConfig === 'function') {
+                applyRemoteMascotConfig({
+                    enabled: true,
+                    modes: { floatingBubble: true, quickMenu: true, aiChat: true }
+                });
+            }
             // 1. Elements Exist
             const container = document.getElementById('novaMascotContainer');
             const mascotBtn = document.getElementById('novaMascotBtn');
@@ -2155,6 +2162,7 @@ server.listen(PORT, async () => {
                 localAdviceWorks = shabuAdvice.includes('ชาบู') && proteinAdvice.includes('โปรตีน');
             }
 
+            const isModalOpenBeforeClose = isChatModalOpen;
             if (typeof window.closeNovaChatModal === 'function') {
                 window.closeNovaChatModal();
             }
@@ -2173,7 +2181,7 @@ server.listen(PORT, async () => {
                 isPillVisible,
                 isContainerHidden,
                 isContainerRestored,
-                isChatModalOpen,
+                isChatModalOpen: isModalOpenBeforeClose,
                 tier1Deflected,
                 localAdviceWorks
             };
@@ -2259,8 +2267,8 @@ server.listen(PORT, async () => {
             throw new Error('Test 45: Smart Time-Based Meal Selector failed: ' + JSON.stringify(smartMealTest));
         }
 
-        // Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22 - v5.9.23)
-        console.log('--- Test 46: MeowNova Remote Control Hub, Avatar & Zero-Token Policy (v5.9.23) ---');
+        // Test 46: MeowNova Remote Control Hub, Granular Modes & Zero-Token Policy (v5.9.24)
+        console.log('--- Test 46: MeowNova Remote Control Hub, Modes & Zero-Token Policy (v5.9.24) ---');
         const remoteConfigTest = await evalJs(`(() => {
             // Test User Avatar rendering in Chat
             const chatHistory = document.getElementById('novaChatHistory');
@@ -2274,14 +2282,51 @@ server.listen(PORT, async () => {
             const userImg = lastMsg ? lastMsg.querySelector('img.user-avatar-in-chat') : null;
             const hasUserAvatarImg = !!userImg && userImg.src.includes('mock-avatar-user.jpg');
 
-            // 1. Test applyRemoteMascotConfig - kill switch
+            // 1. Test applyRemoteMascotConfig - Feature Modes (v5.9.24)
+            // Test Disable Bubble Mode
+            applyRemoteMascotConfig({
+                modes: { floatingBubble: false }
+            });
+            showNovaSpeechBubble('ทดสอบบับเบิ้ลขณะปิด');
+            const bubbleEl = document.getElementById('novaSpeechBubble');
+            const bubbleBlockedWhenDisabled = bubbleEl?.classList.contains('hidden');
+
+            // Test Disable Quick Menu Mode
+            applyRemoteMascotConfig({
+                modes: { quickMenu: false }
+            });
+            toggleNovaQuickMenu();
+            const quickMenuEl = document.getElementById('novaQuickMenu');
+            const quickMenuBlockedWhenDisabled = quickMenuEl?.classList.contains('hidden');
+
+            // Ensure modal is closed before testing blocked open
+            const chatModalEl = document.getElementById('novaChatModal');
+            if (chatModalEl) {
+                chatModalEl.classList.add('hidden');
+                chatModalEl.classList.remove('modal-open');
+                chatModalEl.style.display = 'none';
+            }
+
+            // Test Disable AI Chat Mode
+            applyRemoteMascotConfig({
+                modes: { aiChat: false }
+            });
+            openNovaChatModal();
+            const chatBlockedWhenDisabled = chatModalEl?.classList.contains('hidden') || chatModalEl?.style.display === 'none';
+
+            // Restore modes to true
+            applyRemoteMascotConfig({
+                modes: { floatingBubble: true, quickMenu: true, aiChat: true }
+            });
+
+            // 2. Test applyRemoteMascotConfig - kill switch
             if (typeof applyRemoteMascotConfig === 'function') {
                 applyRemoteMascotConfig({ enabled: false });
             }
             const containerHiddenOnKill = document.getElementById('novaMascotContainer')?.classList.contains('hidden');
             const pillHiddenOnKill = document.getElementById('novaMascotPill')?.classList.contains('hidden');
 
-            // 2. Test applyRemoteMascotConfig - custom speech broadcast
+            // 3. Test applyRemoteMascotConfig - custom speech broadcast
             if (typeof applyRemoteMascotConfig === 'function') {
                 applyRemoteMascotConfig({
                     enabled: true,
@@ -2303,12 +2348,16 @@ server.listen(PORT, async () => {
                     enabled: true,
                     customBroadcast: '',
                     quickWaterDose: 250,
-                    forceLocalOnly: false
+                    forceLocalOnly: false,
+                    modes: { floatingBubble: true, quickMenu: true, aiChat: true }
                 });
             }
 
             return {
                 hasUserAvatarImg,
+                bubbleBlockedWhenDisabled,
+                quickMenuBlockedWhenDisabled,
+                chatBlockedWhenDisabled,
                 containerHiddenOnKill,
                 pillHiddenOnKill,
                 broadcastWorks,
@@ -2316,15 +2365,18 @@ server.listen(PORT, async () => {
                 forceLocalUpdated
             };
         })()`);
-        console.log('MeowNova Remote Config verified:', remoteConfigTest);
+        console.log('MeowNova Remote Config & Granular Modes verified:', remoteConfigTest);
 
         if (!remoteConfigTest.hasUserAvatarImg ||
+            !remoteConfigTest.bubbleBlockedWhenDisabled ||
+            !remoteConfigTest.quickMenuBlockedWhenDisabled ||
+            !remoteConfigTest.chatBlockedWhenDisabled ||
             !remoteConfigTest.containerHiddenOnKill ||
             !remoteConfigTest.pillHiddenOnKill ||
             !remoteConfigTest.broadcastWorks ||
             !remoteConfigTest.doseUpdated ||
             !remoteConfigTest.forceLocalUpdated) {
-            throw new Error('Test 46: MeowNova Remote Config or User Avatar failed: ' + JSON.stringify(remoteConfigTest));
+            throw new Error('Test 46: MeowNova Remote Config, Modes, or User Avatar failed: ' + JSON.stringify(remoteConfigTest));
         }
 
         ws.close();
