@@ -227,6 +227,115 @@ exports.scheduledPushReminders = onSchedule({
                 console.log(`⏰ Scheduled reminder for [${slotKey}] dispatched to ${sendPromises.length} devices.`);
             }
         }
+
+        // ----------------------------------------------------
+        // 💧 Smart Behavioral Hydration Automated Dispatcher (v5.9.17)
+        // ----------------------------------------------------
+        try {
+            const hydroDoc = await db.collection("push_schedules").doc("hydration_behavior_config").get();
+            if (hydroDoc.exists) {
+                const hConfig = hydroDoc.data()?.config || {};
+                const triggerTime = hConfig.triggerTime || "14:30";
+                const [hH, hM] = triggerTime.split(":").map(Number);
+                const hTotalMinutes = (hH || 14) * 60 + (hM || 30);
+                const hDiff = currentTotalMinutes - hTotalMinutes;
+
+                // Trigger if within a 30-minute window of trigger time
+                if (hDiff >= 0 && hDiff < 30) {
+                    const lastHydroDispatched = hydroDoc.data()?.lastDispatched;
+                    if (lastHydroDispatched !== todayStr) {
+                        const critMsgs = Array.isArray(hConfig.criticalMsgs) && hConfig.criticalMsgs.length > 0
+                            ? hConfig.criticalMsgs
+                            : ["🥱 บ่ายนี้เริ่มล้า สมองตื้ออยู่มั้ย? เช็คดูแล้ววันนี้เพิ่งได้น้ำไปนิดเดียวเอง! ลุกไปจิบน้ำสัก 1 แก้วตอนนี้เลยนะ 💧"];
+                        const modMsgs = Array.isArray(hConfig.moderateMsgs) && hConfig.moderateMsgs.length > 0
+                            ? hConfig.moderateMsgs
+                            : ["🥤 บ่ายนี้เติมความสดชื่นอีกนิด! ดื่มน้ำเพิ่มอีก 1-2 แก้วจะแตะ 50% ของเป้าหมายแล้วนะ 💧"];
+
+                        const [usersSnap, guestsSnap, tokensSnap] = await Promise.all([
+                            db.collection("users").get(),
+                            db.collection("guest_sessions").get(),
+                            db.collection("fcm_tokens").get()
+                        ]);
+
+                        // Map user/device water states
+                        const userWaterMap = new Map();
+                        const processUserWater = (docId, data) => {
+                            const st = data.state || {};
+                            const waterLogs = st.waterByDate || {};
+                            let todayGlasses = 0;
+                            if (typeof waterLogs[todayStr] === 'number') {
+                                todayGlasses = waterLogs[todayStr];
+                            } else if (data.stats && typeof data.stats.waterGlassesToday === 'number') {
+                                todayGlasses = data.stats.waterGlassesToday;
+                            }
+                            const w = parseFloat(st.profile?.weight || data.weight || 60);
+                            const targetWaterMl = Math.round(w * 35) || 2000;
+                            const waterMl = (todayGlasses > 30) ? todayGlasses : (todayGlasses * 250);
+                            const pct = Math.round((waterMl / targetWaterMl) * 100);
+                            userWaterMap.set(docId, pct);
+                        };
+
+                        usersSnap.forEach(d => processUserWater(d.id, d.data()));
+                        guestsSnap.forEach(d => processUserWater(d.id, d.data()));
+
+                        // Send personalized notification to each device
+                        const hydroPromises = [];
+                        tokensSnap.forEach(d => {
+                            const device = d.data();
+                            if (!device || !device.pushSubscription || !device.pushSubscription.endpoint) return;
+
+                            // Match user by userId or deviceId
+                            const uid = device.userId || device.deviceId || d.id;
+                            const pct = userWaterMap.has(uid) ? userWaterMap.get(uid) : 0;
+
+                            // If >= 50%, do not disturb!
+                            if (pct >= (hConfig.thresholdPct || 50)) return;
+
+                            let chosenMsg = '';
+                            let title = '';
+                            if (pct < (hConfig.criticalThreshold || 25)) {
+                                chosenMsg = critMsgs[Math.floor(Math.random() * critMsgs.length)];
+                                title = '💧 บ่ายนี้ร่างกายต้องการน้ำ!';
+                            } else {
+                                chosenMsg = modMsgs[Math.floor(Math.random() * modMsgs.length)];
+                                title = '🥤 เติมความสดชื่นอีกนิด!';
+                            }
+
+                            const payload = JSON.stringify({
+                                title: title,
+                                body: chosenMsg,
+                                icon: "icon-192.png",
+                                badge: "favicon-32x32.png",
+                                vibrate: [120, 60, 120],
+                                tag: `novafit-hydration-${todayStr}`,
+                                data: { url: "./", timestamp: Date.now() }
+                            });
+
+                            const p = webpush.sendNotification(device.pushSubscription, payload)
+                                .catch(async (err) => {
+                                    if (err.statusCode === 410 || err.statusCode === 404) {
+                                        await db.collection("fcm_tokens").doc(d.id).delete();
+                                    }
+                                });
+                            hydroPromises.push(p);
+                        });
+
+                        await Promise.allSettled(hydroPromises);
+
+                        await db.collection("push_schedules").doc("hydration_behavior_config").set({
+                            lastDispatched: todayStr,
+                            lastDispatchedCount: hydroPromises.length,
+                            lastDispatchedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+
+                        console.log(`💧 Smart Behavioral Hydration dispatched to ${hydroPromises.length} devices.`);
+                    }
+                }
+            }
+        } catch (hErr) {
+            console.warn("Smart Behavioral Hydration dispatch error:", hErr);
+        }
+
         return null;
     } catch (schedErr) {
         console.error("scheduledPushReminders error:", schedErr);
