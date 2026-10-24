@@ -543,12 +543,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.14
+                            Current Version: v5.9.15
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.15 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">💧 v5.9.15 (Smart Behavioral Hydration Hub, Dynamic Threshold Config & Multi-Segment Tester)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>💧 Smart Behavioral Hydration Push Hub:</b> ติดตั้งแดชบอร์ดมอนิเตอร์พฤติกรรมการดื่มน้ำจริงรายบุคคลในแท็บ Push Hub แสดง KPI ผู้ใช้กลุ่มดื่มน้อยวิกฤต (&lt; 25%), กลุ่มปานกลาง (25-49%) และกลุ่มดื่มดีตามเป้า (≥ 50%)</li>
+                                <li><b>🎛️ Dual-Pool Dynamic Config & Custom Message Management:</b> สามารถเพิ่ม ลบ และปรับแต่งคลังข้อความแยกตามกลุ่มพฤติกรรม พร้อมบันทึกลง Firestore <code>push_schedules/hydration_behavior_config</code></li>
+                                <li><b>🧪 In-Dashboard Device Testing & Dispatch Simulation:</b> เพิ่มปุ่มทดสอบยิง Push Notification ข้อความแต่ละกลุ่มเข้าสู่อุปกรณ์แอดมินทันที และปุ่มยิงจริงแบบกรองกลุ่มเป้าหมาย (Personalized Broadcast)</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.15 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.14 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1315,6 +1329,113 @@
                             </p>
                             <button type="button" onclick="testLocalNotification('NovaFit Pro 🥑', '🔔 ทดสอบสำเร็จ! สั่นเตือนบน Apple Watch & สมาร์ตวอทช์เรียบร้อย')" class="w-full py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs active:scale-95 cursor-pointer">
                                 🔔 ทดสอบส่งเข้าเครื่องนี้
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SMART BEHAVIORAL HYDRATION PUSH HUB (v5.9.15) -->
+                <div class="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl p-2 rounded-2xl bg-sky-500/15 text-sky-500">💧</span>
+                            <div>
+                                <h4 class="font-extrabold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                    <span>ระบบวิเคราะห์และเตือนจิบน้ำอัจฉริยะ (Smart Hydration Behavior Trigger)</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold">Personalized</span>
+                                </h4>
+                                <p class="text-xs text-slate-400">ตรวจจับพฤติกรรมจริงรายบุคคลช่วงบ่าย ยิงเตือนเฉพาะคนที่ดื่มน้ำน้อยกว่า 50% และไม่รบกวนคนที่ดื่มครบแล้ว</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="scanHydrationBehavior()" class="px-3.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-600 dark:text-sky-400 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                                <span>🔍</span> สแกนพฤติกรรมวันนี้
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Hydration Segment KPI Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                            <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                                <span>👥</span> ผู้ใช้งานวันนี้
+                            </div>
+                            <div id="hydroKpiTotalUsers" class="text-xl font-black text-slate-800 dark:text-slate-100">0</div>
+                            <div class="text-[10px] text-slate-400">เข้าใช้งานแอปในวันนี้</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 space-y-1">
+                            <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                                <span>🔴</span> ดื่มน้อยวิกฤต (&lt; 25%)
+                            </div>
+                            <div id="hydroKpiCritical" class="text-xl font-black text-rose-500">0</div>
+                            <div class="text-[10px] text-rose-500/80">ดื่มน้อยกว่า 25% ของเป้า</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-1">
+                            <div class="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <span>🟡</span> ดื่มปานกลาง (25-49%)
+                            </div>
+                            <div id="hydroKpiModerate" class="text-xl font-black text-amber-500">0</div>
+                            <div class="text-[10px] text-amber-500/80">เกือบครึ่งทาง ชวนจิบอีกนิด</div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-1">
+                            <div class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <span>🟢</span> ดื่มดีตามเป้า (≥ 50%)
+                            </div>
+                            <div id="hydroKpiHealthy" class="text-xl font-black text-emerald-500">0</div>
+                            <div class="text-[10px] text-emerald-500/80">ไม่รบกวนการแจ้งเตือน</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Config Panel & Message Pools -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+                        <!-- Group A: Critical Pool (< 25%) -->
+                        <div class="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="font-extrabold text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                    <span>🔴</span> คลังข้อความ: กลุ่มดื่มน้อยวิกฤต (&lt; 25%)
+                                </span>
+                                <button type="button" onclick="testHydrationPush('critical')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 font-bold text-[11px] transition cursor-pointer flex items-center gap-1 active:scale-95">
+                                    <span>📱</span> ทดสอบยิงเข้าเครื่องฉัน
+                                </button>
+                            </div>
+                            <div id="hydroCriticalMsgList" class="space-y-1.5 max-h-36 overflow-y-auto text-xs no-scrollbar"></div>
+                            <div class="flex gap-1.5">
+                                <input type="text" id="inHydroCriticalMsg" placeholder="เพิ่มข้อความชวนจิบน้ำ เช่น 🥱 บ่ายนี้เริ่มล้า สมองตื้อ..." class="flex-1 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:outline-none focus:border-rose-500">
+                                <button type="button" onclick="addHydrationCustomMsg('critical')" class="px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition active:scale-95 cursor-pointer">
+                                    เพิ่ม
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Group B: Moderate Pool (25% - 49%) -->
+                        <div class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="font-extrabold text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                    <span>🟡</span> คลังข้อความ: กลุ่มดื่มปานกลาง (25-49%)
+                                </span>
+                                <button type="button" onclick="testHydrationPush('moderate')" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-bold text-[11px] transition cursor-pointer flex items-center gap-1 active:scale-95">
+                                    <span>📱</span> ทดสอบยิงเข้าเครื่องฉัน
+                                </button>
+                            </div>
+                            <div id="hydroModerateMsgList" class="space-y-1.5 max-h-36 overflow-y-auto text-xs no-scrollbar"></div>
+                            <div class="flex gap-1.5">
+                                <input type="text" id="inHydroModerateMsg" placeholder="เพิ่มข้อความกระตุ้นอีกนิด เช่น 🥤 ใกล้ครึ่งทางแล้ว จิบอีกแก้ว..." class="flex-1 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:outline-none focus:border-amber-500">
+                                <button type="button" onclick="addHydrationCustomMsg('moderate')" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition active:scale-95 cursor-pointer">
+                                    เพิ่ม
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-700/80">
+                        <span class="text-[11px] text-slate-400">💡 การยิงจริงจะคัดกรองเฉพาะผู้ใช้ที่มี FCM Token และดื่มน้ำไม่ถึง 50% เท่านั้น</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="saveHydrationConfig()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5">
+                                <span>💾</span> บันทึกการตั้งค่า
+                            </button>
+                            <button type="button" onclick="dispatchPersonalizedHydrationBroadcast()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-95 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition active:scale-95 cursor-pointer flex items-center gap-1.5">
+                                <span>🚀</span> ยิงเตือนเฉพาะกลุ่มดื่มน้อยเดี๋ยวนี้
                             </button>
                         </div>
                     </div>

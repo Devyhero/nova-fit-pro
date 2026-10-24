@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.14' ||
-            !v598Test.toolsBadge?.includes('v5.9.14')) {
+            v598Test.appVersion !== '5.9.15' ||
+            !v598Test.toolsBadge?.includes('v5.9.15')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1746,6 +1746,16 @@ server.listen(PORT, async () => {
             const fnGenAi = typeof window.generateAiPushMessage === 'function';
             const fnTestSlotNow = typeof window.testPushSlotNow === 'function';
 
+            // Smart Hydration Behavioral Hub Components (v5.9.15)
+            const kpiHydroTotal = document.getElementById('hydroKpiTotalUsers');
+            const kpiHydroCrit = document.getElementById('hydroKpiCritical');
+            const listHydroCrit = document.getElementById('hydroCriticalMsgList');
+            const listHydroMod = document.getElementById('hydroModerateMsgList');
+            const fnScanHydro = typeof window.scanHydrationBehavior === 'function';
+            const fnSaveHydro = typeof window.saveHydrationConfig === 'function';
+            const fnTestHydro = typeof window.testHydrationPush === 'function';
+            const fnDispatchHydro = typeof window.dispatchPersonalizedHydrationBroadcast === 'function';
+
             return {
                 hasTabBtn,
                 isPushViewVisible,
@@ -1761,7 +1771,12 @@ server.listen(PORT, async () => {
                 fnSaveSched,
                 fnSendBroadcast,
                 fnGenAi,
-                fnTestSlotNow
+                fnTestSlotNow,
+                hasHydroComponents: !!(kpiHydroTotal && kpiHydroCrit && listHydroCrit && listHydroMod),
+                fnScanHydro,
+                fnSaveHydro,
+                fnTestHydro,
+                fnDispatchHydro
             };
         })()`);
         console.log('Admin Push Hub verified:', adminPushTest);
@@ -1780,7 +1795,10 @@ server.listen(PORT, async () => {
             !adminPushTest.fnSaveSched ||
             !adminPushTest.fnSendBroadcast ||
             !adminPushTest.fnGenAi ||
-            !adminPushTest.fnTestSlotNow) {
+            !adminPushTest.fnTestSlotNow ||
+            !adminPushTest.hasHydroComponents ||
+            !adminPushTest.fnScanHydro ||
+            !adminPushTest.fnSaveHydro) {
             throw new Error('Test 39 Part B: Admin Push Hub failed: ' + JSON.stringify(adminPushTest));
         }
 

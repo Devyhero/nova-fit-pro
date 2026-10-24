@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.14';
+const APP_VERSION = '5.9.15';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 

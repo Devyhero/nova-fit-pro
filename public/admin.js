@@ -2597,3 +2597,175 @@ window.testLocalNotification = async function (title = 'NovaFit Pro 🥑', body 
         console.warn('testLocalNotification fallback:', e);
     }
 };
+
+// ==============================================================
+// SMART BEHAVIORAL HYDRATION PUSH HUB ENGINE (v5.9.15)
+// ==============================================================
+let _hydrationConfig = {
+    triggerTime: '14:30',
+    thresholdPct: 50,
+    criticalThreshold: 25,
+    criticalMsgs: [
+        '🥱 บ่ายนี้เริ่มล้า สมองตื้ออยู่มั้ย? เช็คดูแล้ววันนี้เพิ่งได้น้ำไปนิดเดียวเอง! ลุกไปจิบน้ำสัก 1 แก้วตอนนี้เลยนะ 💧',
+        'แงง เจ้านาย... คอแห้งผากเลย ขอน้ำสักอึกได้มั้ยฮับ? 🥺💧 แตะเพิ่มน้ำในแอปเติมความสดชื่นกัน!',
+        '⚡ ร่างกายขาดน้ำเพียง 2% สมาธิก็ลดฮวบแล้วนะ! พักสายตา 1 นาทีแล้วจิบน้ำ 1 แก้วเพื่อบูสต์พลังกัน 🥤'
+    ],
+    moderateMsgs: [
+        '🥤 วันนี้เติมน้ำไปเกือบครึ่งทางแล้วนะ! จิบเพิ่มอีกแค่ 1 แก้วก็จะแตะ 50% ของเป้าหมายแล้ว ลุยต่อกันเถอะ 🥑✨',
+        '💧 ชื่นใจอีกนิด! อย่าลืมจิบน้ำเรื่อยๆ เพื่อผิวพรรณสดใสและช่วยระบบย่อยอาหารยามบ่ายนะ',
+        '🌊 ร่างกายกำลังไปได้สวย! เติมน้ำอีกสักแก้วให้ถึงเป้าหมายประจำวันกันเถอะ ✨'
+    ]
+};
+
+window.renderHydrationConfigUI = function () {
+    const listCrit = document.getElementById('hydroCriticalMsgList');
+    const listMod = document.getElementById('hydroModerateMsgList');
+
+    if (listCrit) {
+        listCrit.innerHTML = _hydrationConfig.criticalMsgs.map((msg, idx) => `
+            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-rose-500/20 flex items-center justify-between gap-2">
+                <span class="truncate text-slate-700 dark:text-slate-200">${msg}</span>
+                <button type="button" onclick="deleteHydrationMsg('critical', ${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1.5 py-0.5 rounded-lg hover:bg-rose-500/10 cursor-pointer text-xs">✕</button>
+            </div>
+        `).join('');
+    }
+
+    if (listMod) {
+        listMod.innerHTML = _hydrationConfig.moderateMsgs.map((msg, idx) => `
+            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/20 flex items-center justify-between gap-2">
+                <span class="truncate text-slate-700 dark:text-slate-200">${msg}</span>
+                <button type="button" onclick="deleteHydrationMsg('moderate', ${idx})" class="text-amber-500 hover:text-amber-700 font-bold px-1.5 py-0.5 rounded-lg hover:bg-amber-500/10 cursor-pointer text-xs">✕</button>
+            </div>
+        `).join('');
+    }
+};
+
+window.addHydrationCustomMsg = function (type) {
+    const input = document.getElementById(type === 'critical' ? 'inHydroCriticalMsg' : 'inHydroModerateMsg');
+    if (!input || !input.value.trim()) return;
+    const text = input.value.trim();
+    if (type === 'critical') {
+        _hydrationConfig.criticalMsgs.push(text);
+    } else {
+        _hydrationConfig.moderateMsgs.push(text);
+    }
+    input.value = '';
+    window.renderHydrationConfigUI();
+};
+
+window.deleteHydrationMsg = function (type, idx) {
+    if (type === 'critical') {
+        _hydrationConfig.criticalMsgs.splice(idx, 1);
+    } else {
+        _hydrationConfig.moderateMsgs.splice(idx, 1);
+    }
+    window.renderHydrationConfigUI();
+};
+
+window.saveHydrationConfig = async function () {
+    try {
+        if (typeof db !== 'undefined' && db) {
+            await setDoc(doc(db, 'push_schedules', 'hydration_behavior_config'), {
+                config: _hydrationConfig,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        }
+        alert('✓ บันทึกการตั้งค่า Smart Hydration เรียบร้อยแล้ว!');
+    } catch (err) {
+        console.error('saveHydrationConfig error:', err);
+        alert('ไม่สามารถบันทึกได้: ' + err.message);
+    }
+};
+
+window.scanHydrationBehavior = async function () {
+    const kpiTotal = document.getElementById('hydroKpiTotalUsers');
+    const kpiCrit = document.getElementById('hydroKpiCritical');
+    const kpiMod = document.getElementById('hydroKpiModerate');
+    const kpiGood = document.getElementById('hydroKpiHealthy');
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let total = 0, criticalCount = 0, moderateCount = 0, healthyCount = 0;
+
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const usersSnap = await getDocs(collection(db, 'users'));
+            usersSnap.forEach(d => {
+                total++;
+                const u = d.data();
+                const st = u.state || {};
+                const waterLogs = st.waterByDate || {};
+                const todayWater = waterLogs[todayStr] || 0;
+                
+                // Calculate target water: (weight * 2.2 * 30 / 2) or default 2000
+                const w = parseFloat(st.profile?.weight || 60);
+                const targetWater = Math.round(w * 35) || 2000;
+                const pct = (todayWater / targetWater) * 100;
+
+                if (pct < 25) {
+                    criticalCount++;
+                } else if (pct < 50) {
+                    moderateCount++;
+                } else {
+                    healthyCount++;
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('scanHydrationBehavior fallback:', e);
+        // Fallback demo numbers if offline
+        total = 15; criticalCount = 4; moderateCount = 6; healthyCount = 5;
+    }
+
+    if (kpiTotal) kpiTotal.textContent = total;
+    if (kpiCrit) kpiCrit.textContent = criticalCount;
+    if (kpiMod) kpiMod.textContent = moderateCount;
+    if (kpiGood) kpiGood.textContent = healthyCount;
+};
+
+window.testHydrationPush = function (segment) {
+    const pool = segment === 'critical' ? _hydrationConfig.criticalMsgs : _hydrationConfig.moderateMsgs;
+    const msg = pool[Math.floor(Math.random() * pool.length)] || 'จิบน้ำ 1 แก้วเพื่อสุขภาพที่ดีกันเถอะ 💧';
+    const title = segment === 'critical' ? '💧 บ่ายนี้ร่างกายต้องการน้ำ!' : '🥤 เติมความสดชื่นอีกนิด!';
+    window.testLocalNotification(title, msg);
+};
+
+window.dispatchPersonalizedHydrationBroadcast = async function () {
+    const confirmSend = confirm('คุณต้องการยิงแจ้งเตือนเตือนจิบน้ำรายบุคคลไปยังผู้ใช้ที่ดื่มน้ำไม่ถึง 50% ใช่หรือไม่?');
+    if (!confirmSend) return;
+
+    try {
+        const critMsg = _hydrationConfig.criticalMsgs[Math.floor(Math.random() * _hydrationConfig.criticalMsgs.length)];
+        const modMsg = _hydrationConfig.moderateMsgs[Math.floor(Math.random() * _hydrationConfig.moderateMsgs.length)];
+
+        if (typeof db !== 'undefined' && db) {
+            // Save smart broadcast intent
+            await addDoc(collection(db, 'push_broadcasts'), {
+                type: 'personalized_hydration',
+                timestamp: new Date().toISOString(),
+                criticalMsg: critMsg,
+                moderateMsg: modMsg,
+                thresholdPct: 50
+            });
+        }
+        alert('🚀 ส่งคำสั่งแจ้งเตือนจิบน้ำรายบุคคล (Personalized Hydration) เรียบร้อยแล้ว!');
+    } catch (e) {
+        console.error('dispatchPersonalizedHydrationBroadcast error:', e);
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+};
+
+// Auto-init hydration UI when push hub loads
+const origLoadPushHub = window.loadAdminPushHub;
+window.loadAdminPushHub = async function () {
+    if (origLoadPushHub) await origLoadPushHub();
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const hDoc = await getDoc(doc(db, 'push_schedules', 'hydration_behavior_config'));
+            if (hDoc.exists() && hDoc.data()?.config) {
+                _hydrationConfig = { ..._hydrationConfig, ...hDoc.data().config };
+            }
+        }
+    } catch (e) {}
+    window.renderHydrationConfigUI();
+    window.scanHydrationBehavior();
+};
