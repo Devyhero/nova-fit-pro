@@ -570,14 +570,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.24
+                            Current Version: v5.9.25
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.24 -->
+                        <!-- Release: v5.9.25 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">💬 v5.9.25 (Standalone AI Chat Trigger & Granular Mode Flow)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>💬 Standalone AI Chat Trigger:</b> ปรับปรุง <code>toggleNovaQuickMenu()</code> ใน <code>mascot-companion.js</code> ให้รองรับเคสที่แอดมินปิดเมนูลัด (<code>quickMenu: false</code>) แต่เปิดใช้งานกล่องแชต (<code>aiChat: true</code>) โดยผู้ใช้สามารถแตะตัวน้องเพื่อเปิดหน้าต่างแชต AI สุขภาพได้โดยตรงทันทีโดยไม่ต้องผ่านเมนูลัด</li>
+                                <li><b>🎯 Dynamic Tooltip & UX Feedback:</b> อัปเดตข้อความ Tooltip ของ <code>#novaMascotBtn</code> ให้สอดคล้องกับโหมดที่เปิดใช้งานจริงแบบเรียลไทม์</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.25 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.24 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🎭 v5.9.24 (Granular Mascot Modes Sync, Deep Config Merge & Cache Busting)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
@@ -1858,7 +1870,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.24"></script>
+    <script type="module" src="admin.js?v=5.9.25"></script>
 
 </body>
 

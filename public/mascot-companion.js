@@ -266,6 +266,20 @@
         img.src = imgSrc;
         img.alt = `MeowNova Cat (${_currentMascotMood})`;
 
+        // Update Mascot Button Tooltip according to enabled roles
+        const mascotBtn = document.getElementById('novaMascotBtn');
+        if (mascotBtn) {
+            const isQuickMenuRoleEnabled = _remoteMascotConfig.modes?.quickMenu !== false;
+            const isAiChatRoleEnabled = _remoteMascotConfig.modes?.aiChat !== false;
+            if (!isQuickMenuRoleEnabled && isAiChatRoleEnabled) {
+                mascotBtn.title = 'โค้ชเหมียวโนวา แมวอโวคาโด (แตะเพื่อเปิดแชต AI สุขภาพ)';
+            } else if (!isQuickMenuRoleEnabled && !isAiChatRoleEnabled) {
+                mascotBtn.title = 'โค้ชเหมียวโนวา แมวอโวคาโด (แตะเพื่อทักทาย)';
+            } else {
+                mascotBtn.title = 'โค้ชเหมียวโนวา แมวอโวคาโด (แตะเพื่อสั่งการด่วน)';
+            }
+        }
+
         // Update Mood Badge
         if (badge) {
             const acc = NOVA_MOOD_ACCENTS[_currentMascotMood] || NOVA_MOOD_ACCENTS.happy;
@@ -319,20 +333,34 @@
         const menu = document.getElementById('novaQuickMenu');
         if (!menu) return;
 
-        // Check if quick menu role is disabled by Admin
-        if (_remoteMascotConfig.modes?.quickMenu === false) {
+        const isQuickMenuRoleEnabled = _remoteMascotConfig.modes?.quickMenu !== false;
+        const isAiChatRoleEnabled = _remoteMascotConfig.modes?.aiChat !== false;
+
+        // If BOTH Quick Actions (Water/Snap) AND AI Chat are disabled:
+        if (!isQuickMenuRoleEnabled && !isAiChatRoleEnabled) {
             menu.classList.add('hidden');
             if (!forceClose) {
-                // If quick menu is disabled, tapping mascot can directly trigger greeting bubble or feedback
+                // If both are disabled, tapping mascot can only trigger greeting bubble or toast
                 if (_remoteMascotConfig.modes?.floatingBubble !== false) {
                     showNovaSpeechBubble();
                 } else if (typeof window.showToast === 'function') {
-                    window.showToast('🥑 เมนูลัดถูกปิดโดยผู้ดูแลระบบเมี้ยว');
+                    window.showToast('🥑 เมนูลัดและแชตถูกปิดโดยผู้ดูแลระบบเมี้ยว');
                 }
             }
             return;
         }
 
+        // If Quick Actions are disabled BUT AI Chat is enabled:
+        // Tapping the mascot opens the AI Health Coach chat modal directly!
+        if (!isQuickMenuRoleEnabled && isAiChatRoleEnabled) {
+            menu.classList.add('hidden');
+            if (!forceClose) {
+                openNovaChatModal();
+            }
+            return;
+        }
+
+        // Normal flow: At least Quick Actions are enabled
         const isHidden = menu.classList.contains('hidden');
         if (forceClose || !isHidden) {
             menu.classList.add('hidden');

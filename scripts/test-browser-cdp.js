@@ -1630,8 +1630,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.24' ||
-            !v598Test.toolsBadge?.includes('v5.9.24')) {
+            v598Test.appVersion !== '5.9.25' ||
+            !v598Test.toolsBadge?.includes('v5.9.25')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2267,8 +2267,8 @@ server.listen(PORT, async () => {
             throw new Error('Test 45: Smart Time-Based Meal Selector failed: ' + JSON.stringify(smartMealTest));
         }
 
-        // Test 46: MeowNova Remote Control Hub, Granular Modes & Zero-Token Policy (v5.9.24)
-        console.log('--- Test 46: MeowNova Remote Control Hub, Modes & Zero-Token Policy (v5.9.24) ---');
+        // Test 46: MeowNova Remote Control Hub, Granular Modes & Zero-Token Policy (v5.9.25)
+        console.log('--- Test 46: MeowNova Remote Control Hub, Modes & Zero-Token Policy (v5.9.25) ---');
         const remoteConfigTest = await evalJs(`(() => {
             // Test User Avatar rendering in Chat
             const chatHistory = document.getElementById('novaChatHistory');
@@ -2291,16 +2291,25 @@ server.listen(PORT, async () => {
             const bubbleEl = document.getElementById('novaSpeechBubble');
             const bubbleBlockedWhenDisabled = bubbleEl?.classList.contains('hidden');
 
-            // Test Disable Quick Menu Mode
+            // Test Disable Quick Menu Mode (Quick Actions off, AI Chat stays ON) - v5.9.25
+            const chatModalEl = document.getElementById('novaChatModal');
             applyRemoteMascotConfig({
-                modes: { quickMenu: false }
+                modes: { quickMenu: false, aiChat: true }
+            });
+            // When quickMenu is false and aiChat is true, clicking mascot directly opens AI chat
+            toggleNovaQuickMenu();
+            const directChatOpensWhenQuickMenuOff = !chatModalEl?.classList.contains('hidden');
+            if (typeof closeNovaChatModal === 'function') closeNovaChatModal();
+
+            // Test Both Quick Menu and AI Chat disabled
+            applyRemoteMascotConfig({
+                modes: { quickMenu: false, aiChat: false }
             });
             toggleNovaQuickMenu();
             const quickMenuEl = document.getElementById('novaQuickMenu');
             const quickMenuBlockedWhenDisabled = quickMenuEl?.classList.contains('hidden');
 
             // Ensure modal is closed before testing blocked open
-            const chatModalEl = document.getElementById('novaChatModal');
             if (chatModalEl) {
                 chatModalEl.classList.add('hidden');
                 chatModalEl.classList.remove('modal-open');
@@ -2356,6 +2365,7 @@ server.listen(PORT, async () => {
             return {
                 hasUserAvatarImg,
                 bubbleBlockedWhenDisabled,
+                directChatOpensWhenQuickMenuOff,
                 quickMenuBlockedWhenDisabled,
                 chatBlockedWhenDisabled,
                 containerHiddenOnKill,
@@ -2369,6 +2379,7 @@ server.listen(PORT, async () => {
 
         if (!remoteConfigTest.hasUserAvatarImg ||
             !remoteConfigTest.bubbleBlockedWhenDisabled ||
+            !remoteConfigTest.directChatOpensWhenQuickMenuOff ||
             !remoteConfigTest.quickMenuBlockedWhenDisabled ||
             !remoteConfigTest.chatBlockedWhenDisabled ||
             !remoteConfigTest.containerHiddenOnKill ||
