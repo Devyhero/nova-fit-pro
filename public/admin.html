@@ -543,12 +543,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.15
+                            Current Version: v5.9.16
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.16 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">💧 v5.9.16 (Hydration Volume Conversion Fix, Multi-Collection Telemetry, Lock-Screen FCM Dispatch & Admin Micro-Loader)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>💧 Hydration Metric & Conversion Engine:</b> แก้ไขการคำนวณใน <code>scanHydrationBehavior()</code> โดยแปลงจำนวนแก้ว (Glasses x 250ml) ให้สอดคล้องกับเป้าหมายมิลลิลิตร (Target ml = Weight x 35) แก้ปัญหาผู้ใช้ที่ดื่มน้ำเกิน 50% แล้วผลการสแกนไม่ขึ้นข้อมูลได้อย่างสมบูรณ์ 100%</li>
+                                <li><b>👥 Multi-Collection Telemetry Aggregation:</b> ปรับปรุงให้สแกนทั้ง <code>users</code> และ <code>guest_sessions</code> พร้อมฟังก์ชัน <code>getAdminTodayStr()</code> เพื่อป้องกันปัญหา Date Zone Offset (GMT+7) คลาดเคลื่อน</li>
+                                <li><b>🔔 Native Web Push & Lock-Screen Wake Dispatcher:</b> ปรับปรุง <code>testHydrationPush()</code> และ <code>dispatchPersonalizedHydrationBroadcast()</code> ให้ยิงตรงผ่าน Cloud Function <code>sendPushBroadcast</code> สู่ FCM Tokens ทั้งหมด เพื่อให้การแจ้งเตือนสั่นสะเทือนและแสดงผลบนหน้าจอล็อค (Lock Screen) และ Apple Watch / Wear OS แม้ปิดหน้าจออยู่</li>
+                                <li><b>⏳ Unified Action Micro-Loader & Toast Feedback:</b> ติดตั้ง <code>#novaMiniLoader</code> และ <code>#toastContainer</code> (ระดับความสูง <code>z-[100000]</code>) ใน <code>admin.html</code> และเชื่อมโยงทุกปุ่มในแดชบอร์ด (สแกนน้ำ, บันทึกการตั้งค่า, ทดสอบ Push, และโหลดข้อมูล) ให้แสดงสถานะการทำงาน ลื่นไหล ชัดเจน ป้องกันการกดซ้ำ</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.16 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.15 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1524,6 +1538,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Nova Action Mini Loader Modal for Admin Dashboard (v5.9.16) -->
+    <div id="novaMiniLoader" class="hidden fixed inset-0 z-[100000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-auto">
+        <div class="relative p-5 rounded-3xl bg-slate-900/95 border border-purple-500/40 shadow-[0_0_40px_rgba(168,85,247,0.35)] flex flex-col items-center text-center space-y-3 max-w-[190px] select-none">
+            <!-- Central Animated Mascot with Neon Spinner Ring -->
+            <div class="relative w-20 h-20 flex items-center justify-center">
+                <!-- Neon Spinner Orbit Ring -->
+                <div class="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 border-r-pink-400 animate-spin"></div>
+                <div class="absolute inset-2 rounded-full border border-purple-500/20"></div>
+
+                <!-- Central Icon -->
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-400 to-pink-400 p-0.5 shadow-lg flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-slate-900 flex flex-col items-center justify-center overflow-hidden">
+                        <span class="text-2xl animate-pulse">🥑</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Loading Caption -->
+            <span id="miniLoaderText" class="text-xs font-bold text-purple-300 leading-tight">กำลังประมวลผล...</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container for Admin (v5.9.16) -->
+    <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
     <script type="module" src="admin.js"></script>

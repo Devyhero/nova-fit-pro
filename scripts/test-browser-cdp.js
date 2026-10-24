@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.15' ||
-            !v598Test.toolsBadge?.includes('v5.9.15')) {
+            v598Test.appVersion !== '5.9.16' ||
+            !v598Test.toolsBadge?.includes('v5.9.16')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1756,6 +1756,12 @@ server.listen(PORT, async () => {
             const fnTestHydro = typeof window.testHydrationPush === 'function';
             const fnDispatchHydro = typeof window.dispatchPersonalizedHydrationBroadcast === 'function';
 
+            // Admin Micro-Loader & Toast System (v5.9.16)
+            const hasMiniLoader = !!document.getElementById('novaMiniLoader');
+            const hasToastContainer = !!document.getElementById('toastContainer');
+            const fnShowAdminMiniLoader = typeof window.showAdminMiniLoader === 'function';
+            const fnShowAdminToast = typeof window.showAdminToast === 'function';
+
             return {
                 hasTabBtn,
                 isPushViewVisible,
@@ -1776,7 +1782,11 @@ server.listen(PORT, async () => {
                 fnScanHydro,
                 fnSaveHydro,
                 fnTestHydro,
-                fnDispatchHydro
+                fnDispatchHydro,
+                hasMiniLoader,
+                hasToastContainer,
+                fnShowAdminMiniLoader,
+                fnShowAdminToast
             };
         })()`);
         console.log('Admin Push Hub verified:', adminPushTest);
@@ -1798,8 +1808,14 @@ server.listen(PORT, async () => {
             !adminPushTest.fnTestSlotNow ||
             !adminPushTest.hasHydroComponents ||
             !adminPushTest.fnScanHydro ||
-            !adminPushTest.fnSaveHydro) {
-            throw new Error('Test 39 Part B: Admin Push Hub failed: ' + JSON.stringify(adminPushTest));
+            !adminPushTest.fnSaveHydro ||
+            !adminPushTest.fnTestHydro ||
+            !adminPushTest.fnDispatchHydro ||
+            !adminPushTest.hasMiniLoader ||
+            !adminPushTest.hasToastContainer ||
+            !adminPushTest.fnShowAdminMiniLoader ||
+            !adminPushTest.fnShowAdminToast) {
+            throw new Error('Test 39 Admin: Push hub, Smart Hydration, or Admin Micro-Loader components missing: ' + JSON.stringify(adminPushTest));
         }
 
         // Test 40: In-App Web Audio API Sound Effects Synthesizer Engine (v5.9.11)

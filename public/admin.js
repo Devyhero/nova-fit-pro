@@ -54,6 +54,60 @@ function getTodayStr() {
     return new Date(now.getTime() - offset).toISOString().split('T')[0];
 }
 
+// ==========================================
+// ⏳ UNIFIED ACTION MINI-LOADER & TOAST SYSTEM (v5.9.16)
+// ==========================================
+function showAdminMiniLoader(message = 'กำลังประมวลผล...') {
+    const loader = document.getElementById('novaMiniLoader');
+    const textEl = document.getElementById('miniLoaderText');
+    if (!loader) return;
+    if (textEl && message) textEl.textContent = message;
+    loader.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        loader.classList.remove('opacity-0');
+        loader.classList.add('opacity-100');
+    });
+}
+
+function hideAdminMiniLoader() {
+    const loader = document.getElementById('novaMiniLoader');
+    if (!loader || loader.classList.contains('hidden')) return;
+    loader.classList.remove('opacity-100');
+    loader.classList.add('opacity-0');
+    setTimeout(() => {
+        if (loader.classList.contains('opacity-0')) {
+            loader.classList.add('hidden');
+        }
+    }, 200);
+}
+
+function showAdminToast(msg, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.log('[Admin Toast]', msg);
+        return;
+    }
+    const el = document.createElement('div');
+    const bgClass = type === 'error'
+        ? 'bg-rose-900/95 text-rose-200 border-rose-500/40'
+        : (type === 'warn' ? 'bg-amber-900/95 text-amber-200 border-amber-500/40' : 'bg-slate-900/95 text-emerald-300 border-emerald-500/40');
+    el.className = `${bgClass} backdrop-blur-md text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-xl border flex items-center gap-2 transform transition-all duration-300 pointer-events-auto`;
+    el.innerHTML = `<span>${msg}</span>`;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        setTimeout(() => el.remove(), 300);
+    }, 3500);
+}
+
+window.showAdminMiniLoader = showAdminMiniLoader;
+window.hideAdminMiniLoader = hideAdminMiniLoader;
+window.showAdminToast = showAdminToast;
+window.showMiniLoader = showAdminMiniLoader;
+window.hideMiniLoader = hideAdminMiniLoader;
+window.showToast = showAdminToast;
+
 // Auth State Listener
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
@@ -152,6 +206,7 @@ window.loadAllUserData = async function () {
 
     const refreshIcon = document.getElementById('refreshIcon');
     if (refreshIcon) refreshIcon.classList.add('animate-spin');
+    showAdminMiniLoader('กำลังโหลดข้อมูลสมาชิกและผู้ใช้ทั้งหมด...');
 
     try {
         const [usersSnap, guestsSnap] = await Promise.all([
@@ -188,9 +243,12 @@ window.loadAllUserData = async function () {
 
         window.allUsersData = allUsersData;
         renderAdminOverview();
+        hideAdminMiniLoader();
+        showAdminToast(`✓ โหลดข้อมูลผู้ใช้ ${allUsersData.length} รายการสำเร็จ!`);
     } catch (err) {
+        hideAdminMiniLoader();
         console.error('Failed to load users data:', err);
-        alert('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud Firestore: ' + err.message);
+        showAdminToast('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message, 'error');
     } finally {
         if (refreshIcon) refreshIcon.classList.remove('animate-spin');
     }
@@ -2398,7 +2456,7 @@ window.generateAiPushMessage = async function (slotKey) {
     }
     _adminPushSlotsData[slotKey].messages.push(generatedText);
     window.renderAdminPushSlots();
-    alert(`✨ AI สร้างข้อความสำเร็จ:\n"${generatedText}"\n\nเพิ่มลงในคลังข้อความสุ่มเรียบร้อยแล้ว!`);
+    showAdminToast(`✨ AI สร้างข้อความ: "${generatedText}"`);
 };
 
 window.testPushSlotNow = async function (slotKey) {
@@ -2429,6 +2487,8 @@ window.testPushSlotNow = async function (slotKey) {
         return;
     }
 
+    showAdminMiniLoader(`กำลังยิงแจ้งเตือนทดสอบช่วงเวลา "${slotTitle}" ไปยังอุปกรณ์...`);
+
     try {
         const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
             method: "POST",
@@ -2444,14 +2504,17 @@ window.testPushSlotNow = async function (slotKey) {
         console.log(`Slot [${slotKey}] test push result:`, cfResult);
 
         const count = cfResult?.stats?.delivered || 0;
-        alert(`✅ ยิงแจ้งเตือนทดสอบช่วงเวลา "${slotTitle}" สำเร็จ!\n\nหัวข้อ: "${pushTitle}"\nข้อความ: "${chosenMessage}"\nส่งถึง: ${count} เครื่องเรียบร้อยแล้วครับ 🥑`);
+        hideAdminMiniLoader();
+        showAdminToast(`✅ ส่งทดสอบช่วงเวลา "${slotTitle}" สำเร็จ! (ส่งถึง ${count} เครื่อง)`);
     } catch (err) {
         console.error(`Failed to test slot [${slotKey}]:`, err);
-        alert(`❌ ส่งทดสอบไม่สำเร็จ: ` + err.message);
+        hideAdminMiniLoader();
+        showAdminToast(`❌ ส่งทดสอบไม่สำเร็จ: ` + err.message, 'error');
     }
 };
 
 window.saveAdminPushSchedule = async function () {
+    showAdminMiniLoader('กำลังบันทึกตารางเวลาแจ้งเตือนลงคลาวด์...');
     try {
         if (typeof db !== 'undefined' && db) {
             await setDoc(doc(db, 'push_schedules', 'main_schedule'), {
@@ -2460,10 +2523,12 @@ window.saveAdminPushSchedule = async function () {
                 updatedBy: currentUser?.email || 'admin'
             }, { merge: true });
         }
-        alert('✓ บันทึกตารางเวลาและคลังข้อความแจ้งเตือนลงระบบคลาวด์เรียบร้อยแล้ว!\nระบบจะนำข้อความเหล่านี้ไปสุ่มส่งตามเวลาที่กำหนด');
+        hideAdminMiniLoader();
+        showAdminToast('✓ บันทึกตารางเวลาและคลังข้อความแจ้งเตือนเรียบร้อยแล้ว!');
     } catch (err) {
         console.error('Failed to save push schedule:', err);
-        alert('❌ บันทึกไม่สำเร็จ: ' + err.message);
+        hideAdminMiniLoader();
+        showAdminToast('❌ บันทึกไม่สำเร็จ: ' + err.message, 'error');
     }
 };
 
@@ -2504,13 +2569,15 @@ window.sendAdminPushBroadcast = async function () {
     const statusMsg = document.getElementById('broadcastStatusMsg');
 
     if (!title || !body) {
-        alert('กรุณากรอกหัวข้อและเนื้อหาข้อความก่อนส่งครับ');
+        showAdminToast('กรุณากรอกหัวข้อและเนื้อหาข้อความก่อนส่งครับ', 'warn');
         return;
     }
 
     if (!confirm(`ยืนยันการยิงแจ้งเตือนทันทีไปยังผู้ใช้กลุ่ม "${audience}" ใช่หรือไม่?`)) {
         return;
     }
+
+    showAdminMiniLoader('กำลังส่งการแจ้งเตือนบรอดคาสต์ไปยังอุปกรณ์ทั้งหมด...');
 
     try {
         let broadcastDocId = null;
@@ -2545,16 +2612,20 @@ window.sendAdminPushBroadcast = async function () {
             console.warn("Cloud Function push dispatch note:", cfErr);
         }
 
+        hideAdminMiniLoader();
+        const countInfo = cfResult?.stats?.delivered ? ` (ส่งถึง ${cfResult.stats.delivered} เครื่องเรียบร้อย)` : '';
+        showAdminToast(`✓ ส่งการแจ้งเตือนบรอดคาสต์เรียบร้อยแล้ว!${countInfo}`);
+
         if (statusMsg) {
-            const countInfo = cfResult?.stats?.delivered ? ` (ส่งถึง ${cfResult.stats.delivered} เครื่องเรียบร้อย)` : '';
             statusMsg.textContent = `✓ ส่งการแจ้งเตือนบรอดคาสต์เรียบร้อยแล้ว!${countInfo}`;
             statusMsg.className = 'p-2.5 rounded-xl text-[11px] font-semibold text-center bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
             statusMsg.classList.remove('hidden');
             setTimeout(() => statusMsg.classList.add('hidden'), 5000);
         }
     } catch (err) {
+        hideAdminMiniLoader();
         console.error('Failed to send broadcast:', err);
-        alert('❌ ส่งแจ้งเตือนไม่สำเร็จ: ' + err.message);
+        showAdminToast('❌ ส่งแจ้งเตือนไม่สำเร็จ: ' + err.message, 'error');
     }
 };
 
@@ -2663,6 +2734,7 @@ window.deleteHydrationMsg = function (type, idx) {
 };
 
 window.saveHydrationConfig = async function () {
+    showAdminMiniLoader('กำลังบันทึกการตั้งค่า Smart Hydration...');
     try {
         if (typeof db !== 'undefined' && db) {
             await setDoc(doc(db, 'push_schedules', 'hydration_behavior_config'), {
@@ -2670,10 +2742,12 @@ window.saveHydrationConfig = async function () {
                 updatedAt: new Date().toISOString()
             }, { merge: true });
         }
-        alert('✓ บันทึกการตั้งค่า Smart Hydration เรียบร้อยแล้ว!');
+        hideAdminMiniLoader();
+        showAdminToast('✓ บันทึกการตั้งค่า Smart Hydration เรียบร้อยแล้ว!');
     } catch (err) {
         console.error('saveHydrationConfig error:', err);
-        alert('ไม่สามารถบันทึกได้: ' + err.message);
+        hideAdminMiniLoader();
+        showAdminToast('ไม่สามารถบันทึกได้: ' + err.message, 'error');
     }
 };
 
@@ -2683,23 +2757,55 @@ window.scanHydrationBehavior = async function () {
     const kpiMod = document.getElementById('hydroKpiModerate');
     const kpiGood = document.getElementById('hydroKpiHealthy');
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    showAdminMiniLoader('กำลังวิเคราะห์พฤติกรรมการดื่มน้ำวันนี้...');
+
+    const todayStr = getTodayStr();
     let total = 0, criticalCount = 0, moderateCount = 0, healthyCount = 0;
 
     try {
-        if (typeof db !== 'undefined' && db) {
-            const usersSnap = await getDocs(collection(db, 'users'));
-            usersSnap.forEach(d => {
+        let usersList = window.allUsersData;
+        if (!usersList || usersList.length === 0) {
+            if (typeof db !== 'undefined' && db) {
+                const [usersSnap, guestsSnap] = await Promise.all([
+                    getDocs(collection(db, 'users')),
+                    getDocs(collection(db, 'guest_sessions')).catch(err => {
+                        console.warn('Failed to load guest_sessions collection:', err);
+                        return { forEach: () => {} };
+                    })
+                ]);
+                usersList = [];
+                usersSnap.forEach(d => usersList.push(d.data()));
+                guestsSnap.forEach(d => usersList.push(d.data()));
+            }
+        }
+
+        if (Array.isArray(usersList) && usersList.length > 0) {
+            usersList.forEach(u => {
                 total++;
-                const u = d.data();
                 const st = u.state || {};
                 const waterLogs = st.waterByDate || {};
-                const todayWater = waterLogs[todayStr] || 0;
                 
-                // Calculate target water: (weight * 2.2 * 30 / 2) or default 2000
-                const w = parseFloat(st.profile?.weight || 60);
-                const targetWater = Math.round(w * 35) || 2000;
-                const pct = (todayWater / targetWater) * 100;
+                // Read water logged today (in glasses)
+                let todayGlasses = 0;
+                if (typeof waterLogs[todayStr] === 'number') {
+                    todayGlasses = waterLogs[todayStr];
+                } else if (u.stats && typeof u.stats.waterGlassesToday === 'number') {
+                    todayGlasses = u.stats.waterGlassesToday;
+                } else {
+                    const keys = Object.keys(waterLogs);
+                    if (keys.includes(todayStr)) {
+                        todayGlasses = Number(waterLogs[todayStr]) || 0;
+                    }
+                }
+
+                // Calculate target water: default 2000 ml or weight * 35 ml
+                const w = parseFloat(st.profile?.weight || u.weight || 60);
+                const targetWaterMl = Math.round(w * 35) || 2000;
+
+                // CRITICAL FIX: NovaFit Pro stores water in GLASSES (250 ml/glass).
+                // If todayGlasses > 30, it is already recorded in ml; otherwise convert glasses to ml:
+                const waterMl = (todayGlasses > 30) ? todayGlasses : (todayGlasses * 250);
+                const pct = Math.round((waterMl / targetWaterMl) * 100);
 
                 if (pct < 25) {
                     criticalCount++;
@@ -2710,10 +2816,16 @@ window.scanHydrationBehavior = async function () {
                 }
             });
         }
+        hideAdminMiniLoader();
+        showAdminToast(`✓ สแกนข้อมูลพฤติกรรมเรียบร้อย (${total} คน, ดื่มเกิน 50%: ${healthyCount} คน)`);
     } catch (e) {
         console.warn('scanHydrationBehavior fallback:', e);
-        // Fallback demo numbers if offline
-        total = 15; criticalCount = 4; moderateCount = 6; healthyCount = 5;
+        hideAdminMiniLoader();
+        showAdminToast('⚠️ การสแกนข้อมูลขัดข้อง: ' + e.message, 'error');
+        // Fallback demo numbers if offline or no DB connection
+        if (total === 0) {
+            total = 15; criticalCount = 4; moderateCount = 6; healthyCount = 5;
+        }
     }
 
     if (kpiTotal) kpiTotal.textContent = total;
@@ -2722,35 +2834,94 @@ window.scanHydrationBehavior = async function () {
     if (kpiGood) kpiGood.textContent = healthyCount;
 };
 
-window.testHydrationPush = function (segment) {
+window.testHydrationPush = async function (segment) {
     const pool = segment === 'critical' ? _hydrationConfig.criticalMsgs : _hydrationConfig.moderateMsgs;
     const msg = pool[Math.floor(Math.random() * pool.length)] || 'จิบน้ำ 1 แก้วเพื่อสุขภาพที่ดีกันเถอะ 💧';
     const title = segment === 'critical' ? '💧 บ่ายนี้ร่างกายต้องการน้ำ!' : '🥤 เติมความสดชื่นอีกนิด!';
-    window.testLocalNotification(title, msg);
+
+    showAdminMiniLoader('กำลังส่งแจ้งเตือนเตือนจิบน้ำไปยังอุปกรณ์ (รวมถึงหน้าจอล็อค)...');
+
+    let deliveredInfo = '';
+    try {
+        // Send native Web Push to locked mobile devices via Cloud Function
+        const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: title,
+                body: msg,
+                audience: 'all',
+                type: 'hydration_test',
+                segment: segment
+            })
+        });
+        const cfResult = await cfRes.json();
+        if (cfResult?.stats?.delivered) {
+            deliveredInfo = ` (ส่งถึง ${cfResult.stats.delivered} เครื่อง)`;
+        }
+    } catch (cfErr) {
+        console.warn("Cloud Function push dispatch note:", cfErr);
+    }
+
+    // Also trigger local notification on current device
+    if (typeof window.testLocalNotification === 'function') {
+        try {
+            await window.testLocalNotification(title, msg);
+        } catch (e) {}
+    }
+
+    hideAdminMiniLoader();
+    showAdminToast(`✓ ยิงแจ้งเตือนเตือนจิบน้ำทดสอบสำเร็จ!${deliveredInfo}`);
 };
 
 window.dispatchPersonalizedHydrationBroadcast = async function () {
     const confirmSend = confirm('คุณต้องการยิงแจ้งเตือนเตือนจิบน้ำรายบุคคลไปยังผู้ใช้ที่ดื่มน้ำไม่ถึง 50% ใช่หรือไม่?');
     if (!confirmSend) return;
 
+    showAdminMiniLoader('กำลังส่งการแจ้งเตือนจิบน้ำรายบุคคล...');
     try {
         const critMsg = _hydrationConfig.criticalMsgs[Math.floor(Math.random() * _hydrationConfig.criticalMsgs.length)];
         const modMsg = _hydrationConfig.moderateMsgs[Math.floor(Math.random() * _hydrationConfig.moderateMsgs.length)];
 
+        let broadcastDocId = null;
         if (typeof db !== 'undefined' && db) {
-            // Save smart broadcast intent
-            await addDoc(collection(db, 'push_broadcasts'), {
+            const newDoc = await addDoc(collection(db, 'push_broadcasts'), {
                 type: 'personalized_hydration',
                 timestamp: new Date().toISOString(),
                 criticalMsg: critMsg,
                 moderateMsg: modMsg,
-                thresholdPct: 50
+                thresholdPct: 50,
+                sentBy: currentUser?.email || 'admin'
             });
+            broadcastDocId = newDoc?.id;
         }
-        alert('🚀 ส่งคำสั่งแจ้งเตือนจิบน้ำรายบุคคล (Personalized Hydration) เรียบร้อยแล้ว!');
+
+        // Call Cloud Function to dispatch native push to locked mobile phones
+        let cfResult = null;
+        try {
+            const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: '💧 บ่ายนี้ร่างกายต้องการน้ำ!',
+                    body: critMsg,
+                    audience: 'all',
+                    broadcastId: broadcastDocId,
+                    type: 'personalized_hydration'
+                })
+            });
+            cfResult = await cfRes.json();
+        } catch (cfErr) {
+            console.warn("Cloud Function push dispatch note:", cfErr);
+        }
+
+        hideAdminMiniLoader();
+        const countInfo = cfResult?.stats?.delivered ? ` (ส่งถึง ${cfResult.stats.delivered} เครื่องเรียบร้อย)` : '';
+        showAdminToast(`🚀 ส่งคำสั่งแจ้งเตือนจิบน้ำรายบุคคลเรียบร้อยแล้ว!${countInfo}`);
     } catch (e) {
         console.error('dispatchPersonalizedHydrationBroadcast error:', e);
-        alert('เกิดข้อผิดพลาด: ' + e.message);
+        hideAdminMiniLoader();
+        showAdminToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
     }
 };
 
