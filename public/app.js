@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.17';
+const APP_VERSION = '5.9.18';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -1415,8 +1415,11 @@ const APP_VERSION = '5.9.17';
             }
 
             body.classList.add('accordion-section');
-            body.classList.toggle('hidden', willBeCollapsed);
-            body.classList.toggle('is-collapsed', willBeCollapsed);
+            if (willBeCollapsed) {
+                body.classList.add('is-collapsed');
+            } else {
+                body.classList.remove('hidden', 'is-collapsed');
+            }
 
             if (icon) {
                 icon.classList.add('accordion-chevron');
@@ -1469,26 +1472,54 @@ const APP_VERSION = '5.9.17';
                 const isCollapsed = !!state.collapsedSections[id];
                 if (body) {
                     body.classList.add('accordion-section');
-                    body.classList.toggle('hidden', isCollapsed);
-                    body.classList.toggle('is-collapsed', isCollapsed);
+                    if (isCollapsed) {
+                        body.classList.add('is-collapsed');
+                    } else {
+                        body.classList.remove('hidden', 'is-collapsed');
+                    }
                 }
                 if (icon) {
                     icon.classList.add('accordion-chevron');
                     icon.classList.toggle('icon-collapsed', isCollapsed);
                 }
             });
+
+            // Synchronize custom food collapsible form
+            const customBody = document.getElementById('customFoodFormBody');
+            const customIcon = document.getElementById('customFormToggleIcon');
+            if (customBody) {
+                customBody.classList.add('accordion-section');
+                if (state.customFormOpen) {
+                    customBody.classList.remove('hidden', 'is-collapsed');
+                    if (customIcon) customIcon.textContent = '▲ ซ่อนฟอร์ม';
+                } else {
+                    customBody.classList.add('is-collapsed');
+                    if (customIcon) customIcon.textContent = '▼ เปิดฟอร์ม';
+                }
+            }
         }
 
         function toggleCustomForm() {
-            state.customFormOpen = !state.customFormOpen;
             const body = document.getElementById('customFoodFormBody');
             const icon = document.getElementById('customFormToggleIcon');
-            if (state.customFormOpen) {
-                body.classList.remove('hidden');
-                icon.textContent = '▲ ซ่อนฟอร์ม';
+            if (!body) return;
+
+            // Direct DOM check guarantees first-click reliability
+            const isCurrentlyCollapsed = body.classList.contains('hidden') || body.classList.contains('is-collapsed');
+            const willOpen = isCurrentlyCollapsed;
+
+            state.customFormOpen = willOpen;
+            saveState();
+
+            body.classList.add('accordion-section');
+            if (willOpen) {
+                body.classList.remove('hidden', 'is-collapsed');
+                if (icon) icon.textContent = '▲ ซ่อนฟอร์ม';
+                const nameInput = document.getElementById('inFoodName');
+                if (nameInput) setTimeout(() => nameInput.focus(), 60);
             } else {
-                body.classList.add('hidden');
-                icon.textContent = '▼ เปิดฟอร์ม';
+                body.classList.add('is-collapsed');
+                if (icon) icon.textContent = '▼ เปิดฟอร์ม';
             }
         }
 

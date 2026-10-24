@@ -244,8 +244,8 @@ server.listen(PORT, async () => {
             return {
                 allVisible,
                 rects,
-                foodBodyHidden: foodBody.classList.contains('hidden'),
-                workoutBodyHidden: workoutBody.classList.contains('hidden'),
+                foodBodyHidden: foodBody.classList.contains('hidden') || foodBody.classList.contains('is-collapsed'),
+                workoutBodyHidden: workoutBody.classList.contains('hidden') || workoutBody.classList.contains('is-collapsed'),
                 foodCardHeight: Math.round(foodCard.getBoundingClientRect().height),
                 workoutCardHeight: Math.round(workoutCard.getBoundingClientRect().height),
                 hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
@@ -454,7 +454,7 @@ server.listen(PORT, async () => {
         // Test Meals section accordion collapse & expand with scroll simulation while IF timer is ticking
         await evalJs('window.scrollTo(0, 300)');
         await evalJs('toggleCardSection("section_meals")');
-        let mealsHidden = await evalJs('document.getElementById("body_section_meals").classList.contains("hidden")');
+        let mealsHidden = await evalJs('document.getElementById("body_section_meals").classList.contains("is-collapsed")');
         console.log('Meals section collapsed successfully:', mealsHidden);
         if (!mealsHidden) {
             throw new Error('Meals section failed to collapse');
@@ -471,7 +471,7 @@ server.listen(PORT, async () => {
         // Re-expand meals section
         await new Promise(r => setTimeout(r, 200));
         await evalJs('toggleCardSection("section_meals")');
-        let mealsRestored = await evalJs('!document.getElementById("body_section_meals").classList.contains("hidden")');
+        let mealsRestored = await evalJs('!document.getElementById("body_section_meals").classList.contains("is-collapsed")');
         console.log('Meals section restored successfully:', mealsRestored);
         if (!mealsRestored) {
             throw new Error('Meals section failed to restore');
@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.17' ||
-            !v598Test.toolsBadge?.includes('v5.9.17')) {
+            v598Test.appVersion !== '5.9.18' ||
+            !v598Test.toolsBadge?.includes('v5.9.18')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1950,6 +1950,88 @@ server.listen(PORT, async () => {
             !tourTest.titleBack1.includes('ยินดีต้อนรับ') ||
             !tourTest.isClosing) {
             throw new Error('Test 41: App Tour interactive guide failed: ' + JSON.stringify(tourTest));
+        }
+
+        // Test 42: v5.9.18 UX Smoothing & Admin Readiness Verification
+        console.log('--- Test 42: v5.9.18 UX Smoothing & Admin Readiness Verification ---');
+        const v5918Test = await evalJs(`(() => {
+            // 1. Desktop Tools dropdown scrollability
+            const toolsMenu = document.getElementById('toolsDropdownMenu');
+            const hasToolsMenu = !!toolsMenu;
+            const hasMaxH = toolsMenu?.className.includes('max-h-');
+            const hasOverflowY = toolsMenu?.className.includes('overflow-y-auto');
+
+            // 2. Custom food form single-click toggle
+            const customBody = document.getElementById('customFoodFormBody');
+            const customIcon = document.getElementById('customFormToggleIcon');
+            const initialCollapsed = customBody?.classList.contains('is-collapsed') || customBody?.classList.contains('hidden');
+
+            // Toggle open on 1st click
+            if (typeof window.toggleCustomForm === 'function') {
+                window.toggleCustomForm();
+            }
+            const openAfterClick1 = !customBody?.classList.contains('is-collapsed') && !customBody?.classList.contains('hidden');
+            const stateOpenAfterClick1 = state.customFormOpen === true;
+
+            // Toggle close
+            if (typeof window.toggleCustomForm === 'function') {
+                window.toggleCustomForm();
+            }
+            const collapsedAfterClick2 = customBody?.classList.contains('is-collapsed');
+
+            return {
+                hasToolsMenu,
+                hasMaxH,
+                hasOverflowY,
+                initialCollapsed,
+                openAfterClick1,
+                stateOpenAfterClick1,
+                collapsedAfterClick2
+            };
+        })()`);
+        console.log('v5.9.18 UX Features verified:', v5918Test);
+
+        if (!v5918Test.hasToolsMenu ||
+            !v5918Test.hasMaxH ||
+            !v5918Test.hasOverflowY ||
+            !v5918Test.openAfterClick1 ||
+            !v5918Test.stateOpenAfterClick1 ||
+            !v5918Test.collapsedAfterClick2) {
+            throw new Error('Test 42: v5.9.18 UX smoothing failed: ' + JSON.stringify(v5918Test));
+        }
+
+        // Test 42 Part B: Admin Readiness & Connection Splash Gate
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
+        await new Promise(r => setTimeout(r, 600));
+        const adminGateTest = await evalJs(`(() => {
+            const splash = document.getElementById('adminInitSplash');
+            const authGate = document.getElementById('adminAuthGate');
+            const statusText = document.getElementById('adminInitStatusText');
+            const bar = document.getElementById('adminInitProgressBar');
+            const retryBox = document.getElementById('adminInitRetryBox');
+            const fnRetry = typeof window.retryAdminInit === 'function';
+            const fnTestHydro = typeof window.testHydrationPush === 'function';
+
+            return {
+                hasSplash: !!splash,
+                hasAuthGate: !!authGate,
+                hasStatusText: !!statusText,
+                hasBar: !!bar,
+                hasRetryBox: !!retryBox,
+                fnRetry,
+                fnTestHydro
+            };
+        })()`);
+        console.log('Admin Readiness Splash Gate verified:', adminGateTest);
+
+        if (!adminGateTest.hasSplash ||
+            !adminGateTest.hasAuthGate ||
+            !adminGateTest.hasStatusText ||
+            !adminGateTest.hasBar ||
+            !adminGateTest.hasRetryBox ||
+            !adminGateTest.fnRetry ||
+            !adminGateTest.fnTestHydro) {
+            throw new Error('Test 42 Part B: Admin Readiness Splash Gate failed: ' + JSON.stringify(adminGateTest));
         }
 
         ws.close();

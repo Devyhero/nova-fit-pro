@@ -118,14 +118,19 @@ window.showToast = showAdminToast;
 // Auth State Listener
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
+    const splash = document.getElementById('adminInitSplash');
     const authGate = document.getElementById('adminAuthGate');
     const panel = document.getElementById('adminPanel');
     const btnLogout = document.getElementById('btnAdminLogout');
     const errBox = document.getElementById('adminLoginError');
+    const statusText = document.getElementById('adminInitStatusText');
+    const bar = document.getElementById('adminInitProgressBar');
+    const retryBox = document.getElementById('adminInitRetryBox');
 
     if (!user) {
         allUsersData = [];
         window.allUsersData = [];
+        if (splash) splash.classList.add('hidden');
         if (authGate) authGate.classList.remove('hidden');
         if (panel) panel.classList.add('hidden');
         if (btnLogout) btnLogout.classList.add('hidden');
@@ -136,6 +141,7 @@ onAuthStateChanged(auth, async (user) => {
     if (!ADMIN_EMAILS.includes(email)) {
         allUsersData = [];
         window.allUsersData = [];
+        if (splash) splash.classList.add('hidden');
         if (authGate) authGate.classList.remove('hidden');
         if (panel) panel.classList.add('hidden');
         if (btnLogout) btnLogout.classList.remove('hidden');
@@ -166,20 +172,63 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    // Authorized
+    // Authorized Admin
     if (authGate) authGate.classList.add('hidden');
-    if (panel) panel.classList.remove('hidden');
-    if (btnLogout) btnLogout.classList.remove('hidden');
     if (errBox) errBox.classList.add('hidden');
+    if (btnLogout) btnLogout.classList.remove('hidden');
 
-    document.getElementById('adminName').textContent = user.displayName || 'Admin';
-    document.getElementById('adminEmail').textContent = user.email || '';
-    if (user.photoURL) {
-        document.getElementById('adminPhoto').src = user.photoURL;
+    const adminNameEl = document.getElementById('adminName');
+    const adminEmailEl = document.getElementById('adminEmail');
+    const adminPhotoEl = document.getElementById('adminPhoto');
+    if (adminNameEl) adminNameEl.textContent = user.displayName || 'Admin';
+    if (adminEmailEl) adminEmailEl.textContent = user.email || '';
+    if (adminPhotoEl && user.photoURL) adminPhotoEl.src = user.photoURL;
+
+    if (statusText) statusText.textContent = 'เชื่อมต่อฐานข้อมูลสำเร็จ กำลังดึงข้อมูลสมาชิกและสถิติทั้งหมด...';
+    if (bar) bar.style.width = '75%';
+
+    try {
+        await loadAllUserData(false);
+        if (typeof window.loadAdminPushHub === 'function') {
+            await window.loadAdminPushHub();
+        }
+        if (bar) bar.style.width = '100%';
+        if (splash) splash.classList.add('hidden');
+        if (panel) panel.classList.remove('hidden');
+    } catch (loadErr) {
+        console.error('Admin initial data load error:', loadErr);
+        if (retryBox) retryBox.classList.remove('hidden');
+        const errDesc = document.getElementById('adminInitErrorMsg');
+        if (errDesc) errDesc.textContent = 'การเชื่อมต่อฐานข้อมูลขัดข้อง: ' + (loadErr.message || 'โปรดตรวจสอบสัญญาณอินเทอร์เน็ต');
     }
-
-    await loadAllUserData();
 });
+
+window.retryAdminInit = async function () {
+    const retryBox = document.getElementById('adminInitRetryBox');
+    const statusText = document.getElementById('adminInitStatusText');
+    const bar = document.getElementById('adminInitProgressBar');
+    const splash = document.getElementById('adminInitSplash');
+    const panel = document.getElementById('adminPanel');
+
+    if (retryBox) retryBox.classList.add('hidden');
+    if (statusText) statusText.textContent = 'กำลังลองเชื่อมต่อฐานข้อมูลใหม่อีกครั้ง...';
+    if (bar) bar.style.width = '50%';
+
+    try {
+        await loadAllUserData(false);
+        if (typeof window.loadAdminPushHub === 'function') {
+            await window.loadAdminPushHub();
+        }
+        if (bar) bar.style.width = '100%';
+        if (splash) splash.classList.add('hidden');
+        if (panel) panel.classList.remove('hidden');
+        showAdminToast('✓ เชื่อมต่อฐานข้อมูลสำเร็จแล้ว!');
+    } catch (e) {
+        if (retryBox) retryBox.classList.remove('hidden');
+        const errDesc = document.getElementById('adminInitErrorMsg');
+        if (errDesc) errDesc.textContent = 'ยังไม่สามารถเชื่อมต่อได้: ' + (e.message || 'เกิดข้อผิดพลาด');
+    }
+};
 
 window.handleAdminGoogleLogin = async function () {
     try {
@@ -2861,6 +2910,7 @@ window.testHydrationPush = async function (segment) {
     showAdminMiniLoader('กำลังส่งแจ้งเตือนเตือนจิบน้ำไปยังอุปกรณ์ (รวมถึงหน้าจอล็อค)...');
 
     let deliveredInfo = '';
+    let pushDelivered = false;
     try {
         // Send native Web Push to locked mobile devices via Cloud Function
         const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
@@ -2875,15 +2925,16 @@ window.testHydrationPush = async function (segment) {
             })
         });
         const cfResult = await cfRes.json();
-        if (cfResult?.stats?.delivered) {
+        if (cfResult?.stats?.delivered && Number(cfResult.stats.delivered) > 0) {
             deliveredInfo = ` (ส่งถึง ${cfResult.stats.delivered} เครื่อง)`;
+            pushDelivered = true;
         }
     } catch (cfErr) {
         console.warn("Cloud Function push dispatch note:", cfErr);
     }
 
-    // Also trigger local notification on current device
-    if (typeof window.testLocalNotification === 'function') {
+    // Only fallback to local notification if Cloud Function Web Push did not deliver to any devices
+    if (!pushDelivered && typeof window.testLocalNotification === 'function') {
         try {
             await window.testLocalNotification(title, msg);
         } catch (e) {}

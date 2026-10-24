@@ -73,8 +73,35 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-3 sm:px-4 py-5 flex-1 w-full space-y-5">
 
+        <!-- INITIALIZATION & CONNECTION GATE: Visible until DB & Auth are fully verified and loaded -->
+        <div id="adminInitSplash" class="max-w-md mx-auto my-16 p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl text-center space-y-5 animate-pop">
+            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 rounded-3xl bg-purple-500/20 animate-ping"></div>
+                <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-lg text-3xl">
+                    🛡️
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                <h2 class="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1.5">
+                    <span>NovaFit Pro</span>
+                    <span class="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 uppercase font-extrabold">ADMIN</span>
+                </h2>
+                <p id="adminInitStatusText" class="text-xs text-slate-500 dark:text-slate-400 font-medium">กำลังเชื่อมต่อฐานข้อมูลและตรวจสอบสิทธิ์...</p>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-2 overflow-hidden">
+                <div id="adminInitProgressBar" class="h-full bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 w-1/3 animate-pulse transition-all duration-300"></div>
+            </div>
+            <div id="adminInitRetryBox" class="hidden pt-2 space-y-2">
+                <p id="adminInitErrorMsg" class="text-xs text-rose-500 font-semibold"></p>
+                <button type="button" onclick="retryAdminInit()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition active:scale-95 inline-flex items-center gap-1.5">
+                    <span>🔄</span> <span>ลองเชื่อมต่อใหม่อีกครั้ง</span>
+                </button>
+            </div>
+        </div>
+
         <!-- AUTH GATE: When not logged in or not admin -->
-        <div id="adminAuthGate" class="max-w-md mx-auto my-12 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-center space-y-4">
+        <div id="adminAuthGate" class="hidden max-w-md mx-auto my-12 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-center space-y-4">
             <div class="w-16 h-16 rounded-3xl bg-purple-500/15 text-purple-600 dark:text-purple-400 mx-auto flex items-center justify-center text-3xl">
                 🛡️
             </div>
@@ -543,12 +570,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.17
+                            Current Version: v5.9.18
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.18 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🛡️ v5.9.18 (Admin Readiness Connection Splash Gate, Push Deduplication, Custom Food Form Single-Click & 60fps Spring UI)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🛡️ Admin Readiness & Connection Splash Gate:</b> ติดตั้ง <code>#adminInitSplash</code> ป้องกันปัญหาเข้าหน้าแดชบอร์ดแล้วแสดงข้อมูลว่างเปล่า (0 สมาชิก) โดยระบบจะตรวจสอบสิทธิ์ผู้ดูแลระบบและดึงข้อมูลจาก Cloud Firestore จนพร้อมใช้งาน 100% จึงจะเปิดหน้าต่างแดชบอร์ดอย่างราบรื่น พร้อมปุ่ม Retry กรณีสัญญาณเน็ตขัดข้อง</li>
+                                <li><b>🔔 Push Broadcast Deduplication:</b> แก้ไขฟังก์ชัน <code>testHydrationPush()</code> ยกเลิกการเรียก <code>testLocalNotification()</code> ซ้ำซ้อนเมื่อ Cloud Function จัดส่ง FCM Push สำเร็จแล้ว ช่วยแก้ปัญหาการแจ้งเตือนเด้ง 2 รอบบนอุปกรณ์ทดสอบ</li>
+                                <li><b>🍽️ Custom Food Form Single-Click Sync:</b> ปรับปรุง <code>toggleCustomForm()</code> ให้ตรวจเช็คสถานะการแสดงผลจาก DOM โดยตรง แก้ปัญหาคลิกปุ่มกรอกเพิ่มเมนูเองรอบแรกไม่ตอบสนองเนื่องจาก State และ DOM Desync</li>
+                                <li><b>⚡ 60FPS Spring Accordion Transitions:</b> ปรับสไตล์ <code>.accordion-section</code> และ <code>toggleCardSection()</code> ให้ใช้ CSS Animated Max-Height / Opacity / Transform แทนการตัดสลับด้วย <code>display: none</code> ทันที มอบประสบการณ์พับ/คลี่เนื้อหาการ์ดที่นุ่มนวลระดับ 60fps</li>
+                                <li><b>📜 Desktop Dropdown Viewport Clamping:</b> เพิ่ม <code>max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain</code> ให้กับ <code>#toolsDropdownMenu</code> และ <code>#userDropdown</code> สามารถเลื่อนดูเมนูด้านล่างสุด (Export/Import/Reset/Admin) ได้อย่างสมบูรณ์แบบบนหน้าจอคอมพิวเตอร์</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.18 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.17 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
