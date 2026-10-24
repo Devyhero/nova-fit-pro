@@ -628,7 +628,7 @@
 
                         <button id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.12)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.13)
                         </button>
                         <button id="btnPwaInstall" onclick="handlePwaInstallClick(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition">
@@ -2543,9 +2543,9 @@
                         <p class="text-xs text-slate-400">คำนวณอัตโนมัติด้วยสมการ Mifflin-St Jeor ตามเป้าหมายของคุณ</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeProfileSettingsModal()"
+                <button type="button" onclick="dismissProfileSettingsModal()"
                     class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 font-bold flex items-center justify-center text-sm transition active:scale-90"
-                    title="ปิด">✕</button>
+                    title="ปิดชั่วคราว">✕</button>
             </div>
 
             <!-- Active Profile Summary Pills inside Drawer & Avatar Wardrobe Quick Link -->
@@ -2760,9 +2760,9 @@
 
             <div class="pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 shrink-0">
                 <span class="text-[11px] text-slate-400 hidden sm:inline">การเปลี่ยนแปลงทั้งหมดจะถูกบันทึกอัตโนมัติ</span>
-                <button type="button" onclick="closeProfileSettingsModal()"
-                    class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-xs transition flex items-center justify-center gap-1.5">
-                    ✓ เรียบร้อย (บันทึก & ปิด)
+                <button type="button" id="btnSaveProfileSettings" onclick="saveAndConfirmProfileSettings()"
+                    class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    ✓ บันทึกข้อมูลเรียบร้อย
                 </button>
             </div>
         </div>
@@ -3924,19 +3924,19 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.12"></script>
+    <script src="food-db.js?v=5.9.13"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.12"></script>
+    <script src="health-tips.js?v=5.9.13"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.12"></script>
+    <script src="ai-snap.js?v=5.9.13"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.12"></script>
+    <script src="app.js?v=5.9.13"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.12"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.13"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

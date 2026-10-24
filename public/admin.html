@@ -543,12 +543,25 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.12
+                            Current Version: v5.9.13
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.13 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🔒 v5.9.13 (Mandatory Profile Confirmation Lock, Non-Confirmed Prompt Loop & Dismiss Separation)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🔒 Mandatory Profile Confirmation Engine:</b> ปรับปรุง Logic ใน <code>checkFirstVisitProfilePrompt()</code> และแยกฟังก์ชันระหว่าง <code>dismissProfileSettingsModal()</code> (ปิดชั่วคราว) กับ <code>saveAndConfirmProfileSettings()</code> (บันทึกถาวร)</li>
+                                <li><b>🛡️ Non-Confirmed Data Protection:</b> หากผู้ใช้เปิดเข้ามาใช้งานและยังไม่เคยกดปุ่ม "✓ บันทึกข้อมูลเรียบร้อย" (<code>state.profileConfigured !== true</code>) ระบบจะตรวจสอบและเปิดหน้าต่างตั้งค่าร่างกายซ้ำทุกครั้งที่เข้าแอป เพื่อป้องกันผู้ใช้เผลอกดปิดแล้วข้อมูลโภชนาการและการคำนวณ TDEE/Macro คลาดเคลื่อน</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.13 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.12 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

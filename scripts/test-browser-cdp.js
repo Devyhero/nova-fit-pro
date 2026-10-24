@@ -312,6 +312,8 @@ server.listen(PORT, async () => {
 
         // Test 12: First-time Visitor Profile Modal Auto-Prompt Logic
         console.log('--- Test 12: First-time Visitor Onboarding Prompt Logic ---');
+        // Simulate save & confirm profile settings (v5.9.13 mandatory lock)
+        await evalJs('if (typeof saveAndConfirmProfileSettings === "function") saveAndConfirmProfileSettings(); else if (typeof closeProfileSettingsModal === "function") closeProfileSettingsModal();');
         const profilePrompted = await evalJs('localStorage.getItem("novafit_profile_prompted")');
         console.log('novafit_profile_prompted is recorded:', !!profilePrompted);
         if (!profilePrompted) throw new Error('novafit_profile_prompted was not set');
@@ -1627,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.12' ||
-            !v598Test.toolsBadge?.includes('v5.9.12')) {
+            v598Test.appVersion !== '5.9.13' ||
+            !v598Test.toolsBadge?.includes('v5.9.13')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 

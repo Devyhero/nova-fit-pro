@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.12';
+const APP_VERSION = '5.9.13';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -6136,6 +6136,17 @@ function openProfileSettingsModal() {
 
 function closeProfileSettingsModal() {
     closeModalAnimated('profileSettingsModal');
+}
+
+function dismissProfileSettingsModal() {
+    closeModalAnimated('profileSettingsModal');
+    // If user hasn't confirmed profile yet, inform them gently
+    if (!state.profileConfigured) {
+        showToast('ℹ️ ข้อมูลร่างกายยังไม่ได้รับการบันทึก ระบบจะแสดงหน้านี้อีกครั้งจนกว่าจะกด "✓ บันทึกข้อมูลเรียบร้อย"');
+    }
+}
+
+function saveAndConfirmProfileSettings() {
     state.profileConfigured = true;
     localStorage.setItem('novafit_profile_prompted', 'true');
     if (window.currentUser) {
@@ -6147,6 +6158,9 @@ function closeProfileSettingsModal() {
         }
     }
     saveState();
+    closeModalAnimated('profileSettingsModal');
+    if (typeof playSound === 'function') playSound('pop');
+    showToast('✓ บันทึกข้อมูลร่างกายและเป้าหมายสำเร็จแล้ว!');
 }
 
 function checkFirstVisitProfilePrompt() {
@@ -6159,13 +6173,11 @@ function checkFirstVisitProfilePrompt() {
         return;
     }
 
-    // 2. Otherwise fallback to standard profile prompt if profile not configured
-    const hasPrompted = localStorage.getItem('novafit_profile_prompted');
-    if (!hasPrompted && window._isFirstTimeVisitor) {
-        localStorage.setItem('novafit_profile_prompted', 'true');
+    // 2. If profile is not yet confirmed (profileConfigured !== true), keep prompting until user saves!
+    if (!state.profileConfigured) {
         setTimeout(() => {
             openProfileSettingsModal();
-            showToast('👋 ยินดีต้อนรับสู่ NovaFit Pro! กรุณากรอกข้อมูลร่างกายเพื่อเริ่มต้นใช้งาน');
+            showToast('⚙️ กรุณาตรวจสอบและกด "✓ บันทึกข้อมูลเรียบร้อย" เพื่อเริ่มคำนวณเป้าหมายส่วนตัว');
         }, 500);
     }
 }
@@ -6185,7 +6197,7 @@ function checkDayRollover() {
 
 function closeProfileSettingsOnBackdrop(e) {
     if (e && e.target && e.target.id === 'profileSettingsModal') {
-        closeProfileSettingsModal();
+        dismissProfileSettingsModal();
     }
 }
 
@@ -7119,6 +7131,8 @@ function triggerTestCompanionNudge(type) {
 window.state = state;
 window.openProfileSettingsModal = openProfileSettingsModal;
 window.closeProfileSettingsModal = closeProfileSettingsModal;
+window.dismissProfileSettingsModal = dismissProfileSettingsModal;
+window.saveAndConfirmProfileSettings = saveAndConfirmProfileSettings;
 window.closeProfileSettingsOnBackdrop = closeProfileSettingsOnBackdrop;
 window.openQuickAddModal = openQuickAddModal;
 window.closeQuickAddModal = closeQuickAddModal;
