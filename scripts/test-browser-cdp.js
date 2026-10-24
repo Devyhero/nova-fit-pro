@@ -307,8 +307,9 @@ server.listen(PORT, async () => {
         await evalJs('setActiveMeal("snack")');
         await evalJs('(() => { state.lastActiveDate = "2026-10-18"; checkDayRollover(); })()');
         currentMeal = await evalJs('state.activeMeal');
-        console.log('Active meal after simulated day rollover (should be breakfast):', currentMeal);
-        if (currentMeal !== 'breakfast') throw new Error('Active meal did not reset to breakfast on day rollover');
+        const expectedMeal = await evalJs('getDefaultMealByTime()');
+        console.log('Active meal after simulated day rollover (should be ' + expectedMeal + '):', currentMeal);
+        if (currentMeal !== expectedMeal) throw new Error('Active meal did not reset to ' + expectedMeal + ' on day rollover');
 
         // Test 12: First-time Visitor Profile Modal Auto-Prompt Logic
         console.log('--- Test 12: First-time Visitor Onboarding Prompt Logic ---');
@@ -1629,8 +1630,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.20' ||
-            !v598Test.toolsBadge?.includes('v5.9.20')) {
+            v598Test.appVersion !== '5.9.21' ||
+            !v598Test.toolsBadge?.includes('v5.9.21')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2196,6 +2197,66 @@ server.listen(PORT, async () => {
             !mascotTest.tier1Deflected ||
             !mascotTest.localAdviceWorks) {
             throw new Error('Test 44: Nova Mascot Companion failed: ' + JSON.stringify(mascotTest));
+        }
+
+        // Test 45: Smart Time-Based Meal Selector & Auto-Sync Engine (v5.9.21)
+        console.log('--- Test 45: Smart Time-Based Meal Selector & Auto-Sync Engine (v5.9.21) ---');
+        const smartMealTest = await evalJs(`(() => {
+            // 1. Check time-based logic mapping
+            const dMorning = new Date('2026-10-24T08:30:00');
+            const dLunch = new Date('2026-10-24T12:15:00');
+            const dDinner = new Date('2026-10-24T18:45:00');
+            const dNight = new Date('2026-10-24T22:30:00');
+            const dLateNight = new Date('2026-10-24T02:00:00');
+
+            const mMorning = getDefaultMealByTime(dMorning);
+            const mLunch = getDefaultMealByTime(dLunch);
+            const mDinner = getDefaultMealByTime(dDinner);
+            const mNight = getDefaultMealByTime(dNight);
+            const mLate = getDefaultMealByTime(dLateNight);
+
+            const isMappingAccurate = mMorning === 'breakfast' &&
+                mLunch === 'lunch' &&
+                mDinner === 'dinner' &&
+                mNight === 'snack' &&
+                mLate === 'snack';
+
+            // 2. Test goToToday restores time-based meal
+            setActiveMeal('snack');
+            goToToday();
+            const todayExpected = getDefaultMealByTime();
+            const mealAfterGoToToday = state.activeMeal;
+            const matchesTodayMeal = mealAfterGoToToday === todayExpected;
+
+            // 3. Test onDateChange past day vs today
+            onDateChange('2026-10-10');
+            const pastMeal = state.activeMeal;
+            onDateChange(getTodayStr());
+            const restoredTodayMeal = state.activeMeal;
+            const pastVsTodayAccurate = pastMeal === 'breakfast' && restoredTodayMeal === todayExpected;
+
+            // 4. Test autoSyncMealByTime function
+            const hasAutoSync = typeof autoSyncMealByTime === 'function';
+
+            return {
+                isMappingAccurate,
+                mMorning,
+                mLunch,
+                mDinner,
+                mNight,
+                mLate,
+                matchesTodayMeal,
+                pastVsTodayAccurate,
+                hasAutoSync
+            };
+        })()`);
+        console.log('Smart Time-Based Meal Selector verified:', smartMealTest);
+
+        if (!smartMealTest.isMappingAccurate ||
+            !smartMealTest.matchesTodayMeal ||
+            !smartMealTest.pastVsTodayAccurate ||
+            !smartMealTest.hasAutoSync) {
+            throw new Error('Test 45: Smart Time-Based Meal Selector failed: ' + JSON.stringify(smartMealTest));
         }
 
         ws.close();

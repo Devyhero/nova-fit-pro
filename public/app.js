@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.20';
+const APP_VERSION = '5.9.21';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -8,12 +8,13 @@ const APP_VERSION = '5.9.20';
             return new Date(now.getTime() - offset).toISOString().split('T')[0];
         }
 
-        function getDefaultMealByTime() {
-            const h = new Date().getHours();
-            if (h >= 4 && h < 11) return 'breakfast';
-            if (h >= 11 && h < 16) return 'lunch';
-            if (h >= 16 && h < 21) return 'dinner';
-            return 'snack';
+        function getDefaultMealByTime(date = new Date()) {
+            const d = (date instanceof Date && !isNaN(date.getTime())) ? date : new Date();
+            const h = d.getHours();
+            if (h >= 4 && h < 11) return 'breakfast';   // 04:00 - 10:59: มื้อเช้า
+            if (h >= 11 && h < 16) return 'lunch';      // 11:00 - 15:59: มื้อเที่ยง
+            if (h >= 16 && h < 21) return 'dinner';     // 16:00 - 20:59: มื้อเย็น
+            return 'snack';                             // 21:00 - 03:59: ของว่าง / มื้อดึก
         }
 
         function inferMealFromTime(timeStr) {
@@ -287,7 +288,7 @@ const APP_VERSION = '5.9.20';
                         version: APP_VERSION,
                         soundEnabled: parsed.soundEnabled !== false,
                         collapsedSections: (parsed.collapsedSections && typeof parsed.collapsedSections === 'object') ? parsed.collapsedSections : {},
-                        activeMeal: isNewDay ? 'breakfast' : (parsed.activeMeal || 'breakfast'),
+                        activeMeal: getDefaultMealByTime(),
                         selectedPortion: Number(parsed.selectedPortion) || 1,
                         favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
                         bodyTab: parsed.bodyTab || 'weight',
@@ -386,7 +387,7 @@ const APP_VERSION = '5.9.20';
                     state.settingsCollapsed = false;
                     state.lastActiveDate = todayStr;
                     state.selectedDate = todayStr;
-                    state.activeMeal = 'breakfast';
+                    state.activeMeal = getDefaultMealByTime();
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
@@ -397,7 +398,8 @@ const APP_VERSION = '5.9.20';
             state.searchQuery = ''; // Always clean search on load to prevent phantom query bugs
             const validCatIds = new Set(['all', 'favorites', 'custom', 'combos', ...(FOOD_DATABASE.categories ? FOOD_DATABASE.categories.map(c => c.id) : [])]);
             if (!validCatIds.has(state.selectedCategory)) state.selectedCategory = 'all';
-            if (!state.activeMeal) state.activeMeal = 'breakfast';
+            if (!state.activeMeal) state.activeMeal = getDefaultMealByTime();
+            state._lastAutoMealPeriod = state.activeMeal;
             if (!state.selectedPortion) state.selectedPortion = 1;
             if (!Array.isArray(state.favorites)) state.favorites = [];
             if (!Array.isArray(state.mealCombos) || state.mealCombos.length === 0) state.mealCombos = DEFAULT_MEAL_COMBOS;
@@ -4277,7 +4279,9 @@ const APP_VERSION = '5.9.20';
             const changed = state.selectedDate !== val;
             state.selectedDate = val;
             if (changed) {
-                state.activeMeal = 'breakfast';
+                const isToday = val === getTodayStr();
+                state.activeMeal = isToday ? getDefaultMealByTime() : 'breakfast';
+                if (isToday) state._lastAutoMealPeriod = state.activeMeal;
             }
             saveState();
             renderAll();
@@ -4290,7 +4294,9 @@ const APP_VERSION = '5.9.20';
             const newDateStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
             if (state.selectedDate !== newDateStr) {
                 state.selectedDate = newDateStr;
-                state.activeMeal = 'breakfast';
+                const isToday = newDateStr === getTodayStr();
+                state.activeMeal = isToday ? getDefaultMealByTime() : 'breakfast';
+                if (isToday) state._lastAutoMealPeriod = state.activeMeal;
                 saveState();
                 renderAll();
             }
@@ -4298,10 +4304,12 @@ const APP_VERSION = '5.9.20';
 
         function goToToday() {
             state.selectedDate = getTodayStr();
-            state.activeMeal = 'breakfast';
+            state.activeMeal = getDefaultMealByTime();
+            state._lastAutoMealPeriod = state.activeMeal;
             saveState();
             renderAll();
-            showToast('📅 กลับสู่วันปัจจุบัน (มื้อเช้า) เรียบร้อย');
+            const mealName = MEAL_CONFIG[state.activeMeal]?.name || 'มื้อเช้า';
+            showToast(`📅 กลับสู่วันปัจจุบัน (${mealName}) เรียบร้อย`);
         }
 
         function addFoodItem(name, p, c, f, explicitCal, targetMeal, targetPortion) {
@@ -6231,16 +6239,35 @@ function checkFirstVisitProfilePrompt() {
     }
 }
 
+function autoSyncMealByTime() {
+    if (state.selectedDate !== getTodayStr()) return;
+    const currentPeriod = getDefaultMealByTime();
+    if (state._lastAutoMealPeriod && state._lastAutoMealPeriod !== currentPeriod) {
+        console.log(`⏰ Time period shifted from ${state._lastAutoMealPeriod} to ${currentPeriod}, auto-selecting meal`);
+        state.activeMeal = currentPeriod;
+        state._lastAutoMealPeriod = currentPeriod;
+        saveState();
+        renderMealSelector();
+        renderFoodDatabaseExplorer();
+        const targets = getCalculatedTargets();
+        renderDateTrackerAndRecommendations(targets, false);
+    }
+}
+
 function checkDayRollover() {
     const todayStr = getTodayStr();
     if (state.lastActiveDate && state.lastActiveDate !== todayStr) {
-        console.log('🌅 New day detected! Auto-switching to:', todayStr, 'with breakfast active');
+        console.log('🌅 New day detected! Auto-switching to:', todayStr);
         state.lastActiveDate = todayStr;
         state.selectedDate = todayStr;
-        state.activeMeal = 'breakfast';
+        state.activeMeal = getDefaultMealByTime();
+        state._lastAutoMealPeriod = state.activeMeal;
         saveState();
         renderAll();
-        showToast('🌅 อรุณสวัสดิ์วันใหม่! สลับไปมื้อเช้าให้อัตโนมัติแล้ว');
+        const mealName = MEAL_CONFIG[state.activeMeal]?.name || 'มื้อเช้า';
+        showToast(`🌅 อรุณสวัสดิ์วันใหม่! สลับไป${mealName}ให้อัตโนมัติแล้ว`);
+    } else {
+        autoSyncMealByTime();
     }
 }
 
@@ -7256,3 +7283,5 @@ window.dismissPushPrompt = dismissPushPrompt;
 window.checkPushPromptEligibility = checkPushPromptEligibility;
 window.testLocalNotification = testLocalNotification;
 window.togglePushNotificationPermission = togglePushNotificationPermission;
+window.getDefaultMealByTime = getDefaultMealByTime;
+window.autoSyncMealByTime = autoSyncMealByTime;
