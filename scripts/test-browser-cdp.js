@@ -2145,6 +2145,15 @@ server.listen(PORT, async () => {
                 tier1Deflected = !!lastMsg?.textContent?.includes('เชี่ยวชาญเฉพาะเรื่องอาหาร');
             }
 
+            // Test Dynamic Local Advice Engine (v5.9.20)
+            let localAdviceWorks = false;
+            if (typeof window.generateSmartLocalAdvice === 'function') {
+                const sampleStats = { remainCal: 450, totalP: 75, targetP: 120, waterGlasses: 4, waterTarget: 8, streak: 3 };
+                const shabuAdvice = window.generateSmartLocalAdvice('เย็นนี้กินชาบูได้ไหม', sampleStats);
+                const proteinAdvice = window.generateSmartLocalAdvice('โปรตีนยังขาดอยู่ กินอะไรดี', sampleStats);
+                localAdviceWorks = shabuAdvice.includes('ชาบู') && proteinAdvice.includes('โปรตีน');
+            }
+
             if (typeof window.closeNovaChatModal === 'function') {
                 window.closeNovaChatModal();
             }
@@ -2164,7 +2173,8 @@ server.listen(PORT, async () => {
                 isContainerHidden,
                 isContainerRestored,
                 isChatModalOpen,
-                tier1Deflected
+                tier1Deflected,
+                localAdviceWorks
             };
         })()`);
         console.log('Nova Mascot Companion verified:', mascotTest);
@@ -2183,7 +2193,8 @@ server.listen(PORT, async () => {
             !mascotTest.isContainerHidden ||
             !mascotTest.isContainerRestored ||
             !mascotTest.isChatModalOpen ||
-            !mascotTest.tier1Deflected) {
+            !mascotTest.tier1Deflected ||
+            !mascotTest.localAdviceWorks) {
             throw new Error('Test 44: Nova Mascot Companion failed: ' + JSON.stringify(mascotTest));
         }
 

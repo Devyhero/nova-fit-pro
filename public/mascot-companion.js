@@ -1,11 +1,11 @@
 /**
  * NovaFit Pro - Smart Mascot Companion Engine (v5.9.20)
- * Mascot: "Nova the Avocado Cat" (น้องโนวา แมวอโวคาโด)
+ * Mascot: "MeowNova the Avocado Cat" (น้องเหมียวโนวา แมวอโวคาโด)
  * 
  * Roles:
  * 1. Role 1 (Smart Reactive Floating Bubble): 100% Zero-Token Client Rule-Based Mood & Cheer-Up Engine
  * 2. Role 2 (One-Tap Shortcut Action Hub): Quick Water (+250ml), AI Snap, AI Chat, Minimize
- * 3. Role 3 (Nova AI Health Coach): Context-Aware Advice with 4-Tier Strict Token Protection
+ * 3. Role 3 (MeowNova AI Health Coach): Context-Aware Advice with 4-Tier Strict Token Protection
  */
 
 (function () {
@@ -174,7 +174,7 @@
 
         return {
             mood: 'happy',
-            text: `โค้ชโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑`,
+            text: `โค้ชเหมียวโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑`,
             actionHint: 'happy'
         };
     }
@@ -213,7 +213,7 @@
         // Update Mascot Face
         const imgSrc = NOVA_MOOD_IMAGES[_currentMascotMood] || NOVA_MOOD_IMAGES.happy;
         img.src = imgSrc;
-        img.alt = `Nova Cat (${_currentMascotMood})`;
+        img.alt = `MeowNova Cat (${_currentMascotMood})`;
 
         // Update Mood Badge
         if (badge) {
@@ -281,7 +281,7 @@
         toggleNovaQuickMenu(true);
         renderNovaMascot();
         if (typeof window.showToast === 'function') {
-            window.showToast('🥑 ซ่อนน้องโนวาแล้ว แตะแถบขอบจอเพื่อเรียกกลับมาได้ตลอดนะเมี้ยว');
+            window.showToast('🥑 ซ่อนน้องเหมียวโนวาแล้ว แตะแถบขอบจอเพื่อเรียกกลับมาได้ตลอดนะเมี้ยว');
         }
     }
 
@@ -293,7 +293,7 @@
             if (typeof window.saveState === 'function') window.saveState();
         }
         renderNovaMascot();
-        showNovaSpeechBubble('สวัสดีเมี้ยว! โนวากลับมาดูแลแล้ว 🥑✨', 4000);
+        showNovaSpeechBubble('สวัสดีเมี้ยว! เหมียวโนวากลับมาดูแลแล้ว 🥑✨', 4000);
         playSfx('pop');
     }
 
@@ -335,7 +335,7 @@
     }
 
     // ==========================================
-    // ROLE 3: NOVA AI HEALTH COACH CHAT WITH 4-TIER GUARD
+    // ROLE 3: MEOWNOVA AI HEALTH COACH WITH SMART FALLBACK & 4-TIER GUARD
     // ==========================================
 
     function getChatDailyQuota() {
@@ -382,7 +382,7 @@
         // Populate initial greeting if empty
         const history = document.getElementById('novaChatHistory');
         if (history && history.children.length === 0) {
-            appendMascotMessage('สวัสดีเมี้ยว! โค้ชโนวาพร้อมตอบข้อสงสัยเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายให้คุณแล้ว มีอะไรให้น้องช่วยแนะนำไหมเมี้ยว 🥑✨');
+            appendMascotMessage('สวัสดีเมี้ยว! โค้ชเหมียวโนวาพร้อมตอบข้อสงสัยเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายให้คุณแล้ว มีอะไรให้น้องช่วยแนะนำไหมเมี้ยว 🥑✨');
         }
 
         if (typeof window.openModalAnimated === 'function') {
@@ -427,7 +427,7 @@
         row.className = 'flex items-start gap-2 animate-pop mascot-msg-row';
         row.innerHTML = `
             <div class="w-8 h-8 rounded-full border border-emerald-400/40 bg-emerald-50 dark:bg-emerald-950/40 p-0.5 shrink-0 select-none overflow-hidden shadow-xs">
-                <img src="${NOVA_MOOD_IMAGES.happy}" alt="Nova" class="w-full h-full object-contain">
+                <img src="${NOVA_MOOD_IMAGES.happy}" alt="MeowNova" class="w-full h-full object-contain">
             </div>
             <div class="max-w-[82%] p-3 rounded-2xl rounded-tl-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs leading-relaxed shadow-xs">
                 ${isTyping ? '<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.2s]"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.4s]"></span></span>' : formatMascotText(text)}
@@ -448,6 +448,66 @@
         return escapeHtml(text).replace(/\n/g, '<br>');
     }
 
+    // Dynamic, Context-Aware Offline & Heuristic Advisor (NEVER repeats a static sentence!)
+    function generateSmartLocalAdvice(question, stats) {
+        const q = (question || '').toLowerCase();
+        const { remainCal, totalP, targetP, waterGlasses, targetGlasses } = stats;
+
+        // 1. Shabu / Suki / Buffet
+        if (/ชาบู|สุกี้|หมูกระทะ|บุฟเฟต์|ปิ้งย่าง/i.test(q)) {
+            return `กินชาบูให้ฟินและไม่อ้วนเมี้ยว: 1. เลือกน้ำซุปใส 2. เน้นเนื้อสัตว์ไม่ติดมัน เช่น สันใน/อกไก่/กุ้ง 3. ทานผักใบเขียวก่อน 4. จิ้มน้ำจิ้มพอประมาณ ตอนนี้แคลอรีคุณเหลืออีก ${remainCal} kcal จัดสรรได้สบายๆ เลยน้า 🍲😋`;
+        }
+
+        // 2. Protein deficit & suggestions
+        if (/โปรตีน|เนื้อ|ไก่|ไข่|เวย์|whey/i.test(q)) {
+            const pGap = Math.max(0, targetP - totalP);
+            if (pGap > 0) {
+                return `วันนี้โปรตีนทานไปแล้ว ${totalP}g ยังขาดอีก ${pGap}g เมี้ยว! แนะนำเสริมด้วย: ไข่ต้ม 2 ฟอง (~12g P), อกไก่ 100g (~23g P), หรือนมถั่วเหลือง/เวย์โปรตีน จะช่วยซ่อมแซมกล้ามเนื้อได้พอดีเป๊ะเลย 🍗🍳`;
+            } else {
+                return `สุดยอดมากเมี้ยว! โปรตีนวันนี้ทะลุ ${totalP}g เกินเป้าหมาย ${targetP}g เรียบร้อยแล้ว กล้ามเนื้อฟื้นตัวเต็มที่แน่นอน ทานมื้อต่อไปเน้นผักและคาร์บเชิงซ้อนได้เลยน้า 🌟`;
+            }
+        }
+
+        // 3. Water Intake
+        if (/น้ำ|ดื่ม|กี่แก้ว|กี่ลิตร|กระหาย|hydration/i.test(q)) {
+            const wGap = Math.max(0, targetGlasses - waterGlasses);
+            return `การดื่มน้ำวันละ 2-3 ลิตรช่วยเร่งการเผาผลาญไขมัน ลดอาการหิวปลอม และช่วยให้ระบบขับถ่ายคล่องตัวเมี้ยว! วันนี้ดื่มไปแล้ว ${waterGlasses} แก้ว (${waterGlasses * 250} ml) จิบเพิ่มอีก ${wGap > 0 ? wGap + ' แก้ว' : 'เรื่อยๆ'} เพื่อความสดชื่นนะเมี้ยว 💧✨`;
+        }
+
+        // 4. Workout / Exercise Timing
+        if (/ออกกำลัง|เวท|วิ่ง|คาร์ดิโอ|ซ้อม|ยิม|ฟิตเนส|ก่อนหรือหลัง/i.test(q)) {
+            return `ถ้าเน้นเบิร์นไขมัน คาร์ดิโอเบาๆ ตอนเช้าก่อนอาหารก็เหมาะมากเมี้ยว! แต่ถ้าเน้นยกเวทสร้างกล้าม แนะนำทานกล้วยหอมหรือขนมปัง 1 แผ่นก่อนเล่น 45 นาที จะช่วยให้มีพลังงานยกได้หนักขึ้นโดยไม่หมดแรงน้า 💪🔥`;
+        }
+
+        // 5. Dinner / Evening meal
+        if (/เย็น|มื้อเย็น|ค่ำ|อาหารเย็น/i.test(q)) {
+            return `มื้อเย็นวันนี้ แคลอรีคงเหลือ ${remainCal} kcal แนะนำเมนูเบาสบายท้อง ย่อยง่าย เช่น เกาเหลาไก่ฉีก, ส้มตำไก่ย่างไม่ติดหนัง, สเต๊กปลา หรือสลัดอกไก่น้ำใส ทานก่อนนอนอย่างน้อย 3 ชม. จะหลับสบายไม่อึดอัดเมี้ยว 🥗🥑`;
+        }
+
+        // 6. Late night hunger / cravings
+        if (/หิว|ดึก|มื้อดึก|นอนไม่หลับ/i.test(q)) {
+            return `ถ้าหิวช่วงดึก แนะนำจิบน้ำอุ่นหรือชาคาโมมายล์ก่อนเมี้ยว ถ้าร่างกายต้องการพลังงานจริงๆ ให้เลือกไข่ต้ม 1 ฟอง, กรีกโยเกิร์ต 1 ถ้วย, หรือนมอัลมอนด์ ไม่เกิน 100 kcal เพื่อไม่ให้รบกวนฮอร์โมนเผาผลาญตอนนอนน้า 🌙`;
+        }
+
+        // 7. Carb / Rice / Bread / Starch
+        if (/ข้าว|แป้ง|คาร์บ|เส้น|ขนมปัง/i.test(q)) {
+            return `คาร์บไม่ใช่ผู้ร้ายน้าเมี้ยว! ร่างกายต้องการคาร์บเป็นพลังงานหลัก แค่เลือกคาร์บเชิงซ้อน เช่น ข้าวกล้อง ข้าวไรซ์เบอร์รี่ หรือมันหวาน จะอิ่มนานและระดับน้ำตาลในเลือดนิ่งขึ้นเมี้ยว 🍠🍚`;
+        }
+
+        // 8. Fat / Fried / Oil
+        if (/ไขมัน|ของทอด|มัน/i.test(q)) {
+            return `ไขมันดีจำเป็นต่อการสร้างฮอร์โมนเมี้ยว! เลือกไขมันจากอโวคาโด น้ำมันมะกอก หรือถั่วเปลือกแข็ง เลี่ยงของทอดน้ำมันซ้ำ แค่นี้หลอดเลือดก็สะอาดหุ่นเฟิร์มแน่นอนน้า 🥑🥜`;
+        }
+
+        // 9. IF / Fasting
+        if (/if|fasting|อดอาหาร|กี่ชั่วโมง/i.test(q)) {
+            return `ช่วง Fasting ร่างกายจะดึงไขมันสะสมมาใช้เป็นพลังงานและซ่อมแซมเซลล์เมี้ยว! ระหว่างอดสามารถดื่มน้ำเปล่า ชาไม่ใส่น้ำตาล และกาแฟดำได้ สู้ๆ นะเมี้ยว อดทนอีกนิดเพื่อหุ่นในฝัน ⏳✨`;
+        }
+
+        // 10. Default Context-Aware Answer
+        return `สำหรับคำถามนี้ จากเป้าหมายวันนี้แคลอรีคงเหลือ ${remainCal} kcal แนะนำให้เลือกทานอาหารธรรมชาติ (Whole Foods) โปรตีนคุณภาพดี และดื่มน้ำให้เพียงพอ เหมียวโนวาเป็นกำลังใจให้เสมอ ลุยไปด้วยกันนะเมี้ยว 🥑✨`;
+    }
+
     // Ask Question with 4-Tier Guard
     async function handleNovaAskSubmit(overrideText = null) {
         const input = document.getElementById('novaChatInput');
@@ -466,7 +526,7 @@
         // ==========================================
         if (OFF_TOPIC_REGEX.test(question)) {
             playSfx('pop');
-            appendMascotMessage('เหมียว~ โค้ชโนวาเชี่ยวชาญเฉพาะเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายเท่านั้นน้าเมี้ยว เรื่องอื่นน้องตอบไม่ได้จริง ๆ ลองถามเกี่ยวกับเมนูวันนี้หรือเป้าหมายสุขภาพดูสิเมี้ยว 🥑✨');
+            appendMascotMessage('เหมียว~ โค้ชเหมียวโนวาเชี่ยวชาญเฉพาะเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายเท่านั้นน้าเมี้ยว เรื่องอื่นน้องตอบไม่ได้จริง ๆ ลองถามเกี่ยวกับเมนูวันนี้หรือเป้าหมายสุขภาพดูสิเมี้ยว 🥑✨');
             return;
         }
 
@@ -496,6 +556,8 @@
         const remainCal = Math.max(0, goalCal - totalCal);
         const waterGlasses = (st.waterByDate && st.waterByDate[todayStr]) || 0;
         const weight = st.weight || 65;
+        const targetP = (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6);
+        const targetGlasses = Math.max(6, Math.round((weight * 35) / 250));
 
         const userContextPrompt = `ข้อมูลสุขภาพผู้ใช้วันนี้:
 - น้ำหนัก: ${weight} กก.
@@ -511,71 +573,88 @@
         const typingRow = appendMascotMessage('', true);
 
         // ==========================================
-        // TIER 2: STRICT SYSTEM PROMPT & GEMINI CALL
+        // TIER 2: STRICT SYSTEM PROMPT & GEMINI CALL WITH MULTI-MODEL FALLBACK
         // ==========================================
         try {
-            const systemInstruction = `You are "Nova" (โนวา), an adorable avocado-cat fitness & nutrition coach in NovaFit Pro.
-Tone: Warm, encouraging, concise Thai, ending sentences politely with "เมี้ยว" or "น้า".
-STRICT SCOPE: You ONLY give advice regarding food nutrition, calories, macros (P/C/F), weight goals, hydration, fasting (IF), and workouts.
-STRICT DEFLECTION: If the question is outside this scope, strictly respond in 1 friendly sentence: "น้องโนวาขอตอบเฉพาะเรื่องอาหารและสุขภาพเท่านั้นนะเมี้ยว ลองถามเกี่ยวกับเมนูวันนี้ดูสิ!"
-LENGTH LIMIT: Keep the answer short and punchy within 2-3 sentences (maximum 80 Thai words).`;
+            const systemInstruction = `คุณคือ "MeowNova" (เหมียวโนวา) แมวอโวคาโด โค้ชสุขภาพและโภชนาการประจำแอป NovaFit Pro
+บุคลิก: อบอุ่น เป็นกันเอง ให้กำลังใจ ใช้คำลงท้ายน่ารักสุภาพสไตล์แมว เช่น "เมี้ยว" หรือ "น้า"
+ขอบเขตคำตอบ: ตอบเฉพาะเรื่องอาหาร สารอาหาร (โปรตีน/คาร์บ/ไขมัน) แคลอรี น้ำหนัก การดื่มน้ำ IF และการออกกำลังกายเท่านั้น
+ความยาว: ตอบกระชับตรงประเด็น 2-3 ประโยค (ไม่เกิน 70 คำ) และห้ามตอบเรื่องนอกเหนือจากสุขภาพเด็ดขาด`;
 
             let apiKey = '';
             if (typeof window.getGeminiApiKey === 'function') {
                 apiKey = window.getGeminiApiKey();
             } else {
-                apiKey = localStorage.getItem('novafit_gemini_api_key') || '';
+                apiKey = localStorage.getItem('novafit_gemini_api_key') || localStorage.getItem('novafit_system_gemini_api_key') || '';
             }
 
-            // Fallback for UAT without key
-            if (!apiKey && isUat) {
-                await new Promise(r => setTimeout(r, 600));
-                typingRow.remove();
-                appendMascotMessage(`เมี้ยว~ สำหรับคำถามนี้ ในเป้าหมายแคลอรีคงเหลือ ${remainCal} kcal แนะนำให้เน้นโปรตีนไขมันต่ำ เช่น อกไก่ย่าง หรือไข่ต้ม 2 ฟอง จะช่วยให้อิ่มท้องและกล้ามเนื้อกระชับตามเป้าเลยน้า! 🍗✨`);
-                incrementChatDailyQuota();
-                playSfx('pop');
-                return;
-            }
+            const candidateModels = [
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash',
+                'gemini-1.5-flash-latest'
+            ];
 
-            if (!apiKey) {
-                typingRow.remove();
-                appendMascotMessage('ยังไม่ได้เชื่อมต่อ Google Gemini API Key กรุณาตั้งค่า API Key ในเมนู AI Snap ก่อนนะเมี้ยว 🥑');
-                return;
-            }
+            let replyText = null;
 
-            const modelName = 'gemini-1.5-flash';
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            if (apiKey) {
+                const fullPrompt = `${systemInstruction}\n\n${userContextPrompt}\n\nคำถามจากผู้ใช้: "${question}"`;
 
-            const payload = {
-                systemInstruction: {
-                    parts: [{ text: systemInstruction }]
-                },
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [
-                            { text: `${userContextPrompt}\n\nคำถามจากผู้ใช้: "${question}"` }
-                        ]
+                for (const modelName of candidateModels) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 10000);
+                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            signal: controller.signal,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-goog-api-key': apiKey
+                            },
+                            body: JSON.stringify({
+                                contents: [
+                                    {
+                                        parts: [{ text: fullPrompt }]
+                                    }
+                                ],
+                                generationConfig: {
+                                    temperature: 0.6,
+                                    maxOutputTokens: 220
+                                }
+                            })
+                        });
+                        clearTimeout(timeoutId);
+
+                        if (!response.ok) {
+                            console.warn(`MeowNova: model ${modelName} returned status ${response.status}`);
+                            continue;
+                        }
+
+                        const data = await response.json();
+                        const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (candidate && candidate.trim()) {
+                            replyText = candidate.trim();
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn(`MeowNova model ${modelName} attempt failed:`, e);
                     }
-                ],
-                generationConfig: {
-                    temperature: 0.5,
-                    maxOutputTokens: 180
                 }
-            };
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
             }
 
-            const data = await response.json();
-            const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            // If API didn't return (no key, offline, or temporary API rate limit) -> Run Smart Contextual Local Advisor!
+            if (!replyText) {
+                await new Promise(r => setTimeout(r, 400));
+                replyText = generateSmartLocalAdvice(question, {
+                    remainCal,
+                    totalP,
+                    targetP,
+                    waterGlasses,
+                    targetGlasses
+                });
+            }
 
             typingRow.remove();
 
@@ -588,10 +667,17 @@ LENGTH LIMIT: Keep the answer short and punchy within 2-3 sentences (maximum 80 
             }
 
         } catch (err) {
-            console.warn('Nova Chat AI error:', err);
+            console.warn('MeowNova Chat error:', err);
             typingRow.remove();
-            // Friendly graceful offline fallback
-            appendMascotMessage(`เมี้ยว~ ถ้าคุณต้องการดูแลเป้าหมายวันนี้ ลองเลือกเมนูที่มีโปรตีนสูงและดื่มน้ำให้ครบ 8 แก้ว ร่างกายจะสดชื่นกระปรี้กระเปร่าแน่นอนน้า 🥑💧`);
+            // Intelligent fallback with user stats
+            const fallbackReply = generateSmartLocalAdvice(question, {
+                remainCal,
+                totalP,
+                targetP,
+                waterGlasses,
+                targetGlasses
+            });
+            appendMascotMessage(fallbackReply);
         } finally {
             _isAiChatLoading = false;
             if (sendBtn) sendBtn.disabled = false;
@@ -645,10 +731,10 @@ LENGTH LIMIT: Keep the answer short and punchy within 2-3 sentences (maximum 80 
         renderNovaMascot();
         renderMascotMenuBadge();
         if (window.state.mascotCompanion.enabled) {
-            if (typeof window.showToast === 'function') window.showToast('🥑 เปิดน้องโนวา บับเบิ้ลคู่คิดเรียบร้อย');
-            showNovaSpeechBubble('สวัสดีเมี้ยว! โนวากลับมาดูแลแล้ว 🥑✨', 4000);
+            if (typeof window.showToast === 'function') window.showToast('🥑 เปิดน้องเหมียวโนวา บับเบิ้ลคู่คิดเรียบร้อย');
+            showNovaSpeechBubble('สวัสดีเมี้ยว! เหมียวโนวากลับมาดูแลแล้ว 🥑✨', 4000);
         } else {
-            if (typeof window.showToast === 'function') window.showToast('🥑 ปิดการแสดงผลน้องโนวาเรียบร้อย');
+            if (typeof window.showToast === 'function') window.showToast('🥑 ปิดการแสดงผลน้องเหมียวโนวาเรียบร้อย');
         }
     }
 
@@ -678,6 +764,7 @@ LENGTH LIMIT: Keep the answer short and punchy within 2-3 sentences (maximum 80 
     window.askNovaSample = askNovaSample;
     window.toggleMascotCompanion = toggleMascotCompanion;
     window.renderMascotMenuBadge = renderMascotMenuBadge;
+    window.generateSmartLocalAdvice = generateSmartLocalAdvice;
     window.initNovaMascotCompanion = initNovaMascotCompanion;
 
     // Auto-init when DOM ready
