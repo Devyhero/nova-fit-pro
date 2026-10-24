@@ -1,0 +1,690 @@
+/**
+ * NovaFit Pro - Smart Mascot Companion Engine (v5.9.20)
+ * Mascot: "Nova the Avocado Cat" (น้องโนวา แมวอโวคาโด)
+ * 
+ * Roles:
+ * 1. Role 1 (Smart Reactive Floating Bubble): 100% Zero-Token Client Rule-Based Mood & Cheer-Up Engine
+ * 2. Role 2 (One-Tap Shortcut Action Hub): Quick Water (+250ml), AI Snap, AI Chat, Minimize
+ * 3. Role 3 (Nova AI Health Coach): Context-Aware Advice with 4-Tier Strict Token Protection
+ */
+
+(function () {
+    'use strict';
+
+    // Mascot Mood Image Assets
+    const NOVA_MOOD_IMAGES = {
+        happy: 'mascot/nova-happy.png',
+        thirsty: 'mascot/nova-thirsty.png',
+        proud: 'mascot/nova-proud.png',
+        workout: 'mascot/nova-workout.png',
+        sleepy: 'mascot/nova-sleepy.png'
+    };
+
+    // Mascot Mood Status Colors & Accents
+    const NOVA_MOOD_ACCENTS = {
+        happy: { ring: 'ring-emerald-400', badge: 'bg-emerald-500', icon: '✨' },
+        thirsty: { ring: 'ring-cyan-400', badge: 'bg-cyan-500', icon: '💧' },
+        proud: { ring: 'ring-amber-400', badge: 'bg-amber-500', icon: '🏆' },
+        workout: { ring: 'ring-rose-400', badge: 'bg-rose-500', icon: '🔥' },
+        sleepy: { ring: 'ring-indigo-400', badge: 'bg-indigo-500', icon: '🌙' }
+    };
+
+    // Client-Side Keyword Blocklist for Tier 1 Token Protection
+    const OFF_TOPIC_REGEX = /(javascript|python|html|css|php|sql|react|vue|node|programming|เขียนโค้ด|ภาษาโค้ด|โปรแกรมเมอร์|อัลกอริทึม|github|vscode|การเมือง|รัฐบาล|นายก|พรรค|สภา|ม็อบ|สงคราม|เลือกตั้ง|เผด็จการ|นโยบายรัฐ|หุ้น|คริปโต|บิตคอยน์|bitcoin|crypto|forex|หวย|บาคาร่า|การพนัน|กู้เงิน|สินเชื่อ|ดูดวง|ไพ่ยิปซี|ราศี|เนื้อคู่|แฟนทิ้ง|อกหัก|จีบสาว|ความรัก|แต่งกลอน|เขียนเรียงความ|ช่วยทำการบ้าน|เฉลยข้อสอบ|วิจัย)/i;
+
+    let _currentMascotMood = 'happy';
+    let _speechFadeTimer = null;
+    let _isAiChatLoading = false;
+
+    // Helper: Get Current ISO Date
+    function getTodayIso() {
+        if (typeof window.getTodayStr === 'function') {
+            return window.getTodayStr();
+        }
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Helper: Play Sound safely
+    function playSfx(name) {
+        if (typeof window.playSound === 'function') {
+            try {
+                window.playSound(name);
+            } catch (e) {
+                // Ignore audio context restrictions
+            }
+        }
+    }
+
+    // Ensure Companion State Integrity
+    function ensureCompanionState() {
+        if (!window.state) return;
+        if (!window.state.mascotCompanion || typeof window.state.mascotCompanion !== 'object') {
+            window.state.mascotCompanion = {
+                enabled: true,
+                minimized: false,
+                lastSpeechDate: '',
+                lastSpeechTime: 0,
+                chatDailyUsage: {}
+            };
+        }
+        if (!window.state.mascotCompanion.chatDailyUsage) {
+            window.state.mascotCompanion.chatDailyUsage = {};
+        }
+    }
+
+    // ==========================================
+    // ROLE 1: SMART REACTIVE MOOD & SPEECH ENGINE
+    // ==========================================
+
+    function evaluateNovaMood() {
+        ensureCompanionState();
+        const now = new Date();
+        const hour = now.getHours();
+        const todayStr = getTodayIso();
+        const st = window.state || {};
+
+        // 1. Water Intake Check (13:00 - 18:30)
+        const waterGlasses = (st.waterByDate && st.waterByDate[todayStr]) || 0;
+        const weight = Number(st.weight) || 65;
+        const targetGlasses = Math.max(6, Math.round((weight * 35) / 250));
+        const waterRatio = targetGlasses > 0 ? (waterGlasses / targetGlasses) : 0;
+
+        if (hour >= 13 && hour < 19 && waterRatio < 0.5) {
+            return {
+                mood: 'thirsty',
+                text: `บ่ายแล้ว ดื่มน้ำไปแค่ ${waterGlasses} แก้วเองนะเมี้ยว 💧 แตะที่น้องเพื่อ +1 แก้วได้เลย!`,
+                actionHint: 'water'
+            };
+        }
+
+        // 2. Goal Met / Proud Check
+        const todayLogs = (st.logsByDate && st.logsByDate[todayStr]) || [];
+        const totalCal = todayLogs.reduce((acc, cur) => acc + (Number(cur.cal) || 0), 0);
+        const totalP = todayLogs.reduce((acc, cur) => acc + (Number(cur.p) || 0), 0);
+        const calorieGoal = Number(st.calorieGoal) || 2000;
+        const proteinTarget = (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6);
+
+        if (totalP >= proteinTarget && proteinTarget > 0) {
+            return {
+                mood: 'proud',
+                text: `โปรตีนวันนี้ทะลุ ${totalP}g ครบเป้าหมายแล้ว สุดยอดมากเมี้ยว! 🏆✨`,
+                actionHint: 'proud'
+            };
+        }
+
+        if (totalCal >= calorieGoal * 0.9 && totalCal <= calorieGoal * 1.1) {
+            return {
+                mood: 'proud',
+                text: `แคลอรีวันนี้ ${totalCal.toLocaleString()} kcal ตรงเป้าหมายเป๊ะเลย มีวินัยมากเมี้ยว! 🌟`,
+                actionHint: 'proud'
+            };
+        }
+
+        // 3. Late Night / Sleepy / Fasting Check
+        const fasting = st.fasting || {};
+        if (hour >= 21 || hour < 6) {
+            return {
+                mood: 'sleepy',
+                text: `ดึกแล้วนะเมี้ยว เข้านอนพักผ่อนให้เพียงพอนะ ร่างกายจะได้ฟื้นฟูเต็มที่ 🌙`,
+                actionHint: 'sleep'
+            };
+        }
+
+        if (fasting.isActive && fasting.startTime) {
+            const elapsedHours = (Date.now() - fasting.startTime) / (1000 * 60 * 60);
+            if (elapsedHours >= 12) {
+                return {
+                    mood: 'sleepy',
+                    text: `คุณอดอาหาร IF มาแล้ว ${Math.floor(elapsedHours)} ชม. อดทนเก่งมาก ร่างกายเริ่มเผาผลาญไขมันแล้วเมี้ยว ⏳`,
+                    actionHint: 'fasting'
+                };
+            }
+        }
+
+        // 4. Workout Hours Check (16:30 - 19:30)
+        const workoutsToday = (st.workoutLogsByDate && st.workoutLogsByDate[todayStr]) || [];
+        if (workoutsToday.length > 0) {
+            return {
+                mood: 'workout',
+                text: `ออกกำลังกายสำเร็จไปแล้ว! เบิร์นไขมันกระจุยเลย เก่งที่สุดเมี้ยว 🔥`,
+                actionHint: 'workout'
+            };
+        }
+
+        if (hour >= 16 && hour <= 19) {
+            return {
+                mood: 'workout',
+                text: `ช่วงเย็นเหมาะกับการขยับร่างกาย เผาผลาญแคลอรีสุดๆ ไปลุยกันเมี้ยว! 💪🔥`,
+                actionHint: 'workout'
+            };
+        }
+
+        // 5. Default Morning / Energized
+        if (hour >= 6 && hour < 12) {
+            return {
+                mood: 'happy',
+                text: `อรุณสวัสดิ์เมี้ยว! เช้านี้อย่าลืมบันทึกมื้อเช้าเพิ่มพลังงานนะ 🥑✨`,
+                actionHint: 'happy'
+            };
+        }
+
+        return {
+            mood: 'happy',
+            text: `โค้ชโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑`,
+            actionHint: 'happy'
+        };
+    }
+
+    function renderNovaMascot() {
+        ensureCompanionState();
+        const container = document.getElementById('novaMascotContainer');
+        const pill = document.getElementById('novaMascotPill');
+        const img = document.getElementById('novaMascotImg');
+        const badge = document.getElementById('novaMascotBadge');
+
+        if (!container || !img) return;
+
+        const compState = window.state?.mascotCompanion || {};
+        if (compState.enabled === false) {
+            container.classList.add('hidden');
+            if (pill) pill.classList.add('hidden');
+            return;
+        }
+
+        // Handle Minimized State
+        if (compState.minimized) {
+            container.classList.add('hidden');
+            if (pill) {
+                pill.classList.remove('hidden');
+            }
+            return;
+        } else {
+            container.classList.remove('hidden');
+            if (pill) pill.classList.add('hidden');
+        }
+
+        const moodData = evaluateNovaMood();
+        _currentMascotMood = moodData.mood;
+
+        // Update Mascot Face
+        const imgSrc = NOVA_MOOD_IMAGES[_currentMascotMood] || NOVA_MOOD_IMAGES.happy;
+        img.src = imgSrc;
+        img.alt = `Nova Cat (${_currentMascotMood})`;
+
+        // Update Mood Badge
+        if (badge) {
+            const acc = NOVA_MOOD_ACCENTS[_currentMascotMood] || NOVA_MOOD_ACCENTS.happy;
+            badge.className = `absolute -top-1 -right-1 w-5 h-5 rounded-full ${acc.badge} text-[10px] text-white flex items-center justify-center shadow-md animate-pulse`;
+            badge.textContent = acc.icon;
+        }
+    }
+
+    function showNovaSpeechBubble(customText, durationMs = 5000) {
+        const bubble = document.getElementById('novaSpeechBubble');
+        const bubbleText = document.getElementById('novaSpeechBubbleText');
+        if (!bubble || !bubbleText) return;
+
+        const moodData = evaluateNovaMood();
+        const message = customText || moodData.text;
+
+        bubbleText.textContent = message;
+        bubble.classList.remove('hidden', 'opacity-0', 'scale-95');
+        bubble.classList.add('opacity-100', 'scale-100');
+
+        if (_speechFadeTimer) {
+            clearTimeout(_speechFadeTimer);
+        }
+
+        _speechFadeTimer = setTimeout(() => {
+            hideNovaSpeechBubble();
+        }, durationMs);
+    }
+
+    function hideNovaSpeechBubble() {
+        const bubble = document.getElementById('novaSpeechBubble');
+        if (!bubble) return;
+        bubble.classList.remove('opacity-100', 'scale-100');
+        bubble.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            if (bubble.classList.contains('opacity-0')) {
+                bubble.classList.add('hidden');
+            }
+        }, 300);
+    }
+
+    // Toggle Mascot Floating Quick Menu
+    function toggleNovaQuickMenu(forceClose = false) {
+        const menu = document.getElementById('novaQuickMenu');
+        if (!menu) return;
+
+        const isHidden = menu.classList.contains('hidden');
+        if (forceClose || !isHidden) {
+            menu.classList.add('hidden');
+        } else {
+            hideNovaSpeechBubble();
+            menu.classList.remove('hidden');
+            playSfx('pop');
+        }
+    }
+
+    // Minimize mascot into small edge pill
+    function minimizeNovaMascot() {
+        ensureCompanionState();
+        if (window.state && window.state.mascotCompanion) {
+            window.state.mascotCompanion.minimized = true;
+            if (typeof window.saveState === 'function') window.saveState();
+        }
+        toggleNovaQuickMenu(true);
+        renderNovaMascot();
+        if (typeof window.showToast === 'function') {
+            window.showToast('🥑 ซ่อนน้องโนวาแล้ว แตะแถบขอบจอเพื่อเรียกกลับมาได้ตลอดนะเมี้ยว');
+        }
+    }
+
+    // Restore mascot from edge pill
+    function restoreNovaMascot() {
+        ensureCompanionState();
+        if (window.state && window.state.mascotCompanion) {
+            window.state.mascotCompanion.minimized = false;
+            if (typeof window.saveState === 'function') window.saveState();
+        }
+        renderNovaMascot();
+        showNovaSpeechBubble('สวัสดีเมี้ยว! โนวากลับมาดูแลแล้ว 🥑✨', 4000);
+        playSfx('pop');
+    }
+
+    // ==========================================
+    // ROLE 2: ONE-TAP SHORTCUT ACTION HUB
+    // ==========================================
+
+    function quickAddWaterFromMascot() {
+        toggleNovaQuickMenu(true);
+        if (typeof window.addWater === 'function') {
+            window.addWater(1);
+        } else {
+            const today = getTodayIso();
+            if (!window.state.waterByDate) window.state.waterByDate = {};
+            window.state.waterByDate[today] = (window.state.waterByDate[today] || 0) + 1;
+            if (typeof window.saveState === 'function') window.saveState();
+            if (typeof window.renderAll === 'function') window.renderAll();
+        }
+
+        playSfx('water');
+        
+        // Mascot cheers
+        const img = document.getElementById('novaMascotImg');
+        if (img) img.src = NOVA_MOOD_IMAGES.proud;
+        showNovaSpeechBubble('ชื่นใจจัง! บันทึกน้ำ +1 แก้ว (250 ml) สำเร็จแล้วเมี้ยว 💧✨', 4500);
+
+        setTimeout(() => {
+            renderNovaMascot();
+        }, 5000);
+    }
+
+    function quickOpenAiSnapFromMascot() {
+        toggleNovaQuickMenu(true);
+        if (typeof window.openAiSnapModal === 'function') {
+            window.openAiSnapModal('photo');
+        } else {
+            alert('ระบบ AI Snap กำลังโหลด กรุณารอสักครู่ครับ');
+        }
+    }
+
+    // ==========================================
+    // ROLE 3: NOVA AI HEALTH COACH CHAT WITH 4-TIER GUARD
+    // ==========================================
+
+    function getChatDailyQuota() {
+        const isAuth = !!window.currentUser;
+        const maxQuota = isAuth ? 5 : 3;
+        const todayStr = getTodayIso();
+        const usageMap = window.state?.mascotCompanion?.chatDailyUsage || {};
+        const used = usageMap[todayStr] || 0;
+        const remaining = Math.max(0, maxQuota - used);
+        return { used, remaining, maxQuota };
+    }
+
+    function incrementChatDailyQuota() {
+        ensureCompanionState();
+        const todayStr = getTodayIso();
+        const usage = window.state.mascotCompanion.chatDailyUsage;
+        usage[todayStr] = (usage[todayStr] || 0) + 1;
+        if (typeof window.saveState === 'function') window.saveState();
+        updateChatQuotaUI();
+    }
+
+    function updateChatQuotaUI() {
+        const badge = document.getElementById('novaChatQuotaBadge');
+        if (!badge) return;
+        const { remaining, maxQuota } = getChatDailyQuota();
+        const isUat = typeof window.isUatEnvironment === 'function' && window.isUatEnvironment();
+        
+        if (isUat) {
+            badge.textContent = '⚡ โควตาไม่จำกัด (UAT Sandbox)';
+            badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold';
+        } else {
+            badge.textContent = `ถามได้อีก ${remaining}/${maxQuota} ครั้งวันนี้`;
+            badge.className = remaining > 0
+                ? 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold';
+        }
+    }
+
+    function openNovaChatModal() {
+        toggleNovaQuickMenu(true);
+        hideNovaSpeechBubble();
+        updateChatQuotaUI();
+
+        // Populate initial greeting if empty
+        const history = document.getElementById('novaChatHistory');
+        if (history && history.children.length === 0) {
+            appendMascotMessage('สวัสดีเมี้ยว! โค้ชโนวาพร้อมตอบข้อสงสัยเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายให้คุณแล้ว มีอะไรให้น้องช่วยแนะนำไหมเมี้ยว 🥑✨');
+        }
+
+        if (typeof window.openModalAnimated === 'function') {
+            window.openModalAnimated('novaChatModal');
+        } else {
+            document.getElementById('novaChatModal')?.classList.remove('hidden');
+        }
+        playSfx('pop');
+    }
+
+    function closeNovaChatModal() {
+        if (typeof window.closeModalAnimated === 'function') {
+            window.closeModalAnimated('novaChatModal');
+        } else {
+            document.getElementById('novaChatModal')?.classList.add('hidden');
+        }
+    }
+
+    function appendUserMessage(text) {
+        const history = document.getElementById('novaChatHistory');
+        if (!history) return;
+
+        const row = document.createElement('div');
+        row.className = 'flex justify-end gap-2 animate-pop';
+        row.innerHTML = `
+            <div class="max-w-[80%] p-3 rounded-2xl rounded-tr-xs bg-emerald-500 text-white text-xs leading-relaxed shadow-sm font-medium">
+                ${escapeHtml(text)}
+            </div>
+            <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs shrink-0 select-none">
+                👤
+            </div>
+        `;
+        history.appendChild(row);
+        history.scrollTop = history.scrollHeight;
+    }
+
+    function appendMascotMessage(text, isTyping = false) {
+        const history = document.getElementById('novaChatHistory');
+        if (!history) return;
+
+        const row = document.createElement('div');
+        row.className = 'flex items-start gap-2 animate-pop mascot-msg-row';
+        row.innerHTML = `
+            <div class="w-8 h-8 rounded-full border border-emerald-400/40 bg-emerald-50 dark:bg-emerald-950/40 p-0.5 shrink-0 select-none overflow-hidden shadow-xs">
+                <img src="${NOVA_MOOD_IMAGES.happy}" alt="Nova" class="w-full h-full object-contain">
+            </div>
+            <div class="max-w-[82%] p-3 rounded-2xl rounded-tl-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs leading-relaxed shadow-xs">
+                ${isTyping ? '<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.2s]"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.4s]"></span></span>' : formatMascotText(text)}
+            </div>
+        `;
+        history.appendChild(row);
+        history.scrollTop = history.scrollHeight;
+        return row;
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+    }
+
+    function formatMascotText(text) {
+        return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    // Ask Question with 4-Tier Guard
+    async function handleNovaAskSubmit(overrideText = null) {
+        const input = document.getElementById('novaChatInput');
+        const question = (overrideText || input?.value || '').trim();
+        if (!question || _isAiChatLoading) return;
+
+        if (input && !overrideText) {
+            input.value = '';
+        }
+
+        // Show User Message
+        appendUserMessage(question);
+
+        // ==========================================
+        // TIER 1: CLIENT-SIDE KEYWORD BLOCKLIST (0 TOKENS)
+        // ==========================================
+        if (OFF_TOPIC_REGEX.test(question)) {
+            playSfx('pop');
+            appendMascotMessage('เหมียว~ โค้ชโนวาเชี่ยวชาญเฉพาะเรื่องอาหาร แคลอรี สารอาหาร และการออกกำลังกายเท่านั้นน้าเมี้ยว เรื่องอื่นน้องตอบไม่ได้จริง ๆ ลองถามเกี่ยวกับเมนูวันนี้หรือเป้าหมายสุขภาพดูสิเมี้ยว 🥑✨');
+            return;
+        }
+
+        // ==========================================
+        // TIER 3: DAILY QUOTA CHECK
+        // ==========================================
+        const isUat = typeof window.isUatEnvironment === 'function' && window.isUatEnvironment();
+        const { remaining } = getChatDailyQuota();
+
+        if (!isUat && remaining <= 0) {
+            playSfx('pop');
+            appendMascotMessage('โควตาคำถามวันนี้ครบกำหนดแล้วน้าเมี้ยว ไว้พรุ่งนี้มาคุยกันใหม่ หรือเปิดดูเคล็ดลับสุขภาพประจำวันในแอปได้เลยนะเมี้ยว! 🥑');
+            return;
+        }
+
+        // ==========================================
+        // TIER 4: BUILD PERSONALIZED CONTEXT
+        // ==========================================
+        const st = window.state || {};
+        const todayStr = getTodayIso();
+        const logs = (st.logsByDate && st.logsByDate[todayStr]) || [];
+        const totalCal = logs.reduce((a, c) => a + (Number(c.cal) || 0), 0);
+        const totalP = logs.reduce((a, c) => a + (Number(c.p) || 0), 0);
+        const totalC = logs.reduce((a, c) => a + (Number(c.c) || 0), 0);
+        const totalF = logs.reduce((a, c) => a + (Number(c.f) || 0), 0);
+        const goalCal = Number(st.calorieGoal) || 2000;
+        const remainCal = Math.max(0, goalCal - totalCal);
+        const waterGlasses = (st.waterByDate && st.waterByDate[todayStr]) || 0;
+        const weight = st.weight || 65;
+
+        const userContextPrompt = `ข้อมูลสุขภาพผู้ใช้วันนี้:
+- น้ำหนัก: ${weight} กก.
+- เป้าหมายแคลอรี: ${goalCal} kcal | ทานแล้ว: ${totalCal} kcal (เหลือ ${remainCal} kcal)
+- โปรตีน: ${totalP}g / คาร์บ: ${totalC}g / ไขมัน: ${totalF}g
+- ดื่มน้ำ: ${waterGlasses} แก้ว (${waterGlasses * 250} ml)`;
+
+        // Show typing indicator
+        _isAiChatLoading = true;
+        const sendBtn = document.getElementById('btnNovaSendChat');
+        if (sendBtn) sendBtn.disabled = true;
+
+        const typingRow = appendMascotMessage('', true);
+
+        // ==========================================
+        // TIER 2: STRICT SYSTEM PROMPT & GEMINI CALL
+        // ==========================================
+        try {
+            const systemInstruction = `You are "Nova" (โนวา), an adorable avocado-cat fitness & nutrition coach in NovaFit Pro.
+Tone: Warm, encouraging, concise Thai, ending sentences politely with "เมี้ยว" or "น้า".
+STRICT SCOPE: You ONLY give advice regarding food nutrition, calories, macros (P/C/F), weight goals, hydration, fasting (IF), and workouts.
+STRICT DEFLECTION: If the question is outside this scope, strictly respond in 1 friendly sentence: "น้องโนวาขอตอบเฉพาะเรื่องอาหารและสุขภาพเท่านั้นนะเมี้ยว ลองถามเกี่ยวกับเมนูวันนี้ดูสิ!"
+LENGTH LIMIT: Keep the answer short and punchy within 2-3 sentences (maximum 80 Thai words).`;
+
+            let apiKey = '';
+            if (typeof window.getGeminiApiKey === 'function') {
+                apiKey = window.getGeminiApiKey();
+            } else {
+                apiKey = localStorage.getItem('novafit_gemini_api_key') || '';
+            }
+
+            // Fallback for UAT without key
+            if (!apiKey && isUat) {
+                await new Promise(r => setTimeout(r, 600));
+                typingRow.remove();
+                appendMascotMessage(`เมี้ยว~ สำหรับคำถามนี้ ในเป้าหมายแคลอรีคงเหลือ ${remainCal} kcal แนะนำให้เน้นโปรตีนไขมันต่ำ เช่น อกไก่ย่าง หรือไข่ต้ม 2 ฟอง จะช่วยให้อิ่มท้องและกล้ามเนื้อกระชับตามเป้าเลยน้า! 🍗✨`);
+                incrementChatDailyQuota();
+                playSfx('pop');
+                return;
+            }
+
+            if (!apiKey) {
+                typingRow.remove();
+                appendMascotMessage('ยังไม่ได้เชื่อมต่อ Google Gemini API Key กรุณาตั้งค่า API Key ในเมนู AI Snap ก่อนนะเมี้ยว 🥑');
+                return;
+            }
+
+            const modelName = 'gemini-1.5-flash';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+            const payload = {
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [
+                            { text: `${userContextPrompt}\n\nคำถามจากผู้ใช้: "${question}"` }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.5,
+                    maxOutputTokens: 180
+                }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            typingRow.remove();
+
+            if (replyText) {
+                appendMascotMessage(replyText);
+                incrementChatDailyQuota();
+                playSfx('pop');
+            } else {
+                appendMascotMessage('ขออภัยด้วยนะเมี้ยว พอดีมีสัญญาณรบกวน ลองแตะถามอีกครั้งดูน้า 🥑');
+            }
+
+        } catch (err) {
+            console.warn('Nova Chat AI error:', err);
+            typingRow.remove();
+            // Friendly graceful offline fallback
+            appendMascotMessage(`เมี้ยว~ ถ้าคุณต้องการดูแลเป้าหมายวันนี้ ลองเลือกเมนูที่มีโปรตีนสูงและดื่มน้ำให้ครบ 8 แก้ว ร่างกายจะสดชื่นกระปรี้กระเปร่าแน่นอนน้า 🥑💧`);
+        } finally {
+            _isAiChatLoading = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
+    }
+
+    function askNovaSample(text) {
+        handleNovaAskSubmit(text);
+    }
+
+    // ==========================================
+    // INITIALIZATION & LIFECYCLE
+    // ==========================================
+
+    function initNovaMascotCompanion() {
+        ensureCompanionState();
+        renderNovaMascot();
+
+        // Check if first greeting needed
+        setTimeout(() => {
+            const comp = window.state?.mascotCompanion;
+            if (comp && !comp.minimized && comp.enabled !== false) {
+                showNovaSpeechBubble(null, 5500);
+            }
+        }, 1200);
+
+        // Periodically refresh mood every 5 minutes
+        setInterval(() => {
+            renderNovaMascot();
+        }, 5 * 60 * 1000);
+    }
+
+    // Close popups on outside click
+    document.addEventListener('click', (e) => {
+        const container = document.getElementById('novaMascotContainer');
+        const menu = document.getElementById('novaQuickMenu');
+        if (container && menu && !menu.classList.contains('hidden')) {
+            if (!container.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        }
+    });
+
+    function toggleMascotCompanion() {
+        ensureCompanionState();
+        window.state.mascotCompanion.enabled = !(window.state.mascotCompanion.enabled !== false);
+        if (window.state.mascotCompanion.enabled) {
+            window.state.mascotCompanion.minimized = false;
+        }
+        if (typeof window.saveState === 'function') window.saveState();
+        renderNovaMascot();
+        renderMascotMenuBadge();
+        if (window.state.mascotCompanion.enabled) {
+            if (typeof window.showToast === 'function') window.showToast('🥑 เปิดน้องโนวา บับเบิ้ลคู่คิดเรียบร้อย');
+            showNovaSpeechBubble('สวัสดีเมี้ยว! โนวากลับมาดูแลแล้ว 🥑✨', 4000);
+        } else {
+            if (typeof window.showToast === 'function') window.showToast('🥑 ปิดการแสดงผลน้องโนวาเรียบร้อย');
+        }
+    }
+
+    function renderMascotMenuBadge() {
+        const badge = document.getElementById('mascotMenuBadge');
+        if (!badge) return;
+        const isEnabled = window.state?.mascotCompanion?.enabled !== false;
+        badge.textContent = isEnabled ? 'เปิด' : 'ปิด';
+        badge.className = isEnabled
+            ? 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold'
+            : 'text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
+    }
+
+    // Window Exports
+    window.evaluateNovaMood = evaluateNovaMood;
+    window.renderNovaMascot = renderNovaMascot;
+    window.showNovaSpeechBubble = showNovaSpeechBubble;
+    window.hideNovaSpeechBubble = hideNovaSpeechBubble;
+    window.toggleNovaQuickMenu = toggleNovaQuickMenu;
+    window.minimizeNovaMascot = minimizeNovaMascot;
+    window.restoreNovaMascot = restoreNovaMascot;
+    window.quickAddWaterFromMascot = quickAddWaterFromMascot;
+    window.quickOpenAiSnapFromMascot = quickOpenAiSnapFromMascot;
+    window.openNovaChatModal = openNovaChatModal;
+    window.closeNovaChatModal = closeNovaChatModal;
+    window.handleNovaAskSubmit = handleNovaAskSubmit;
+    window.askNovaSample = askNovaSample;
+    window.toggleMascotCompanion = toggleMascotCompanion;
+    window.renderMascotMenuBadge = renderMascotMenuBadge;
+    window.initNovaMascotCompanion = initNovaMascotCompanion;
+
+    // Auto-init when DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNovaMascotCompanion);
+    } else {
+        setTimeout(initNovaMascotCompanion, 200);
+    }
+
+})();

@@ -1629,8 +1629,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.19' ||
-            !v598Test.toolsBadge?.includes('v5.9.19')) {
+            v598Test.appVersion !== '5.9.20' ||
+            !v598Test.toolsBadge?.includes('v5.9.20')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2087,6 +2087,104 @@ server.listen(PORT, async () => {
             !v5919Test.resetInAdmin ||
             !v5919Test.exportInAdmin) {
             throw new Error('Test 43: v5.9.19 PWA Home Screen, Clean Profile & Preferences Reorganization failed: ' + JSON.stringify(v5919Test));
+        }
+
+        // Test 44: v5.9.20 Nova Mascot Companion Engine, 4-Tier Guard & Quick Action Hub
+        console.log('--- Test 44: v5.9.20 Nova Mascot Companion Engine & 4-Tier Guard ---');
+        const mascotTest = await evalJs(`(() => {
+            // 1. Elements Exist
+            const container = document.getElementById('novaMascotContainer');
+            const mascotBtn = document.getElementById('novaMascotBtn');
+            const mascotImg = document.getElementById('novaMascotImg');
+            const speechBubble = document.getElementById('novaSpeechBubble');
+            const quickMenu = document.getElementById('novaQuickMenu');
+            const pill = document.getElementById('novaMascotPill');
+            const chatModal = document.getElementById('novaChatModal');
+            const menuToggle = document.getElementById('btnToggleMascotMenu');
+
+            // 2. Role 1 Mood Evaluator
+            const moodData = typeof window.evaluateNovaMood === 'function' ? window.evaluateNovaMood() : null;
+
+            // 3. Role 2 Quick Action Menu
+            if (typeof window.toggleNovaQuickMenu === 'function') {
+                window.toggleNovaQuickMenu();
+            }
+            const menuOpen = !quickMenu?.classList.contains('hidden');
+
+            // Test quick water action
+            const today = getTodayStr();
+            const waterBefore = (state.waterByDate && state.waterByDate[today]) || 0;
+            if (typeof window.quickAddWaterFromMascot === 'function') {
+                window.quickAddWaterFromMascot();
+            }
+            const waterAfter = (state.waterByDate && state.waterByDate[today]) || 0;
+
+            // 4. Test Minimize & Restore
+            if (typeof window.minimizeNovaMascot === 'function') {
+                window.minimizeNovaMascot();
+            }
+            const isPillVisible = !pill?.classList.contains('hidden');
+            const isContainerHidden = container?.classList.contains('hidden');
+
+            if (typeof window.restoreNovaMascot === 'function') {
+                window.restoreNovaMascot();
+            }
+            const isContainerRestored = !container?.classList.contains('hidden');
+
+            // 5. Role 3 Chat Modal & Tier 1 Blocklist Test
+            if (typeof window.openNovaChatModal === 'function') {
+                window.openNovaChatModal();
+            }
+            const isChatModalOpen = !chatModal?.classList.contains('hidden');
+
+            // Test Tier 1 Regex Blocklist with off-topic question (coding/crypto)
+            let tier1Deflected = false;
+            if (typeof window.handleNovaAskSubmit === 'function') {
+                window.handleNovaAskSubmit('ช่วยเขียนโค้ด python ให้หน่อย');
+                const lastMsg = document.querySelector('#novaChatHistory .mascot-msg-row:last-child');
+                tier1Deflected = !!lastMsg?.textContent?.includes('เชี่ยวชาญเฉพาะเรื่องอาหาร');
+            }
+
+            if (typeof window.closeNovaChatModal === 'function') {
+                window.closeNovaChatModal();
+            }
+
+            return {
+                hasContainer: !!container,
+                hasMascotBtn: !!mascotBtn,
+                hasMascotImg: !!mascotImg,
+                hasSpeechBubble: !!speechBubble,
+                hasQuickMenu: !!quickMenu,
+                hasChatModal: !!chatModal,
+                hasMenuToggle: !!menuToggle,
+                moodData,
+                menuOpen,
+                waterAdded: waterAfter === waterBefore + 1,
+                isPillVisible,
+                isContainerHidden,
+                isContainerRestored,
+                isChatModalOpen,
+                tier1Deflected
+            };
+        })()`);
+        console.log('Nova Mascot Companion verified:', mascotTest);
+
+        if (!mascotTest.hasContainer ||
+            !mascotTest.hasMascotBtn ||
+            !mascotTest.hasMascotImg ||
+            !mascotTest.hasSpeechBubble ||
+            !mascotTest.hasQuickMenu ||
+            !mascotTest.hasChatModal ||
+            !mascotTest.hasMenuToggle ||
+            !mascotTest.moodData?.mood ||
+            !mascotTest.menuOpen ||
+            !mascotTest.waterAdded ||
+            !mascotTest.isPillVisible ||
+            !mascotTest.isContainerHidden ||
+            !mascotTest.isContainerRestored ||
+            !mascotTest.isChatModalOpen ||
+            !mascotTest.tier1Deflected) {
+            throw new Error('Test 44: Nova Mascot Companion failed: ' + JSON.stringify(mascotTest));
         }
 
         ws.close();

@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.19';
+const APP_VERSION = '5.9.20';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -79,7 +79,14 @@ const APP_VERSION = '5.9.19';
             },
             customPresets: [],
             logsByDate: {},
-            waterByDate: {}
+            waterByDate: {},
+            mascotCompanion: {
+                enabled: true,
+                minimized: false,
+                lastSpeechDate: '',
+                lastSpeechTime: 0,
+                chatDailyUsage: {}
+            }
         };
 
         // Cache for recommendations so clicking water or theme doesn't reshuffle
@@ -312,6 +319,19 @@ const APP_VERSION = '5.9.19';
                         logsByDate: parsed.logsByDate || {},
                         waterByDate: parsed.waterByDate || {},
                         customPresets: parsed.customPresets || [],
+                        mascotCompanion: (parsed.mascotCompanion && typeof parsed.mascotCompanion === 'object') ? {
+                            enabled: parsed.mascotCompanion.enabled !== false,
+                            minimized: !!parsed.mascotCompanion.minimized,
+                            lastSpeechDate: parsed.mascotCompanion.lastSpeechDate || '',
+                            lastSpeechTime: Number(parsed.mascotCompanion.lastSpeechTime) || 0,
+                            chatDailyUsage: parsed.mascotCompanion.chatDailyUsage || {}
+                        } : {
+                            enabled: true,
+                            minimized: false,
+                            lastSpeechDate: '',
+                            lastSpeechTime: 0,
+                            chatDailyUsage: {}
+                        },
                         lastActiveDate: todayStr,
                         selectedDate: todayStr
                     };
@@ -1710,6 +1730,12 @@ const APP_VERSION = '5.9.19';
             renderPrestigeFrames();
             renderAllSectionCollapses();
             syncResponsiveLayout();
+            if (typeof window.renderNovaMascot === 'function') {
+                window.renderNovaMascot();
+            }
+            if (typeof window.renderMascotMenuBadge === 'function') {
+                window.renderMascotMenuBadge();
+            }
             if (typeof triggerLivingCompanionCheck === 'function') {
                 triggerLivingCompanionCheck(2000);
             }
