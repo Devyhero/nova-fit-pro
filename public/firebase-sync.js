@@ -134,6 +134,22 @@ async function fetchSystemAiConfig() {
     }
 }
 
+// Fetch System Mascot & AI Companion Configuration from Firestore (system_config/mascot) - v5.9.22
+async function fetchSystemMascotConfig() {
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'mascot'));
+        if (snap.exists()) {
+            const mascotConfig = snap.data();
+            if (mascotConfig && typeof window.applyRemoteMascotConfig === 'function') {
+                window.applyRemoteMascotConfig(mascotConfig);
+            }
+        }
+    } catch (err) {
+        console.warn('System mascot config fetch skipped or failed:', err);
+    }
+}
+window.fetchSystemMascotConfig = fetchSystemMascotConfig;
+
 // Listen for authentication changes
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
@@ -160,6 +176,9 @@ onAuthStateChanged(auth, async (user) => {
         // Phase 1: Trigger Guest Session heartbeat sync
         syncGuestSession();
     }
+
+    // Always fetch mascot remote config (for both guest & logged in users)
+    fetchSystemMascotConfig();
 
     if (window.syncPushTokenToCloud) {
         window.syncPushTokenToCloud();

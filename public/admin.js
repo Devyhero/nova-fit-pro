@@ -1152,6 +1152,7 @@ window.switchAdminTab = function (tabId) {
         if (window.loadAdminGeminiApiKey) window.loadAdminGeminiApiKey();
         if (window.loadAdminAiScanLogs) window.loadAdminAiScanLogs();
         if (window.loadAdminAiCacheStats) window.loadAdminAiCacheStats();
+        if (window.loadAdminMascotConfig) window.loadAdminMascotConfig();
     }
     if (tabId === 'security_logs') {
         if (window.loadAdminSecurityLogs) window.loadAdminSecurityLogs();
@@ -1803,6 +1804,139 @@ window.testAdminGeminiApiKey = async function () {
         console.error('Gemini test ping failed:', lastErr);
         alert('❌ การทดสอบล้มเหลว: ' + (lastErr?.message || 'ไม่สามารถเชื่อมต่อได้'));
     }
+};
+
+// ==========================================
+// Admin: MeowNova Mascot Remote Control Hub (Firestore system_config/mascot) - v5.9.22
+// ==========================================
+
+window.updateMascotStatusBadgePreview = function () {
+    const isEnabled = document.getElementById('adminMascotGlobalEnabled')?.checked !== false;
+    const badge = document.getElementById('adminMascotStatusBadge');
+    if (badge) {
+        badge.textContent = isEnabled ? '🟢 เปิดใช้งานทั้งระบบ' : '🔴 ปิดใช้งานชั่วคราว';
+        badge.className = isEnabled
+            ? 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+            : 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+    }
+};
+
+window.loadAdminMascotConfig = async function () {
+    const badge = document.getElementById('adminMascotStatusBadge');
+    if (badge) {
+        badge.textContent = '⏳ กำลังโหลด...';
+    }
+
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'mascot'));
+        const data = snap.exists() ? snap.data() : {};
+
+        const elGlobal = document.getElementById('adminMascotGlobalEnabled');
+        const elAllowToggle = document.getElementById('adminMascotAllowUserToggle');
+        const elBubble = document.getElementById('adminMascotModeBubble');
+        const elQuickMenu = document.getElementById('adminMascotModeQuickMenu');
+        const elAiChat = document.getElementById('adminMascotModeAiChat');
+        const elQuota = document.getElementById('adminMascotDailyQuota');
+        const elTokens = document.getElementById('adminMascotMaxTokens');
+        const elForceLocal = document.getElementById('adminMascotForceLocalOnly');
+        const elWaterDose = document.getElementById('adminMascotWaterDose');
+        const elCustomSpeech = document.getElementById('adminMascotCustomSpeech');
+        const elDuration = document.getElementById('adminMascotBubbleDuration');
+
+        if (elGlobal) elGlobal.checked = data.enabled !== false;
+        if (elAllowToggle) elAllowToggle.checked = data.allowUserToggle !== false;
+        if (elBubble) elBubble.checked = data.modes?.floatingBubble !== false;
+        if (elQuickMenu) elQuickMenu.checked = data.modes?.quickMenu !== false;
+        if (elAiChat) elAiChat.checked = data.modes?.aiChat !== false;
+        if (elQuota) elQuota.value = data.chatDailyQuota || 5;
+        if (elTokens) elTokens.value = data.maxTokens || 180;
+        if (elForceLocal) elForceLocal.checked = !!data.forceLocalOnly;
+        if (elWaterDose) elWaterDose.value = data.quickWaterDose || 250;
+        if (elCustomSpeech) elCustomSpeech.value = data.customBroadcast || '';
+        if (elDuration) elDuration.value = Math.round((data.bubbleDuration || 4000) / 1000);
+
+        window.updateMascotStatusBadgePreview();
+    } catch (err) {
+        console.error('Failed to load mascot config from Firestore:', err);
+        if (badge) {
+            badge.textContent = '⚠️ ไม่สามารถโหลดสถานะได้';
+            badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+        }
+    }
+};
+
+window.saveAdminMascotConfig = async function () {
+    const elGlobal = document.getElementById('adminMascotGlobalEnabled');
+    const elAllowToggle = document.getElementById('adminMascotAllowUserToggle');
+    const elBubble = document.getElementById('adminMascotModeBubble');
+    const elQuickMenu = document.getElementById('adminMascotModeQuickMenu');
+    const elAiChat = document.getElementById('adminMascotModeAiChat');
+    const elQuota = document.getElementById('adminMascotDailyQuota');
+    const elTokens = document.getElementById('adminMascotMaxTokens');
+    const elForceLocal = document.getElementById('adminMascotForceLocalOnly');
+    const elWaterDose = document.getElementById('adminMascotWaterDose');
+    const elCustomSpeech = document.getElementById('adminMascotCustomSpeech');
+    const elDuration = document.getElementById('adminMascotBubbleDuration');
+
+    const config = {
+        enabled: elGlobal ? elGlobal.checked : true,
+        allowUserToggle: elAllowToggle ? elAllowToggle.checked : true,
+        modes: {
+            floatingBubble: elBubble ? elBubble.checked : true,
+            quickMenu: elQuickMenu ? elQuickMenu.checked : true,
+            aiChat: elAiChat ? elAiChat.checked : true
+        },
+        chatDailyQuota: Math.max(1, Math.min(100, Number(elQuota?.value) || 5)),
+        maxTokens: Math.max(50, Math.min(500, Number(elTokens?.value) || 180)),
+        forceLocalOnly: elForceLocal ? elForceLocal.checked : false,
+        quickWaterDose: Math.max(50, Math.min(1000, Number(elWaterDose?.value) || 250)),
+        customBroadcast: (elCustomSpeech ? elCustomSpeech.value : '').trim(),
+        bubbleDuration: Math.max(2, Math.min(15, Number(elDuration?.value) || 4)) * 1000,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser?.email || 'admin'
+    };
+
+    try {
+        await setDoc(doc(db, 'system_config', 'mascot'), config, { merge: true });
+        window.updateMascotStatusBadgePreview();
+        if (typeof window.showAdminToast === 'function') {
+            window.showAdminToast('✓ บันทึกการตั้งค่าบอท MeowNova ลงระบบ Firestore เรียบร้อย!');
+        } else {
+            alert('✓ บันทึกการตั้งค่าบอท MeowNova ลงระบบ Firestore เรียบร้อยแล้ว!\nทุกเครื่องจะอัปเดตการทำงานตามนี้ทันที');
+        }
+    } catch (err) {
+        console.error('Failed to save mascot config:', err);
+        alert('❌ บันทึกไม่สำเร็จ: ' + err.message);
+    }
+};
+
+window.resetAdminMascotConfigDefaults = function () {
+    if (!confirm('ต้องการคืนค่าการตั้งค่าบอท MeowNova เป็นค่าเริ่มต้นใช่หรือไม่?')) return;
+    const elGlobal = document.getElementById('adminMascotGlobalEnabled');
+    const elAllowToggle = document.getElementById('adminMascotAllowUserToggle');
+    const elBubble = document.getElementById('adminMascotModeBubble');
+    const elQuickMenu = document.getElementById('adminMascotModeQuickMenu');
+    const elAiChat = document.getElementById('adminMascotModeAiChat');
+    const elQuota = document.getElementById('adminMascotDailyQuota');
+    const elTokens = document.getElementById('adminMascotMaxTokens');
+    const elForceLocal = document.getElementById('adminMascotForceLocalOnly');
+    const elWaterDose = document.getElementById('adminMascotWaterDose');
+    const elCustomSpeech = document.getElementById('adminMascotCustomSpeech');
+    const elDuration = document.getElementById('adminMascotBubbleDuration');
+
+    if (elGlobal) elGlobal.checked = true;
+    if (elAllowToggle) elAllowToggle.checked = true;
+    if (elBubble) elBubble.checked = true;
+    if (elQuickMenu) elQuickMenu.checked = true;
+    if (elAiChat) elAiChat.checked = true;
+    if (elQuota) elQuota.value = 5;
+    if (elTokens) elTokens.value = 180;
+    if (elForceLocal) elForceLocal.checked = false;
+    if (elWaterDose) elWaterDose.value = 250;
+    if (elCustomSpeech) elCustomSpeech.value = '';
+    if (elDuration) elDuration.value = 4;
+
+    window.updateMascotStatusBadgePreview();
 };
 
 

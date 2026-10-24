@@ -26,10 +26,10 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // System configuration (e.g. AI settings, shared quota):
-    // Authenticated users can read configuration, only verified Admin can write
+    // System configuration (e.g. AI settings, shared quota, mascot remote config):
+    // Public read for app configuration; only verified Admin can write
     match /system_config/{configId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if isAdmin();
     }
 

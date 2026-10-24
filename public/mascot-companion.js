@@ -32,6 +32,31 @@
     // Client-Side Keyword Blocklist for Tier 1 Token Protection
     const OFF_TOPIC_REGEX = /(javascript|python|html|css|php|sql|react|vue|node|programming|เขียนโค้ด|ภาษาโค้ด|โปรแกรมเมอร์|อัลกอริทึม|github|vscode|การเมือง|รัฐบาล|นายก|พรรค|สภา|ม็อบ|สงคราม|เลือกตั้ง|เผด็จการ|นโยบายรัฐ|หุ้น|คริปโต|บิตคอยน์|bitcoin|crypto|forex|หวย|บาคาร่า|การพนัน|กู้เงิน|สินเชื่อ|ดูดวง|ไพ่ยิปซี|ราศี|เนื้อคู่|แฟนทิ้ง|อกหัก|จีบสาว|ความรัก|แต่งกลอน|เขียนเรียงความ|ช่วยทำการบ้าน|เฉลยข้อสอบ|วิจัย)/i;
 
+    // Remote Configuration State (Synchronized from Firestore system_config/mascot) - v5.9.22
+    let _remoteMascotConfig = {
+        enabled: true,
+        allowUserToggle: true,
+        modes: {
+            floatingBubble: true,
+            quickMenu: true,
+            aiChat: true
+        },
+        chatDailyQuota: 5,
+        maxTokens: 180,
+        forceLocalOnly: false,
+        quickWaterDose: 250,
+        customBroadcast: '',
+        bubbleDuration: 4000
+    };
+
+    // Load Cached Remote Config if available
+    try {
+        const cachedRemote = localStorage.getItem('novafit_system_mascot_config');
+        if (cachedRemote) {
+            _remoteMascotConfig = { ..._remoteMascotConfig, ...JSON.parse(cachedRemote) };
+        }
+    } catch (e) { }
+
     let _currentMascotMood = 'happy';
     let _speechFadeTimer = null;
     let _isAiChatLoading = false;
@@ -82,6 +107,16 @@
 
     function evaluateNovaMood() {
         ensureCompanionState();
+
+        // 0. Check Custom Broadcast Speech from Admin (system_config/mascot) - v5.9.22
+        if (_remoteMascotConfig.customBroadcast && _remoteMascotConfig.customBroadcast.trim()) {
+            return {
+                mood: 'happy',
+                text: _remoteMascotConfig.customBroadcast.trim(),
+                actionHint: null
+            };
+        }
+
         const now = new Date();
         const hour = now.getHours();
         const todayStr = getTodayIso();
@@ -188,6 +223,13 @@
 
         if (!container || !img) return;
 
+        // Check Remote Global Kill-Switch (system_config/mascot) - v5.9.22
+        if (_remoteMascotConfig.enabled === false) {
+            container.classList.add('hidden');
+            if (pill) pill.classList.add('hidden');
+            return;
+        }
+
         const compState = window.state?.mascotCompanion || {};
         if (compState.enabled === false) {
             container.classList.add('hidden');
@@ -223,11 +265,18 @@
         }
     }
 
-    function showNovaSpeechBubble(customText, durationMs = 5000) {
+    function showNovaSpeechBubble(customText, durationMs) {
         const bubble = document.getElementById('novaSpeechBubble');
         const bubbleText = document.getElementById('novaSpeechBubbleText');
         if (!bubble || !bubbleText) return;
 
+        // Check if floating bubble role is disabled by Admin
+        if (_remoteMascotConfig.modes?.floatingBubble === false) {
+            bubble.classList.add('hidden');
+            return;
+        }
+
+        const effectiveDuration = durationMs || _remoteMascotConfig.bubbleDuration || 4500;
         const moodData = evaluateNovaMood();
         const message = customText || moodData.text;
 
@@ -241,7 +290,7 @@
 
         _speechFadeTimer = setTimeout(() => {
             hideNovaSpeechBubble();
-        }, durationMs);
+        }, effectiveDuration);
     }
 
     function hideNovaSpeechBubble() {
@@ -273,6 +322,14 @@
 
     // Minimize mascot into small edge pill
     function minimizeNovaMascot() {
+        if (_remoteMascotConfig.allowUserToggle === false) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('🥑 การซ่อน/ย่อน้องเหมียวโนวาถูกล็อกโดยผู้ดูแลระบบเมี้ยว');
+            }
+            toggleNovaQuickMenu(true);
+            return;
+        }
+
         ensureCompanionState();
         if (window.state && window.state.mascotCompanion) {
             window.state.mascotCompanion.minimized = true;
@@ -316,9 +373,10 @@
         playSfx('water');
         
         // Mascot cheers
+        const dose = _remoteMascotConfig.quickWaterDose || 250;
         const img = document.getElementById('novaMascotImg');
         if (img) img.src = NOVA_MOOD_IMAGES.proud;
-        showNovaSpeechBubble('ชื่นใจจัง! บันทึกน้ำ +1 แก้ว (250 ml) สำเร็จแล้วเมี้ยว 💧✨', 4500);
+        showNovaSpeechBubble(`ชื่นใจจัง! บันทึกน้ำ +1 แก้ว (${dose} ml) สำเร็จแล้วเมี้ยว 💧✨`, 4500);
 
         setTimeout(() => {
             renderNovaMascot();
@@ -340,7 +398,8 @@
 
     function getChatDailyQuota() {
         const isAuth = !!window.currentUser;
-        const maxQuota = isAuth ? 5 : 3;
+        const baseLimit = Number(_remoteMascotConfig.chatDailyQuota) || 5;
+        const maxQuota = isAuth ? baseLimit : Math.min(3, baseLimit);
         const todayStr = getTodayIso();
         const usageMap = window.state?.mascotCompanion?.chatDailyUsage || {};
         const used = usageMap[todayStr] || 0;
@@ -375,6 +434,13 @@
     }
 
     function openNovaChatModal() {
+        if (_remoteMascotConfig.modes?.aiChat === false) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('🥑 ฟังก์ชันแชตปิดปรับปรุงชั่วคราวโดยผู้ดูแลระบบเมี้ยว');
+            }
+            return;
+        }
+
         toggleNovaQuickMenu(true);
         hideNovaSpeechBubble();
         updateChatQuotaUI();
@@ -558,6 +624,16 @@
         const weight = st.weight || 65;
         const targetP = (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6);
         const targetGlasses = Math.max(6, Math.round((weight * 35) / 250));
+        const userStats = { remainCal, totalP, targetP, waterGlasses, targetGlasses };
+
+        // Zero-Token Admin Policy: Force Local Heuristics (system_config/mascot) - v5.9.22
+        if (_remoteMascotConfig.forceLocalOnly) {
+            playSfx('pop');
+            incrementChatDailyQuota();
+            const localAdvice = generateSmartLocalAdvice(question, userStats);
+            appendMascotMessage(localAdvice);
+            return;
+        }
 
         const userContextPrompt = `ข้อมูลสุขภาพผู้ใช้วันนี้:
 - น้ำหนัก: ${weight} กก.
@@ -621,7 +697,7 @@
                                 ],
                                 generationConfig: {
                                     temperature: 0.6,
-                                    maxOutputTokens: 220
+                                    maxOutputTokens: Number(_remoteMascotConfig.maxTokens) || 180
                                 }
                             })
                         });
@@ -722,6 +798,19 @@
     });
 
     function toggleMascotCompanion() {
+        if (_remoteMascotConfig.enabled === false) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('🥑 น้องเหมียวโนวาถูกปิดใช้งานชั่วคราวโดยผู้ดูแลระบบ');
+            }
+            return;
+        }
+        if (_remoteMascotConfig.allowUserToggle === false) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('🥑 การเปิด/ปิดน้องเหมียวโนวาถูกล็อกโดยผู้ดูแลระบบเมี้ยว');
+            }
+            return;
+        }
+
         ensureCompanionState();
         window.state.mascotCompanion.enabled = !(window.state.mascotCompanion.enabled !== false);
         if (window.state.mascotCompanion.enabled) {
@@ -741,11 +830,31 @@
     function renderMascotMenuBadge() {
         const badge = document.getElementById('mascotMenuBadge');
         if (!badge) return;
+        if (_remoteMascotConfig.enabled === false) {
+            badge.textContent = 'ปิดโดยระบบ';
+            badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold';
+            return;
+        }
         const isEnabled = window.state?.mascotCompanion?.enabled !== false;
         badge.textContent = isEnabled ? 'เปิด' : 'ปิด';
         badge.className = isEnabled
             ? 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold'
             : 'text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 font-bold';
+    }
+
+    function applyRemoteMascotConfig(cfg) {
+        if (!cfg || typeof cfg !== 'object') return;
+        _remoteMascotConfig = { ..._remoteMascotConfig, ...cfg };
+        try {
+            localStorage.setItem('novafit_system_mascot_config', JSON.stringify(_remoteMascotConfig));
+        } catch (e) { }
+        renderNovaMascot();
+        renderMascotMenuBadge();
+        updateChatQuotaUI();
+    }
+
+    function getRemoteMascotConfig() {
+        return _remoteMascotConfig;
     }
 
     // Window Exports
@@ -765,6 +874,8 @@
     window.toggleMascotCompanion = toggleMascotCompanion;
     window.renderMascotMenuBadge = renderMascotMenuBadge;
     window.generateSmartLocalAdvice = generateSmartLocalAdvice;
+    window.applyRemoteMascotConfig = applyRemoteMascotConfig;
+    window.getRemoteMascotConfig = getRemoteMascotConfig;
     window.initNovaMascotCompanion = initNovaMascotCompanion;
 
     // Auto-init when DOM ready

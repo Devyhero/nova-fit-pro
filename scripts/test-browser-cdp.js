@@ -1630,8 +1630,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.21' ||
-            !v598Test.toolsBadge?.includes('v5.9.21')) {
+            v598Test.appVersion !== '5.9.22' ||
+            !v598Test.toolsBadge?.includes('v5.9.22')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2257,6 +2257,60 @@ server.listen(PORT, async () => {
             !smartMealTest.pastVsTodayAccurate ||
             !smartMealTest.hasAutoSync) {
             throw new Error('Test 45: Smart Time-Based Meal Selector failed: ' + JSON.stringify(smartMealTest));
+        }
+
+        // Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22)
+        console.log('--- Test 46: MeowNova Remote Control Hub & Zero-Token Policy (v5.9.22) ---');
+        const remoteConfigTest = await evalJs(`(() => {
+            // 1. Test applyRemoteMascotConfig - kill switch
+            if (typeof applyRemoteMascotConfig === 'function') {
+                applyRemoteMascotConfig({ enabled: false });
+            }
+            const containerHiddenOnKill = document.getElementById('novaMascotContainer')?.classList.contains('hidden');
+            const pillHiddenOnKill = document.getElementById('novaMascotPill')?.classList.contains('hidden');
+
+            // 2. Test applyRemoteMascotConfig - custom speech broadcast
+            if (typeof applyRemoteMascotConfig === 'function') {
+                applyRemoteMascotConfig({
+                    enabled: true,
+                    customBroadcast: 'สวัสดีชาว NovaFit Pro เมี้ยว! 🥑✨',
+                    quickWaterDose: 300,
+                    forceLocalOnly: true
+                });
+            }
+            const moodData = typeof evaluateNovaMood === 'function' ? evaluateNovaMood() : null;
+            const broadcastWorks = moodData?.text === 'สวัสดีชาว NovaFit Pro เมี้ยว! 🥑✨';
+
+            const cfg = typeof getRemoteMascotConfig === 'function' ? getRemoteMascotConfig() : null;
+            const doseUpdated = cfg?.quickWaterDose === 300;
+            const forceLocalUpdated = cfg?.forceLocalOnly === true;
+
+            // Restore defaults
+            if (typeof applyRemoteMascotConfig === 'function') {
+                applyRemoteMascotConfig({
+                    enabled: true,
+                    customBroadcast: '',
+                    quickWaterDose: 250,
+                    forceLocalOnly: false
+                });
+            }
+
+            return {
+                containerHiddenOnKill,
+                pillHiddenOnKill,
+                broadcastWorks,
+                doseUpdated,
+                forceLocalUpdated
+            };
+        })()`);
+        console.log('MeowNova Remote Config verified:', remoteConfigTest);
+
+        if (!remoteConfigTest.containerHiddenOnKill ||
+            !remoteConfigTest.pillHiddenOnKill ||
+            !remoteConfigTest.broadcastWorks ||
+            !remoteConfigTest.doseUpdated ||
+            !remoteConfigTest.forceLocalUpdated) {
+            throw new Error('Test 46: MeowNova Remote Config failed: ' + JSON.stringify(remoteConfigTest));
         }
 
         ws.close();

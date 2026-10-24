@@ -209,8 +209,8 @@
                 <button type="button" onclick="switchAdminTab('system_changelog')" id="tabBtn_system_changelog" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
                     <span>📋</span> <span>ประวัติอัปเดตระบบ & หลังบ้าน</span>
                 </button>
-                <button type="button" onclick="switchAdminTab('system_ai')" id="tabBtn_system_ai" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
-                    <span>🤖</span> <span>จัดการ Gemini AI & Quota</span>
+                <button type="button" onclick="switchAdminTab('system_ai')" id="tabBtn_system_ai" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
+                    <span>🤖</span> <span>Gemini AI & บอทคู่คิด MeowNova</span>
                 </button>
                 <button type="button" onclick="switchAdminTab('security_logs')" id="tabBtn_security_logs" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
                     <span>🛡️</span> <span>บันทึกความปลอดภัย & ป้องกันโกง</span>
@@ -570,12 +570,25 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.21
+                            Current Version: v5.9.22
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.22 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🥑 v5.9.22 (MeowNova Remote Control Hub, Dynamic Speech Broadcast & Zero-Token Governance)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🥑 Centralized MeowNova Remote Control Hub:</b> ติดตั้งแผงควบคุมมาสคอตบอทคู่คิดใน <code>tabView_system_ai</code> เชื่อมต่อ Cloud Firestore <code>system_config/mascot</code> รองรับสวิตช์ Global Kill-Switch, สิทธิ์การเปิด/ปิดของผู้ใช้ (User Autonomy), และการเปิด/ปิดบทบาทรายโหมด (Floating Bubble, Quick Menu, AI Chat)</li>
+                                <li><b>🛡️ Token Governance & Zero-Token Fallback:</b> แอดมินสามารถปรับโควตาคำถามต่อวัน (Daily Questions Limit), เพดาน Max Tokens, ปริมาณน้ำปุ่มลัด (Quick Water Dose), และเปิดโหมด Force Local Heuristics ตอบด้วยสมองในเครื่อง 0-Token ได้ทันที</li>
+                                <li><b>📢 Custom Broadcast Voice:</b> เพิ่มช่องทางบรอดแคสต์ข้อความพิเศษจากปากน้อง MeowNova ส่งตรงถึงหน้าจอผู้ใช้ทุกคนเมื่อเปิดแอป พร้อมกำหนดระยะเวลาแสดงบับเบิ้ล (Bubble Duration)</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.22 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.21 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1107,6 +1120,160 @@
                                 <span>🧪</span> <span>ทดสอบการเชื่อมต่อ API (Test Ping)</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- MeowNova Mascot & AI Companion Remote Control Hub (v5.9.22) -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">🥑</span>
+                            <div>
+                                <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                    <span>จัดการบอทคู่หู MeowNova (Mascot & AI Companion Control)</span>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">system_config/mascot</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">
+                                    ควบคุมการเปิด/ปิด, บทบาทการทำงาน, โควตาแชต และข้อความบรอดแคสต์ทักทายไปยังผู้ใช้ทุกคนแบบเรียลไทม์
+                                </p>
+                            </div>
+                        </div>
+                        <span id="adminMascotStatusBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            🟢 เปิดใช้งานทั้งระบบ
+                        </span>
+                    </div>
+
+                    <!-- Master Switch & User Autonomy -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                    <span>🔘</span> <span>เปิดแสดงน้อง MeowNova ทั้งระบบ (Global Kill-Switch)</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-0.5">หากปิด น้องจะหายไปจากหน้าจอผู้ใช้ทุกคนทันที</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" id="adminMascotGlobalEnabled" checked class="sr-only peer" onchange="updateMascotStatusBadgePreview()">
+                                <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                    <span>👤</span> <span>อนุญาตให้ผู้ใช้เลือกปิด/ย่อเก็บเองได้</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-0.5">ให้ผู้ใช้กดซ่อนหรือย่อแถบน้องได้ในเมนูเครื่องมือ</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" id="adminMascotAllowUserToggle" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Active Roles / Features -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 space-y-2.5">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>🎭</span> <span>เปิด/ปิดบทบาทของน้อง MeowNova (Feature Modes)</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                                <input type="checkbox" id="adminMascotModeBubble" checked class="rounded text-emerald-500 focus:ring-emerald-400">
+                                <span class="font-semibold text-slate-700 dark:text-slate-200">1. บับเบิ้ลลอยทักทาย</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                                <input type="checkbox" id="adminMascotModeQuickMenu" checked class="rounded text-emerald-500 focus:ring-emerald-400">
+                                <span class="font-semibold text-slate-700 dark:text-slate-200">2. เมนูลัดจิบน้ำ & สแกน</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                                <input type="checkbox" id="adminMascotModeAiChat" checked class="rounded text-emerald-500 focus:ring-emerald-400">
+                                <span class="font-semibold text-slate-700 dark:text-slate-200">3. กล่องแชต AI สุขภาพ</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- AI Governance & Token Controls -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 space-y-1">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">
+                                💬 โควตาแชต/คน/วัน:
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="adminMascotDailyQuota" min="1" max="50" value="5"
+                                    class="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-bold text-center text-slate-800 dark:text-slate-100">
+                                <span class="text-[11px] text-slate-400">คำถาม / วัน</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 space-y-1">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">
+                                💎 ความยาวคำตอบสูงสุด:
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="adminMascotMaxTokens" min="50" max="500" step="10" value="180"
+                                    class="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-bold text-center text-slate-800 dark:text-slate-100">
+                                <span class="text-[11px] text-slate-400">Max Tokens</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80 space-y-1">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">
+                                💧 ปริมาณน้ำปุ่มลัด (ml):
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="adminMascotWaterDose" min="100" max="1000" step="50" value="250"
+                                    class="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-bold text-center text-slate-800 dark:text-slate-100">
+                                <span class="text-[11px] text-slate-400">มล. / คลิก</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Force Local Heuristics / Zero-Token Mode -->
+                    <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-bold text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                                <span>⚡</span> <span>โหมดประหยัด Token 100% (บังคับใช้เฉพาะสมองในเครื่อง Heuristics)</span>
+                            </div>
+                            <p class="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+                                เมื่อเปิด น้องจะตอบด้วยการคำนวณสารอาหารและแคลอรีคงเหลือในเครื่อง โดยไม่ยิงเรียก Google Gemini API ประหยัด Token สมบูรณ์แบบ
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="adminMascotForceLocalOnly" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Custom Broadcast Speech Bubble -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            📢 ข้อความบรอดแคสต์พิเศษให้น้องพูดทักทายทุกคน (Custom Broadcast Speech):
+                        </label>
+                        <div class="flex gap-2 items-start">
+                            <textarea id="adminMascotCustomSpeech" rows="2" placeholder="ปล่อยว่างไว้เพื่อให้น้องทักทายตามอารมณ์และสถิติจริง หรือพิมพ์ข้อความประกาศพิเศษที่นี่ เช่น 'วันนี้อย่าลืมดื่มน้ำเยอะๆ น้าเมี้ยว 🥑✨'"
+                                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500"></textarea>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400">
+                            <span>💡 หากเว้นว่าง น้องจะพูดให้กำลังใจและเตือนดื่มน้ำตามช่วงเวลาและสถิติจริงตามปกติ</span>
+                            <div class="flex items-center gap-1.5">
+                                <span>แสดงค้าง:</span>
+                                <input type="number" id="adminMascotBubbleDuration" min="2" max="15" value="4" class="w-14 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 text-center text-xs font-bold text-slate-800 dark:text-slate-100">
+                                <span>วินาที</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex-wrap">
+                        <button type="button" onclick="saveAdminMascotConfig()" id="btnSaveMascotConfig"
+                            class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>💾</span> <span>บันทึกการตั้งค่าบอท MeowNova</span>
+                        </button>
+                        <button type="button" onclick="resetAdminMascotConfigDefaults()"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>🔄</span> <span>คืนค่าเริ่มต้น</span>
+                        </button>
                     </div>
                 </div>
 
