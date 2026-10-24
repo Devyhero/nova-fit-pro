@@ -543,12 +543,26 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.11
+                            Current Version: v5.9.12
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.12 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">📖 v5.9.12 (Interactive App Tour Carousel, Mobile Profile Dropdown Clearance & Settings Routing)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">24 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>📖 Interactive App Tour Engine:</b> พัฒนาระบบคู่มือแนะนำการใช้งานแบบ 5 สเต็ป (`TOUR_SLIDES`) ใน `public/app.js` และ Modal `appTourModal` พร้อมปุ่มเปลี่ยนสไลด์ ดอทระบุสเต็ป และการเชื่อมโยงระบบเสียง Web Audio Effect</li>
+                                <li><b>📱 Mobile Profile Dropdown Geometry Fix:</b> ปรับปรุง CSS `max-w-[calc(100vw-24px)]` และ Margin Offset ของ `#userDropdown` เพื่อแก้ปัญหาเมนูโปรไฟล์ล้นตกขอบซ้ายของหน้าจอมือถือ (Viewport 360-390px) 100%</li>
+                                <li><b>🎛️ Settings Modal & Dropdown Dual Sound Binding:</b> ย้ายตัวควบคุมสวิตช์เปิด/ปิดเสียงเอฟเฟกต์เข้าไปใน `profileSettingsModal` และ `toolsDropdownMenu` เพื่อความสะอาดตาของ Header Bar</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.12 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+
                         <!-- Release: v5.9.11 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">

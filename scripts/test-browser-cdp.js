@@ -1627,8 +1627,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.11' ||
-            !v598Test.toolsBadge?.includes('v5.9.11')) {
+            v598Test.appVersion !== '5.9.12' ||
+            !v598Test.toolsBadge?.includes('v5.9.12')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -1857,6 +1857,63 @@ server.listen(PORT, async () => {
             !soundTest.stateUnmuted ||
             !soundTest.playSoundPopOk) {
             throw new Error('Test 40: Sound effects synthesizer engine failed: ' + JSON.stringify(soundTest));
+        }
+
+        // Test 41: App Tour Modal & Interactive Guide Engine (v5.9.12)
+        console.log('--- Test 41: App Tour Modal & Interactive Guide Engine (v5.9.12) ---');
+        const tourTest = await evalJs(`(() => {
+            const modal = document.getElementById('appTourModal');
+            const btnAppTour = document.getElementById('btnAppTour');
+            const hasModal = !!modal;
+            const hasBtn = !!btnAppTour;
+            const fnOpen = typeof window.openAppTourModal === 'function';
+            const fnClose = typeof window.closeAppTourModal === 'function';
+            const fnNext = typeof window.nextTourSlide === 'function';
+            const fnPrev = typeof window.prevTourSlide === 'function';
+            const fnGoTo = typeof window.goToTourSlide === 'function';
+
+            // Test opening tour
+            if (fnOpen) window.openAppTourModal();
+            const isOpen = modal && !modal.classList.contains('hidden');
+            const titleEl = document.getElementById('tourSlideTitle');
+            const title1 = titleEl ? titleEl.textContent.trim() : '';
+
+            // Test next slide
+            if (fnNext) window.nextTourSlide();
+            const title2 = titleEl ? titleEl.textContent.trim() : '';
+
+            // Test prev slide
+            if (fnPrev) window.prevTourSlide();
+            const titleBack1 = titleEl ? titleEl.textContent.trim() : '';
+
+            // Test closing
+            if (fnClose) window.closeAppTourModal();
+            const isClosing = modal && !modal.classList.contains('modal-open');
+
+            return {
+                hasModal,
+                hasBtn,
+                fnOpen,
+                fnClose,
+                fnNext,
+                isOpen,
+                title1,
+                title2,
+                titleBack1,
+                isClosing
+            };
+        })()`);
+        console.log('App Tour engine verified:', tourTest);
+
+        if (!tourTest.hasModal ||
+            !tourTest.hasBtn ||
+            !tourTest.fnOpen ||
+            !tourTest.isOpen ||
+            !tourTest.title1.includes('ยินดีต้อนรับ') ||
+            !tourTest.title2.includes('ถ่ายรูปอาหาร') ||
+            !tourTest.titleBack1.includes('ยินดีต้อนรับ') ||
+            !tourTest.isClosing) {
+            throw new Error('Test 41: App Tour interactive guide failed: ' + JSON.stringify(tourTest));
         }
 
         ws.close();

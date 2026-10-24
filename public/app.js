@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.11';
+const APP_VERSION = '5.9.12';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -574,6 +574,157 @@ const APP_VERSION = '5.9.11';
                 closePrestigeWardrobeModal();
             }
         }
+
+        // ==========================================
+        // APP TOUR & INTERACTIVE GUIDE ENGINE (v5.9.12)
+        // ==========================================
+        const TOUR_SLIDES = [
+            {
+                icon: '🥑',
+                tag: 'สเต็ป 1 จาก 5 • ยินดีต้อนรับ',
+                title: 'ยินดีต้อนรับสู่ NovaFit Pro!',
+                desc: 'เพื่อนคู่คิดด้านโภชนาการและการออกกำลังกาย ช่วยคุณคำนวณแคลอรีและสารอาหารหลัก (Macro) ให้เข้ากับเป้าหมายอย่างแม่นยำ',
+                tipTitle: '💡 เคล็ดลับการเริ่มต้น',
+                tipContent: 'เริ่มตั้งค่าส่วนสูง น้ำหนัก และเป้าหมายของคุณได้ที่เมนู "⚙️ จัดการ" ➔ "ตั้งค่าข้อมูลร่างกาย & Macro"'
+            },
+            {
+                icon: '📸',
+                tag: 'สเต็ป 2 จาก 5 • สแกนอาหาร AI',
+                title: 'ถ่ายรูปอาหาร บันทึกแคลอรีทันใจ',
+                desc: 'แตะปุ่ม "📸 สแกนอาหารด้วย AI" เพื่อถ่ายรูปจานข้าวของคุณ AI อัจฉริยะจะช่วยประเมินชื่ออาหาร แคลอรี และสารอาหารให้ทันทีใน 2 วินาที',
+                tipTitle: '⚡ ระบบ Smart Food Cache',
+                tipContent: 'เมนูยอดฮิตกว่า 280+ รายการจะถูกค้นหาและจำค่าอัตโนมัติ ทำให้บันทึกได้เร็วปานสายฟ้าแลบ'
+            },
+            {
+                icon: '💧',
+                tag: 'สเต็ป 3 จาก 5 • จิบน้ำ & IF',
+                title: 'ติดตามการดื่มน้ำ & นาฬิกา IF',
+                desc: 'แตะ +250 มล. เมื่อดื่มน้ำเพื่อเติมหลอดความชุ่มชื้น พร้อมระบบจับเวลาทำ Intermittent Fasting (IF) นับถอยหลังช่วง Fasting และ Feasting แบบเรียลไทม์',
+                tipTitle: '🌊 สถิติน้ำ & ช่วงเวลาอดอาหาร',
+                tipContent: 'ระบบจำค่าการดื่มน้ำและเวลากดเริ่ม IF ไว้ในเครื่อง สามารถใช้งานต่อได้แม้ออฟไลน์'
+            },
+            {
+                icon: '🏆',
+                tag: 'สเต็ป 4 จาก 5 • สตรีค & กรอบโปรไฟล์',
+                title: 'สะสมสตรีค & กรอบเกียรติยศ',
+                desc: 'บันทึกอาหารจริงทุกวันเพื่อสะสมสตรีคต่อเนื่อง ปลดล็อกกรอบโปรไฟล์ 5 ลำดับขั้น (เริ่มต้น ➔ ทองแดง ➔ เงิน ➔ ทอง ➔ เพชร) อวดความมีวินัยของคุณ',
+                tipTitle: '🛡️ ระบบป้องกันสตรีคปลอดภัย',
+                tipContent: 'สตรีคจะนับจากการบันทึกมื้ออาหารจริงเท่านั้น แตะที่รูปโปรไฟล์เพื่อเปิดตู้เสื้อผ้าแต่งตัวกรอบได้ตลอดเวลา'
+            },
+            {
+                icon: '🔔',
+                tag: 'สเต็ป 5 จาก 5 • แจ้งเตือนอัจฉริยะ',
+                title: 'เชื่อมต่อแจ้งเตือน & สมาร์ตวอทช์',
+                desc: 'เปิดรับแจ้งเตือนเพื่อรับข้อความเตือนกินข้าวกลางวัน เย็น และเตือนเซฟสตรีค รองรับการสั่นเตือนบน Apple Watch & สมาร์ตวอทช์',
+                tipTitle: '🔊 เสียงเอฟเฟกต์ในแอป',
+                tipContent: 'สนุกขึ้นด้วยเสียง Pop ตอนบันทึกอาหาร และปรับเปิด/ปิดเสียงได้สะดวกในเมนูตั้งค่า'
+            }
+        ];
+
+        let currentTourSlideIndex = 0;
+
+        function renderTourSlide() {
+            const slide = TOUR_SLIDES[currentTourSlideIndex];
+            if (!slide) return;
+
+            const iconEl = document.getElementById('tourSlideIcon');
+            const tagEl = document.getElementById('tourSlideTag');
+            const titleEl = document.getElementById('tourSlideTitle');
+            const descEl = document.getElementById('tourSlideDesc');
+            const tipTitleEl = document.getElementById('tourSlideTipTitle');
+            const tipContentEl = document.getElementById('tourSlideTipContent');
+            const btnPrev = document.getElementById('btnTourPrev');
+            const btnNext = document.getElementById('btnTourNext');
+            const btnNextText = document.getElementById('btnTourNextText');
+            const dotsContainer = document.getElementById('tourDotsContainer');
+
+            if (iconEl) iconEl.textContent = slide.icon;
+            if (tagEl) tagEl.textContent = slide.tag;
+            if (titleEl) titleEl.textContent = slide.title;
+            if (descEl) descEl.textContent = slide.desc;
+            if (tipTitleEl) tipTitleEl.innerHTML = `<span>💡</span> ${slide.tipTitle}`;
+            if (tipContentEl) tipContentEl.innerHTML = slide.tipContent;
+
+            // Previous button state
+            if (btnPrev) {
+                if (currentTourSlideIndex === 0) {
+                    btnPrev.classList.add('opacity-40', 'pointer-events-none');
+                } else {
+                    btnPrev.classList.remove('opacity-40', 'pointer-events-none');
+                }
+            }
+
+            // Next button text
+            const isLast = currentTourSlideIndex === TOUR_SLIDES.length - 1;
+            if (btnNextText) {
+                btnNextText.textContent = isLast ? 'เริ่มใช้งานทันที! 🚀' : 'ถัดไป';
+            }
+
+            // Update Dots
+            if (dotsContainer) {
+                const dots = dotsContainer.querySelectorAll('button');
+                dots.forEach((dot, idx) => {
+                    if (idx === currentTourSlideIndex) {
+                        dot.className = 'w-6 h-2 rounded-full bg-emerald-500 transition-all';
+                    } else {
+                        dot.className = 'w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700 transition-all';
+                    }
+                });
+            }
+        }
+
+        function openAppTourModal() {
+            currentTourSlideIndex = 0;
+            renderTourSlide();
+            openModalAnimated('appTourModal');
+            if (typeof playSound === 'function') playSound('pop');
+        }
+
+        function closeAppTourModal() {
+            closeModalAnimated('appTourModal');
+            localStorage.setItem('novafit_tour_seen', 'true');
+        }
+
+        function closeAppTourModalOnBackdrop(e) {
+            if (e && e.target && e.target.id === 'appTourModal') {
+                closeAppTourModal();
+            }
+        }
+
+        function nextTourSlide() {
+            if (currentTourSlideIndex < TOUR_SLIDES.length - 1) {
+                currentTourSlideIndex++;
+                renderTourSlide();
+                if (typeof playSound === 'function') playSound('pop');
+            } else {
+                closeAppTourModal();
+                if (typeof playSound === 'function') playSound('celebrate');
+                showToast('🎉 พร้อมแล้ว! เริ่มบันทึกอาหารเพื่อสุขภาพที่ดีของคุณได้เลย');
+            }
+        }
+
+        function prevTourSlide() {
+            if (currentTourSlideIndex > 0) {
+                currentTourSlideIndex--;
+                renderTourSlide();
+                if (typeof playSound === 'function') playSound('pop');
+            }
+        }
+
+        function goToTourSlide(index) {
+            if (index >= 0 && index < TOUR_SLIDES.length) {
+                currentTourSlideIndex = index;
+                renderTourSlide();
+                if (typeof playSound === 'function') playSound('pop');
+            }
+        }
+
+        window.openAppTourModal = openAppTourModal;
+        window.closeAppTourModal = closeAppTourModal;
+        window.closeAppTourModalOnBackdrop = closeAppTourModalOnBackdrop;
+        window.nextTourSlide = nextTourSlide;
+        window.prevTourSlide = prevTourSlide;
+        window.goToTourSlide = goToTourSlide;
 
         function equipPrestigeFrame(tierId) {
             verifyAndSanitizeStreak();
