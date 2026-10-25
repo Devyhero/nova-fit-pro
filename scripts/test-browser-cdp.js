@@ -336,12 +336,20 @@ server.listen(PORT, async () => {
             throw new Error(`Universal search failed: count=${searchResultsCount}, cat=${activeSearchCat}`);
         }
 
-        // Clear search
-        await evalJs('clearFoodSearch()');
+        // Clear search using DOM Button #btnClearSearch
+        const btnClearExists = await evalJs('!!document.getElementById("btnClearSearch")');
+        const isBtnClearVisible = await evalJs('!document.getElementById("btnClearSearch").classList.contains("hidden")');
+        const btnClearClasses = await evalJs('document.getElementById("btnClearSearch").className');
+        const hasMobileTouchWidth = btnClearClasses.includes('w-11') && btnClearClasses.includes('absolute');
+
+        // Click the actual DOM button #btnClearSearch
+        await evalJs('document.getElementById("btnClearSearch").click()');
+        const searchInputAfterClear = await evalJs('document.getElementById("foodSearchInput").value');
+        const isBtnClearHiddenAfter = await evalJs('document.getElementById("btnClearSearch").classList.contains("hidden")');
         const restoredCat = await evalJs('state.selectedCategory');
-        console.log('Restored category after search clear:', restoredCat);
-        if (restoredCat !== 'cat_dessert') {
-            throw new Error('Category was not restored after search clear');
+        console.log('Clear button verified:', { btnClearExists, isBtnClearVisible, hasMobileTouchWidth, searchInputAfterClear, isBtnClearHiddenAfter, restoredCat });
+        if (!btnClearExists || !isBtnClearVisible || !hasMobileTouchWidth || searchInputAfterClear !== '' || !isBtnClearHiddenAfter || restoredCat !== 'cat_dessert') {
+            throw new Error('Clear food search button verification failed');
         }
 
         // Test 14: Quick Meal Picker Modal & Direct Meal Selection
@@ -1651,8 +1659,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.26' ||
-            !v598Test.toolsBadge?.includes('v5.9.26')) {
+            v598Test.appVersion !== '5.9.27' ||
+            !v598Test.toolsBadge?.includes('v5.9.27')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 

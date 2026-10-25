@@ -692,7 +692,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.26)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.27)
                         </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
@@ -1131,9 +1131,15 @@
                         <div class="relative w-full">
                             <input type="text" id="foodSearchInput" oninput="onSearchFood(this.value)"
                                 placeholder="🔍 ค้นหาเมนู เช่น กะเพรา, ราเมน, ข้าวมันไก่..."
-                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 shadow-inner">
-                            <button onclick="clearFoodSearch()" id="btnClearSearch"
-                                class="hidden absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-11 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 shadow-inner">
+                            <button type="button" id="btnClearSearch"
+                                onclick="clearFoodSearch()"
+                                onpointerdown="event.preventDefault();"
+                                onmousedown="event.preventDefault();"
+                                title="ล้างการค้นหา"
+                                class="hidden absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer z-10">
+                                <span class="w-5 h-5 rounded-full bg-slate-200/90 dark:bg-slate-700/90 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold leading-none select-none shadow-xs">✕</span>
+                            </button>
                         </div>
 
                         <!-- Category Tabs -->
@@ -1576,11 +1582,35 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.26!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.27!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.26 -->
+                <!-- Latest Release: v5.9.27 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🎯</span> v5.9.27 (ปุ่มเคลียร์ช่องค้นหาอาหารแตะติดทันที & ป้องกันแป้นพิมพ์เด้ง)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">25 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🎯</span>
+                            <span><b>ปุ่มกากบาทเคลียร์ช่องค้นหาแตะติดทันทีในครั้งเดียว:</b> ขยายพื้นที่แตะสัมผัสเต็มพิกัด 44px ตามมาตรฐาน Mobile-First หมดปัญหาต้องกดย้ำหลายรอบ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">⚡</span>
+                            <span><b>ป้องกันแป้นพิมพ์เด้งหลุด:</b> แตะปุ่ม X ปุ๊บ ล้างข้อความปั๊บ ทันใจในเสี้ยววินาที หน้าจอไม่กระตุก</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">🔍</span>
+                            <span><b>ครอบคลุมทุกช่องค้นหา:</b> อัปเกรดระบบเคลียร์ข้อความทั้งในคลังอาหารหลัก เมนูเซ็ต และเกร็ดความรู้สุขภาพ ให้ลื่นไหลเท่าเทียมกัน</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.26 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>⚡</span> v5.9.26 (แก้ไขสตรีค 7 วันแม่นยำ 100% & ปลดล็อกกรอบ Silver Striker)
@@ -3328,8 +3358,10 @@
 
             <!-- Search input -->
             <div class="relative shrink-0">
-                <input type="text" id="healthTipsSearchInput" oninput="renderHealthTipsModalList(this.value)" placeholder="🔍 ค้นหา เช่น มะเขือเทศ, โปรตีน, นอนหลับ, น้ำดื่ม..." class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-xs focus:outline-none focus:border-amber-500 shadow-xs font-medium">
-                <button type="button" onclick="document.getElementById('healthTipsSearchInput').value=''; renderHealthTipsModalList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                <input type="text" id="healthTipsSearchInput" oninput="renderHealthTipsModalList(this.value)" placeholder="🔍 ค้นหา เช่น มะเขือเทศ, โปรตีน, นอนหลับ, น้ำดื่ม..." class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-amber-500 shadow-xs font-medium">
+                <button type="button" onpointerdown="event.preventDefault();" onmousedown="event.preventDefault();" onclick="document.getElementById('healthTipsSearchInput').value=''; renderHealthTipsModalList('');" title="ล้างการค้นหา" class="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10">
+                    <span class="w-5 h-5 rounded-full bg-slate-200/80 dark:bg-slate-600/80 flex items-center justify-center text-xs font-bold leading-none select-none">✕</span>
+                </button>
             </div>
 
             <div id="healthTipsListContainer" class="space-y-3 overflow-y-auto pr-1 flex-1 text-xs">
@@ -3983,10 +4015,11 @@
                             <input type="text" id="comboFoodSearchInput"
                                 placeholder="🔍 พิมพ์ค้นหาเมนูในคลัง... (เช่น อกไก่, ข้าวสวย, ไข่ต้ม)"
                                 oninput="onComboFoodSearchInput(this.value)"
-                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500 pr-8">
+                                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500 pr-10">
                             <button type="button" id="comboFoodSearchClearBtn" onclick="clearComboFoodSearch()"
-                                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
-                                ✕
+                                onpointerdown="event.preventDefault();" onmousedown="event.preventDefault();" title="ล้างการค้นหา"
+                                class="hidden absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10">
+                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200">✕</span>
                             </button>
                         </div>
 
@@ -4365,22 +4398,22 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.26"></script>
+    <script src="food-db.js?v=5.9.27"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.26"></script>
+    <script src="health-tips.js?v=5.9.27"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.26"></script>
+    <script src="ai-snap.js?v=5.9.27"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.26"></script>
+    <script src="app.js?v=5.9.27"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.26"></script>
+    <script src="mascot-companion.js?v=5.9.27"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.26"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.27"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

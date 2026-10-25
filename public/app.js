@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.26';
+const APP_VERSION = '5.9.27';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -1961,7 +1961,13 @@ const APP_VERSION = '5.9.26';
         function clearFoodSearch() {
             state.searchQuery = '';
             const input = document.getElementById('foodSearchInput');
-            if (input) input.value = '';
+            const wasFocused = input && document.activeElement === input;
+            if (input) {
+                input.value = '';
+                if (wasFocused) {
+                    input.focus();
+                }
+            }
             const btnClear = document.getElementById('btnClearSearch');
             if (btnClear) btnClear.classList.add('hidden');
             if (state._prevCategoryBeforeSearch) {
