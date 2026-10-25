@@ -3095,9 +3095,10 @@ window.testLocalNotification = async function (title = 'NovaFit Pro 🥑', body 
 };
 
 // ==============================================================
-// SMART BEHAVIORAL HYDRATION PUSH HUB ENGINE (v5.9.15)
+// SMART BEHAVIORAL HYDRATION PUSH HUB ENGINE (v5.9.15 / v5.9.29)
 // ==============================================================
 let _hydrationConfig = {
+    enabled: true,
     triggerTime: '14:30',
     thresholdPct: 50,
     criticalThreshold: 25,
@@ -3112,10 +3113,40 @@ let _hydrationConfig = {
         '🌊 ร่างกายกำลังไปได้สวย! เติมน้ำอีกสักแก้วให้ถึงเป้าหมายประจำวันกันเถอะ ✨'
     ]
 };
+let _hydrationLastDispatched = null;
+
+window.onHydrationScheduleChange = function () {
+    const chk = document.getElementById('inHydroEnabled');
+    const timeIn = document.getElementById('inHydroTriggerTime');
+    const threshSel = document.getElementById('inHydroThresholdPct');
+    if (chk) _hydrationConfig.enabled = !!chk.checked;
+    if (timeIn && timeIn.value) _hydrationConfig.triggerTime = timeIn.value;
+    if (threshSel && threshSel.value) _hydrationConfig.thresholdPct = parseInt(threshSel.value, 10) || 50;
+    window.renderHydrationConfigUI();
+};
 
 window.renderHydrationConfigUI = function () {
     const listCrit = document.getElementById('hydroCriticalMsgList');
     const listMod = document.getElementById('hydroModerateMsgList');
+    const chk = document.getElementById('inHydroEnabled');
+    const timeIn = document.getElementById('inHydroTriggerTime');
+    const threshSel = document.getElementById('inHydroThresholdPct');
+    const statusBadge = document.getElementById('hydroScheduleStatusBadge');
+
+    if (chk) chk.checked = _hydrationConfig.enabled !== false;
+    if (timeIn) timeIn.value = _hydrationConfig.triggerTime || '14:30';
+    if (threshSel) threshSel.value = String(_hydrationConfig.thresholdPct || 50);
+
+    if (statusBadge) {
+        if (_hydrationConfig.enabled === false) {
+            statusBadge.textContent = '⏸️ ปิดการส่งอัตโนมัติชั่วคราว';
+            statusBadge.className = 'text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold';
+        } else {
+            const dispText = _hydrationLastDispatched ? ` • ส่งล่าสุด: ${_hydrationLastDispatched}` : '';
+            statusBadge.textContent = `⏱️ ส่งอัตโนมัติ: ${_hydrationConfig.triggerTime || '14:30'} น. (< ${_hydrationConfig.thresholdPct || 50}%)${dispText}`;
+            statusBadge.className = 'text-[11px] px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold';
+        }
+    }
 
     if (listCrit) {
         listCrit.innerHTML = _hydrationConfig.criticalMsgs.map((msg, idx) => `
@@ -3159,6 +3190,7 @@ window.deleteHydrationMsg = function (type, idx) {
 };
 
 window.saveHydrationConfig = async function () {
+    window.onHydrationScheduleChange();
     showAdminMiniLoader('กำลังบันทึกการตั้งค่า Smart Hydration...');
     try {
         if (typeof db !== 'undefined' && db) {
@@ -3168,7 +3200,8 @@ window.saveHydrationConfig = async function () {
             }, { merge: true });
         }
         hideAdminMiniLoader();
-        showAdminToast('✓ บันทึกการตั้งค่า Smart Hydration เรียบร้อยแล้ว!');
+        showAdminToast(`✓ บันทึกเวลาส่ง (${_hydrationConfig.triggerTime} น.) และการตั้งค่า Smart Hydration เรียบร้อยแล้ว!`);
+        window.scanHydrationBehavior();
     } catch (err) {
         console.error('saveHydrationConfig error:', err);
         hideAdminMiniLoader();
@@ -3236,10 +3269,12 @@ window.scanHydrationBehavior = async function (isManual = false) {
                 // If todayGlasses > 30, it is already recorded in ml; otherwise convert glasses to ml:
                 const waterMl = (todayGlasses > 30) ? todayGlasses : (todayGlasses * 250);
                 const pct = Math.round((waterMl / targetWaterMl) * 100);
+                const critLimit = Number(_hydrationConfig.criticalThreshold) || 25;
+                const modLimit = Number(_hydrationConfig.thresholdPct) || 50;
 
-                if (pct < 25) {
+                if (pct < critLimit) {
                     criticalCount++;
-                } else if (pct < 50) {
+                } else if (pct < modLimit) {
                     moderateCount++;
                 } else {
                     healthyCount++;
@@ -3307,10 +3342,12 @@ window.testHydrationPush = async function (segment) {
 };
 
 window.dispatchPersonalizedHydrationBroadcast = async function () {
-    const confirmSend = confirm('คุณต้องการยิงแจ้งเตือนเตือนจิบน้ำรายบุคคลไปยังผู้ใช้ที่ดื่มน้ำไม่ถึง 50% ใช่หรือไม่?');
+    window.onHydrationScheduleChange();
+    const thresholdPct = Number(_hydrationConfig.thresholdPct) || 50;
+    const confirmSend = confirm(`คุณต้องการยิงแจ้งเตือนเตือนจิบน้ำรายบุคคล (คัดกรองเฉพาะคนที่ดื่มน้ำไม่ถึง ${thresholdPct}% และแยกข้อความตามระดับการดื่มน้ำของแต่ละคน) ใช่หรือไม่?`);
     if (!confirmSend) return;
 
-    showAdminMiniLoader('กำลังส่งการแจ้งเตือนจิบน้ำรายบุคคล...');
+    showAdminMiniLoader('กำลังคัดกรองข้อมูลน้ำดื่มรายคนและส่งการแจ้งเตือน...');
     try {
         const critMsg = _hydrationConfig.criticalMsgs[Math.floor(Math.random() * _hydrationConfig.criticalMsgs.length)];
         const modMsg = _hydrationConfig.moderateMsgs[Math.floor(Math.random() * _hydrationConfig.moderateMsgs.length)];
@@ -3322,13 +3359,13 @@ window.dispatchPersonalizedHydrationBroadcast = async function () {
                 timestamp: new Date().toISOString(),
                 criticalMsg: critMsg,
                 moderateMsg: modMsg,
-                thresholdPct: 50,
+                thresholdPct: thresholdPct,
                 sentBy: currentUser?.email || 'admin'
             });
             broadcastDocId = newDoc?.id;
         }
 
-        // Call Cloud Function to dispatch native push to locked mobile phones
+        // Call Cloud Function to dispatch per-user personalized push
         let cfResult = null;
         try {
             const cfRes = await fetch("https://asia-southeast1-fitmacro-pro-benz.cloudfunctions.net/sendPushBroadcast", {
@@ -3339,7 +3376,8 @@ window.dispatchPersonalizedHydrationBroadcast = async function () {
                     body: critMsg,
                     audience: 'all',
                     broadcastId: broadcastDocId,
-                    type: 'personalized_hydration'
+                    type: 'personalized_hydration',
+                    hydrationConfig: _hydrationConfig
                 })
             });
             cfResult = await cfRes.json();
@@ -3348,8 +3386,12 @@ window.dispatchPersonalizedHydrationBroadcast = async function () {
         }
 
         hideAdminMiniLoader();
-        const countInfo = cfResult?.stats?.delivered ? ` (ส่งถึง ${cfResult.stats.delivered} เครื่องเรียบร้อย)` : '';
-        showAdminToast(`🚀 ส่งคำสั่งแจ้งเตือนจิบน้ำรายบุคคลเรียบร้อยแล้ว!${countInfo}`);
+        const delivered = cfResult?.stats?.delivered ?? 0;
+        const skippedHealthy = cfResult?.stats?.skippedHealthy ?? 0;
+        const countInfo = cfResult?.stats
+            ? ` (ส่งถึง ${delivered} เครื่อง • ข้ามคนที่ดื่มครบแล้ว ${skippedHealthy} เครื่อง)`
+            : '';
+        showAdminToast(`🚀 ส่งแจ้งเตือนจิบน้ำรายบุคคลเรียบร้อยแล้ว!${countInfo}`);
     } catch (e) {
         console.error('dispatchPersonalizedHydrationBroadcast error:', e);
         hideAdminMiniLoader();
@@ -3363,9 +3405,17 @@ window.loadAdminPushHub = async function () {
     if (origLoadPushHub) await origLoadPushHub();
     try {
         if (typeof db !== 'undefined' && db) {
-            const hDoc = await getDoc(doc(db, 'push_schedules', 'hydration_behavior_config'));
+            const hRef = doc(db, 'push_schedules', 'hydration_behavior_config');
+            const hDoc = await getDoc(hRef);
             if (hDoc.exists() && hDoc.data()?.config) {
                 _hydrationConfig = { ..._hydrationConfig, ...hDoc.data().config };
+                _hydrationLastDispatched = hDoc.data().lastDispatched || null;
+            } else {
+                // Auto-seed default hydration config into Firestore so Cloud Scheduler works out-of-the-box
+                await setDoc(hRef, {
+                    config: _hydrationConfig,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true }).catch(() => {});
             }
         }
     } catch (e) {}

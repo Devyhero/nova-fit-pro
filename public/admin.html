@@ -600,6 +600,7 @@
                                 <li><b>🛡️ Smart Protein Cap Algorithm (≤ 2.2 g/kg):</b> อัปเกรดฟังก์ชัน <code>getCalculatedTargets()</code> ใน <code>public/app.js</code> ให้ตรวจสอบเพดานโปรตีนสูงสุดตามมาตรฐาน ISSN (<code>maxPGram = Math.round(weight * 2.2)</code>) เมื่อผู้ใช้ที่ตัวลีนหรือมี TDEE สูงเลือกโหมดเปอร์เซ็นต์โปรตีนสูง (เช่น 35/40/25) ระบบจะล็อกโปรตีนไม่ให้ทะลุเกิน 2.2 g/kg และโอนแคลอรีส่วนเกิน (<code>surplusCal</code>) ไปทบให้ฝั่งคาร์โบไฮเดรตอัตโนมัติ พร้อมรองรับสวิตช์เปิด/ปิด <code>state.profile.smartProteinCap</code></li>
                                 <li><b>⚡ Body Recomposition Goal Preset (-12%):</b> เพิ่มปุ่ม <code>#goalRecomp</code> (<code>setGoalPreset(-12)</code>) ใน <code>public/index.html</code> และ <code>public/app.js</code> สำหรับการลดไขมันควบคู่กับการสร้างมวลกล้ามเนื้อ (Slight Calorie Deficit -12% พร้อมล็อกโปรตีน 2.2 g/kg และเติมคาร์บสำหรับเวทเทรนนิ่ง)</li>
                                 <li><b>📊 Dynamic Donut & Badge Synchronization:</b> ปรับการเรนเดอร์ <code>#donutP</code>, <code>#donutC</code>, <code>#donutF</code> ใน <code>renderAll()</code> ให้อิงสัดส่วนแคลอรีสุทธิหลังผ่าน Smart Cap จริง พร้อมแสดงป้ายสถานะ <code>#dashboardSmartCapBadge</code> และ <code>#smartCapActiveHint</code></li>
+                                <li><b>💧 Smart Hydration Schedule Controls & Personalized Dispatcher Fix:</b> เพิ่มช่องตั้งเวลาส่งแจ้งเตือนอัตโนมัติ (<code>#inHydroTriggerTime</code>), สวิตช์เปิด/ปิดรายวัน (<code>#inHydroEnabled</code>), และตัวเลือกเกณฑ์ขั้นต่ำ (<code>#inHydroThresholdPct</code>) ในหน้าแอดมิน พร้อมแก้ไขบั๊กโซนเวลา UTC ใน <code>functions/index.js</code> ให้ใช้เวลาไทย <code>Asia/Bangkok</code> แท้ และปรับทั้งระบบตั้งเวลาอัตโนมัติและปุ่มสั่งยิงทันทีให้คัดกรองปริมาณน้ำดื่มรายบุคคลแยกตามเครื่องอย่างแม่นยำ</li>
                                 <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.29 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
                             </ul>
                         </div>
@@ -1769,6 +1770,38 @@
                             </div>
                             <div id="hydroKpiHealthy" class="text-xl font-black text-emerald-500">0</div>
                             <div class="text-[10px] text-emerald-500/80">ไม่รบกวนการแจ้งเตือน</div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule & Threshold Control Bar (NEW v5.9.29) -->
+                    <div class="p-4 rounded-2xl bg-sky-500/5 border border-sky-500/25 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" id="inHydroEnabled" checked onchange="onHydrationScheduleChange()"
+                                    class="w-4 h-4 accent-sky-500 rounded cursor-pointer">
+                                <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">⏰ เปิดส่งอัตโนมัติรายวัน</span>
+                            </label>
+                            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">เวลาส่ง:</span>
+                                <input type="time" id="inHydroTriggerTime" value="14:30" onchange="onHydrationScheduleChange()"
+                                    class="bg-transparent text-xs font-black text-sky-600 dark:text-sky-400 focus:outline-none cursor-pointer">
+                                <span class="text-[10px] text-slate-400">น.</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">เกณฑ์ขั้นต่ำ:</span>
+                                <select id="inHydroThresholdPct" onchange="onHydrationScheduleChange()"
+                                    class="bg-transparent text-xs font-extrabold text-emerald-600 dark:text-emerald-400 focus:outline-none cursor-pointer">
+                                    <option value="40">&lt; 40% เตือน (≥ 40% ข้าม)</option>
+                                    <option value="50" selected>&lt; 50% เตือน (≥ 50% ข้าม)</option>
+                                    <option value="60">&lt; 60% เตือน (≥ 60% ข้าม)</option>
+                                    <option value="75">&lt; 75% เตือน (≥ 75% ข้าม)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="hydroScheduleStatusBadge" class="text-[11px] px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400 font-bold">
+                                ⏱️ ตั้งเวลาส่งอัตโนมัติ: 14:30 น.
+                            </span>
                         </div>
                     </div>
 
