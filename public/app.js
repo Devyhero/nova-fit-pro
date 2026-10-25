@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.28';
+const APP_VERSION = '5.9.29';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -76,6 +76,7 @@ const APP_VERSION = '5.9.28';
                 height: 173,
                 activity: 1.55,
                 goalDiff: 0,
+                smartProteinCap: true,
                 macros: { p: 30, c: 40, f: 30 }
             },
             customPresets: [],
@@ -1386,7 +1387,7 @@ const APP_VERSION = '5.9.28';
             const text = document.getElementById('toggleSettingsText');
             const p = state.profile;
             const bmi = (p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
-            const goalLabel = p.goalDiff < 0 ? `ลดไขมัน (${p.goalDiff}%)` : p.goalDiff > 0 ? `เพิ่มกล้าม (+${p.goalDiff}%)` : 'รักษาน้ำหนัก (0%)';
+            const goalLabel = p.goalDiff === -12 ? 'ลีน+สร้างกล้าม (-12%)' : p.goalDiff < 0 ? `ลดไขมัน (${p.goalDiff}%)` : p.goalDiff > 0 ? `เพิ่มกล้าม (+${p.goalDiff}%)` : 'รักษาน้ำหนัก (0%)';
 
             const compactPills = document.getElementById('compactProfilePills');
             if (compactPills) {
@@ -1573,7 +1574,7 @@ const APP_VERSION = '5.9.28';
             return { weight: Number(state.profile.weight) || 70, isExact: false, sourceDate: 'profile' };
         }
 
-        // Calculate BMR, TDEE, Macros & Daily Water Target (with Carb Cycling)
+        // Calculate BMR, TDEE, Macros & Daily Water Target (with Carb Cycling & Smart Protein Cap)
         function getCalculatedTargets(dateStr) {
             const effectiveDate = dateStr || state.selectedDate || getTodayStr();
             const { gender, age, height, activity, goalDiff, macros } = state.profile;
@@ -1591,6 +1592,25 @@ const APP_VERSION = '5.9.28';
             let cCal = Math.round(targetCal * (macros.c / 100));
             let fCal = Math.round(targetCal * (macros.f / 100));
 
+            // Smart Protein Cap (ISSN Sports Nutrition Standard: max 2.2 g/kg ceiling)
+            // Prevents excessive protein allocation for lean / high-TDEE users on percentage splits
+            // and reallocates surplus calories to Carbohydrates for workout performance.
+            const smartCapEnabled = state.profile.smartProteinCap !== false;
+            const maxProteinPerKg = 2.2;
+            const maxPGram = Math.round(weight * maxProteinPerKg);
+            const rawPGram = Math.round(pCal / 4);
+            let proteinCapped = false;
+            let surplusToCarbGram = 0;
+
+            if (smartCapEnabled && rawPGram > maxPGram) {
+                const cappedPCal = maxPGram * 4;
+                const surplusCal = Math.max(0, pCal - cappedPCal);
+                pCal = cappedPCal;
+                cCal = cCal + surplusCal;
+                proteinCapped = true;
+                surplusToCarbGram = Math.round(surplusCal / 4);
+            }
+
             if (dayType === 'rest') {
                 // Rest Day: preserve 100% protein for muscle recovery, reduce carbs by 15%, calories drop accordingly
                 const oldCCal = cCal;
@@ -1605,6 +1625,10 @@ const APP_VERSION = '5.9.28';
             const waterTargetGlasses = Math.max(6, Math.round(rawWaterMl / 250));
             const waterTargetMl = waterTargetGlasses * 250;
 
+            const pGram = proteinCapped ? maxPGram : Math.round(pCal / 4);
+            const cGram = Math.round(cCal / 4);
+            const fGram = Math.round(fCal / 9);
+
             return {
                 weight,
                 weightInfo,
@@ -1613,9 +1637,14 @@ const APP_VERSION = '5.9.28';
                 targetCal,
                 dayType,
                 isRestDay: dayType === 'rest',
-                pGram: Math.round(pCal / 4),
-                cGram: Math.round(cCal / 4),
-                fGram: Math.round(fCal / 9),
+                pGram,
+                cGram,
+                fGram,
+                rawPGram,
+                maxPGram,
+                proteinCapped,
+                surplusToCarbGram,
+                smartCapEnabled,
                 pCal, cCal, fCal,
                 waterTargetGlasses,
                 waterTargetMl,
@@ -1649,6 +1678,8 @@ const APP_VERSION = '5.9.28';
             document.getElementById('btnFemale').className = `py-1.5 rounded-xl text-xs border transition ${p.gender === 'female' ? activeBtn : inactiveBtn}`;
 
             document.getElementById('goalCut').className = `py-2 px-2 rounded-xl text-xs border transition ${p.goalDiff === -20 ? activeBtn : inactiveBtn}`;
+            const goalRecompEl = document.getElementById('goalRecomp');
+            if (goalRecompEl) goalRecompEl.className = `py-2 px-2 rounded-xl text-xs border transition ${p.goalDiff === -12 ? activeBtn : inactiveBtn}`;
             document.getElementById('goalMaintain').className = `py-2 px-2 rounded-xl text-xs border transition ${p.goalDiff === 0 ? activeBtn : inactiveBtn}`;
             document.getElementById('goalBulk').className = `py-2 px-2 rounded-xl text-xs border transition ${p.goalDiff === 15 ? activeBtn : inactiveBtn}`;
 
@@ -1692,14 +1723,21 @@ const APP_VERSION = '5.9.28';
             const kgPerWeek = ((dailyDiffKcal * 7) / 7700).toFixed(2);
             document.getElementById('lblWeightTrend').textContent = dailyDiffKcal === 0
                 ? 'แนวโน้มน้ำหนัก: คงที่'
-                : `แนวโน้มน้ำหนัก: ${dailyDiffKcal > 0 ? '+' : ''}${kgPerWeek} กก./สัปดาห์ (${dailyDiffKcal > 0 ? '+' : ''}${dailyDiffKcal} kcal/วัน)`;
+                : p.goalDiff === -12
+                    ? `โหมด Recomp: ลดไขมันพร้อมสร้างกล้ามเนื้อ (${kgPerWeek} กก./สัปดาห์ • ${dailyDiffKcal} kcal/วัน)`
+                    : `แนวโน้มน้ำหนัก: ${dailyDiffKcal > 0 ? '+' : ''}${kgPerWeek} กก./สัปดาห์ (${dailyDiffKcal > 0 ? '+' : ''}${dailyDiffKcal} kcal/วัน)`;
 
-            document.getElementById('donutP').setAttribute('stroke-dasharray', `${p.macros.p} ${100 - p.macros.p}`);
+            const totalMacroCal = Math.max(1, t.pCal + t.cCal + t.fCal);
+            const effP = Math.round((t.pCal / totalMacroCal) * 100);
+            const effC = Math.round((t.cCal / totalMacroCal) * 100);
+            const effF = Math.max(0, 100 - effP - effC);
+
+            document.getElementById('donutP').setAttribute('stroke-dasharray', `${effP} ${100 - effP}`);
             document.getElementById('donutP').setAttribute('stroke-dashoffset', '0');
-            document.getElementById('donutC').setAttribute('stroke-dasharray', `${p.macros.c} ${100 - p.macros.c}`);
-            document.getElementById('donutC').setAttribute('stroke-dashoffset', `-${p.macros.p}`);
-            document.getElementById('donutF').setAttribute('stroke-dasharray', `${p.macros.f} ${100 - p.macros.f}`);
-            document.getElementById('donutF').setAttribute('stroke-dashoffset', `-${p.macros.p + p.macros.c}`);
+            document.getElementById('donutC').setAttribute('stroke-dasharray', `${effC} ${100 - effC}`);
+            document.getElementById('donutC').setAttribute('stroke-dashoffset', `-${effP}`);
+            document.getElementById('donutF').setAttribute('stroke-dasharray', `${effF} ${100 - effF}`);
+            document.getElementById('donutF').setAttribute('stroke-dashoffset', `-${effP + effC}`);
 
             document.getElementById('targetPGram').textContent = `${t.pGram}g`;
             document.getElementById('targetPMeta').textContent = `${t.pCal} kcal (${(t.pGram / curWeight).toFixed(1)} g/kg)`;
@@ -1707,6 +1745,35 @@ const APP_VERSION = '5.9.28';
             document.getElementById('targetCMeta').textContent = `${t.cCal} kcal (${(t.cGram / curWeight).toFixed(1)} g/kg)`;
             document.getElementById('targetFGram').textContent = `${t.fGram}g`;
             document.getElementById('targetFMeta').textContent = `${t.fCal} kcal (${(t.fGram / curWeight).toFixed(1)} g/kg)`;
+
+            // Render Smart Protein Cap Status & Reallocation Notice
+            const smartCapBtn = document.getElementById('btnToggleSmartCap');
+            const smartCapHint = document.getElementById('smartCapActiveHint');
+            const dashCapBadge = document.getElementById('dashboardSmartCapBadge');
+            const isCapOn = p.smartProteinCap !== false;
+
+            if (smartCapBtn) {
+                smartCapBtn.textContent = isCapOn ? '✓ เปิดล็อก ≤ 2.2g/kg' : 'ปิดล็อกเพดาน';
+                smartCapBtn.className = isCapOn
+                    ? 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition cursor-pointer'
+                    : 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 transition cursor-pointer';
+            }
+            if (smartCapHint) {
+                if (t.proteinCapped) {
+                    smartCapHint.classList.remove('hidden');
+                    smartCapHint.innerHTML = `🛡️ <b>Smart Cap ทำงาน:</b> ล็อกโปรตีนตามน้ำหนักตัวที่ <b>${t.pGram}g (2.2 g/kg)</b> จากเดิม ${t.rawPGram}g และโอนพลังงานส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> เพื่อให้มีแรงซ้อมเต็มที่`;
+                } else {
+                    smartCapHint.classList.add('hidden');
+                }
+            }
+            if (dashCapBadge) {
+                if (t.proteinCapped) {
+                    dashCapBadge.classList.remove('hidden');
+                    dashCapBadge.innerHTML = `<span>🛡️</span> <span><b>Smart Cap (2.2 g/kg):</b> ล็อกโปรตีนที่ <b>${t.pGram}g</b> • โอนส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> เติมแรงซ้อม</span>`;
+                } else {
+                    dashCapBadge.classList.add('hidden');
+                }
+            }
 
             // Update Day Type (Training vs Rest) buttons and badge
             const dayType = t.dayType || 'training';
@@ -1886,8 +1953,30 @@ const APP_VERSION = '5.9.28';
             }
         }
         function updateActivity(val) { state.profile.activity = parseFloat(val); saveState(); renderAll(); }
-        function setGoalPreset(diff) { state.profile.goalDiff = diff; saveState(); renderAll(); }
+        function setGoalPreset(diff) {
+            state.profile.goalDiff = diff;
+            if (diff === -12) {
+                // Body Recomposition preset: optimal muscle retention + fat loss ratio with Smart Protein Cap
+                state.profile.macros = { p: 35, c: 40, f: 25 };
+                state.profile.smartProteinCap = true;
+                showToast('⚡ ตั้งโหมด Body Recomp (-12%): ลดไขมันพร้อมสร้างกล้ามเนื้อ');
+            }
+            saveState();
+            renderAll();
+        }
         function updateGoalDiff(val) { state.profile.goalDiff = parseInt(val, 10); saveState(); renderAll(); }
+
+        function toggleSmartProteinCap() {
+            state.profile.smartProteinCap = !(state.profile.smartProteinCap !== false);
+            saveState();
+            renderAll();
+            if (state.profile.smartProteinCap) {
+                showToast('🛡️ เปิดระบบล็อกเพดานโปรตีนอัจฉริยะ (ไม่เกิน 2.2 g/kg)');
+            } else {
+                showToast('⚙️ ปิดการล็อกเพดานโปรตีน (คำนวณตามเปอร์เซ็นต์ดิบ)');
+            }
+        }
+        window.toggleSmartProteinCap = toggleSmartProteinCap;
 
         function setMacroPreset(p, c, f) {
             state.profile.macros = { p, c, f };
@@ -1897,13 +1986,14 @@ const APP_VERSION = '5.9.28';
 
         function setProtein2gPerKg() {
             const t = getCalculatedTargets();
-            const targetPGram = Math.round((t.weight || state.profile.weight) * 2);
+            const curW = t.weight || state.profile.weight || 70;
+            const targetPGram = Math.round(curW * 2);
             let pPct = Math.round(((targetPGram * 4) / t.targetCal) * 100);
             pPct = Math.min(60, Math.max(15, pPct));
-            const rem = 100 - pPct;
-            const fPct = Math.max(15, Math.round(rem * 0.4));
-            const cPct = 100 - pPct - fPct;
-            state.profile.macros = { p: pPct, c: cPct, f: fPct };
+            // Standard sports nutrition fat allocation: ~25% of total calories (approx 0.8-1.0 g/kg)
+            const fPct = Math.min(35, Math.max(20, Math.round(((curW * 0.9 * 9) / t.targetCal) * 100)));
+            const cPct = Math.max(10, 100 - pPct - fPct);
+            state.profile.macros = { p: pPct, c: cPct, f: 100 - pPct - cPct };
             saveState();
             renderAll();
         }

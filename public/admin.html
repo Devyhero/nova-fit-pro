@@ -584,14 +584,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.28
+                            Current Version: v5.9.29
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.28 -->
+                        <!-- Release: v5.9.29 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">⚡ v5.9.29 (ISSN Sports Nutrition Smart Protein Cap 2.2g/kg & Body Recomposition Engine)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🛡️ Smart Protein Cap Algorithm (≤ 2.2 g/kg):</b> อัปเกรดฟังก์ชัน <code>getCalculatedTargets()</code> ใน <code>public/app.js</code> ให้ตรวจสอบเพดานโปรตีนสูงสุดตามมาตรฐาน ISSN (<code>maxPGram = Math.round(weight * 2.2)</code>) เมื่อผู้ใช้ที่ตัวลีนหรือมี TDEE สูงเลือกโหมดเปอร์เซ็นต์โปรตีนสูง (เช่น 35/40/25) ระบบจะล็อกโปรตีนไม่ให้ทะลุเกิน 2.2 g/kg และโอนแคลอรีส่วนเกิน (<code>surplusCal</code>) ไปทบให้ฝั่งคาร์โบไฮเดรตอัตโนมัติ พร้อมรองรับสวิตช์เปิด/ปิด <code>state.profile.smartProteinCap</code></li>
+                                <li><b>⚡ Body Recomposition Goal Preset (-12%):</b> เพิ่มปุ่ม <code>#goalRecomp</code> (<code>setGoalPreset(-12)</code>) ใน <code>public/index.html</code> และ <code>public/app.js</code> สำหรับการลดไขมันควบคู่กับการสร้างมวลกล้ามเนื้อ (Slight Calorie Deficit -12% พร้อมล็อกโปรตีน 2.2 g/kg และเติมคาร์บสำหรับเวทเทรนนิ่ง)</li>
+                                <li><b>📊 Dynamic Donut & Badge Synchronization:</b> ปรับการเรนเดอร์ <code>#donutP</code>, <code>#donutC</code>, <code>#donutF</code> ใน <code>renderAll()</code> ให้อิงสัดส่วนแคลอรีสุทธิหลังผ่าน Smart Cap จริง พร้อมแสดงป้ายสถานะ <code>#dashboardSmartCapBadge</code> และ <code>#smartCapActiveHint</code></li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.29 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.28 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🛠️ v5.9.28 (PWA Home Screen Instant Preloader Unlock & Real-time Maintenance Mode Hub)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
@@ -2039,7 +2052,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.28"></script>
+    <script type="module" src="admin.js?v=5.9.29"></script>
 
 </body>
 

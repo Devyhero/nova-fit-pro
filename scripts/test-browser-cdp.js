@@ -2620,6 +2620,80 @@ server.listen(PORT, async () => {
             throw new Error('Test 48: Client Preloader / Maintenance modal failed: ' + JSON.stringify(clientMaintTest));
         }
 
+        // Test 49: Smart Protein Cap (2.2 g/kg) & Body Recomposition (-12%) Macro Engine (v5.9.29)
+        console.log('Running Test 49: Smart Protein Cap (2.2 g/kg) & Body Recomposition (-12%)...');
+        const smartMacroTest = await evalJs(`(() => {
+            const backupProfile = JSON.parse(JSON.stringify(state.profile));
+            const backupWeights = JSON.parse(JSON.stringify(state.weightsByDate || {}));
+            const backupDayType = JSON.parse(JSON.stringify(state.dayTypeByDate || {}));
+
+            // Clear weight overrides so profile weight 68 kg is used directly
+            state.weightsByDate = {};
+            state.dayTypeByDate = {};
+            state.profile = {
+                gender: 'male',
+                age: 33,
+                weight: 68,
+                height: 178,
+                activity: 1.55,
+                goalDiff: -20,
+                smartProteinCap: true,
+                macros: { p: 35, c: 40, f: 25 }
+            };
+            renderAll();
+            const cutCapped = getCalculatedTargets();
+            const dashBadgeVisible = !document.getElementById('dashboardSmartCapBadge').classList.contains('hidden');
+
+            // Toggle Smart Cap OFF -> should return raw 177g protein
+            toggleSmartProteinCap();
+            const cutUncapped = getCalculatedTargets();
+
+            // Toggle Smart Cap back ON and switch to Recomp (-12%)
+            setGoalPreset(-12);
+            const recompTargets = getCalculatedTargets();
+            const recompBtnActive = document.getElementById('goalRecomp').className.includes('bg-emerald-500');
+
+            // Restore state
+            state.profile = backupProfile;
+            state.weightsByDate = backupWeights;
+            state.dayTypeByDate = backupDayType;
+            renderAll();
+
+            return {
+                cutCappedBmr: cutCapped.bmr,
+                cutCappedTdee: cutCapped.tdee,
+                cutCappedCal: cutCapped.targetCal,
+                cutCappedP: cutCapped.pGram,
+                cutCappedC: cutCapped.cGram,
+                cutCappedF: cutCapped.fGram,
+                isCapped: cutCapped.proteinCapped,
+                dashBadgeVisible,
+                uncappedP: cutUncapped.pGram,
+                recompCal: recompTargets.targetCal,
+                recompP: recompTargets.pGram,
+                recompC: recompTargets.cGram,
+                recompF: recompTargets.fGram,
+                recompBtnActive
+            };
+        })()`);
+        console.log('Smart Macro & Body Recomp Engine verified:', smartMacroTest);
+
+        if (smartMacroTest.cutCappedBmr !== 1633 ||
+            smartMacroTest.cutCappedTdee !== 2531 ||
+            smartMacroTest.cutCappedCal !== 2025 ||
+            smartMacroTest.cutCappedP !== 150 ||
+            smartMacroTest.cutCappedC !== 230 ||
+            smartMacroTest.cutCappedF !== 56 ||
+            !smartMacroTest.isCapped ||
+            !smartMacroTest.dashBadgeVisible ||
+            smartMacroTest.uncappedP !== 177 ||
+            smartMacroTest.recompCal !== 2227 ||
+            smartMacroTest.recompP !== 150 ||
+            smartMacroTest.recompC !== 268 ||
+            !smartMacroTest.recompBtnActive) {
+            throw new Error('Test 49: Smart Macro / Recomp calculation failed: ' + JSON.stringify(smartMacroTest));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

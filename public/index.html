@@ -745,7 +745,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.28)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.29)
                         </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
@@ -928,6 +928,7 @@
                             <p id="targetFMeta" class="text-xs text-slate-400">1.2 g/kg</p>
                         </div>
                     </div>
+                    <div id="dashboardSmartCapBadge" class="hidden col-span-12 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 leading-snug"></div>
                 </div>
 
                 <!-- Real-time Progress Bars -->
@@ -1635,11 +1636,35 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.28!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.29!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.28 -->
+                <!-- Latest Release: v5.9.29 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>⚡</span> v5.9.29 (โหมดลีนไขมัน+สร้างกล้ามเนื้อ & ระบบล็อกเพดานโปรตีนอัจฉริยะ 2.2g/kg)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">25 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">⚡</span>
+                            <span><b>โหมดเป้าหมายใหม่ "ลีน+กล้าม (-12%)" (Body Recomp):</b> ออกแบบตามหลักโภชนาการการกีฬาสำหรับผู้ที่ต้องการลดไขมันสะสมไปพร้อมกับการสร้างกล้ามเนื้อใหม่โดยไม่เสียแรงยกเวท</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">🛡️</span>
+                            <span><b>เพดานโปรตีนอัจฉริยะ (Smart Protein Cap 2.2 g/kg):</b> ป้องกันการคำนวณโปรตีนสูงเกินความจำเป็นของร่างกาย และโอนแคลอรีส่วนเกินไปเพิ่มเป็นคาร์โบไฮเดรตเพื่อให้มีพลังงานซ้อมเต็มที่</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">🥩</span>
+                            <span><b>ปรับสูตรปุ่ม "โปรตีน 2g/นน.ตัว" แม่นยำขึ้น:</b> คำนวณสัดส่วนโปรตีน 2.0 g/kg และไขมันดีที่เหมาะสมกับน้ำหนักตัวจริงโดยอัตโนมัติ</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.28 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>🛠️</span> v5.9.28 (เปิดเข้าแอปจากหน้าจอโฮมได้ทันที & ระบบแจ้งเตือนปรับปรุงระบบ)
@@ -3085,17 +3110,21 @@
                 <div
                     class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700 space-y-4">
                     <h3 class="text-sm font-bold">2. เป้าหมายแคลอรี (Goal)</h3>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
                         <button type="button" onclick="setGoalPreset(-20)" id="goalCut"
-                            class="py-2 px-2 rounded-xl text-xs font-semibold border transition">
+                            class="py-2 px-2 min-h-[44px] rounded-xl text-xs font-semibold border transition">
                             🔥 ลดไขมัน (-20%)
                         </button>
+                        <button type="button" onclick="setGoalPreset(-12)" id="goalRecomp"
+                            class="py-2 px-2 min-h-[44px] rounded-xl text-xs font-semibold border transition">
+                            ⚡ ลีน+กล้าม (-12%)
+                        </button>
                         <button type="button" onclick="setGoalPreset(0)" id="goalMaintain"
-                            class="py-2 px-2 rounded-xl text-xs font-semibold border transition">
+                            class="py-2 px-2 min-h-[44px] rounded-xl text-xs font-semibold border transition">
                             ⚖️ รักษาน้ำหนัก (0%)
                         </button>
                         <button type="button" onclick="setGoalPreset(15)" id="goalBulk"
-                            class="py-2 px-2 rounded-xl text-xs font-semibold border transition">
+                            class="py-2 px-2 min-h-[44px] rounded-xl text-xs font-semibold border transition">
                             💪 เพิ่มกล้าม (+15%)
                         </button>
                     </div>
@@ -3121,13 +3150,28 @@
 
                     <div class="grid grid-cols-2 gap-1.5">
                         <button id="macroPresetBalanced" onclick="setMacroPreset(30,40,30)"
-                            class="text-xs py-1.5 px-2 rounded-lg border font-medium transition">สมดุล 30/40/30</button>
+                            class="text-xs py-1.5 px-2 min-h-[40px] rounded-lg border font-medium transition">สมดุล 30/40/30</button>
                         <button id="macroPresetMuscle" onclick="setMacroPreset(35,40,25)"
-                            class="text-xs py-1.5 px-2 rounded-lg border font-medium transition">สร้างกล้าม 35/40/25</button>
+                            class="text-xs py-1.5 px-2 min-h-[40px] rounded-lg border font-medium transition">สร้างกล้าม 35/40/25</button>
                         <button id="macroPresetLowCarb" onclick="setMacroPreset(40,20,40)"
-                            class="text-xs py-1.5 px-2 rounded-lg border font-medium transition">โลว์คาร์บ 40/20/40</button>
+                            class="text-xs py-1.5 px-2 min-h-[40px] rounded-lg border font-medium transition">โลว์คาร์บ 40/20/40</button>
                         <button id="macroPreset2g" onclick="setProtein2gPerKg()"
-                            class="text-xs py-1.5 px-2 rounded-lg border font-semibold transition">โปรตีน 2g/นน.ตัว</button>
+                            class="text-xs py-1.5 px-2 min-h-[40px] rounded-lg border font-semibold transition">โปรตีน 2g/นน.ตัว</button>
+                    </div>
+
+                    <!-- Smart Protein Cap Control (v5.9.29) -->
+                    <div id="smartProteinCapRow" class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">🛡️ เพดานโปรตีนอัจฉริยะ (Smart Cap)</span>
+                                <span class="text-[11px] text-slate-400 block">ล็อกโปรตีนไม่เกิน 2.2 g/kg แล้วโอนส่วนเกินไปเพิ่มคาร์บ</span>
+                            </div>
+                            <button type="button" id="btnToggleSmartCap" onclick="toggleSmartProteinCap()"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition cursor-pointer shrink-0">
+                                ✓ เปิดล็อก ≤ 2.2g/kg
+                            </button>
+                        </div>
+                        <div id="smartCapActiveHint" class="hidden text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1.5 rounded-lg leading-relaxed"></div>
                     </div>
 
                     <div class="space-y-2 text-xs pt-1">
@@ -4475,22 +4519,22 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.28"></script>
+    <script src="food-db.js?v=5.9.29"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.28"></script>
+    <script src="health-tips.js?v=5.9.29"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.28"></script>
+    <script src="ai-snap.js?v=5.9.29"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.28"></script>
+    <script src="app.js?v=5.9.29"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.28"></script>
+    <script src="mascot-companion.js?v=5.9.29"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.28"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.29"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
