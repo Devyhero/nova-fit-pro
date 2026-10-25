@@ -480,15 +480,34 @@
     // ROLE 3: MEOWNOVA AI HEALTH COACH WITH SMART FALLBACK & 4-TIER GUARD
     // ==========================================
 
+    // Admin Email Whitelist for Unlimited AI Coach Quota
+    const MASCOT_ADMIN_EMAILS = [
+        'benznova01@gmail.com',
+        'parinya6969@gmail.com'
+    ];
+
+    function isMascotUserAdmin() {
+        try {
+            if (typeof window.isCurrentUserAdmin === 'function' && window.isCurrentUserAdmin()) {
+                return true;
+            }
+            const email = (window.currentUser && window.currentUser.email) || '';
+            return MASCOT_ADMIN_EMAILS.includes(email.toLowerCase().trim());
+        } catch (e) {
+            return false;
+        }
+    }
+
     function getChatDailyQuota() {
+        const isAdmin = isMascotUserAdmin();
         const isAuth = !!window.currentUser;
         const baseLimit = Number(_remoteMascotConfig.chatDailyQuota) || 5;
-        const maxQuota = isAuth ? baseLimit : Math.min(3, baseLimit);
+        const maxQuota = isAdmin ? 9999 : (isAuth ? baseLimit : Math.min(3, baseLimit));
         const todayStr = getTodayIso();
         const usageMap = window.state?.mascotCompanion?.chatDailyUsage || {};
         const used = usageMap[todayStr] || 0;
-        const remaining = Math.max(0, maxQuota - used);
-        return { used, remaining, maxQuota };
+        const remaining = isAdmin ? 9999 : Math.max(0, maxQuota - used);
+        return { used, remaining, maxQuota, isAdmin };
     }
 
     function incrementChatDailyQuota() {
@@ -503,10 +522,13 @@
     function updateChatQuotaUI() {
         const badge = document.getElementById('novaChatQuotaBadge');
         if (!badge) return;
-        const { remaining, maxQuota } = getChatDailyQuota();
+        const { remaining, maxQuota, isAdmin } = getChatDailyQuota();
         const isUat = typeof window.isUatEnvironment === 'function' && window.isUatEnvironment();
         
-        if (isUat) {
+        if (isAdmin) {
+            badge.textContent = '👑 โควตาไม่จำกัด (Admin)';
+            badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold';
+        } else if (isUat) {
             badge.textContent = '⚡ โควตาไม่จำกัด (UAT Sandbox)';
             badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold';
         } else {
@@ -516,6 +538,7 @@
                 : 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold';
         }
     }
+    window.updateNovaChatQuotaUI = updateChatQuotaUI;
 
     function openNovaChatModal() {
         if (_remoteMascotConfig.modes?.aiChat === false) {
@@ -714,12 +737,12 @@
         }
 
         // ==========================================
-        // TIER 3: DAILY QUOTA CHECK
+        // TIER 3: DAILY QUOTA CHECK (Bypassed for Admin & UAT)
         // ==========================================
         const isUat = typeof window.isUatEnvironment === 'function' && window.isUatEnvironment();
-        const { remaining } = getChatDailyQuota();
+        const { remaining, isAdmin } = getChatDailyQuota();
 
-        if (!isUat && remaining <= 0) {
+        if (!isUat && !isAdmin && remaining <= 0) {
             playSfx('pop');
             appendMascotMessage('โควตาคำถามวันนี้ครบกำหนดแล้วน้าเมี้ยว ไว้พรุ่งนี้มาคุยกันใหม่ หรือเปิดดูเคล็ดลับสุขภาพประจำวันในแอปได้เลยนะเมี้ยว! 🥑');
             return;

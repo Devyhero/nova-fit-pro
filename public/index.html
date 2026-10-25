@@ -106,36 +106,37 @@
             }
         }
 
-        /* 60fps Native-Feel Spring Accordions (Zero Compositor Lag on iOS) */
+        /* 60fps Native-Feel Spring Accordions (Exact scrollHeight FLIP Transition) */
         .accordion-section {
             display: block;
             max-width: 100%;
-            max-height: 2500px;
             opacity: 1;
             transform: translateY(0);
             overflow: hidden;
-            transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                        opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                        padding-top 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                        padding-bottom 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: max-height 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+                        opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+                        padding-top 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                        padding-bottom 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                        margin-top 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                        transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: max-height, opacity, transform;
         }
         .accordion-section.is-collapsed {
-            max-height: 0 !important;
+            max-height: 0px !important;
             opacity: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            transform: translateY(-4px) !important;
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
+            margin-top: 0px !important;
+            transform: translateY(-6px) !important;
             pointer-events: none !important;
-            border-top-width: 0 !important;
+            border-top-width: 0px !important;
         }
         .accordion-section.hidden:not(.accordion-animating) {
             display: none !important;
         }
         .accordion-chevron {
             display: inline-block;
-            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
         }
         .accordion-chevron.icon-collapsed {
@@ -1657,8 +1658,8 @@
                             <span><b>เพดานโปรตีนอัจฉริยะ (Smart Protein Cap 2.2 g/kg):</b> ป้องกันการคำนวณโปรตีนสูงเกินความจำเป็นของร่างกาย และโอนแคลอรีส่วนเกินไปเพิ่มเป็นคาร์โบไฮเดรตเพื่อให้มีพลังงานซ้อมเต็มที่</span>
                         </li>
                         <li class="flex items-start gap-1.5">
-                            <span class="text-cyan-500">🥩</span>
-                            <span><b>ปรับสูตรปุ่ม "โปรตีน 2g/นน.ตัว" แม่นยำขึ้น:</b> คำนวณสัดส่วนโปรตีน 2.0 g/kg และไขมันดีที่เหมาะสมกับน้ำหนักตัวจริงโดยอัตโนมัติ</span>
+                            <span class="text-cyan-500">✨</span>
+                            <span><b>พับเก็บและขยายการ์ดเมนูสมูท 60fps (Fluid Spring Collapse):</b> หุบและกางการ์ดเมนูทุกส่วน รวมถึงแผงจับเวลา IF ได้อย่างลื่นไหล ทันใจ ไม่หน่วงและไม่กระตุก</span>
                         </li>
                     </ul>
                 </div>

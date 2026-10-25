@@ -1413,6 +1413,43 @@ const APP_VERSION = '5.9.29';
             if (menu) menu.classList.toggle('hidden');
         }
 
+        // 60fps Exact-Height FLIP Accordion Animator (Zero Dead-Zone Lag)
+        function animateSmoothAccordion(body, willCollapse, alsoToggleHiddenClass = false) {
+            if (!body) return;
+            body.classList.add('accordion-section');
+            clearTimeout(body._accAnimTimer);
+
+            if (willCollapse) {
+                const startHeight = body.scrollHeight;
+                if (startHeight > 0) {
+                    body.style.maxHeight = startHeight + 'px';
+                    void body.offsetHeight;
+                }
+                body.classList.add('accordion-animating', 'is-collapsed');
+                if (alsoToggleHiddenClass) body.classList.add('hidden');
+                body.style.maxHeight = '0px';
+
+                body._accAnimTimer = setTimeout(() => {
+                    body.classList.remove('accordion-animating');
+                }, 350);
+            } else {
+                body.classList.add('accordion-animating');
+                body.classList.remove('hidden', 'is-collapsed');
+                body.style.maxHeight = '0px';
+                void body.offsetHeight;
+                const targetHeight = Math.max(body.scrollHeight + 24, 80);
+                body.style.maxHeight = targetHeight + 'px';
+
+                body._accAnimTimer = setTimeout(() => {
+                    body.classList.remove('accordion-animating');
+                    if (!body.classList.contains('is-collapsed')) {
+                        body.style.maxHeight = 'none';
+                    }
+                }, 350);
+            }
+        }
+        window.animateSmoothAccordion = animateSmoothAccordion;
+
         let _lastCardToggleTimes = {};
         function toggleCardSection(sectionId) {
             // Food search is permanently open for instant access & zero-freeze on mobile
@@ -1442,12 +1479,7 @@ const APP_VERSION = '5.9.29';
                 cardRectBefore = card.getBoundingClientRect();
             }
 
-            body.classList.add('accordion-section');
-            if (willBeCollapsed) {
-                body.classList.add('is-collapsed');
-            } else {
-                body.classList.remove('hidden', 'is-collapsed');
-            }
+            animateSmoothAccordion(body, willBeCollapsed, false);
 
             if (icon) {
                 icon.classList.add('accordion-chevron');
@@ -1455,8 +1487,6 @@ const APP_VERSION = '5.9.29';
             }
 
             // Mobile iOS Safari Viewport & Overscroll Clamping Protection
-            // When collapsing large sections, document height shrinks rapidly.
-            // Clamping scroll prevents WebKit touch deadlock & overscroll bounce freeze.
             if (willBeCollapsed && card) {
                 const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
                 if (cardRectBefore && cardRectBefore.top < 0) {
@@ -1484,6 +1514,7 @@ const APP_VERSION = '5.9.29';
             const foodBody = document.getElementById('body_section_food_search');
             if (foodBody) {
                 foodBody.classList.remove('hidden', 'is-collapsed');
+                foodBody.style.maxHeight = 'none';
             }
 
             const sections = [
@@ -1500,10 +1531,14 @@ const APP_VERSION = '5.9.29';
                 const isCollapsed = !!state.collapsedSections[id];
                 if (body) {
                     body.classList.add('accordion-section');
-                    if (isCollapsed) {
-                        body.classList.add('is-collapsed');
-                    } else {
-                        body.classList.remove('hidden', 'is-collapsed');
+                    if (!body.classList.contains('accordion-animating')) {
+                        if (isCollapsed) {
+                            body.classList.add('is-collapsed');
+                            body.style.maxHeight = '0px';
+                        } else {
+                            body.classList.remove('hidden', 'is-collapsed');
+                            body.style.maxHeight = 'none';
+                        }
                     }
                 }
                 if (icon) {
@@ -1517,12 +1552,16 @@ const APP_VERSION = '5.9.29';
             const customIcon = document.getElementById('customFormToggleIcon');
             if (customBody) {
                 customBody.classList.add('accordion-section');
-                if (state.customFormOpen) {
-                    customBody.classList.remove('hidden', 'is-collapsed');
-                    if (customIcon) customIcon.textContent = '▲ ซ่อนฟอร์ม';
-                } else {
-                    customBody.classList.add('is-collapsed');
-                    if (customIcon) customIcon.textContent = '▼ เปิดฟอร์ม';
+                if (!customBody.classList.contains('accordion-animating')) {
+                    if (state.customFormOpen) {
+                        customBody.classList.remove('hidden', 'is-collapsed');
+                        customBody.style.maxHeight = 'none';
+                        if (customIcon) customIcon.textContent = '▲ ซ่อนฟอร์ม';
+                    } else {
+                        customBody.classList.add('is-collapsed');
+                        customBody.style.maxHeight = '0px';
+                        if (customIcon) customIcon.textContent = '▼ เปิดฟอร์ม';
+                    }
                 }
             }
         }
@@ -1532,21 +1571,18 @@ const APP_VERSION = '5.9.29';
             const icon = document.getElementById('customFormToggleIcon');
             if (!body) return;
 
-            // Direct DOM check guarantees first-click reliability
             const isCurrentlyCollapsed = body.classList.contains('hidden') || body.classList.contains('is-collapsed');
             const willOpen = isCurrentlyCollapsed;
 
             state.customFormOpen = willOpen;
             saveState();
 
-            body.classList.add('accordion-section');
+            animateSmoothAccordion(body, !willOpen, false);
             if (willOpen) {
-                body.classList.remove('hidden', 'is-collapsed');
                 if (icon) icon.textContent = '▲ ซ่อนฟอร์ม';
                 const nameInput = document.getElementById('inFoodName');
                 if (nameInput) setTimeout(() => nameInput.focus(), 60);
             } else {
-                body.classList.add('is-collapsed');
                 if (icon) icon.textContent = '▼ เปิดฟอร์ม';
             }
         }
@@ -5155,7 +5191,7 @@ const APP_VERSION = '5.9.29';
             if (typeof forceState === 'boolean') {
                 isCollapsed = forceState;
             } else {
-                isCollapsed = !body.classList.contains('hidden');
+                isCollapsed = !(body.classList.contains('hidden') || body.classList.contains('is-collapsed'));
             }
 
             state.collapsedSections['fasting'] = isCollapsed;
@@ -5166,13 +5202,12 @@ const APP_VERSION = '5.9.29';
                 panelRectBefore = panel.getBoundingClientRect();
             }
 
+            animateSmoothAccordion(body, isCollapsed, true);
             if (isCollapsed) {
-                body.classList.add('hidden');
                 if (chevron) chevron.textContent = '▼';
                 if (label) label.textContent = 'แสดง';
                 try { localStorage.setItem('novafit_fasting_collapsed', 'true'); } catch (e) {}
             } else {
-                body.classList.remove('hidden');
                 if (chevron) chevron.textContent = '▲';
                 if (label) label.textContent = 'ซ่อน';
                 try { localStorage.setItem('novafit_fasting_collapsed', 'false'); } catch (e) {}
@@ -5272,7 +5307,12 @@ const APP_VERSION = '5.9.29';
             const chevronEl = document.getElementById('fastingChevron');
             const labelEl = document.getElementById('fastingCollapseLabel');
             if (bodyEl) {
-                bodyEl.classList.toggle('hidden', isCollapsed);
+                bodyEl.classList.add('accordion-section');
+                if (!bodyEl.classList.contains('accordion-animating')) {
+                    bodyEl.classList.toggle('hidden', isCollapsed);
+                    bodyEl.classList.toggle('is-collapsed', isCollapsed);
+                    bodyEl.style.maxHeight = isCollapsed ? '0px' : 'none';
+                }
             }
             if (chevronEl) {
                 chevronEl.textContent = isCollapsed ? '▼' : '▲';
