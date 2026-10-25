@@ -284,8 +284,8 @@
 
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 pb-16">
 
-    <!-- NovaFit Chef App Preloader (v5.9.7) -->
-    <div id="novaAppPreloader" class="fixed inset-0 z-[99999] bg-slate-950 text-white flex flex-col items-center justify-center p-4 transition-all duration-500 select-none overflow-hidden">
+    <!-- NovaFit Chef App Preloader (v5.9.7 / v5.9.28 Ultra-Reliable) -->
+    <div id="novaAppPreloader" onclick="dismissAppPreloader()" title="แตะเพื่อเข้าสู่แอป" class="fixed inset-0 z-[99999] bg-slate-950 text-white flex flex-col items-center justify-center p-4 transition-all duration-500 select-none overflow-hidden cursor-pointer">
         <!-- Ambient Glow -->
         <div class="absolute w-80 h-80 bg-gradient-to-tr from-emerald-500/25 via-cyan-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -330,6 +330,59 @@
             <p id="preloaderPhrase" class="text-xs font-medium text-slate-300 min-h-[1.5rem] flex items-center justify-center">
                 🍳 กำลังอุ่นกระทะและเตรียมสูตรอาหาร...
             </p>
+
+            <span class="text-[10px] text-slate-500 opacity-60">(แตะหน้าจอเพื่อข้ามได้เลย)</span>
+        </div>
+    </div>
+    <script>
+        // Bulletproof Immediate Preloader Controller (v5.9.28)
+        (function() {
+            window._preloaderDismissed = false;
+            window.dismissAppPreloader = function() {
+                if (window._preloaderDismissed) return;
+                window._preloaderDismissed = true;
+                var p = document.getElementById('novaAppPreloader');
+                if (!p) return;
+                p.style.opacity = '0';
+                p.style.pointerEvents = 'none';
+                p.style.transform = 'scale(0.97)';
+                setTimeout(function() {
+                    p.style.display = 'none';
+                    p.classList.add('hidden');
+                }, 400);
+            };
+            // Absolute Safety Net: If anything hangs (slow CDN/network), dismiss automatically after 2.5s
+            setTimeout(window.dismissAppPreloader, 2500);
+        })();
+    </script>
+
+    <!-- System Maintenance Screen Modal (v5.9.28) -->
+    <div id="novaMaintenanceModal" class="hidden fixed inset-0 z-[99998] bg-slate-950/95 backdrop-blur-md text-white flex flex-col items-center justify-center p-4 transition-all duration-300 select-none">
+        <div class="relative flex flex-col items-center text-center space-y-4 max-w-sm p-6 rounded-3xl bg-slate-900 border border-amber-500/30 shadow-[0_0_50px_rgba(245,158,11,0.2)]">
+            <div class="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center text-4xl shadow-inner animate-pulse">
+                👷‍♂️
+            </div>
+            <div class="space-y-1">
+                <span class="inline-block px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    🛠️ ระบบอยู่ระหว่างปิดปรับปรุงชั่วคราว
+                </span>
+                <h2 class="text-xl font-black text-white pt-1">NovaFit Pro กำลังอัปเกรดระบบ</h2>
+            </div>
+            <p id="maintenanceNoticeMessage" class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                ทีมงานกำลังปรับปรุงและอัปเกรดเซิร์ฟเวอร์เพื่อประสิทธิภาพที่ดีขึ้น กรุณากลับมาใหม่อีกครั้งในเร็วๆ นี้ครับ
+            </p>
+            <div id="maintenanceEstimatedBox" class="hidden text-xs text-amber-400 font-semibold flex items-center gap-1.5">
+                <span>⏱️ คาดว่าจะแล้วเสร็จประมาณ:</span>
+                <span id="maintenanceEstimatedTime" class="underline">18:00 น.</span>
+            </div>
+            <div class="flex flex-col w-full gap-2 pt-2">
+                <button type="button" onclick="window.location.reload()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 font-bold text-xs shadow-lg transition flex items-center justify-center gap-1.5">
+                    <span>🔄</span> <span>ลองโหลดใหม่อีกครั้ง</span>
+                </button>
+                <a href="admin.html" id="maintenanceAdminBypassLink" class="text-[11px] text-slate-400 hover:text-amber-300 transition py-1 underline">
+                    สำหรับผู้ดูแลระบบ (Admin Access) ➔
+                </a>
+            </div>
         </div>
     </div>
 
@@ -692,7 +745,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.27)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.28)
                         </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
@@ -1582,11 +1635,35 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.27!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.28!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.27 -->
-                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                <!-- Latest Release: v5.9.28 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🛠️</span> v5.9.28 (เปิดเข้าแอปจากหน้าจอโฮมได้ทันที & ระบบแจ้งเตือนปรับปรุงระบบ)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">25 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">⚡</span>
+                            <span><b>เปิดแอปจากหน้าจอโฮมทันใจ (PWA Instant Unlock):</b> แก้ปัญหาหน้าจอโหลดค้างเมื่อเปิดแอปผ่านหน้าจอโฮมบน iPhone และ Android เข้าสู่หน้าหลักได้ลื่นไหล ไม่ต้องปิด-เปิดใหม่</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">👆</span>
+                            <span><b>แตะหน้าจอเพื่อข้าม (Tap to Dismiss):</b> หากสัญญาณอินเทอร์เน็ตช้า สามารถแตะหน้าจอขณะกำลังโหลดเพื่อเข้าสู่แอปได้ทันทีโดยไม่ต้องรอ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">🛠️</span>
+                            <span><b>หน้าจอแจ้งเตือนปรับปรุงระบบ (Maintenance Notice):</b> ชี้แจงสถานะและเวลาเปิดให้บริการอย่างชัดเจนเมื่อมีการอัปเกรดระบบเพื่อความปลอดภัยของข้อมูล</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.27 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>🎯</span> v5.9.27 (ปุ่มเคลียร์ช่องค้นหาอาหารแตะติดทันที & ป้องกันแป้นพิมพ์เด้ง)
@@ -4398,22 +4475,22 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.27"></script>
+    <script src="food-db.js?v=5.9.28"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.27"></script>
+    <script src="health-tips.js?v=5.9.28"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.27"></script>
+    <script src="ai-snap.js?v=5.9.28"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.27"></script>
+    <script src="app.js?v=5.9.28"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.27"></script>
+    <script src="mascot-companion.js?v=5.9.28"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.27"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.28"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

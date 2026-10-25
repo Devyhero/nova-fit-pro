@@ -1659,8 +1659,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.27' ||
-            !v598Test.toolsBadge?.includes('v5.9.27')) {
+            v598Test.appVersion !== '5.9.28' ||
+            !v598Test.toolsBadge?.includes('v5.9.28')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2509,6 +2509,115 @@ server.listen(PORT, async () => {
             !adminV5926Test.ghostHidden ||
             !adminV5926Test.isAiModalOpen) {
             throw new Error('Test 47: Admin v5.9.26 features failed: ' + JSON.stringify(adminV5926Test));
+        }
+
+        // Test 48: PWA Preloader Self-Dismissing Controller & Real-Time Maintenance Mode (v5.9.28)
+        console.log('--- Test 48: PWA Preloader Self-Dismissing Controller & Real-Time Maintenance Mode (v5.9.28) ---');
+        const v5928Test = await evalJs(`(() => {
+            const tabBtnMaintenance = document.getElementById('tabBtn_maintenance');
+            const tabViewMaintenance = document.getElementById('tabView_maintenance');
+            const toggleSwitch = document.getElementById('maintenanceToggleSwitch');
+            const allowAdminSwitch = document.getElementById('maintenanceAllowAdminSwitch');
+            const msgInput = document.getElementById('maintenanceMessageInput');
+            const timeInput = document.getElementById('maintenanceEstimatedTimeInput');
+            const liveBadge = document.getElementById('maintenanceStatusLiveBadge');
+
+            const hasTabBtn = !!tabBtnMaintenance;
+            const hasTabView = !!tabViewMaintenance;
+            const hasInputs = !!(toggleSwitch && allowAdminSwitch && msgInput && timeInput && liveBadge);
+            const hasLoadFn = typeof window.loadAdminMaintenanceConfig === 'function';
+            const hasSaveFn = typeof window.saveAdminMaintenanceConfig === 'function';
+            const hasTplFn = typeof window.setMaintenanceTemplate === 'function';
+            const hasPreviewFn = typeof window.previewMaintenanceScreen === 'function';
+
+            // Test Tab Switching to Maintenance Hub
+            window.switchAdminTab('maintenance');
+            const isTabVisible = !tabViewMaintenance.classList.contains('hidden');
+
+            // Test Template population
+            window.setMaintenanceTemplate(1);
+            const tpl1Populated = msgInput.value.includes('อัปเกรดระบบสู่เวอร์ชันใหม่') && timeInput.value === '18:00 น.';
+
+            return {
+                hasTabBtn,
+                hasTabView,
+                hasInputs,
+                hasLoadFn,
+                hasSaveFn,
+                hasTplFn,
+                hasPreviewFn,
+                isTabVisible,
+                tpl1Populated
+            };
+        })()`);
+        console.log('Admin Maintenance Mode Hub verified:', v5928Test);
+
+        if (!v5928Test.hasTabBtn ||
+            !v5928Test.hasTabView ||
+            !v5928Test.hasInputs ||
+            !v5928Test.hasLoadFn ||
+            !v5928Test.hasSaveFn ||
+            !v5928Test.hasTplFn ||
+            !v5928Test.hasPreviewFn ||
+            !v5928Test.isTabVisible ||
+            !v5928Test.tpl1Populated) {
+            throw new Error('Test 48: Admin Maintenance Hub failed: ' + JSON.stringify(v5928Test));
+        }
+
+        // Test Main App Preloader & Maintenance Screen Elements
+        await sendCdp('Page.navigate', { url: `http://localhost:${PORT}/` });
+        await new Promise(r => setTimeout(r, 600));
+
+        const clientMaintTest = await evalJs(`(() => {
+            const preloader = document.getElementById('novaAppPreloader');
+            const maintModal = document.getElementById('novaMaintenanceModal');
+            const maintMsg = document.getElementById('maintenanceNoticeMessage');
+            const maintTime = document.getElementById('maintenanceEstimatedTime');
+            const estBox = document.getElementById('maintenanceEstimatedBox');
+
+            const hasPreloader = !!preloader;
+            const hasDismissFn = typeof window.dismissAppPreloader === 'function';
+            const hasMaintModal = !!maintModal;
+            const hasApplyMaintFn = typeof window.applyMaintenanceConfig === 'function';
+
+            // Simulate Maintenance Mode activation on client
+            window.applyMaintenanceConfig({
+                enabled: true,
+                message: 'กำลังปิดปรับปรุงระบบชั่วคราวเพื่ออัปเกรดความเร็ว',
+                estimatedTime: '20:00 น.',
+                allowAdmin: true
+            });
+
+            const isMaintModalVisible = !maintModal.classList.contains('hidden');
+            const msgMatches = maintMsg.textContent.includes('กำลังปิดปรับปรุงระบบชั่วคราว');
+            const timeMatches = maintTime.textContent === '20:00 น.';
+
+            // Dismiss maintenance modal
+            window.applyMaintenanceConfig({ enabled: false });
+            const isMaintModalHidden = maintModal.classList.contains('hidden');
+
+            return {
+                hasPreloader,
+                hasDismissFn,
+                hasMaintModal,
+                hasApplyMaintFn,
+                isMaintModalVisible,
+                msgMatches,
+                timeMatches,
+                isMaintModalHidden
+            };
+        })()`);
+        console.log('Client Preloader & Maintenance Screen verified:', clientMaintTest);
+
+        if (!clientMaintTest.hasPreloader ||
+            !clientMaintTest.hasDismissFn ||
+            !clientMaintTest.hasMaintModal ||
+            !clientMaintTest.hasApplyMaintFn ||
+            !clientMaintTest.isMaintModalVisible ||
+            !clientMaintTest.msgMatches ||
+            !clientMaintTest.timeMatches ||
+            !clientMaintTest.isMaintModalHidden) {
+            throw new Error('Test 48: Client Preloader / Maintenance modal failed: ' + JSON.stringify(clientMaintTest));
         }
 
         ws.close();

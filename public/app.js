@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.27';
+const APP_VERSION = '5.9.28';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -1152,20 +1152,21 @@ const APP_VERSION = '5.9.27';
             const phraseEl = document.getElementById('preloaderPhrase');
             if (phraseEl) {
                 _preloaderTimer = setInterval(() => {
-                    if (_preloaderDismissed) return;
+                    if (_preloaderDismissed || window._preloaderDismissed) return;
                     _preloaderPhraseIndex = (_preloaderPhraseIndex + 1) % PRELOADER_PHRASES.length;
                     phraseEl.textContent = PRELOADER_PHRASES[_preloaderPhraseIndex];
                 }, 1800);
             }
-            // Hard safety fallback: automatically dismiss after 4 seconds
+            // Rapid & reliable safety fallback: dismiss after 1.8s
             setTimeout(() => {
                 dismissAppPreloader();
-            }, 4000);
+            }, 1800);
         }
 
         function dismissAppPreloader() {
             if (_preloaderDismissed) return;
             _preloaderDismissed = true;
+            window._preloaderDismissed = true;
             if (_preloaderTimer) {
                 clearInterval(_preloaderTimer);
                 _preloaderTimer = null;
@@ -1178,7 +1179,7 @@ const APP_VERSION = '5.9.27';
             setTimeout(() => {
                 preloader.style.display = 'none';
                 preloader.classList.add('hidden');
-            }, 520);
+            }, 350);
         }
 
         // ==========================================
@@ -5975,13 +5976,12 @@ const APP_VERSION = '5.9.27';
         updatePushStatusUI();
         checkPushPromptEligibility();
 
-        // Smooth preloader dismissal after initial setup
-        if (document.readyState === 'complete') {
-            setTimeout(dismissAppPreloader, 900);
+        // Smooth & immediate preloader dismissal after initial setup
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(dismissAppPreloader, 600);
         } else {
-            window.addEventListener('load', () => {
-                setTimeout(dismissAppPreloader, 900);
-            });
+            window.addEventListener('DOMContentLoaded', () => setTimeout(dismissAppPreloader, 600));
+            window.addEventListener('load', () => setTimeout(dismissAppPreloader, 600));
         }
 
         // Expose globals for Firebase Module integration

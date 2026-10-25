@@ -218,6 +218,9 @@
                 <button type="button" onclick="switchAdminTab('push_hub')" id="tabBtn_push_hub" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-500 transition shrink-0 flex items-center gap-1.5">
                     <span>🔔</span> <span>ศูนย์แจ้งเตือน Web Push (FCM)</span>
                 </button>
+                <button type="button" onclick="switchAdminTab('maintenance')" id="tabBtn_maintenance" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-amber-500 transition shrink-0 flex items-center gap-1.5">
+                    <span>🛠️</span> <span>โหมดปิดปรับปรุงระบบ</span>
+                </button>
             </div>
 
             <!-- VIEW 1: USERS DIRECTORY -->
@@ -581,14 +584,27 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.27
+                            Current Version: v5.9.28
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.28 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🛠️ v5.9.28 (PWA Home Screen Instant Preloader Unlock & Real-time Maintenance Mode Hub)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>⚡ PWA Standalone Preloader Freeze Fix:</b> แก้ไขปัญหาหน้าจอโหลดค้างเมื่อเปิดแอปผ่าน Home Screen PWA บน iOS/Android โดยติดตั้ง Immediate Self-Dismissing Controller ใต้กล่อง <code>#novaAppPreloader</code> ใน <code>index.html</code> พร้อมตัด Safety Fallback เหลือ 1.8-2.5 วินาที และรองรับการแตะหน้าจอเพื่อข้าม (Tap to Dismiss) ได้ทันที</li>
+                                <li><b>🛠️ Real-time Maintenance Mode Hub:</b> เพิ่มแท็บที่ 10 ในหน้าแอดมิน (<code>tabView_maintenance</code>) เชื่อมต่อ Cloud Firestore <code>system_config/maintenance</code> สามารถเปิด/ปิดโหมดปรับปรุงระบบ, กำหนดข้อความแจ้งเตือน, ระบุเวลาคาดหมายว่าจะแล้วเสร็จ, และรองรับ Admin Bypass ให้ผู้ดูแลระบบเข้าใช้งานได้ตามปกติ</li>
+                                <li><b>🔒 Client-Side Realtime Guard:</b> เพิ่ม Listener ตรวจสอบสถานะการปิดปรับปรุงใน <code>firebase-sync.js</code> และหน้าต่าง <code>#novaMaintenanceModal</code> บล็อกการใช้งานของผู้ใช้ทั่วไปแบบ Real-time ทันทีที่แอดมินเปิดสวิตช์</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.28 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.27 -->
-                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🎯 v5.9.27 (Mobile-First Search Input Clear Optimization & PointerDown Blur Prevention)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
@@ -1799,6 +1815,98 @@
                 </div>
             </div>
 
+            <!-- VIEW 10: SYSTEM MAINTENANCE MODE CONTROL (v5.9.28) -->
+            <div id="tabView_maintenance" class="hidden space-y-4">
+                <!-- Header Card -->
+                <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-rose-500/15 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-amber-500/30">
+                            🛠️
+                        </div>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <span>ศูนย์ควบคุมการปิดปรับปรุงระบบ (Maintenance Mode Hub)</span>
+                                <span id="maintenanceStatusLiveBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">กำลังตรวจสอบ...</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">ควบคุมการปิดหน้าเว็บชั่วคราวเพื่ออัปเกรดฐานข้อมูลหรือเตรียมขึ้นฟีเจอร์ใหญ่ บล็อคผู้ใช้ทั่วไปทันทีแบบ Real-time</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="loadAdminMaintenanceConfig()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs hover:bg-slate-50 transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95">
+                        <span>🔄</span> รีเฟรชสถานะ
+                    </button>
+                </div>
+
+                <!-- Main Settings Form Card -->
+                <div class="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-5">
+                    <!-- Status Toggle Strip -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700">
+                        <div class="space-y-0.5">
+                            <div class="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                <span>⚡ เปิดใช้งานโหมดปิดปรับปรุง (Maintenance Mode)</span>
+                            </div>
+                            <p class="text-xs text-slate-400">เมื่อเปิดสวิตช์ ผู้ใช้งานทั่วไปจะเห็นหน้าจอแจ้งเตือนปิดปรับปรุงทันที และไม่สามารถใช้งานแอปได้</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="maintenanceToggleSwitch" class="sr-only peer">
+                            <div class="w-14 h-8 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Admin Bypass Option -->
+                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-700/60">
+                        <div class="space-y-0.5">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">🛡️ อนุญาตให้ Admin เข้าใช้งานได้ตามปกติ (Admin Bypass)</span>
+                            <p class="text-[11px] text-slate-400">บัญชีอีเมลแอดมินจะไม่ถูกบล็อก สามารถเข้าหน้าแอปและทดสอบฟังก์ชันต่างๆ ได้เต็มที่</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="maintenanceAllowAdminSwitch" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Custom Message Input -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                            💬 ข้อความชี้แจงที่จะแสดงให้ผู้ใช้เห็น (Notice Message):
+                        </label>
+                        <textarea id="maintenanceMessageInput" rows="3" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-medium" placeholder="เช่น ทีมงานกำลังอัปเกรดระบบเพื่อเพิ่มประสิทธิภาพ คาดว่าจะแล้วเสร็จเวลา 18:00 น. ขออภัยในความไม่สะดวกครับ"></textarea>
+                        <!-- Quick Templates -->
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="text-[11px] text-slate-400 font-medium py-0.5">ข้อความด่วน:</span>
+                            <button type="button" onclick="setMaintenanceTemplate(1)" class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-[11px] font-medium transition cursor-pointer">
+                                🚀 อัปเกรดเวอร์ชันใหม่
+                            </button>
+                            <button type="button" onclick="setMaintenanceTemplate(2)" class="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 text-[11px] font-medium transition cursor-pointer">
+                                ☁️ ปรับปรุงเซิร์ฟเวอร์ Cloud
+                            </button>
+                            <button type="button" onclick="setMaintenanceTemplate(3)" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-[11px] font-medium transition cursor-pointer">
+                                ⚡ แก้ไขด่วนเสร็จใน 15 นาที
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estimated Completion Time -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                                ⏱️ เวลาคาดว่าจะแล้วเสร็จ (Estimated Time):
+                            </label>
+                            <input type="text" id="maintenanceEstimatedTimeInput" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-medium" placeholder="เช่น 18:00 น. หรือ อีก 30 นาที">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-700">
+                        <button type="button" onclick="previewMaintenanceScreen()" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>👁️</span> <span>ดูตัวอย่างหน้าจอผู้ใช้</span>
+                        </button>
+                        <button type="button" onclick="saveAdminMaintenanceConfig()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                            <span>💾</span> <span>บันทึกการตั้งค่า & มีผลทันที</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -1931,7 +2039,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.27"></script>
+    <script type="module" src="admin.js?v=5.9.28"></script>
 
 </body>
 

@@ -177,8 +177,70 @@ async function fetchSystemMascotConfig() {
 }
 window.fetchSystemMascotConfig = fetchSystemMascotConfig;
 
-// Initialize realtime listener immediately
+// Real-Time System Maintenance Mode Engine (system_config/maintenance) - v5.9.28
+let unsubscribeMaintenanceConfig = null;
+let currentMaintenanceConfig = { enabled: false, message: '', estimatedTime: '', allowAdmin: true };
+
+function applyMaintenanceConfig(config) {
+    if (!config) return;
+    currentMaintenanceConfig = Object.assign(currentMaintenanceConfig, config);
+    const modal = document.getElementById('novaMaintenanceModal');
+    const msgEl = document.getElementById('maintenanceNoticeMessage');
+    const estBox = document.getElementById('maintenanceEstimatedBox');
+    const estTime = document.getElementById('maintenanceEstimatedTime');
+
+    if (!modal) return;
+
+    // Check if current authenticated user is an administrator
+    const user = auth.currentUser;
+    const isAdmin = user && user.email && ['benznova01@gmail.com', 'parinya6969@gmail.com'].includes(user.email.toLowerCase());
+
+    if (currentMaintenanceConfig.enabled && !(isAdmin && currentMaintenanceConfig.allowAdmin)) {
+        if (msgEl && currentMaintenanceConfig.message) {
+            msgEl.textContent = currentMaintenanceConfig.message;
+        }
+        if (estBox && estTime) {
+            if (currentMaintenanceConfig.estimatedTime) {
+                estTime.textContent = currentMaintenanceConfig.estimatedTime;
+                estBox.classList.remove('hidden');
+            } else {
+                estBox.classList.add('hidden');
+            }
+        }
+        modal.classList.remove('hidden');
+        if (window.dismissAppPreloader) window.dismissAppPreloader();
+    } else {
+        modal.classList.add('hidden');
+    }
+}
+window.applyMaintenanceConfig = applyMaintenanceConfig;
+window.getCurrentMaintenanceConfig = () => currentMaintenanceConfig;
+
+function setupRealtimeMaintenanceListener() {
+    if (unsubscribeMaintenanceConfig) {
+        unsubscribeMaintenanceConfig();
+        unsubscribeMaintenanceConfig = null;
+    }
+    try {
+        const maintDocRef = doc(db, 'system_config', 'maintenance');
+        unsubscribeMaintenanceConfig = onSnapshot(maintDocRef, (snap) => {
+            if (snap.exists()) {
+                applyMaintenanceConfig(snap.data());
+            } else {
+                applyMaintenanceConfig({ enabled: false });
+            }
+        }, (err) => {
+            console.warn('Maintenance listener fallback or skipped:', err);
+        });
+    } catch (e) {
+        console.warn('Failed to attach maintenance listener:', e);
+    }
+}
+window.setupRealtimeMaintenanceListener = setupRealtimeMaintenanceListener;
+
+// Initialize realtime listeners immediately
 setupRealtimeMascotConfigListener();
+setupRealtimeMaintenanceListener();
 
 // Listen for authentication changes
 onAuthStateChanged(auth, async (user) => {
@@ -269,6 +331,11 @@ function updateAuthUI(user) {
     }
     if (adminSection) {
         adminSection.classList.toggle('hidden', !isAdmin);
+    }
+
+    // Re-evaluate maintenance modal with updated admin auth state
+    if (typeof applyMaintenanceConfig === 'function' && typeof currentMaintenanceConfig !== 'undefined') {
+        applyMaintenanceConfig(currentMaintenanceConfig);
     }
 }
 

@@ -1332,7 +1332,7 @@ window.cleanUpGhostGuests = async function () {
 };
 
 window.switchAdminTab = function (tabId) {
-    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai', 'security_logs', 'push_hub'].forEach(t => {
+    ['users', 'analytics', 'foods', 'custom_presets', 'message_logs', 'system_changelog', 'system_ai', 'security_logs', 'push_hub', 'maintenance'].forEach(t => {
         const btn = document.getElementById('tabBtn_' + t);
         const view = document.getElementById('tabView_' + t);
         if (btn) {
@@ -1359,6 +1359,9 @@ window.switchAdminTab = function (tabId) {
     }
     if (tabId === 'push_hub') {
         if (window.loadAdminPushHub) window.loadAdminPushHub();
+    }
+    if (tabId === 'maintenance') {
+        if (window.loadAdminMaintenanceConfig) window.loadAdminMaintenanceConfig();
     }
 };
 
@@ -3368,4 +3371,110 @@ window.loadAdminPushHub = async function () {
     } catch (e) {}
     window.renderHydrationConfigUI();
     window.scanHydrationBehavior();
+};
+
+// ==========================================
+// Admin Maintenance Mode Hub (Firestore system_config/maintenance) - v5.9.28
+// ==========================================
+let _adminMaintenanceConfig = {
+    enabled: false,
+    message: '',
+    estimatedTime: '',
+    allowAdmin: true,
+    updatedAt: null,
+    updatedBy: ''
+};
+
+window.loadAdminMaintenanceConfig = async function () {
+    showAdminMiniLoader('กำลังโหลดสถานะปรับปรุงระบบ...');
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'maintenance'));
+        if (snap.exists()) {
+            _adminMaintenanceConfig = Object.assign(_adminMaintenanceConfig, snap.data());
+        }
+        window.renderAdminMaintenanceUI();
+        hideAdminMiniLoader();
+    } catch (err) {
+        console.error('loadAdminMaintenanceConfig error:', err);
+        hideAdminMiniLoader();
+        showAdminToast('โหลดสถานะไม่สำเร็จ: ' + err.message, 'error');
+    }
+};
+
+window.renderAdminMaintenanceUI = function () {
+    const badge = document.getElementById('maintenanceStatusLiveBadge');
+    const toggle = document.getElementById('maintenanceToggleSwitch');
+    const allowAdmin = document.getElementById('maintenanceAllowAdminSwitch');
+    const msgInput = document.getElementById('maintenanceMessageInput');
+    const timeInput = document.getElementById('maintenanceEstimatedTimeInput');
+
+    if (badge) {
+        if (_adminMaintenanceConfig.enabled) {
+            badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-500 font-bold border border-rose-500/30 animate-pulse';
+            badge.textContent = '🔴 กำลังปิดปรับปรุง (Active)';
+        } else {
+            badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/30';
+            badge.textContent = '🟢 เปิดให้บริการปกติ (Online)';
+        }
+    }
+    if (toggle) toggle.checked = !!_adminMaintenanceConfig.enabled;
+    if (allowAdmin) allowAdmin.checked = _adminMaintenanceConfig.allowAdmin !== false;
+    if (msgInput) msgInput.value = _adminMaintenanceConfig.message || '';
+    if (timeInput) timeInput.value = _adminMaintenanceConfig.estimatedTime || '';
+};
+
+window.saveAdminMaintenanceConfig = async function () {
+    const toggle = document.getElementById('maintenanceToggleSwitch');
+    const allowAdmin = document.getElementById('maintenanceAllowAdminSwitch');
+    const msgInput = document.getElementById('maintenanceMessageInput');
+    const timeInput = document.getElementById('maintenanceEstimatedTimeInput');
+
+    const config = {
+        enabled: toggle ? toggle.checked : false,
+        allowAdmin: allowAdmin ? allowAdmin.checked : true,
+        message: msgInput ? msgInput.value.trim() : '',
+        estimatedTime: timeInput ? timeInput.value.trim() : '',
+        updatedAt: new Date().toISOString(),
+        updatedBy: auth.currentUser?.email || 'admin'
+    };
+
+    showAdminMiniLoader('กำลังบันทึกและอัปเดตระบบ...');
+    try {
+        await setDoc(doc(db, 'system_config', 'maintenance'), config, { merge: true });
+        _adminMaintenanceConfig = config;
+        window.renderAdminMaintenanceUI();
+        hideAdminMiniLoader();
+        const actionStr = config.enabled ? 'เปิดโหมดปิดปรับปรุงแล้ว 🛠️ ผู้ใช้จะเห็นหน้าจอแจ้งเตือนทันที' : 'ปิดโหมดปรับปรุงแล้ว 🟢 ระบบเปิดให้บริการปกติ';
+        showAdminToast(actionStr);
+    } catch (err) {
+        console.error('saveAdminMaintenanceConfig error:', err);
+        hideAdminMiniLoader();
+        showAdminToast('บันทึกไม่สำเร็จ: ' + err.message, 'error');
+    }
+};
+
+window.setMaintenanceTemplate = function (tplType) {
+    const msgInput = document.getElementById('maintenanceMessageInput');
+    const timeInput = document.getElementById('maintenanceEstimatedTimeInput');
+    if (!msgInput) return;
+
+    if (tplType === 1) {
+        msgInput.value = '🚀 NovaFit Pro กำลังอัปเกรดระบบสู่เวอร์ชันใหม่เพื่อเพิ่มความเร็วและฟีเจอร์ที่ดียิ่งขึ้น ทีมงานขออภัยในความไม่สะดวกครับ';
+        if (timeInput) timeInput.value = '18:00 น.';
+    } else if (tplType === 2) {
+        msgInput.value = '☁️ ระบบคลาวด์และฐานข้อมูลกำลังทำการสำรองข้อมูลและปรับปรุงเซิร์ฟเวอร์ชั่วคราว กรุณากลับมาใหม่อีกครั้งในเร็วๆ นี้ครับ';
+        if (timeInput) timeInput.value = 'ประมาณ 30 นาที';
+    } else if (tplType === 3) {
+        msgInput.value = '⚡ ทีมงานกำลังดำเนินการปรับแต่งประสิทธิภาพระบบแบบเร่งด่วน คาดว่าจะเปิดให้บริการได้ตามปกติภายใน 15 นาทีครับ';
+        if (timeInput) timeInput.value = 'อีกประมาณ 15 นาที';
+    }
+    showAdminToast('เลือกข้อความด่วนเรียบร้อย');
+};
+
+window.previewMaintenanceScreen = function () {
+    const msgInput = document.getElementById('maintenanceMessageInput');
+    const timeInput = document.getElementById('maintenanceEstimatedTimeInput');
+    const msg = msgInput ? msgInput.value.trim() : '';
+    const time = timeInput ? timeInput.value.trim() : '';
+    alert(`[ตัวอย่างหน้าจอผู้ใช้]\n\n🛠️ NovaFit Pro กำลังปรับปรุงระบบ\n\nข้อความ: ${msg || 'ไม่มีข้อความ'}\nเวลาคาดหมาย: ${time || 'ไม่ได้ระบุ'}`);
 };
