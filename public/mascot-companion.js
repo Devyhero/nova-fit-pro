@@ -404,7 +404,7 @@
         }
     }
 
-    // Minimize mascot into small edge pill
+    // Minimize mascot into small edge pill with smooth slide-to-edge transition
     function minimizeNovaMascot() {
         if (_remoteMascotConfig.allowUserToggle === false) {
             if (typeof window.showToast === 'function') {
@@ -420,13 +420,36 @@
             if (typeof window.saveState === 'function') window.saveState();
         }
         toggleNovaQuickMenu(true);
-        renderNovaMascot();
+
+        const container = document.getElementById('novaMascotContainer');
+        const pill = document.getElementById('novaMascotPill');
+        if (container && !container.classList.contains('hidden')) {
+            container.style.transition = 'transform 0.24s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease';
+            container.style.transform = 'translateX(28px) scale(0.82)';
+            container.style.opacity = '0';
+            setTimeout(() => {
+                container.style.transform = '';
+                container.style.opacity = '';
+                renderNovaMascot();
+                if (pill) {
+                    pill.style.transition = 'transform 0.26s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease';
+                    pill.style.transform = 'translateX(20px)';
+                    pill.style.opacity = '0';
+                    void pill.offsetHeight;
+                    pill.style.transform = 'translateX(0)';
+                    pill.style.opacity = '1';
+                }
+            }, 210);
+        } else {
+            renderNovaMascot();
+        }
+
         if (typeof window.showToast === 'function') {
             window.showToast('🥑 ซ่อนน้องเหมียวโนวาแล้ว แตะแถบขอบจอเพื่อเรียกกลับมาได้ตลอดนะเมี้ยว');
         }
     }
 
-    // Restore mascot from edge pill
+    // Restore mascot from edge pill with smooth spring pop-out
     function restoreNovaMascot() {
         ensureCompanionState();
         if (window.state && window.state.mascotCompanion) {
@@ -434,6 +457,16 @@
             if (typeof window.saveState === 'function') window.saveState();
         }
         renderNovaMascot();
+        const container = document.getElementById('novaMascotContainer');
+        if (container) {
+            container.style.transition = 'none';
+            container.style.transform = 'translateX(24px) scale(0.85)';
+            container.style.opacity = '0';
+            void container.offsetHeight;
+            container.style.transition = 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease';
+            container.style.transform = 'translateX(0) scale(1)';
+            container.style.opacity = '1';
+        }
         showNovaSpeechBubble('สวัสดีเมี้ยว! เหมียวโนวากลับมาดูแลแล้ว 🥑✨', 4000);
         playSfx('pop');
     }

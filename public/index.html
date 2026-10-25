@@ -106,28 +106,30 @@
             }
         }
 
-        /* 60fps Native-Feel Spring Accordions (Exact scrollHeight FLIP Transition) */
+        /* 60fps Native-Feel Spring Accordions (Exact-Pixel GPU FLIP Transition for Mobile iOS/Android) */
         .accordion-section {
             display: block;
             max-width: 100%;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) translateZ(0);
             overflow: hidden;
-            transition: max-height 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+            transition: max-height 0.32s cubic-bezier(0.32, 0.72, 0, 1),
                         opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
-                        padding-top 0.32s cubic-bezier(0.32, 0.72, 0, 1),
-                        padding-bottom 0.32s cubic-bezier(0.32, 0.72, 0, 1),
-                        margin-top 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                        padding-top 0.30s cubic-bezier(0.32, 0.72, 0, 1),
+                        padding-bottom 0.30s cubic-bezier(0.32, 0.72, 0, 1),
+                        margin-top 0.30s cubic-bezier(0.32, 0.72, 0, 1),
                         transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: max-height, opacity, transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         .accordion-section.is-collapsed {
-            max-height: 0px !important;
+            max-height: 0px;
             opacity: 0 !important;
             padding-top: 0px !important;
             padding-bottom: 0px !important;
             margin-top: 0px !important;
-            transform: translateY(-6px) !important;
+            transform: translateY(-6px) translateZ(0) !important;
             pointer-events: none !important;
             border-top-width: 0px !important;
         }

@@ -1413,31 +1413,35 @@ const APP_VERSION = '5.9.29';
             if (menu) menu.classList.toggle('hidden');
         }
 
-        // 60fps Exact-Height FLIP Accordion Animator (Zero Dead-Zone Lag)
+        // 60fps Exact-Height FLIP Accordion Animator (Zero Dead-Zone Lag on Mobile iOS/Android)
         function animateSmoothAccordion(body, willCollapse, alsoToggleHiddenClass = false) {
             if (!body) return;
             body.classList.add('accordion-section');
             clearTimeout(body._accAnimTimer);
 
             if (willCollapse) {
-                const startHeight = body.scrollHeight;
-                if (startHeight > 0) {
-                    body.style.maxHeight = startHeight + 'px';
-                    void body.offsetHeight;
-                }
+                const startHeight = body.offsetHeight || body.scrollHeight;
+                body.style.transition = 'none';
+                body.style.maxHeight = startHeight + 'px';
+                void body.offsetHeight; // Commit exact numeric pixel height before collapsing
+                body.style.transition = '';
+
                 body.classList.add('accordion-animating', 'is-collapsed');
                 if (alsoToggleHiddenClass) body.classList.add('hidden');
                 body.style.maxHeight = '0px';
 
                 body._accAnimTimer = setTimeout(() => {
                     body.classList.remove('accordion-animating');
-                }, 350);
+                }, 340);
             } else {
+                body.style.transition = 'none';
                 body.classList.add('accordion-animating');
                 body.classList.remove('hidden', 'is-collapsed');
+                body.style.maxHeight = 'none';
+                const targetHeight = Math.max(body.offsetHeight || body.scrollHeight, 60);
                 body.style.maxHeight = '0px';
-                void body.offsetHeight;
-                const targetHeight = Math.max(body.scrollHeight + 24, 80);
+                void body.offsetHeight; // Commit 0px start state before expanding
+                body.style.transition = '';
                 body.style.maxHeight = targetHeight + 'px';
 
                 body._accAnimTimer = setTimeout(() => {
@@ -1445,7 +1449,7 @@ const APP_VERSION = '5.9.29';
                     if (!body.classList.contains('is-collapsed')) {
                         body.style.maxHeight = 'none';
                     }
-                }, 350);
+                }, 340);
             }
         }
         window.animateSmoothAccordion = animateSmoothAccordion;
