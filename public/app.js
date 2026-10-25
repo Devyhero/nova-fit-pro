@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.25';
+const APP_VERSION = '5.9.26';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -502,6 +502,13 @@ const APP_VERSION = '5.9.25';
             if (!logsByDate || typeof logsByDate !== 'object') return 0;
             const hasMeals = (d) => Array.isArray(logsByDate[d]) && logsByDate[d].filter(m => m && m.name && String(m.name).trim() !== '').length >= 1;
             
+            const toLocalDateStr = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
             const today = new Date(todayStr + 'T00:00:00');
             let current = new Date(today);
             let streak = 0;
@@ -510,7 +517,7 @@ const APP_VERSION = '5.9.25';
                 streak = 1;
                 while (true) {
                     current.setDate(current.getDate() - 1);
-                    const dStr = current.toISOString().split('T')[0];
+                    const dStr = toLocalDateStr(current);
                     if (hasMeals(dStr)) {
                         streak++;
                     } else {
@@ -519,12 +526,12 @@ const APP_VERSION = '5.9.25';
                 }
             } else {
                 current.setDate(current.getDate() - 1);
-                const yestStr = current.toISOString().split('T')[0];
+                const yestStr = toLocalDateStr(current);
                 if (hasMeals(yestStr)) {
                     streak = 1;
                     while (true) {
                         current.setDate(current.getDate() - 1);
-                        const dStr = current.toISOString().split('T')[0];
+                        const dStr = toLocalDateStr(current);
                         if (hasMeals(dStr)) {
                             streak++;
                         } else {

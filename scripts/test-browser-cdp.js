@@ -1358,12 +1358,18 @@ server.listen(PORT, async () => {
         console.log('Main app ready for Prestige Frame test:', isMainAppReady);
 
         const prestigeEngineTest = await evalJs(`(() => {
+            const toLocalStr = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return \`\${year}-\${month}-\${day}\`;
+            };
             const todayStr = window.getTodayStr();
             const dObj = new Date(todayStr + 'T00:00:00');
             dObj.setDate(dObj.getDate() - 1);
-            const yestStr = dObj.toISOString().split('T')[0];
+            const yestStr = toLocalStr(dObj);
             dObj.setDate(dObj.getDate() - 1);
-            const day2Str = dObj.toISOString().split('T')[0];
+            const day2Str = toLocalStr(dObj);
 
             // 1. Test mathematical streak calculation
             const emptyLogs = {};
@@ -1384,6 +1390,17 @@ server.listen(PORT, async () => {
                 [todayStr]: [{ name: 'อกไก่ต้ม', cal: 150 }]
             };
             const streakThree = window.calculateVerifiedStreak(threeDayLogs, todayStr);
+
+            // 1.1 Test 7 Consecutive Days Streak (Fixes Timezone Offset Bug)
+            const sevenDayLogs = {};
+            const curDate = new Date(todayStr + 'T00:00:00');
+            for (let i = 0; i < 7; i++) {
+                const s = toLocalStr(curDate);
+                sevenDayLogs[s] = [{ name: 'อาหารมื้อ ' + (i + 1), cal: 200 }];
+                curDate.setDate(curDate.getDate() - 1);
+            }
+            const streakSeven = window.calculateVerifiedStreak(sevenDayLogs, todayStr);
+            const isSilverUnlocked = window.isFrameUnlocked('silver', streakSeven, false);
 
             // 2. Test Anti-Cheat: Spoof tampering rejection
             window.state.streakDays = 999;
@@ -1416,6 +1433,8 @@ server.listen(PORT, async () => {
                 streakOne,
                 streakTwo,
                 streakThree,
+                streakSeven,
+                isSilverUnlocked,
                 sanitizedStreak,
                 frameAfterIllegalEquip,
                 frameAfterLegalEquip,
@@ -1429,6 +1448,8 @@ server.listen(PORT, async () => {
             prestigeEngineTest.streakOne !== 1 ||
             prestigeEngineTest.streakTwo !== 2 ||
             prestigeEngineTest.streakThree !== 3 ||
+            prestigeEngineTest.streakSeven !== 7 ||
+            !prestigeEngineTest.isSilverUnlocked ||
             prestigeEngineTest.sanitizedStreak !== 1 ||
             prestigeEngineTest.frameAfterIllegalEquip === 'diamond' ||
             prestigeEngineTest.frameAfterLegalEquip !== 'bronze' ||
@@ -1630,8 +1651,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.25' ||
-            !v598Test.toolsBadge?.includes('v5.9.25')) {
+            v598Test.appVersion !== '5.9.26' ||
+            !v598Test.toolsBadge?.includes('v5.9.26')) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2388,6 +2409,98 @@ server.listen(PORT, async () => {
             !remoteConfigTest.doseUpdated ||
             !remoteConfigTest.forceLocalUpdated) {
             throw new Error('Test 46: MeowNova Remote Config, Modes, or User Avatar failed: ' + JSON.stringify(remoteConfigTest));
+        }
+
+        // Test 47: Admin Smart Search, Real Active User Filtering & Ghost Guest Purge (v5.9.26)
+        console.log('--- Test 47: Admin Smart Search & Real Active User Standards (v5.9.26) ---');
+        await sendCdp('Page.navigate', { url: 'http://localhost:8195/admin.html' });
+        await new Promise(r => setTimeout(r, 600));
+
+        const adminV5926Test = await evalJs(`(async () => {
+            const hasSmartSearchFn = typeof window.executeAdminSmartSearch === 'function';
+            const hasAiModalFn = typeof window.openAdminAiInsightModal === 'function';
+            const hasCleanGhostFn = typeof window.cleanUpGhostGuests === 'function';
+            const searchInput = document.getElementById('adminUserSearch');
+            const btnActiveFilter = document.getElementById('btnFilterUserActive');
+            const btnCleanGhost = document.getElementById('btnCleanGhostGuests');
+            const aiInsightModal = document.getElementById('adminAiInsightModal');
+
+            // 1. Mock users data with real active and ghost guests
+            window.allUsersData = [
+                {
+                    uid: 'user_active_1',
+                    displayName: 'สมชาย รักสุขภาพ',
+                    email: 'somchai@fit.com',
+                    isGuest: false,
+                    isRealActive: true,
+                    state: {
+                        streakDays: 7,
+                        prestigeFrame: 'silver',
+                        logsByDate: { '2026-10-25': [{ name: 'สลัดอกไก่', cal: 350 }] }
+                    }
+                },
+                {
+                    uid: 'guest_ghost_1',
+                    displayName: 'ผู้ใช้ทั่วไป (Ghost Device)',
+                    email: 'ผู้ใช้ทั่วไป (ไม่ระบุตัวตน)',
+                    isGuest: true,
+                    isRealActive: false,
+                    state: { logsByDate: {}, waterByDate: {} }
+                }
+            ];
+
+            // 2. Test Smart NLP Search: 'อยากดูข้อมูลของ user สมชาย'
+            searchInput.value = 'อยากดูข้อมูลของ user สมชาย';
+            await window.executeAdminSmartSearch();
+            const inspectModal = document.getElementById('userInspectModal');
+            const inspectName = document.getElementById('inspectUserName')?.textContent;
+            const inspectBodyHtml = document.getElementById('inspectUserBody')?.innerHTML || '';
+            const isInspectOpen = !inspectModal.classList.contains('hidden');
+            const hasStreakBadge = inspectBodyHtml.includes('สตรีคต่อเนื่อง') && inspectBodyHtml.includes('7 วัน');
+            const hasFrameBadge = inspectBodyHtml.includes('Silver Striker');
+            window.closeUserInspectModal();
+
+            // 3. Test Active Users Filter
+            window.setUserTypeFilter('active');
+            const tbodyHtml = document.getElementById('usersTableBody').innerHTML;
+            const hasActiveUser = tbodyHtml.includes('สมชาย รักสุขภาพ');
+            const ghostHidden = !tbodyHtml.includes('Ghost Device');
+
+            // 4. Test AI Insight Modal display
+            window.openAdminAiInsightModal('ใคร streak สูงสุด', '🏆 สมชาย รักสุขภาพ (7 วัน)');
+            const isAiModalOpen = !aiInsightModal.classList.contains('hidden');
+            window.closeAdminAiInsightModal();
+
+            return {
+                hasSmartSearchFn,
+                hasAiModalFn,
+                hasCleanGhostFn,
+                hasSearchInput: !!searchInput,
+                hasBtnActive: !!btnActiveFilter,
+                hasBtnClean: !!btnCleanGhost,
+                isInspectOpen,
+                inspectName,
+                hasStreakBadge,
+                hasFrameBadge,
+                hasActiveUser,
+                ghostHidden,
+                isAiModalOpen
+            };
+        })()`);
+        console.log('Admin v5.9.26 Features verified:', adminV5926Test);
+
+        if (!adminV5926Test.hasSmartSearchFn ||
+            !adminV5926Test.hasAiModalFn ||
+            !adminV5926Test.hasCleanGhostFn ||
+            !adminV5926Test.hasBtnActive ||
+            !adminV5926Test.hasBtnClean ||
+            !adminV5926Test.isInspectOpen ||
+            !adminV5926Test.hasStreakBadge ||
+            !adminV5926Test.hasFrameBadge ||
+            !adminV5926Test.hasActiveUser ||
+            !adminV5926Test.ghostHidden ||
+            !adminV5926Test.isAiModalOpen) {
+            throw new Error('Test 47: Admin v5.9.26 features failed: ' + JSON.stringify(adminV5926Test));
         }
 
         ws.close();

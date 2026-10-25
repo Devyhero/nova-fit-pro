@@ -49,10 +49,11 @@ service cloud.firestore {
     }
 
     // Guest & Unauthenticated Visitor Activity Tracking (Phase 1):
-    // Allows unauthenticated visitors to heartbeat/record their own device stats; verified Admin can read & delete
+    // Allows unauthenticated visitors to heartbeat/record their own device stats; verified Admin or converted auth user can delete
     match /guest_sessions/{deviceId} {
       allow create, update: if request.resource.data.deviceId == deviceId;
-      allow read, delete: if isAdmin();
+      allow delete: if isAdmin() || request.auth != null;
+      allow read: if isAdmin();
     }
 
     // Security Audit Logs Collection (Phase 3 Anti-Cheat & Bot Protection):

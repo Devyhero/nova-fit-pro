@@ -225,9 +225,14 @@
                 <!-- Search & Filters -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full flex-1">
-                        <div class="relative w-full sm:w-64 md:w-72">
-                            <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" placeholder="🔍 ค้นหาชื่อ หรือ อีเมลผู้ใช้..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
-                            <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-600">✕</button>
+                        <div class="relative w-full sm:w-80 md:w-96">
+                            <input type="text" id="adminUserSearch" oninput="filterUsersList(this.value)" onkeydown="if(event.key==='Enter') executeAdminSmartSearch()" placeholder="🔍 ค้นหาชื่อ หรือสั่ง 'อยากดูข้อมูลของ user นาย a'..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-24 py-2 text-xs sm:text-sm focus:outline-none focus:border-purple-500 shadow-xs">
+                            <div class="absolute right-1.5 top-1.5 flex items-center gap-1">
+                                <button type="button" onclick="executeAdminSmartSearch()" title="ค้นหาด่วน / สั่งการด้วย AI" class="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1 cursor-pointer">
+                                    <span>✨</span> <span>AI หา</span>
+                                </button>
+                                <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="text-xs text-slate-400 hover:text-slate-600 px-1">✕</button>
+                            </div>
                         </div>
                         <!-- User Type Segment Filter (Phase 1) -->
                         <div class="flex items-center justify-between sm:justify-start gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs overflow-x-auto no-scrollbar shrink-0">
@@ -240,7 +245,13 @@
                             <button type="button" id="btnFilterUserGuest" onclick="setUserTypeFilter('guest')" class="flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer whitespace-nowrap">
                                 ⚪ Guest (<span id="countFilterGuest">0</span>)
                             </button>
+                            <button type="button" id="btnFilterUserActive" onclick="setUserTypeFilter('active')" class="flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer whitespace-nowrap">
+                                🔥 ใช้งานจริง (<span id="countFilterActive">0</span>)
+                            </button>
                         </div>
+                        <button type="button" id="btnCleanGhostGuests" onclick="cleanUpGhostGuests()" title="ล้างข้อมูล Guest ที่ไม่มีกิจกรรมหรือแปลงเป็น Google แล้ว" class="px-2.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1 transition shrink-0 cursor-pointer">
+                            <span>🧹</span> <span>ล้าง Guest ขยะ</span>
+                        </button>
                     </div>
                     <div class="w-full sm:w-auto shrink-0">
                         <button type="button" onclick="openBroadcastMessageModal()" class="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
@@ -570,14 +581,29 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.25
+                            Current Version: v5.9.26
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.25 -->
+                        <!-- Release: v5.9.26 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">⚡ v5.9.26 (Streak Timezone Skew Fix, Active-Only Guest Guard, Deduplication & AI Natural Language Admin Inspector)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>⚡ Local Date Calendar Streak Resolution:</b> ปรับปรุงฟังก์ชัน <code>calculateVerifiedStreak()</code> ใน <code>app.js</code> ให้ใช้ <code>toLocalDateStr()</code> อิงปฏิทินท้องถิ่นแทน <code>toISOString()</code> แก้ไขปัญหา Timezone Offset (GMT+7) ที่ทำให้วันที่ย้อนหลังข้ามไป 1 วัน ส่งผลให้ผู้ใช้บันทึก 7 วันแต่แสดง 6 วัน ปลดล็อกกรอบ Silver Striker ได้อย่างแม่นยำ 100%</li>
+                                <li><b>👥 Real Active User Guard for Guest Sessions:</b> ปรับปรุง <code>syncGuestSession()</code> ใน <code>firebase-sync.js</code> ไม่บันทึกผู้ใช้ที่เปิดหน้าเว็บแล้วปิดไป (0 มื้อ 0 แก้ว) สู่คอลเลกชัน <code>guest_sessions</code> จัดเก็บเฉพาะผู้ใช้ที่มีการบันทึกอาหาร ดื่มน้ำ หรือออกกำลังกายจริงเท่านั้น</li>
+                                <li><b>🧹 Guest Session Deduplication on Google Login:</b> เพิ่มฟังก์ชัน <code>cleanUpConvertedGuestSession()</code> ใน <code>firebase-sync.js</code> เพื่อลบเอกสาร Guest Session เดิมทิ้งอัตโนมัติเมื่อผู้ใช้กดล็อกอินบัญชี Google ป้องกันการแสดงประวัติเบิ้ล 2 บรรทัดในหน้า Admin</li>
+                                <li><b>✨ AI & Natural Language Smart Search Inspector:</b> ติดตั้งฟังก์ชัน <code>executeAdminSmartSearch()</code> ใน <code>admin.js</code> รองรับการพิมพ์คำสั่งค้นหาด้วยภาษาธรรมชาติ เช่น <i>'อยากดูข้อมูลของ user นาย a'</i> เพื่อส่องไดอารี่ผู้ใช้นั้นได้ทันที หรือถามคำถามวิเคราะห์ข้อมูลผู้ใช้ผ่าน Google Gemini AI ฟรี พร้อมป็อปอัป <code>#adminAiInsightModal</code></li>
+                                <li><b>🧹 One-Click Ghost Guest Purge:</b> เพิ่มปุ่ม <code>cleanUpGhostGuests()</code> ในหน้าแดชบอร์ด เพื่อให้แอดมินลบ Session ว่างเปล่าหรือ Session ที่แปลงเป็น Google ออกจาก Firestore ได้ในคลิกเดียว</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.26 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.25 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">💬 v5.9.25 (Standalone AI Chat Trigger & Granular Mode Flow)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">25 ต.ค. 2026</span>
@@ -1843,6 +1869,28 @@
         </div>
     </div>
 
+    <!-- ADMIN AI INSIGHT MODAL -->
+    <div id="adminAiInsightModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 border border-purple-500/30 rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">✨</span>
+                    <div>
+                        <h3 class="font-bold text-base leading-tight text-purple-600 dark:text-purple-400">บทวิเคราะห์ AI Smart Inspector</h3>
+                        <p id="adminAiQueryCaption" class="text-xs text-slate-400">คำสั่งค้นหา</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAdminAiInsightModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+            <div id="adminAiInsightContent" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed overflow-y-auto whitespace-pre-wrap p-3 rounded-2xl bg-purple-500/5 border border-purple-500/10"></div>
+            <div class="border-t border-slate-200 dark:border-slate-700 pt-3 flex items-center justify-end">
+                <button type="button" onclick="closeAdminAiInsightModal()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition">
+                    รับทราบ
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Nova Action Mini Loader Modal for Admin Dashboard (v5.9.17) -->
     <div id="novaMiniLoader" onclick="hideAdminMiniLoader()" class="hidden fixed inset-0 z-[100000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-auto cursor-pointer" title="แตะเพื่อปิด">
         <div onclick="event.stopPropagation()" class="relative p-5 rounded-3xl bg-slate-900/95 border border-purple-500/40 shadow-[0_0_40px_rgba(168,85,247,0.35)] flex flex-col items-center text-center space-y-3 max-w-[190px] select-none cursor-default">
@@ -1870,7 +1918,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.25"></script>
+    <script type="module" src="admin.js?v=5.9.26"></script>
 
 </body>
 

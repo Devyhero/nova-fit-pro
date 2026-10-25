@@ -21,7 +21,8 @@ import {
     orderBy,
     limit,
     updateDoc,
-    addDoc
+    addDoc,
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -199,10 +200,12 @@ onAuthStateChanged(auth, async (user) => {
         setupRealtimeCloudListener(user);
         setupRealtimeNotificationsListener(user);
         fetchSystemAiConfig();
+        // Clean up or delete orphaned guest session to prevent duplicate user in Admin
+        cleanUpConvertedGuestSession(user);
     } else {
         userNotifications = [];
         updateNotificationBadge(0);
-        // Phase 1: Trigger Guest Session heartbeat sync
+        // Phase 1: Trigger Guest Session heartbeat sync (only if user has active diary logs)
         syncGuestSession();
     }
 
@@ -400,6 +403,30 @@ function setupRealtimeCloudListener(user) {
 // ==========================================
 // GUEST SESSION HEARTBEAT & ACTIVITY TRACKING (v5.9.4 Phase 1)
 // ==========================================
+async function cleanUpConvertedGuestSession(user) {
+    if (!user || !myDeviceId) return;
+    try {
+        const guestDocRef = doc(db, 'guest_sessions', myDeviceId);
+        await deleteDoc(guestDocRef);
+        console.log('🧹 Converted guest session removed for device:', myDeviceId);
+    } catch (err) {
+        // Fallback: If delete disallowed or fails, mark as converted
+        try {
+            const guestDocRef = doc(db, 'guest_sessions', myDeviceId);
+            await setDoc(guestDocRef, {
+                deviceId: myDeviceId,
+                isConverted: true,
+                convertedToUid: user.uid,
+                convertedEmail: user.email || '',
+                convertedAt: new Date().toISOString()
+            }, { merge: true });
+        } catch (e) {
+            console.warn('Guest conversion tag skipped:', e);
+        }
+    }
+}
+window.cleanUpConvertedGuestSession = cleanUpConvertedGuestSession;
+
 let guestSyncTimer = null;
 let lastGuestSyncTime = 0;
 
@@ -422,6 +449,19 @@ async function syncGuestSession(force = false) {
             const waterToday = (currentState.waterByDate && currentState.waterByDate[todayStr]) || 0;
             const workoutsToday = (currentState.workoutsByDate && currentState.workoutsByDate[todayStr]) || [];
             const calToday = mealsToday.reduce((sum, m) => sum + (Number(m.cal) || 0), 0);
+
+            // Real Active User Guard: Only record guest session if user actually has real diary data
+            const hasMeals = mealsToday.length > 0 || (currentState.logsByDate && Object.values(currentState.logsByDate).some(arr => Array.isArray(arr) && arr.length > 0));
+            const hasWater = waterToday > 0 || (currentState.waterByDate && Object.values(currentState.waterByDate).some(n => Number(n) > 0));
+            const hasWorkouts = workoutsToday.length > 0 || (currentState.workoutsByDate && Object.values(currentState.workoutsByDate).some(arr => Array.isArray(arr) && arr.length > 0));
+            const hasWeight = currentState.weightsByDate && Object.values(currentState.weightsByDate).some(w => Number(w) > 0);
+            const hasCustomProfile = !!(currentState.userDisplayName && currentState.userDisplayName.trim() !== '' && currentState.userDisplayName !== 'Guest');
+            const hasRealActivity = hasMeals || hasWater || hasWorkouts || hasWeight || hasCustomProfile;
+
+            // Zero-Activity Guard: Do not write ghost bounce sessions to Firestore unless force=true
+            if (!hasRealActivity && !force) {
+                return;
+            }
 
             let firstSeen = localStorage.getItem('novafit_first_seen');
             if (!firstSeen) {

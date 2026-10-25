@@ -21,6 +21,7 @@ import {
     query,
     orderBy,
     limit,
+    deleteDoc,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
@@ -281,23 +282,44 @@ window.loadAllUserData = async function (isManual = false) {
             allUsersData.push({
                 uid: docSnap.id,
                 isGuest: false,
+                isRealActive: true,
                 provider: 'google',
                 ...docSnap.data()
             });
         });
 
+        let ghostGuestsCount = 0;
         guestsSnap.forEach((docSnap) => {
             const data = docSnap.data();
+            // If session was converted to Google user, skip from user list to avoid duplicate
+            if (data.isConverted || data.convertedToUid) {
+                ghostGuestsCount++;
+                return;
+            }
+
+            // Check if guest has active interactions
+            const hasMeals = (data.stats?.mealsCountToday > 0) || (data.state?.logsByDate && Object.values(data.state.logsByDate).some(a => Array.isArray(a) && a.length > 0));
+            const hasWater = (data.stats?.waterGlassesToday > 0) || (data.state?.waterByDate && Object.values(data.state.waterByDate).some(n => Number(n) > 0));
+            const hasWorkouts = (data.stats?.workoutsCountToday > 0) || (data.state?.workoutsByDate && Object.values(data.state.workoutsByDate).some(a => Array.isArray(a) && a.length > 0));
+            const hasWeight = data.state?.weightsByDate && Object.values(data.state.weightsByDate).some(w => Number(w) > 0);
+            const isRealActive = hasMeals || hasWater || hasWorkouts || hasWeight;
+
+            if (!isRealActive) {
+                ghostGuestsCount++;
+            }
+
             allUsersData.push({
                 uid: docSnap.id,
                 deviceId: docSnap.id,
                 isGuest: true,
+                isRealActive: isRealActive,
                 provider: 'guest',
                 displayName: data.displayName || `ผู้ใช้ทั่วไป (${data.platform || 'Device'})`,
                 email: data.convertedEmail ? `แปลงเป็น: ${data.convertedEmail}` : 'ผู้ใช้ทั่วไป (ไม่ระบุตัวตน)',
                 ...data
             });
         });
+        window._adminGhostGuestsCount = ghostGuestsCount;
 
         window.allUsersData = allUsersData;
         renderAdminOverview();
@@ -419,6 +441,12 @@ function renderAdminOverview() {
     if (cntG) cntG.textContent = googleUsersCount;
     const cntGuest = document.getElementById('countFilterGuest');
     if (cntGuest) cntGuest.textContent = guestUsersCount;
+    const cntActive = document.getElementById('countFilterActive');
+    if (cntActive) cntActive.textContent = allUsersData.filter(u => u.isRealActive).length;
+    const btnCleanGhost = document.getElementById('btnCleanGhostGuests');
+    if (btnCleanGhost) {
+        btnCleanGhost.innerHTML = `<span>🧹</span> <span>ล้าง Guest ขยะ (${window._adminGhostGuestsCount || 0})</span>`;
+    }
 
     // Render Users Table using active filters
     applyUserFilters();
@@ -1087,15 +1115,16 @@ window.setUserTypeFilter = function (type) {
     const btnAll = document.getElementById('btnFilterUserAll');
     const btnGoogle = document.getElementById('btnFilterUserGoogle');
     const btnGuest = document.getElementById('btnFilterUserGuest');
+    const btnActive = document.getElementById('btnFilterUserActive');
 
-    [btnAll, btnGoogle, btnGuest].forEach(btn => {
+    [btnAll, btnGoogle, btnGuest, btnActive].forEach(btn => {
         if (!btn) return;
-        btn.className = 'px-2.5 py-1 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer';
+        btn.className = 'flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg font-bold text-slate-500 hover:text-purple-600 transition cursor-pointer whitespace-nowrap';
     });
 
-    const activeBtn = type === 'google' ? btnGoogle : type === 'guest' ? btnGuest : btnAll;
+    const activeBtn = type === 'google' ? btnGoogle : type === 'guest' ? btnGuest : type === 'active' ? btnActive : btnAll;
     if (activeBtn) {
-        activeBtn.className = 'px-2.5 py-1 rounded-lg font-bold bg-white dark:bg-slate-700 shadow-xs text-purple-600 dark:text-purple-400 transition cursor-pointer';
+        activeBtn.className = 'flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg font-bold bg-white dark:bg-slate-700 shadow-xs text-purple-600 dark:text-purple-400 transition cursor-pointer whitespace-nowrap';
     }
 
     applyUserFilters();
@@ -1112,6 +1141,8 @@ function applyUserFilters() {
         filtered = filtered.filter(u => !u.isGuest);
     } else if (_currentUserTypeFilter === 'guest') {
         filtered = filtered.filter(u => !!u.isGuest);
+    } else if (_currentUserTypeFilter === 'active') {
+        filtered = filtered.filter(u => !!u.isRealActive);
     }
 
     if (q) {
@@ -1129,6 +1160,175 @@ window.applyUserFilters = applyUserFilters;
 
 window.filterUsersList = function (query) {
     applyUserFilters();
+};
+
+window.executeAdminSmartSearch = async function () {
+    if (Array.isArray(window.allUsersData) && window.allUsersData.length > 0) {
+        allUsersData = window.allUsersData;
+    }
+    const input = document.getElementById('adminUserSearch');
+    const rawQuery = (input ? input.value : '').trim();
+    if (!rawQuery) {
+        showAdminToast('กรุณากรอกชื่อ หรือคำสั่งที่ต้องการค้นหาก่อนครับ');
+        return;
+    }
+
+    // 1. Natural Language Intent Matcher (Instant Client NLP / 0 Token)
+    let targetName = rawQuery;
+    const nlpPatterns = [
+        /(?:อยากดูข้อมูล|ขอข้อมูล|ดูข้อมูล|ส่องไดอารี่|ส่องดู|ค้นหา|เปิดดู|ตรวจดู)\s*(?:ของ)?\s*(?:user|ผู้ใช้|คุณ|นาย|นาง|นางสาว)?\s*(.+)/i,
+        /(?:user|ผู้ใช้|สมาชิก)\s*(.+)/i
+    ];
+    for (const pat of nlpPatterns) {
+        const m = rawQuery.match(pat);
+        if (m && m[1]) {
+            targetName = m[1].trim();
+            break;
+        }
+    }
+
+    // Clean up trailing conversational particles
+    targetName = targetName.replace(/[ครับ|ค่ะ|หน่อย|จ้า|นะ|!|?]+$/g, '').trim();
+
+    // Search in allUsersData
+    const qLower = targetName.toLowerCase();
+    const matches = (allUsersData || []).filter(u => {
+        const n = (u.displayName || '').toLowerCase();
+        const e = (u.email || '').toLowerCase();
+        const p = (u.platform || '').toLowerCase();
+        return n.includes(qLower) || e.includes(qLower) || p.includes(qLower);
+    });
+
+    if (matches.length > 0) {
+        // Filter table immediately
+        if (input) input.value = targetName;
+        applyUserFilters();
+
+        // If exact or single match found, directly inspect!
+        const exactMatch = matches.find(u => (u.displayName || '').toLowerCase() === qLower) || matches[0];
+        window.inspectUser(exactMatch.uid);
+        showAdminToast(`🎯 พบผู้ใช้ "${exactMatch.displayName || 'ผู้ใช้'}" และเปิดข้อมูลให้เรียบร้อยแล้ว!`);
+        return;
+    }
+
+    // 2. Analytical AI Questions (e.g. "ใคร streak สูงสุด", "สรุปผู้ใช้", "ใครยังไม่ดื่มน้ำ")
+    const isAnalyticalQuery = /streak|สตรีค|ใคร|สูงสุด|น้อยสุด|ดื่มน้ำ|แคล|สรุป|กี่คน|พฤติกรรม|active|guest/i.test(rawQuery);
+    if (!isAnalyticalQuery) {
+        showAdminToast(`ไม่พบผู้ใช้ที่ตรงกับ "${targetName}" ลองตรวจสอบตัวสะกดอีกครั้งครับ`, 'error');
+        return;
+    }
+
+    // Call Gemini API if available
+    showAdminMiniLoader('🤖 น้อง MeowNova AI กำลังวิเคราะห์ข้อมูลผู้ใช้...');
+    try {
+        const snap = await getDoc(doc(db, 'system_config', 'ai'));
+        const apiKey = snap.exists() ? snap.data()?.geminiApiKey : null;
+
+        // Prepare compact digest of users
+        const usersDigest = (allUsersData || []).slice(0, 30).map(u => ({
+            name: u.displayName || 'Guest',
+            provider: u.provider || (u.isGuest ? 'guest' : 'google'),
+            streak: Number(u.state?.streakDays) || 0,
+            frame: u.state?.prestigeFrame || 'novice',
+            mealsToday: (u.state?.logsByDate && u.state.logsByDate[getTodayStr()] || []).length,
+            calToday: (u.state?.logsByDate && u.state.logsByDate[getTodayStr()] || []).reduce((s, m) => s + (m.cal || 0), 0),
+            waterToday: (u.state?.waterByDate && u.state.waterByDate[getTodayStr()]) || 0,
+            weight: u.state?.profile?.weight || '-'
+        }));
+
+        let aiAnswer = '';
+        if (apiKey) {
+            const prompt = `คุณคือผู้ช่วย AI แอดมินของ NovaFit Pro ตอบคำถามเกี่ยวกับข้อมูลผู้ใช้ระบบต่อไปนี้:
+ข้อมูลสรุปผู้ใช้ (JSON): ${JSON.stringify(usersDigest)}
+คำถามแอดมิน: "${rawQuery}"
+กรุณาตอบเป็นภาษาไทยให้กระชับ ชัดเจน มีอิโมจิ อ่านง่าย บอกชื่อผู้ใช้ที่เกี่ยวข้อง และให้คำแนะนำที่แอดมินนำไปใช้ได้ทันที ไม่ต้องเกริ่นยาว`;
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.2, maxOutputTokens: 300 }
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                aiAnswer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+            }
+        }
+
+        // Local Smart Fallback if no Gemini key or offline
+        if (!aiAnswer) {
+            if (/streak|สตรีค/i.test(rawQuery)) {
+                const sortedStreak = [...allUsersData].sort((a, b) => (Number(b.state?.streakDays) || 0) - (Number(a.state?.streakDays) || 0));
+                const top = sortedStreak.slice(0, 3);
+                aiAnswer = `🏆 ผู้ใช้ที่มี Streak สูงสุด:\n` + top.map((u, i) => `${i + 1}. ${u.displayName} — 🔥 ${u.state?.streakDays || 0} วัน (กรอบ: ${u.state?.prestigeFrame || 'novice'})`).join('\n');
+            } else if (/น้ำ|water/i.test(rawQuery)) {
+                const todayStr = getTodayStr();
+                const lowWater = allUsersData.filter(u => ((u.state?.waterByDate && u.state.waterByDate[todayStr]) || 0) < 4);
+                aiAnswer = `💧 ผู้ใช้ที่ดื่มน้ำน้อยกว่า 4 แก้ววันนี้ (${lowWater.length} คน):\n` + lowWater.slice(0, 5).map(u => `• ${u.displayName} (${(u.state?.waterByDate && u.state.waterByDate[todayStr]) || 0} แก้ว)`).join('\n');
+            } else {
+                aiAnswer = `📊 ภาพรวมสมาชิกปัจจุบัน:\n• ผู้ใช้ทั้งหมด: ${allUsersData.length} คน (Google: ${allUsersData.filter(u => !u.isGuest).length}, Guest: ${allUsersData.filter(u => u.isGuest).length})\n• มีการใช้งานวันนี้: ${allUsersData.filter(u => (u.state?.logsByDate && u.state.logsByDate[getTodayStr()] || []).length > 0).length} คน`;
+            }
+        }
+
+        hideAdminMiniLoader();
+        openAdminAiInsightModal(rawQuery, aiAnswer);
+    } catch (err) {
+        hideAdminMiniLoader();
+        showAdminToast('AI ตอบกลับผิดพลาด: ' + err.message, 'error');
+    }
+};
+
+window.openAdminAiInsightModal = function (query, answer) {
+    const modal = document.getElementById('adminAiInsightModal');
+    const qEl = document.getElementById('adminAiQueryCaption');
+    const aEl = document.getElementById('adminAiInsightContent');
+    if (qEl) qEl.textContent = `คำสั่ง: "${query}"`;
+    if (aEl) aEl.textContent = answer;
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeAdminAiInsightModal = function () {
+    const modal = document.getElementById('adminAiInsightModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.cleanUpGhostGuests = async function () {
+    if (!confirm('ต้องการล้างข้อมูล Guest ที่ไม่มีประวัติการบันทึกอาหาร/น้ำ หรือผู้ใช้ที่ล็อกอิน Google แล้ว ใช่หรือไม่?')) {
+        return;
+    }
+
+    showAdminMiniLoader('กำลังตรวจสอบและล้างข้อมูล Guest ที่ไม่มีกิจกรรม...');
+    try {
+        const guestsSnap = await getDocs(collection(db, 'guest_sessions'));
+        let deletedCount = 0;
+        const deletePromises = [];
+
+        guestsSnap.forEach((docSnap) => {
+            const data = docSnap.data();
+            const isConverted = data.isConverted || data.convertedToUid;
+            const hasMeals = (data.stats?.mealsCountToday > 0) || (data.state?.logsByDate && Object.values(data.state.logsByDate).some(a => Array.isArray(a) && a.length > 0));
+            const hasWater = (data.stats?.waterGlassesToday > 0) || (data.state?.waterByDate && Object.values(data.state.waterByDate).some(n => Number(n) > 0));
+            const hasWorkouts = (data.stats?.workoutsCountToday > 0) || (data.state?.workoutsByDate && Object.values(data.state.workoutsByDate).some(a => Array.isArray(a) && a.length > 0));
+            const hasWeight = data.state?.weightsByDate && Object.values(data.state.weightsByDate).some(w => Number(w) > 0);
+            const isRealActive = hasMeals || hasWater || hasWorkouts || hasWeight;
+
+            // Delete if converted or zero real activity
+            if (isConverted || !isRealActive) {
+                deletedCount++;
+                deletePromises.push(deleteDoc(doc(db, 'guest_sessions', docSnap.id)).catch(e => console.warn('Delete guest err:', e)));
+            }
+        });
+
+        await Promise.all(deletePromises);
+        hideAdminMiniLoader();
+        showAdminToast(`🧹 ล้างข้อมูล Guest ที่ไม่มีกิจกรรมเรียบร้อยแล้ว (${deletedCount} รายการ)!`);
+        await window.loadAllUsersData(true);
+    } catch (err) {
+        hideAdminMiniLoader();
+        showAdminToast('❌ เกิดข้อผิดพลาดในการล้างข้อมูล: ' + err.message, 'error');
+    }
 };
 
 window.switchAdminTab = function (tabId) {
@@ -1163,6 +1363,9 @@ window.switchAdminTab = function (tabId) {
 };
 
 window.inspectUser = function (uid) {
+    if (Array.isArray(window.allUsersData) && window.allUsersData.length > 0) {
+        allUsersData = window.allUsersData;
+    }
     const user = allUsersData.find(u => u.uid === uid);
     if (!user) return;
 
@@ -1186,11 +1389,33 @@ window.inspectUser = function (uid) {
     const safeName = (user.displayName || 'ผู้ใช้').replace(/'/g, "\\'");
     const safeEmail = (user.email || '').replace(/'/g, "\\'");
 
+    const streakDays = Number(state.streakDays) || 0;
+    const prestigeFrame = state.prestigeFrame || 'novice';
+    const tierMap = {
+        novice: { name: 'Novice (เริ่มต้น)', emoji: '⚪' },
+        bronze: { name: 'Bronze Sprout (3 วัน)', emoji: '🌱' },
+        silver: { name: 'Silver Striker (7 วัน)', emoji: '⚡' },
+        gold: { name: 'Gold Champion (30 วัน)', emoji: '👑' },
+        diamond: { name: 'Diamond Nova (VIP/100 วัน)', emoji: '💎' }
+    };
+    const tierInfo = tierMap[prestigeFrame] || { name: prestigeFrame, emoji: '🏆' };
+
     bodyEl.innerHTML = `
         <div class="flex items-center gap-2">
             <button type="button" onclick="openSendMessageModal('${user.uid}', '${safeName}', '${safeEmail}')" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95">
                 <span>💬</span> <span>ส่งข้อความแจ้งเตือนถึงผู้ใช้นี้</span>
             </button>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs">
+            <div class="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300">
+                <span>🔥 สตรีคต่อเนื่อง:</span>
+                <span class="text-sm font-extrabold text-amber-500">${streakDays} วัน</span>
+            </div>
+            <div class="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                <span>กรอบโปรไฟล์:</span>
+                <span class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 shadow-xs font-bold text-[11px]">${tierInfo.emoji} ${tierInfo.name}</span>
+            </div>
         </div>
 
         <div class="grid grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/40">
