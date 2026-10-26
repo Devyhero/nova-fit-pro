@@ -97,29 +97,29 @@ state = {
 
 | Line Range | Module / Component | Key Functions |
 |---|---|---|
-| **L1 – L515** | **State Definition, Web Audio Synthesizer & Core Storage** | `APP_VERSION`, default `state`, `playSound()`, `cleanDuplicateMealLogs()`, `loadState()`, `saveState()` |
-| **L516 – L683** | **Streak Freeze Shield & Anti-Cheat Streak Engine** | `calculateVerifiedStreak()`, `isDayCovered()`, `verifyAndSanitizeStreak()`, `isFrameUnlocked()` |
+| **L1 – L585** | **State Definition, Web Audio Synthesizer & Core Storage** | `APP_VERSION`, default `state`, `playSound()`, `cleanDuplicateMealLogs()`, `loadState()`, `saveState()` |
+| **L586 – L683** | **Streak Freeze Shield & Anti-Cheat Streak Engine** | `calculateVerifiedStreak()`, `isDayCovered()`, `verifyAndSanitizeStreak()`, `isFrameUnlocked()` |
 | **L684 – L1101** | **Prestige Wardrobe Modal & App Tour Guide** | `openPrestigeWardrobeModal()`, `equipPrestigeFrame()`, `renderPrestigeFrames()`, `renderWardrobeModal()`, `openAppTourModal()`, `renderTourSlide()` |
 | **L1102 – L1295**| **Avatar Photo Upload & UI Preloader** | `handleAvatarPhotoSelected()`, `saveProfileDisplayName()`, `removeCustomAvatarPhoto()`, `showToast()`, `showMiniLoader()`, `initAppPreloader()` |
-| **L1296 – L1462**| **Web Push Notifications Engine** | `getPushPermissionState()`, `requestPushPermission()`, `dismissPushPrompt()`, `checkPushPromptEligibility()`, `testLocalNotification()`, `togglePushNotificationPermission()` |
-| **L1463 – L1700**| **Theme & FLIP Smooth Accordion Engine** | `toggleTheme()`, `toggleAllSettings()`, `animateSmoothAccordion()`, `toggleCardSection()`, `renderAllSectionCollapses()` |
-| **L1701 – L2012**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
-| **L2013 – L2278**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()` |
+| **L1296 – L1473**| **Web Push Notifications Engine** | `getPushPermissionState()`, `requestPushPermission()`, `dismissPushPrompt()`, `checkPushPromptEligibility()`, `testLocalNotification()`, `togglePushNotificationPermission()` |
+| **L1474 – L1724**| **Theme & FLIP Smooth Accordion Engine** | `toggleTheme()`, `toggleAllSettings()`, `animateSmoothAccordion()`, `toggleCardSection()`, `renderAllSectionCollapses()` |
+| **L1725 – L2173**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
+| **L2174 – L2278**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()` |
 | **L2279 – L2721**| **Custom Confirm Dialog & Cloud Food DB Sync** | `showConfirmDialog()`, `deleteCustomPreset()`, `applyCentralFoodsFromCloud()`, `renderFoodDatabaseExplorer()` |
-| **L2722 – L3182**| **Water Tracker, Body Weight & Workouts** | `renderWaterSection()`, `submitWeightToday()`, `addWorkout()`, `renderBodyAndWorkoutSection()`, `renderWeeklyAnalytics()` |
-| **L3183 – L3650**| **Daily Tracker & Meal Combo Engine** | `renderDateTrackerAndRecommendations()`, `copyMealFromYesterday()`, `saveMealAsCombo()`, `applyMealCombo()`, `deleteMealCombo()` |
+| **L2722 – L3456**| **Water Tracker, Body Weight & Workouts** | `renderWaterSection()`, `submitWeightToday()`, `addWorkout()`, `renderBodyAndWorkoutSection()`, `renderWeeklyAnalytics()` |
+| **L3457 – L3650**| **Daily Tracker & Meal Combo Engine** | `renderDateTrackerAndRecommendations()`, `copyMealFromYesterday()`, `saveMealAsCombo()`, `applyMealCombo()`, `deleteMealCombo()` |
 | **L3651 – L4044**| **Meal Combo Full Visual Editor** | `openMealComboEditor()`, `onComboFoodSearchInput()`, `addFoodObjectToComboEditor()`, `renderComboEditorItems()`, `saveMealComboEditor()` |
 | **L4045 – L4283**| **Supplements & Vitamins CRUD** | `renderSupplements()`, `toggleSupplement()`, `openAddSupplementModal()`, `submitNewSupplement()`, `deleteSupplement()`, `restoreDefaultSupplements()` |
 | **L4284 – L4611**| **Smart Coach Recommendations & Food Cards** | `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()` |
 | **L4612 – L5031**| **Water Adjustments, Date Navigation & Daily Meals CRUD** | `adjustWater()`, `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
-| **L5032 – L5211**| **Daily Report Modal, Changelog & PWA Update Prompt** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()` |
-| **L5212 – L5603**| **Intermittent Fasting (IF) Engine** | `getFastingPlanTargetHours()`, `setFastingPlan()`, `toggleFastingTimer()`, `openFastingCompleteModal()`, `confirmFinishFasting()`, `renderFastingSection()` |
-| **L5604 – L6212**| **Visual Share Card (HTML5 Canvas Drawing)** | `openShareCardModal()`, `renderShareCard()`, `downloadShareCard()`, `copyShareCardImage()`, `shareCardNative()` |
-| **L6213 – L6519**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
-| **L6520 – L6716**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
-| **L6717 – L7145**| **Living App Companion & Milestone Confetti Cannon** | `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()` |
-| **L7146 – L7569**| **Living Companion Loop & Sandbox Test Modal** | `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
-| **L7570 – L7651**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L5032 – L5266**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
+| **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines): `getFastingPlanTargetHours()`, `setFastingPlan()`, `toggleFastingTimer()`, `openFastingCompleteModal()`, `confirmFinishFasting()`, `renderFastingSection()` |
+| **L5267 – L5822**| **Visual Share Card (HTML5 Canvas Drawing)** | `openShareCardModal()`, `renderShareCard()`, `downloadShareCard()`, `copyShareCardImage()`, `shareCardNative()` |
+| **L5823 – L6129**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
+| **L6130 – L6416**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
+| **L6417 – L6755**| **Living App Companion & Milestone Confetti Cannon** | `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()` |
+| **L6756 – L7179**| **Living Companion Loop & Sandbox Test Modal** | `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
+| **L7180 – L7254**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 
@@ -134,7 +134,7 @@ state = {
 | `addSupplementModal` | `app.js` (L4164) | `openAddSupplementModal()` / `closeAddSupplementModal()` | Add vitamin/supplement with quick emoji presets |
 | `quickAddModal` | `app.js` (L6644) | `openQuickAddModal()` / `closeQuickAddModal()` | Quick calorie and protein logger |
 | `foodMealPickerModal` | `app.js` (L4723) | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | Food meal slot selector (breakfast/lunch/dinner/snack) |
-| `fastingCompleteModal` | `app.js` (L5243) | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | Fasting session complete celebration & autophagy report |
+| `fastingCompleteModal` | `fasting-engine.js` (L38) | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | Fasting session complete celebration & autophagy report |
 | `userNotificationsModal`| `app.js` | `openUserNotificationsModal()` / `closeUserNotificationsModal()` | In-app notification inbox from coach/admin |
 | `shareCardModal` | `app.js` (L5657) | `openShareCardModal()` / `closeShareCardModal()` | Canvas graphic daily summary share card |
 | `prestigeWardrobeModal` | `app.js` (L684) | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak tiers |
