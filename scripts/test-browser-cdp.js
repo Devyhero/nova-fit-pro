@@ -2829,6 +2829,19 @@ server.listen(PORT, async () => {
             throw new Error('Test 50: v5.9.30 Smart Suite verification failed: ' + JSON.stringify(smartSuiteTest));
         }
 
+        // Test 51: Visual Share Card Engine Verification (Phase 2 Modularization)
+        console.log('--- Test 51: Visual Share Card Modal & HTML5 Canvas Engine ---');
+        await evalJs('openShareCardModal()');
+        const isShareModalOpen = await evalJs('!document.getElementById("shareCardModal").classList.contains("hidden")');
+        const shareCanvasW = await evalJs('document.getElementById("shareCardCanvas").width');
+        const shareCanvasH = await evalJs('document.getElementById("shareCardCanvas").height');
+        await evalJs('closeShareCardModal()');
+        const isShareModalClosed = await evalJs('document.getElementById("shareCardModal").classList.contains("hidden")');
+        console.log('Share card modal verified:', { isShareModalOpen, shareCanvasW, shareCanvasH, isShareModalClosed });
+        if (!isShareModalOpen || shareCanvasW !== 1080 || shareCanvasH !== 1420 || !isShareModalClosed) {
+            throw new Error('Test 51: Visual Share Card Engine verification failed!');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');
