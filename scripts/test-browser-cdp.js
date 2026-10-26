@@ -2653,6 +2653,22 @@ server.listen(PORT, async () => {
             const recompTargets = getCalculatedTargets();
             const recompBtnActive = document.getElementById('goalRecomp').className.includes('bg-emerald-500');
 
+            // Test Female 49 kg, 157 cm, age 35, light activity (1.375), Cut (-20%), Balanced (30/40/30)
+            // Also verify syncProfileInput('weight', 49) overrides any stale daily weight!
+            state.weightsByDate = { [getTodayStr()]: 65 };
+            state.profile = {
+                gender: 'female',
+                age: 35,
+                weight: 65,
+                height: 157,
+                activity: 1.375,
+                goalDiff: -20,
+                smartProteinCap: true,
+                macros: { p: 30, c: 40, f: 30 }
+            };
+            syncProfileInput('weight', 49);
+            const femaleBal = getCalculatedTargets();
+
             // Restore state
             state.profile = backupProfile;
             state.weightsByDate = backupWeights;
@@ -2673,7 +2689,13 @@ server.listen(PORT, async () => {
                 recompP: recompTargets.pGram,
                 recompC: recompTargets.cGram,
                 recompF: recompTargets.fGram,
-                recompBtnActive
+                recompBtnActive,
+                femaleBmr: femaleBal.bmr,
+                femaleTdee: femaleBal.tdee,
+                femaleCal: femaleBal.targetCal,
+                femaleP: femaleBal.pGram,
+                femaleC: femaleBal.cGram,
+                femaleF: femaleBal.fGram
             };
         })()`);
         console.log('Smart Macro & Body Recomp Engine verified:', smartMacroTest);
@@ -2690,7 +2712,13 @@ server.listen(PORT, async () => {
             smartMacroTest.recompCal !== 2227 ||
             smartMacroTest.recompP !== 150 ||
             smartMacroTest.recompC !== 268 ||
-            !smartMacroTest.recompBtnActive) {
+            !smartMacroTest.recompBtnActive ||
+            smartMacroTest.femaleBmr !== 1135 ||
+            smartMacroTest.femaleTdee !== 1561 ||
+            smartMacroTest.femaleCal !== 1249 ||
+            smartMacroTest.femaleP !== 78 ||
+            smartMacroTest.femaleC !== 141 ||
+            smartMacroTest.femaleF !== 42) {
             throw new Error('Test 49: Smart Macro / Recomp calculation failed: ' + JSON.stringify(smartMacroTest));
         }
 

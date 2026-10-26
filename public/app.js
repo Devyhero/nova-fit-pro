@@ -1614,7 +1614,7 @@ const APP_VERSION = '5.9.29';
             return { weight: Number(state.profile.weight) || 70, isExact: false, sourceDate: 'profile' };
         }
 
-        // Calculate BMR, TDEE, Macros & Daily Water Target (with Carb Cycling & Smart Protein Cap)
+        // Calculate BMR, TDEE, Macros & Daily Water Target (Clinical & ISSN Mode-Aware Smart Protein Cap)
         function getCalculatedTargets(dateStr) {
             const effectiveDate = dateStr || state.selectedDate || getTodayStr();
             const { gender, age, height, activity, goalDiff, macros } = state.profile;
@@ -1632,11 +1632,14 @@ const APP_VERSION = '5.9.29';
             let cCal = Math.round(targetCal * (macros.c / 100));
             let fCal = Math.round(targetCal * (macros.f / 100));
 
-            // Smart Protein Cap (ISSN Sports Nutrition Standard: max 2.2 g/kg ceiling)
-            // Prevents excessive protein allocation for lean / high-TDEE users on percentage splits
-            // and reallocates surplus calories to Carbohydrates for workout performance.
+            // Clinical & Sports Nutrition Mode-Aware Smart Protein Cap:
+            // - Balanced mode (30/40/30): 1.6 g/kg for light/sedentary activity (<= 1.375), 1.8 g/kg for active (>= 1.55)
+            // - Muscle / Low-Carb mode: 2.0 g/kg for light activity (<= 1.375), 2.2 g/kg ceiling for active training (>= 1.55)
             const smartCapEnabled = state.profile.smartProteinCap !== false;
-            const maxProteinPerKg = 2.2;
+            const isBalancedMode = macros.p === 30 && macros.c === 40 && macros.f === 30;
+            const maxProteinPerKg = isBalancedMode
+                ? (activity <= 1.375 ? 1.6 : 1.8)
+                : (activity <= 1.375 ? 2.0 : 2.2);
             const maxPGram = Math.round(weight * maxProteinPerKg);
             const rawPGram = Math.round(pCal / 4);
             let proteinCapped = false;
@@ -1682,6 +1685,7 @@ const APP_VERSION = '5.9.29';
                 fGram,
                 rawPGram,
                 maxPGram,
+                maxProteinPerKg,
                 proteinCapped,
                 surplusToCarbGram,
                 smartCapEnabled,
@@ -1792,8 +1796,9 @@ const APP_VERSION = '5.9.29';
             const dashCapBadge = document.getElementById('dashboardSmartCapBadge');
             const isCapOn = p.smartProteinCap !== false;
 
+            const capLabelStr = (t.maxProteinPerKg || 2.2).toFixed(1);
             if (smartCapBtn) {
-                smartCapBtn.textContent = isCapOn ? '✓ เปิดล็อก ≤ 2.2g/kg' : 'ปิดล็อกเพดาน';
+                smartCapBtn.textContent = isCapOn ? `✓ เปิดล็อก ≤ ${capLabelStr}g/kg` : 'ปิดล็อกเพดาน';
                 smartCapBtn.className = isCapOn
                     ? 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition cursor-pointer'
                     : 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 transition cursor-pointer';
@@ -1801,7 +1806,7 @@ const APP_VERSION = '5.9.29';
             if (smartCapHint) {
                 if (t.proteinCapped) {
                     smartCapHint.classList.remove('hidden');
-                    smartCapHint.innerHTML = `🛡️ <b>Smart Cap ทำงาน:</b> ล็อกโปรตีนตามน้ำหนักตัวที่ <b>${t.pGram}g (2.2 g/kg)</b> จากเดิม ${t.rawPGram}g และโอนพลังงานส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> เพื่อให้มีแรงซ้อมเต็มที่`;
+                    smartCapHint.innerHTML = `🛡️ <b>เกณฑ์แพทย์ & โภชนาการทำงาน:</b> ล็อกโปรตีนตามน้ำหนักตัวที่ <b>${t.pGram}g (${capLabelStr} g/kg)</b> จากเดิม ${t.rawPGram}g และโอนพลังงานส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> ให้ร่างกายสดชื่นและทำตามได้จริง`;
                 } else {
                     smartCapHint.classList.add('hidden');
                 }
@@ -1809,7 +1814,7 @@ const APP_VERSION = '5.9.29';
             if (dashCapBadge) {
                 if (t.proteinCapped) {
                     dashCapBadge.classList.remove('hidden');
-                    dashCapBadge.innerHTML = `<span>🛡️</span> <span><b>Smart Cap (2.2 g/kg):</b> ล็อกโปรตีนที่ <b>${t.pGram}g</b> • โอนส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> เติมแรงซ้อม</span>`;
+                    dashCapBadge.innerHTML = `<span>🛡️</span> <span><b>Smart Cap (${capLabelStr} g/kg):</b> ล็อกโปรตีนที่ <b>${t.pGram}g</b> • โอนส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> ตามเกณฑ์โภชนาการ</span>`;
                 } else {
                     dashCapBadge.classList.add('hidden');
                 }
@@ -1988,6 +1993,12 @@ const APP_VERSION = '5.9.29';
             const num = parseFloat(val);
             if (!isNaN(num)) {
                 state.profile[field] = num;
+                // If user explicitly updates weight in Profile Settings, sync active date weight
+                // so stale daily weight logs don't override the newly configured profile weight!
+                if (field === 'weight' && num > 20 && state.weightsByDate && Object.keys(state.weightsByDate).length > 0) {
+                    const activeDate = state.selectedDate || getTodayStr();
+                    state.weightsByDate[activeDate] = num;
+                }
                 saveState();
                 renderAll();
             }
