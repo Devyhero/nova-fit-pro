@@ -3528,3 +3528,203 @@ window.previewMaintenanceScreen = function () {
     const time = timeInput ? timeInput.value.trim() : '';
     alert(`[ตัวอย่างหน้าจอผู้ใช้]\n\n🛠️ NovaFit Pro กำลังปรับปรุงระบบ\n\nข้อความ: ${msg || 'ไม่มีข้อความ'}\nเวลาคาดหมาย: ${time || 'ไม่ได้ระบุ'}`);
 };
+
+// ==========================================
+// 🗄️ Admin Central Food Database CRUD Manager (system_config/central_foods) - v5.9.30
+// ==========================================
+let _adminCentralFoods = [];
+
+window.loadCentralFoodsAdmin = async function () {
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const cDoc = await getDoc(doc(db, 'system_config', 'central_foods'));
+            if (cDoc.exists() && Array.isArray(cDoc.data()?.items)) {
+                _adminCentralFoods = cDoc.data().items;
+            }
+        }
+    } catch (err) {
+        console.warn('loadCentralFoodsAdmin note:', err);
+    }
+    window.renderCentralFoodsAdminList();
+};
+
+window.renderCentralFoodsAdminList = function () {
+    const listEl = document.getElementById('centralFoodsAdminList');
+    const badgeEl = document.getElementById('centralFoodCountBadge');
+    if (badgeEl) {
+        badgeEl.textContent = `${_adminCentralFoods.length} รายการเสริม`;
+    }
+    if (!listEl) return;
+
+    if (!_adminCentralFoods || _adminCentralFoods.length === 0) {
+        listEl.innerHTML = `<div class="text-slate-400 text-center py-3">ยังไม่มีเมนูเสริมที่เพิ่มจากหน้าแอดมิน (เพิ่มเมนูใหม่ด้านบนเพื่อให้ซิงค์เข้าคลังอาหารของผู้ใช้ทุกคนได้ทันที)</div>`;
+        return;
+    }
+
+    const catLabels = {
+        healthy: '💪 โปรตีน/สุขภาพ',
+        rice_dishes: '🍛 อาหารจานเดียว',
+        noodles: '🍜 ก๋วยเตี๋ยว/เส้น',
+        isan_dishes: '🌶️ อีสาน/ยำ',
+        snacks: '🥪 ของว่าง/7-Eleven',
+        drinks: '🥤 เครื่องดื่ม',
+        fruits: '🍎 ผลไม้'
+    };
+
+    listEl.innerHTML = _adminCentralFoods.map(item => `
+        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-bold text-slate-800 dark:text-slate-100">${item.name}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">${catLabels[item.category] || item.category || 'ทั่วไป'}</span>
+                    <span class="text-[10px] text-slate-400">(${item.servingSize || '1 ที่'})</span>
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <b class="text-emerald-600 dark:text-emerald-400">${item.calories} kcal</b> • P: ${item.protein}g • C: ${item.carbs}g • F: ${item.fat}g
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="editCentralFoodItem('${item.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-400 font-bold text-[11px] cursor-pointer">✏️ แก้ไข</button>
+                <button type="button" onclick="deleteCentralFoodItem('${item.id}')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 font-bold text-[11px] cursor-pointer">🗑️ ลบ</button>
+            </div>
+        </div>
+    `).join('');
+};
+
+window.resetCentralFoodForm = function () {
+    const idEl = document.getElementById('inCentralFoodEditId');
+    const nameEl = document.getElementById('inCentralFoodName');
+    const catEl = document.getElementById('inCentralFoodCategory');
+    const servEl = document.getElementById('inCentralFoodServing');
+    const calEl = document.getElementById('inCentralFoodCal');
+    const pEl = document.getElementById('inCentralFoodP');
+    const cEl = document.getElementById('inCentralFoodC');
+    const fEl = document.getElementById('inCentralFoodF');
+    const btnEl = document.getElementById('btnSaveCentralFood');
+
+    if (idEl) idEl.value = '';
+    if (nameEl) nameEl.value = '';
+    if (catEl) catEl.value = 'healthy';
+    if (servEl) servEl.value = '1 ที่';
+    if (calEl) calEl.value = '';
+    if (pEl) pEl.value = '';
+    if (cEl) cEl.value = '';
+    if (fEl) fEl.value = '';
+    if (btnEl) btnEl.textContent = '➕ บันทึกเมนู';
+};
+
+window.editCentralFoodItem = function (id) {
+    const item = _adminCentralFoods.find(x => x.id === id);
+    if (!item) return;
+
+    const idEl = document.getElementById('inCentralFoodEditId');
+    const nameEl = document.getElementById('inCentralFoodName');
+    const catEl = document.getElementById('inCentralFoodCategory');
+    const servEl = document.getElementById('inCentralFoodServing');
+    const calEl = document.getElementById('inCentralFoodCal');
+    const pEl = document.getElementById('inCentralFoodP');
+    const cEl = document.getElementById('inCentralFoodC');
+    const fEl = document.getElementById('inCentralFoodF');
+    const btnEl = document.getElementById('btnSaveCentralFood');
+
+    if (idEl) idEl.value = item.id;
+    if (nameEl) nameEl.value = item.name || '';
+    if (catEl) catEl.value = item.category || 'healthy';
+    if (servEl) servEl.value = item.servingSize || '1 ที่';
+    if (calEl) calEl.value = item.calories ?? 0;
+    if (pEl) pEl.value = item.protein ?? 0;
+    if (cEl) cEl.value = item.carbs ?? 0;
+    if (fEl) fEl.value = item.fat ?? 0;
+    if (btnEl) btnEl.textContent = '💾 อัปเดตเมนู';
+    if (nameEl) nameEl.focus();
+};
+
+window.saveCentralFoodItem = async function () {
+    const idEl = document.getElementById('inCentralFoodEditId');
+    const nameEl = document.getElementById('inCentralFoodName');
+    const catEl = document.getElementById('inCentralFoodCategory');
+    const servEl = document.getElementById('inCentralFoodServing');
+    const calEl = document.getElementById('inCentralFoodCal');
+    const pEl = document.getElementById('inCentralFoodP');
+    const cEl = document.getElementById('inCentralFoodC');
+    const fEl = document.getElementById('inCentralFoodF');
+
+    const name = (nameEl?.value || '').trim();
+    const cal = Math.round(Number(calEl?.value) || 0);
+    if (!name || cal <= 0) {
+        showAdminToast('กรุณากรอกชื่อเมนูและแคลอรีให้ครบถ้วน', 'error');
+        return;
+    }
+
+    const editId = (idEl?.value || '').trim();
+    const newItem = {
+        id: editId || ('cf_' + Date.now().toString(36)),
+        name,
+        category: catEl?.value || 'healthy',
+        servingSize: (servEl?.value || '1 ที่').trim(),
+        calories: cal,
+        protein: Math.round((Number(pEl?.value) || 0) * 10) / 10,
+        carbs: Math.round((Number(cEl?.value) || 0) * 10) / 10,
+        fat: Math.round((Number(fEl?.value) || 0) * 10) / 10,
+        updatedAt: new Date().toISOString()
+    };
+
+    const existingIdx = _adminCentralFoods.findIndex(x => x.id === newItem.id || x.name === newItem.name);
+    if (existingIdx >= 0) {
+        _adminCentralFoods[existingIdx] = newItem;
+    } else {
+        _adminCentralFoods.unshift(newItem);
+    }
+
+    showAdminMiniLoader('กำลังบันทึกเมนูลงคลังอาหารกลาง...');
+    try {
+        if (typeof db !== 'undefined' && db) {
+            await setDoc(doc(db, 'system_config', 'central_foods'), {
+                items: _adminCentralFoods,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser?.email || 'admin'
+            }, { merge: true });
+        }
+        hideAdminMiniLoader();
+        window.resetCentralFoodForm();
+        window.renderCentralFoodsAdminList();
+        showAdminToast(`✓ บันทึก "${name}" เข้าคลังอาหารกลางเรียบร้อยแล้ว!`);
+    } catch (err) {
+        hideAdminMiniLoader();
+        showAdminToast('บันทึกไม่สำเร็จ: ' + err.message, 'error');
+    }
+};
+
+window.deleteCentralFoodItem = async function (id) {
+    const target = _adminCentralFoods.find(x => x.id === id);
+    if (!target) return;
+    if (!confirm(`ต้องการลบเมนู "${target.name}" ออกจากคลังอาหารกลางใช่หรือไม่?`)) return;
+
+    _adminCentralFoods = _adminCentralFoods.filter(x => x.id !== id);
+    showAdminMiniLoader('กำลังลบเมนูจากคลังอาหารกลาง...');
+    try {
+        if (typeof db !== 'undefined' && db) {
+            await setDoc(doc(db, 'system_config', 'central_foods'), {
+                items: _adminCentralFoods,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser?.email || 'admin'
+            }, { merge: true });
+        }
+        hideAdminMiniLoader();
+        window.renderCentralFoodsAdminList();
+        showAdminToast(`🗑️ ลบ "${target.name}" เรียบร้อยแล้ว`);
+    } catch (err) {
+        hideAdminMiniLoader();
+        showAdminToast('ลบไม่สำเร็จ: ' + err.message, 'error');
+    }
+};
+
+// Auto-load central foods when switching to foods tab
+const _origSwitchAdminTabForFoods = window.switchAdminTab;
+window.switchAdminTab = function (tabId) {
+    if (_origSwitchAdminTabForFoods) _origSwitchAdminTabForFoods(tabId);
+    if (tabId === 'foods') {
+        window.loadCentralFoodsAdmin();
+    }
+};
+

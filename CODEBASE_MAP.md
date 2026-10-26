@@ -1,66 +1,69 @@
 # 🗺️ NovaFit Pro (fitmacro-web) - Codebase Map & Architecture Reference
 
-> **วัตถุประสงค์ของไฟล์นี้**: เป็นแผนผังอ้างอิงตำแหน่งโค้ด โครงสร้าง State และฟังก์ชันทั้งหมดในโปรเจกต์แบบ Single Source of Truth ช่วยให้นักพัฒนาและ AI Assistant รู้ตำแหน่งโค้ดทันที **ไม่ต้องเสียเวลาและ Token สแกนไฟล์ขนาดใหญ่ซ้ำๆ**
+> **Purpose**: Single source of truth for code positions, state structure, and functions. **Saves 80–90% of tokens** by allowing instant targeted lookups without scanning large source files.
 
 ---
 
-## 📂 1. โครงสร้างไฟล์และความรับผิดชอบ (File Directory Map)
+## 📂 1. File Directory Map
 
-| ไฟล์ | ขนาดโดยประมาณ | หน้าที่หลัก |
+| File | Approximate Size | Responsibility |
 |---|---|---|
-| `public/index.html` | ~185 KB | หน้าเว็บหลักสำหรับผู้ใช้ (User UI), Section Accordions, Modals ทั้งหมด, Service Worker bootstrap |
-| `public/app.js` | ~220 KB | Business Logic หลัก, การคำนวณ Macro, ระบบบันทึกอาหาร, IF Timer, วิตามิน, Modals |
-| `public/food-db.js` | ~50 KB | ฐานข้อมูลอาหาร (280+ รายการ), หมวดหมู่อาหาร, ค่าวิตามินมาตรฐาน (`DEFAULT_SUPPLEMENTS`), Meal Combos |
-| `public/health-tips.js` | ~88 KB | เอนจินเกร็ดความรู้สุขภาพ (Daily Health Tips) 65+ รายการ, การสุ่มเรื่อง, การแสดงผล |
-| `public/health-tips.json`| ~75 KB | ข้อมูลดิบเกร็ดความรู้สุขภาพและโภชนาการสำหรับดึงผ่าน API/Offline |
-| `public/ai-snap.js`     | ~10 KB | เอนจินสแกนอาหารด้วยภาพ AI Snap & Log (Gemini 1.5/2.0 Flash Vision) พร้อม Demo Mode |
-| `public/firebase-sync.js`| ~28 KB | ซิงค์ข้อมูลกับ Firebase Firestore แบบ Realtime (`users/{uid}`), Google Auth, สถานะออนไลน์ |
-| `public/admin.html` | ~58 KB | หน้าแดชบอร์ดเฉพาะผู้ดูแลระบบ (Admin Dashboard) มี 5 แท็บหลัก |
-| `public/admin.js` | ~52 KB | ตรวจสอบสิทธิ์แอดมิน, โหลดข้อมูลผู้ใช้ทั้งหมด, คำนวณสถิติ DAU/Peak Hours, ระบบส่งข้อความ, Audit Logs |
-| `public/sw.js` | ~3.2 KB | Service Worker PWA, Precache ทรัพยากร, Cache-busting, Skip Waiting |
-| `public/version.json` | ~1.0 KB | ตัวระบุเลขเวอร์ชันสำหรับ PWA ตรวจสอบอัปเดตแบบเรียลไทม์ (ฝั่ง User) |
-| `scripts/test-preflight.js` | ~10 KB | สคริปต์ตรวจ Syntax JS/JSON, โครงสร้างแท็ก HTML, Broken Assets, Version Alignment, Firestore Dry-run |
-| `scripts/test-browser-cdp.js`| ~25 KB | การทดสอบ Browser E2E ผ่าน Chrome DevTools Protocol ทั้งหมด 20 การทดสอบ |
-| `firestore.rules` | ~1.5 KB | กฎความปลอดภัย Firestore (แยกระหว่างสิทธิ์ผู้ใช้ทั่วไป และผู้ดูแลระบบ) |
-| `GEMINI.md` | ~3.5 KB | ข้อกำหนดการทำงานอัตโนมัติ (Pre-flight -> Git -> Deploy -> Report) |
+| `public/index.html` | ~420 KB | User interface, section accordions, all modal templates, SW bootstrap |
+| `public/app.js` | ~430 KB (7,651 lines) | Core business logic, macro calculation, meals logging, IF timer, wardrobe, modals |
+| `public/food-db.js` | ~50 KB | 280+ food items database, categories, `DEFAULT_SUPPLEMENTS`, meal presets |
+| `public/health-tips.js` | ~88 KB | Daily health tips engine (65+ items), randomized rotator |
+| `public/health-tips.json`| ~75 KB | Raw health and nutrition tips dataset for offline/PWA cache |
+| `public/ai-snap.js`     | ~97 KB | AI Vision food scanning (Gemini Flash Vision) & multi-modal intake |
+| `public/nutrition-scanner.js` | ~16 KB | 7-Eleven Barcode DB & AI Nutrition Facts Label Scanner OCR |
+| `public/firebase-sync.js`| ~56 KB | Realtime Firestore sync (`users/{uid}`), Google Auth, offline state |
+| `public/mascot-companion.js` | ~55 KB | Nova mascot companion engine, 3 roles, 5-mood sprite state, 4-tier token guard |
+| `public/admin.html` | ~260 KB | Admin dashboard with 6 management tabs |
+| `public/admin.js` | ~188 KB | Admin auth, user inspection, DAU/Peak metrics, push messaging, audit logs |
+| `public/sw.js` | ~7 KB | PWA Service Worker, precaching, cache-busting, skipWaiting lifecycle |
+| `public/version.json` | ~2 KB | App version manifest for PWA update checks |
+| `scripts/test-preflight.js` | ~10 KB | Syntax checker, HTML tag balance, asset verification, version alignment |
+| `scripts/test-browser-cdp.js`| ~148 KB | 50 automated browser E2E tests via Chrome DevTools Protocol |
+| `firestore.rules` | ~3.7 KB | Firestore security rules (role-based user vs admin permissions) |
+| `GEMINI.md` | ~8.5 KB | Core AI workflow rules, 2-device sync standards, release protocols |
 
 ---
 
-## 🧠 2. สถาปัตยกรรม State (`state` ใน `public/app.js`)
+## 🧠 2. State Architecture (`state` in `public/app.js`)
 
-ข้อมูลถูกเก็บใน `localStorage.getItem('fitmacro_pro_v4_state')` และซิงค์ไปยัง Firestore `users/{uid}`:
+Persisted in `localStorage.getItem('fitmacro_pro_v4_state')` and synchronized to Firestore `users/{uid}`:
 
 ```javascript
 state = {
-    version: '5.6.6',                  // เลขเวอร์ชันปัจจุบัน
-    theme: 'dark' | 'light',           // ธีมหน้าจอ
-    selectedDate: 'YYYY-MM-DD',        // วันที่กำลังเลือกดูข้อมูล (รีเซ็ตเป็นวันนี้เสมอเมื่อเปิดแอป)
-    lastActiveDate: 'YYYY-MM-DD',      // วันที่ใช้งานล่าสุด
-    activeMeal: 'breakfast' | 'lunch' | 'dinner' | 'snack', // มื้อที่เลือกอยู่
-    selectedPortion: 1,                // ตัวคูณขนาดเสิร์ฟ
-    selectedCategory: 'all',           // หมวดหมู่อาหารที่เลือกในคลัง
-    searchQuery: '',                   // คำค้นหาอาหาร (ล้างเป็นค่าว่างเสมอเมื่อเริ่มแอป)
-    profileConfigured: true | false,   // ผู้ใช้ตั้งค่าโปรไฟล์แล้วหรือยัง
+    version: '5.9.30',                 // Current semantic version
+    theme: 'dark' | 'light',           // App theme
+    selectedDate: 'YYYY-MM-DD',        // Active viewing date (resets to today on boot)
+    lastActiveDate: 'YYYY-MM-DD',      // Last recorded activity date
+    activeMeal: 'breakfast' | 'lunch' | 'dinner' | 'snack', // Currently active meal slot
+    selectedPortion: 1,                // Active food portion multiplier
+    selectedCategory: 'all',           // Active category in food database explorer
+    searchQuery: '',                   // Food search query string
+    profileConfigured: true | false,   // Whether user has completed profile setup
     profile: {
-        gender, age, height, weight, activityLevel, goal,
-        formula, customTdee, customP, customC, customF
+        gender, age, height, weight, activity, goal,
+        formula, customTdee, customP, customC, customF,
+        smartProteinCap: true          // Clinical protein ceiling (1.6 - 2.2 g/kg)
     },
-    logsByDate: {                      // รายการอาหารที่บันทึกแยกตามวัน
+    logsByDate: {                      // Daily meal logs
         "YYYY-MM-DD": [ { name, p, c, f, cal, portion, meal, servingSize, timestamp } ]
     },
-    supplementList: [                  // รายการวิตามิน & อาหารเสริมทั้งหมด (รองรับ Full CRUD)
+    supplementList: [                  // Full CRUD supplements & vitamins
         { id, name, time, icon, isCustom }
     ],
-    supplementsByDate: {               // ติ๊กทานวิตามินในแต่ละวัน
+    supplementsByDate: {               // Supplement checkboxes per date
         "YYYY-MM-DD": { "supp_id": true }
     },
-    waterByDate: { "YYYY-MM-DD": 2500 }, // ปริมาณน้ำดื่ม (ml)
-    weightsByDate: { "YYYY-MM-DD": 70 }, // น้ำหนักตัวที่ชั่งในแต่ละวัน (kg)
-    workoutsByDate: {                  // รายการออกกำลังกายในแต่ละวัน
+    waterByDate: { "YYYY-MM-DD": 2500 }, // Water intake in ml
+    weightsByDate: { "YYYY-MM-DD": 70 }, // Body weight tracking in kg
+    workoutsByDate: {                  // Workouts logged per date
         "YYYY-MM-DD": [ { name, duration, calBurned, timestamp } ]
     },
-    dayTypeByDate: { "YYYY-MM-DD": 'training' | 'rest' }, // ประเภทของวัน
-    fasting: {                         // ระบบจับเวลาอดอาหาร (Intermittent Fasting)
+    dayTypeByDate: { "YYYY-MM-DD": 'training' | 'rest' },
+    fasting: {                         // Intermittent Fasting engine
         isFasting: false,
         plan: '16:8' | '18:6' | '14:10' | '20:4',
         targetHours: 16,
@@ -68,90 +71,116 @@ state = {
         endTime: timestamp,
         history: [ { startTime, endTime, targetHours, plan, durationHours, achieved } ]
     },
-    mealCombos: [ ... ],               // เซ็ตอาหารสำเร็จรูป
-    favorites: [ ... ],                // อาหารที่กดดาวชื่นชอบ
-    collapsedSections: { ... }         // การพับ/ขยาย Accordion แต่ละ Section
+    streakFreeze: {                    // Streak Freeze Shield system
+        month: 'YYYY-MM',
+        shieldsRemaining: 2,
+        maxShields: 2,
+        frozenDates: []
+    },
+    prestige: {                        // Prestige avatar frames & verified streak
+        frameId: 'novice',
+        verifiedStreak: 0,
+        unlockedFrames: ['novice']
+    },
+    mealCombos: [ ... ],               // Custom meal combos
+    favorites: [ ... ],                // Starred food items
+    collapsedSections: { ... }         // Accordion open/collapsed states
 }
 ```
 
 ---
 
-## 📍 3. ดัชนีตำแหน่งโค้ดใน `public/app.js` (Code Index by Line Range)
+## 📍 3. Code Index by Line Range in `public/app.js` (Updated v5.9.30)
 
-| ช่วงบรรทัด | โมดูล / ฟังก์ชัน | คำอธิบาย & ฟังก์ชันสำคัญ |
+> [!TIP]
+> Before modifying or reading any code, check this index and use `read_file` with specific line ranges to minimize token consumption.
+
+| Line Range | Module / Component | Key Functions |
 |---|---|---|
-| **L1 - L187** | **State Definition & Integrity** | `APP_VERSION`, `state` default, `ensureStateIntegrity()`, `saveState()`, `getTodayStr()` |
-| **L188 - L350** | **Profile & Macro Calculator** | `calculateMacroTargets()`, `getCalculatedTargets()`, `toggleTheme()`, Accordion Smooth Clamp |
-| **L351 - L580** | **Date Navigation & Calendar** | `shiftDate()`, `goToToday()`, `onDateChange()`, `renderWeeklyAnalytics()`, `renderDailySummary()` |
-| **L581 - L1150**| **Daily Meals & Macro Dashboard**| `renderAll()`, `renderMacros()`, `renderMeals()`, `deleteFoodLog()`, `renderWaterSection()` |
-| **L1151 - L1450**| **Food Database & Search Engine**| `renderFoodDatabase()`, Universal Food Search ข้ามทุกหมวด, Favorites Star toggle |
-| **L1451 - L1740**| **Custom Foods & Workouts** | `submitCustomFood()`, `renderWorkouts()`, `addWorkoutLog()`, `deleteWorkoutLog()` |
-| **L1741 - L1870**| **Meal Combos & Yesterday Copy** | `copyMealFromYesterday()`, `applyMealCombo()`, `saveCurrentMealAsCombo()` |
-| **L1871 - L2055**| **Supplements & Vitamins** | `renderSupplements()`, `toggleSupplement()`, `deleteSupplement()`, `restoreDefaultSupplements()`, `openAddSupplementModal()` |
-| **L2056 - L2350**| **Food Meal Picker Modal** | `openFoodMealPicker()`, `setFoodPickerPortion()`, `submitFoodMealPicker()` |
-| **L2351 - L2650**| **Intermittent Fasting (IF) Engine**| `toggleFastingTimer()`, `renderFastingSection()`, `openFastingCompleteModal()`, `confirmFinishFasting()` |
-| **L2651 - L2950**| **PWA Updates & Changelog Modal**| `initPwaUpdates()`, `checkForAppUpdate()`, `updateVersionBadges()`, `openChangelogModal()` |
-| **L2951 - L3250**| **Analytics & Trends Charts** | `renderWeightChart()`, `renderCalorieTrends()` |
-| **L3251 - L3550**| **Visual Share Card (Canvas)** | `openShareCardModal()`, `drawShareCard()`, `downloadShareCard()`, `copyShareCardImage()` |
-| **L3551 - L3890**| **Notifications Inbox & Health Tips**| `openUserNotificationsModal()`, `renderUserNotifications()`, `shuffleDailyTip()` |
-| **L3891 - L4085**| **Modal Engine & Window Exports** | `openModalAnimated()`, `closeModalAnimated()`, `openQuickAddModal()`, Global `window` bindings |
+| **L1 – L515** | **State Definition, Web Audio Synthesizer & Core Storage** | `APP_VERSION`, default `state`, `playSound()`, `cleanDuplicateMealLogs()`, `loadState()`, `saveState()` |
+| **L516 – L683** | **Streak Freeze Shield & Anti-Cheat Streak Engine** | `calculateVerifiedStreak()`, `isDayCovered()`, `verifyAndSanitizeStreak()`, `isFrameUnlocked()` |
+| **L684 – L1101** | **Prestige Wardrobe Modal & App Tour Guide** | `openPrestigeWardrobeModal()`, `equipPrestigeFrame()`, `renderPrestigeFrames()`, `renderWardrobeModal()`, `openAppTourModal()`, `renderTourSlide()` |
+| **L1102 – L1295**| **Avatar Photo Upload & UI Preloader** | `handleAvatarPhotoSelected()`, `saveProfileDisplayName()`, `removeCustomAvatarPhoto()`, `showToast()`, `showMiniLoader()`, `initAppPreloader()` |
+| **L1296 – L1462**| **Web Push Notifications Engine** | `getPushPermissionState()`, `requestPushPermission()`, `dismissPushPrompt()`, `checkPushPromptEligibility()`, `testLocalNotification()`, `togglePushNotificationPermission()` |
+| **L1463 – L1700**| **Theme & FLIP Smooth Accordion Engine** | `toggleTheme()`, `toggleAllSettings()`, `animateSmoothAccordion()`, `toggleCardSection()`, `renderAllSectionCollapses()` |
+| **L1701 – L2012**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
+| **L2013 – L2278**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()` |
+| **L2279 – L2721**| **Custom Confirm Dialog & Cloud Food DB Sync** | `showConfirmDialog()`, `deleteCustomPreset()`, `applyCentralFoodsFromCloud()`, `renderFoodDatabaseExplorer()` |
+| **L2722 – L3182**| **Water Tracker, Body Weight & Workouts** | `renderWaterSection()`, `submitWeightToday()`, `addWorkout()`, `renderBodyAndWorkoutSection()`, `renderWeeklyAnalytics()` |
+| **L3183 – L3650**| **Daily Tracker & Meal Combo Engine** | `renderDateTrackerAndRecommendations()`, `copyMealFromYesterday()`, `saveMealAsCombo()`, `applyMealCombo()`, `deleteMealCombo()` |
+| **L3651 – L4044**| **Meal Combo Full Visual Editor** | `openMealComboEditor()`, `onComboFoodSearchInput()`, `addFoodObjectToComboEditor()`, `renderComboEditorItems()`, `saveMealComboEditor()` |
+| **L4045 – L4283**| **Supplements & Vitamins CRUD** | `renderSupplements()`, `toggleSupplement()`, `openAddSupplementModal()`, `submitNewSupplement()`, `deleteSupplement()`, `restoreDefaultSupplements()` |
+| **L4284 – L4611**| **Smart Coach Recommendations & Food Cards** | `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()` |
+| **L4612 – L5031**| **Water Adjustments, Date Navigation & Daily Meals CRUD** | `adjustWater()`, `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
+| **L5032 – L5211**| **Daily Report Modal, Changelog & PWA Update Prompt** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()` |
+| **L5212 – L5603**| **Intermittent Fasting (IF) Engine** | `getFastingPlanTargetHours()`, `setFastingPlan()`, `toggleFastingTimer()`, `openFastingCompleteModal()`, `confirmFinishFasting()`, `renderFastingSection()` |
+| **L5604 – L6212**| **Visual Share Card (HTML5 Canvas Drawing)** | `openShareCardModal()`, `renderShareCard()`, `downloadShareCard()`, `copyShareCardImage()`, `shareCardNative()` |
+| **L6213 – L6519**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
+| **L6520 – L6716**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
+| **L6717 – L7145**| **Living App Companion & Milestone Confetti Cannon** | `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()` |
+| **L7146 – L7569**| **Living Companion Loop & Sandbox Test Modal** | `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
+| **L7570 – L7651**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 
-## 🪟 4. ทะเบียนหน้าต่าง Modal ทั้งหมด (Modal Registry)
+## 🪟 4. Modal Registry
 
-| Modal DOM ID | สคริปต์ควบคุม | ฟังก์ชันเปิด / ปิด | หน้าที่ |
+| Modal DOM ID | Controller | Open / Close Functions | Purpose |
 |---|---|---|---|
-| `profileSettingsModal` | `app.js` | `openProfileSettingsModal()` / `closeProfileSettingsModal()` | ตั้งค่าโปรไฟล์ น้ำหนัก ส่วนสูง เป้าหมายโภชนาการ |
-| `changelogModal` | `app.js` | `openChangelogModal()` / `closeChangelogModal()` | ดูประวัติอัปเดตฟังก์ชันสำหรับผู้ใช้ (User-Centric) |
-| `dailyReportModal` | `app.js` | `openDailyReportModal()` / `closeDailyReportModal()` | สรุปโภชนาการประจำวัน |
-| `aiSnapModal`      | `ai-snap.js` | `openAiSnapModal()` / `closeAiSnapModal()` | ถ่ายรูปหรือเลือกรูปอาหารเพื่อสแกนแคลอรีด้วย AI |
-| `addSupplementModal` | `app.js` | `openAddSupplementModal()` / `closeAddSupplementModal()` | เพิ่มวิตามิน/อาหารเสริม พร้อมปุ่มลัด Emoji |
-| `quickAddModal` | `app.js` | `openQuickAddModal()` / `closeQuickAddModal()` | บันทึกแคลอรีและโปรตีนด่วน (Quick Add) |
-| `foodMealPickerModal` | `app.js` | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | แตะเลือกมื้ออาหารจากคลัง (เช้า/เที่ยง/เย็น/ว่าง) |
-| `fastingCompleteModal` | `app.js` | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | สรุปความสำเร็จการทำ IF & ระดับ Autophagy |
-| `userNotificationsModal`| `app.js` | `openUserNotificationsModal()` / `closeUserNotificationsModal()` | กล่องจดหมายแจ้งเตือนจากแอดมิน BenzNova |
-| `shareCardModal` | `app.js` | `openShareCardModal()` / `closeShareCardModal()` | การ์ดรูปภาพสรุปผลแคลอรีและสารอาหารสำหรับแชร์ |
-| `userInspectModal` | `admin.js` | `inspectUser(uid)` / `closeUserInspectModal()` | ส่องสมุดบันทึกอาหาร น้ำหนัก น้ำดื่มรายคน (หน้าแอดมิน) |
-| `sendMessageModal` | `admin.js` | `openSendMessageModal(...)` / `closeSendMessageModal()` | ส่งข้อความหาผู้ใช้รายคน หรือบรอดแคสต์ทุกคน (หน้าแอดมิน) |
+| `profileSettingsModal` | `app.js` (L6554) | `openProfileSettingsModal()` / `closeProfileSettingsModal()` | User profile, biometric targets, macro preferences |
+| `changelogModal` | `app.js` (L5128) | `openChangelogModal()` / `closeChangelogModal()` | User-centric release notes & feature highlights |
+| `dailyReportModal` | `app.js` (L5032) | `openDailyReportModal()` / `closeDailyReportModal()` | Daily nutrition summary table & macro breakdown |
+| `aiSnapModal`      | `ai-snap.js` / `nutrition-scanner.js` | `openAiSnapModal()` / `openNutritionLabelScanner()` / `closeAiSnapModal()` | Food image & 7-Eleven nutrition label & barcode scanner |
+| `addSupplementModal` | `app.js` (L4164) | `openAddSupplementModal()` / `closeAddSupplementModal()` | Add vitamin/supplement with quick emoji presets |
+| `quickAddModal` | `app.js` (L6644) | `openQuickAddModal()` / `closeQuickAddModal()` | Quick calorie and protein logger |
+| `foodMealPickerModal` | `app.js` (L4723) | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | Food meal slot selector (breakfast/lunch/dinner/snack) |
+| `fastingCompleteModal` | `app.js` (L5243) | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | Fasting session complete celebration & autophagy report |
+| `userNotificationsModal`| `app.js` | `openUserNotificationsModal()` / `closeUserNotificationsModal()` | In-app notification inbox from coach/admin |
+| `shareCardModal` | `app.js` (L5657) | `openShareCardModal()` / `closeShareCardModal()` | Canvas graphic daily summary share card |
+| `prestigeWardrobeModal` | `app.js` (L684) | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak tiers |
+| `appTourModal` | `app.js` (L801) | `openAppTourModal()` / `closeAppTourModal()` | 6-slide onboarding and PWA install guide |
+| `mealComboEditorModal` | `app.js` (L3651) | `openMealComboEditor()` / `closeMealComboEditor()` | Visual meal combo builder and item portion editor |
+| `companionTestModal` | `app.js` (L7407) | `openCompanionTestModal()` / `closeCompanionTestModal()` | Sandbox test launcher for Nova companion nudges |
+| `confirmDialog` | `app.js` (L2279) | `showConfirmDialog()` / `closeConfirmDialog()` | Unified custom alert/confirm dialog |
+| `userInspectModal` | `admin.js` | `inspectUser(uid)` / `closeUserInspectModal()` | User diary inspection modal (Admin only) |
+| `sendMessageModal` | `admin.js` | `openSendMessageModal(...)` / `closeSendMessageModal()` | Push/in-app message composer (Admin only) |
 
 ---
 
-## 🛡️ 5. สถาปัตยกรรมหน้าแอดมิน (`admin.html` & `admin.js`)
+## 🛡️ 5. Admin Dashboard Architecture (`admin.html` & `admin.js`)
 
-หน้าแอดมินมี 5 แท็บหลัก ควบคุมผ่านฟังก์ชัน `switchAdminTab(tabId)`:
-
-1. **`tabBtn_users` (`tabView_users`)**: รายชื่อผู้ใช้ทั้งหมด, ค้นหาตามชื่อ/อีเมล, ปุ่มส่องสมุดบันทึกรายคน, ปุ่มเปิดส่งข้อความ
-2. **`tabBtn_analytics` (`tabView_analytics`)**: สถิติเชิงลึก DAU, อัตราส่วนอุปกรณ์ (Mobile vs Desktop), Peak Hours บันทึกอาหาร
-3. **`tabBtn_foods` (`tabView_foods`)**: เมนูอาหารยอดนิยม 10 อันดับแรกที่ผู้ใช้กินบ่อยที่สุด
-4. **`tabBtn_custom_presets` (`tabView_custom_presets`)**: คลังเมนูอาหารที่ผู้ใช้สร้างขึ้นเองในระบบ
-5. **`tabBtn_message_logs` (`tabView_message_logs`)**: ประวัติการส่งข้อความแจ้งเตือนทั้งหมด (Mobile Responsive Cards บนมือถือ, ตาราง 6 คอลัมน์บนคอมพิวเตอร์)
-6. **`tabBtn_system_changelog` (`tabView_system_changelog`)**: บันทึกการอัปเดตระบบ & หลังบ้านของผู้ดูแลระบบ (แยกขาดจากฝั่ง User)
-
----
-
-## 🔒 6. หลักการแยกประวัติอัปเดต (Changelog Separation Rules)
-
-- **ฝั่ง User (`index.html` และ `version.json`)**:
-  - ✅ **แสดงเฉพาะ**: ฟีเจอร์ที่ผู้ใช้กดเล่นได้จริง, ผลประโยชน์ทางสุขภาพ, ความลื่นไหลในการใช้งาน
-  - ❌ **ห้ามแสดง**: Admin Dashboard, บัญชีแอดมิน, Audit Logs, Firestore rules, โค้ดหลังบ้าน
-- **ฝั่ง Admin (`admin.html` Tab 6: `tabView_system_changelog`)**:
-  - ✅ **บันทึกทุกเรื่อง**: การปรับปรุงสถาปัตยกรรม, Security Rules, การพัฒนาเอนจินหลังบ้าน, ฟังก์ชันแอดมิน
+Admin tab views switched via `switchAdminTab(tabId)`:
+1. **`tabBtn_users` (`tabView_users`)**: User registry, live search, diary inspector, direct message triggers.
+2. **`tabBtn_analytics` (`tabView_analytics`)**: Deep analytics, DAU metrics, device split (Mobile vs Desktop), Peak meal logging hours.
+3. **`tabBtn_foods` (`tabView_foods`)**: Top 10 most logged foods across all users.
+4. **`tabBtn_custom_presets` (`tabView_custom_presets`)**: User-created custom food presets.
+5. **`tabBtn_message_logs` (`tabView_message_logs`)**: Notification dispatch audit logs.
+6. **`tabBtn_system_changelog` (`tabView_system_changelog`)**: Technical & architectural release log.
 
 ---
 
-## 🚀 7. กฎเหล็กหลังแก้ไขโค้ดทุกครั้ง (Mandatory Workflow)
+## 🔒 6. Changelog Separation Rules
+
+* **User Facing (`index.html` & `version.json`)**:
+  * Show tangible features, health benefits, UI responsiveness.
+  * Never mention technical terms (Admin, Firestore Rules, Cloud Functions, Indexes, CDP tests).
+* **Admin Facing (`admin.html` Tab 6)**:
+  * Document all architectural refactors, security rules, performance optimizations, and function audit references.
+
+---
+
+## 🚀 7. Mandatory Post-Code Workflow
 
 ```bash
-# 1. ตรวจสอบโค้ด 100% (ห้ามข้ามเด็ดขาด)
+# 1. Automated Verification (100% pass required)
 node scripts/test-preflight.js
 node scripts/test-browser-cdp.js
 
-# 2. บันทึกและพุช Git
+# 2. Commit & Push to Feature Branch
 git add .
 git commit -m "feat/fix: ..."
-git push origin main
+git push -u origin feature/<feature-name>
 
-# 3. Deploy ขึ้น Firebase
-firebase deploy
+# 3. Deploy to UAT Channel
+firebase hosting:channel:deploy uat --expires 30d
 ```

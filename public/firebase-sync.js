@@ -238,15 +238,44 @@ function setupRealtimeMaintenanceListener() {
 }
 window.setupRealtimeMaintenanceListener = setupRealtimeMaintenanceListener;
 
+// Real-Time Central Food Database Sync Engine (system_config/central_foods) - v5.9.30
+let unsubscribeCentralFoodsConfig = null;
+function setupRealtimeCentralFoodsListener() {
+    if (unsubscribeCentralFoodsConfig) {
+        unsubscribeCentralFoodsConfig();
+        unsubscribeCentralFoodsConfig = null;
+    }
+    try {
+        const centralRef = doc(db, 'system_config', 'central_foods');
+        unsubscribeCentralFoodsConfig = onSnapshot(centralRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data && Array.isArray(data.items) && typeof window.applyCentralFoodsFromCloud === 'function') {
+                    window.applyCentralFoodsFromCloud(data.items);
+                }
+            }
+        }, (err) => {
+            console.warn('Central foods listener fallback or skipped:', err);
+        });
+    } catch (e) {
+        console.warn('Failed to attach central foods listener:', e);
+    }
+}
+window.setupRealtimeCentralFoodsListener = setupRealtimeCentralFoodsListener;
+
 // Initialize realtime listeners immediately
 setupRealtimeMascotConfigListener();
 setupRealtimeMaintenanceListener();
+setupRealtimeCentralFoodsListener();
 
 // Listen for authentication changes
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     window.currentUser = user;
     updateAuthUI(user);
+    if (typeof window.updateNovaChatQuotaUI === 'function') {
+        window.updateNovaChatQuotaUI();
+    }
 
     // Clean up previous real-time listener if any
     if (unsubscribeSnapshot) {

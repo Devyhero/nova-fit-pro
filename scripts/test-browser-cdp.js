@@ -7,6 +7,7 @@ const { spawn } = require('child_process');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = 8195;
+const CURRENT_VERSION = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'version.json'), 'utf8')).version;
 
 const server = http.createServer((req, res) => {
     let filePath = path.join(PUBLIC_DIR, req.url.split('?')[0]);
@@ -1659,8 +1660,8 @@ server.listen(PORT, async () => {
             !v598Test.hasFav16 ||
             !v598Test.hasFavIco ||
             !v598Test.hasManifest ||
-            v598Test.appVersion !== '5.9.28' ||
-            !v598Test.toolsBadge?.includes('v5.9.28')) {
+            v598Test.appVersion !== CURRENT_VERSION ||
+            !v598Test.toolsBadge?.includes(CURRENT_VERSION)) {
             throw new Error('Test 38: Mascot logo, favicons, or version alignment failed: ' + JSON.stringify(v598Test));
         }
 
@@ -2159,12 +2160,14 @@ server.listen(PORT, async () => {
             // 4. Test Minimize & Restore
             if (typeof window.minimizeNovaMascot === 'function') {
                 window.minimizeNovaMascot();
+                if (typeof window.renderNovaMascot === 'function') window.renderNovaMascot();
             }
             const isPillVisible = !pill?.classList.contains('hidden');
             const isContainerHidden = container?.classList.contains('hidden');
 
             if (typeof window.restoreNovaMascot === 'function') {
                 window.restoreNovaMascot();
+                if (typeof window.renderNovaMascot === 'function') window.renderNovaMascot();
             }
             const isContainerRestored = !container?.classList.contains('hidden');
 
@@ -2720,6 +2723,110 @@ server.listen(PORT, async () => {
             smartMacroTest.femaleC !== 141 ||
             smartMacroTest.femaleF !== 42) {
             throw new Error('Test 49: Smart Macro / Recomp calculation failed: ' + JSON.stringify(smartMacroTest));
+        }
+
+        // Test 50: v5.9.30 Smart Suite (AI Label Scanner, BMR Safety Guard, Streak Freeze Shield & Central Food DB Sync)
+        console.log('Running Test 50: v5.9.30 Smart Suite Verification...');
+        const smartSuiteTest = await evalJs(`(() => {
+            // 1. AI Nutrition Label Scanner & Portion Multiplier
+            switchAiModalTab('label');
+            const labelTabActive = !document.getElementById('aiLabelModeBanner').classList.contains('hidden');
+            renderAiAnalysisResult({
+                foodName: 'อกไก่นุ่ม 7-Eleven (CP)',
+                servingSize: '1 ชิ้น (90g)',
+                cal: 110,
+                p: 20,
+                c: 2,
+                f: 2,
+                ingredients: ['110 kcal'],
+                healthyTip: 'โปรตีนสูง'
+            }, true);
+            setAiResultPortionMultiplier(2);
+            const doubledCal = Number(document.getElementById('aiResCal').value);
+            const doubledP = Number(document.getElementById('aiResP').value);
+            switchAiModalTab('photo');
+
+            // 2. Medical BMR Safety Guard
+            const backupProfile = JSON.parse(JSON.stringify(state.profile));
+            state.profile = {
+                gender: 'female',
+                age: 35,
+                weight: 49,
+                height: 157,
+                activity: 1.2,
+                goalDiff: -20,
+                smartProteinCap: true,
+                macros: { p: 30, c: 40, f: 30 }
+            };
+            renderAll();
+            const belowBmrTarget = getCalculatedTargets();
+            const bmrBannerShown = !document.getElementById('dashboardBmrSafetyBanner').classList.contains('hidden');
+            applyBmrSafetyFloor();
+            const safeBmrTarget = getCalculatedTargets();
+            state.profile = backupProfile;
+            renderAll();
+
+            // 3. Streak Freeze Shield & Make-up Recovery
+            const today = new Date(getTodayStr() + 'T00:00:00');
+            const toIso = (d) => {
+                const yr = d.getFullYear();
+                const mo = String(d.getMonth() + 1).padStart(2, '0');
+                const da = String(d.getDate()).padStart(2, '0');
+                return yr + '-' + mo + '-' + da;
+            };
+            const d1 = new Date(today); d1.setDate(d1.getDate() - 1); const yestStr = toIso(d1);
+            const d2 = new Date(today); d2.setDate(d2.getDate() - 2); const twoDaysAgoStr = toIso(d2);
+
+            const backupLogs = JSON.parse(JSON.stringify(state.logsByDate || {}));
+            state.streakFreeze = { month: getTodayStr().slice(0, 7), shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
+            state.logsByDate = {
+                [twoDaysAgoStr]: [{ name: 'อกไก่ย่าง', cal: 250, p: 45, c: 0, f: 5 }],
+                [getTodayStr()]: [{ name: 'ไข่ต้ม', cal: 140, p: 12, c: 1, f: 10 }]
+            };
+            const protectedStreak = calculateVerifiedStreak(state.logsByDate, getTodayStr());
+            const shieldsAfterFreeze = state.streakFreeze.shieldsRemaining;
+
+            // Log make-up meal for yesterday -> should refund shield back to 2!
+            state.logsByDate[yestStr] = [{ name: 'สลัดอกไก่', cal: 300, p: 30, c: 15, f: 12 }];
+            const recoveredStreak = calculateVerifiedStreak(state.logsByDate, getTodayStr());
+            const shieldsAfterRefund = state.streakFreeze.shieldsRemaining;
+            state.logsByDate = backupLogs;
+
+            // 4. Admin Central Food DB Live Merge
+            applyCentralFoodsFromCloud([
+                { id: 'cf_test_711', name: 'อกไก่นุ่มพริกสด 7-Eleven', category: 'healthy', servingSize: '1 ซอง (90g)', calories: 110, protein: 20, carbs: 2, fat: 2 }
+            ]);
+            const healthyCat = FOOD_DATABASE.categories.find(c => c.id === 'healthy');
+            const centralMerged = healthyCat && healthyCat.foods.some(f => f.name === 'อกไก่นุ่มพริกสด 7-Eleven');
+
+            return {
+                labelTabActive,
+                doubledCal,
+                doubledP,
+                wasBelowBmr: belowBmrTarget.isBelowBmr,
+                bmrBannerShown,
+                safeAfterFloor: !safeBmrTarget.isBelowBmr && safeBmrTarget.targetCal >= safeBmrTarget.bmr,
+                protectedStreak,
+                shieldsAfterFreeze,
+                recoveredStreak,
+                shieldsAfterRefund,
+                centralMerged
+            };
+        })()`);
+        console.log('v5.9.30 Smart Suite verified:', smartSuiteTest);
+
+        if (!smartSuiteTest.labelTabActive ||
+            smartSuiteTest.doubledCal !== 220 ||
+            smartSuiteTest.doubledP !== 40 ||
+            !smartSuiteTest.wasBelowBmr ||
+            !smartSuiteTest.bmrBannerShown ||
+            !smartSuiteTest.safeAfterFloor ||
+            smartSuiteTest.protectedStreak !== 3 ||
+            smartSuiteTest.shieldsAfterFreeze !== 1 ||
+            smartSuiteTest.recoveredStreak !== 3 ||
+            smartSuiteTest.shieldsAfterRefund !== 2 ||
+            !smartSuiteTest.centralMerged) {
+            throw new Error('Test 50: v5.9.30 Smart Suite verification failed: ' + JSON.stringify(smartSuiteTest));
         }
 
         ws.close();

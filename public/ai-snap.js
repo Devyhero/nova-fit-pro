@@ -28,16 +28,19 @@ function isAiSnapEnabled() {
 function applyAiSnapEnvironmentGate() {
     const enabled = isAiSnapEnabled();
     const btnMain = document.getElementById('btnAiSnapMain');
+    const btnLabelMain = document.getElementById('btnNutritionLabelMain');
     const btnTools = document.getElementById('btnAiSnapTools');
     const btnVoiceMain = document.getElementById('btnAiVoiceMain');
     const btnVoiceTools = document.getElementById('btnAiVoiceTools');
     if (!enabled) {
         if (btnMain) btnMain.classList.add('hidden');
+        if (btnLabelMain) btnLabelMain.classList.add('hidden');
         if (btnTools) btnTools.classList.add('hidden');
         if (btnVoiceMain) btnVoiceMain.classList.add('hidden');
         if (btnVoiceTools) btnVoiceTools.classList.add('hidden');
     } else {
         if (btnMain) btnMain.classList.remove('hidden');
+        if (btnLabelMain) btnLabelMain.classList.remove('hidden');
         if (btnTools) btnTools.classList.remove('hidden');
         if (btnVoiceMain) btnVoiceMain.classList.remove('hidden');
         if (btnVoiceTools) btnVoiceTools.classList.remove('hidden');
@@ -167,9 +170,43 @@ const DEMO_AI_FOODS = [
     }
 ];
 
+const DEMO_AI_LABELS = [
+    {
+        foodName: "อกไก่นุ่ม 7-Eleven (CP ซีพี)",
+        servingSize: "1 ชิ้น (90 กรัม • 1 หน่วยบริโภค)",
+        cal: 110,
+        p: 20,
+        c: 2,
+        f: 2,
+        sugar: 1,
+        sodium: 340,
+        servingsPerContainer: 1,
+        confidence: "high",
+        ingredients: ["ฉลากโภชนาการ: 110 kcal", "น้ำตาล 1g", "โซเดียม 340mg", "1 หน่วยบริโภคต่อซอง"],
+        healthyTip: "🏷️ อ่านจากฉลากโภชนาการ: โปรตีนสูงถึง 20g น้ำตาลต่ำมากเพียง 1g โซเดียมอยู่ในเกณฑ์ดี เหมาะกับมื้อสะดวกใน 7-Eleven"
+    },
+    {
+        foodName: "นมโปรตีน Hooray! High Protein (รสช็อกโกแลต)",
+        servingSize: "1 ขวด (340 มล.)",
+        cal: 230,
+        p: 29,
+        c: 14,
+        f: 6,
+        sugar: 8,
+        sodium: 200,
+        servingsPerContainer: 1,
+        confidence: "high",
+        ingredients: ["ฉลากโภชนาการ: 230 kcal", "โปรตีน 29g", "น้ำตาล 8g", "โซเดียม 200mg"],
+        healthyTip: "🏷️ อ่านจากฉลากโภชนาการ: ให้โปรตีนสูง 29g ต่อขวด เหมาะสำหรับดื่มเสริมหลังออกกำลังกาย"
+    }
+];
+
 let _currentAiImageBase64 = null;
 let _currentAiImageMime = 'image/jpeg';
 let _currentAiAnalyzedData = null;
+let _currentAiPhotoSubMode = 'dish'; // 'dish' | 'label'
+let _currentAiBaseAnalyzedData = null;
+let _currentAiPortionMultiplier = 1;
 
 // Validate if Gemini API Key is in correct Google AI Studio format (AIzaSy... or AQ....)
 function isValidGeminiApiKey(key) {
@@ -408,22 +445,45 @@ async function analyzeAiPhoto() {
     document.getElementById('aiSnapLoadingState')?.classList.remove('hidden');
     document.getElementById('aiSnapResultState')?.classList.add('hidden');
 
+    const isLabelMode = _currentAiPhotoSubMode === 'label';
+
+    // Check for Barcode in image first (Hardware acceleration via NutritionScanner)
+    const previewImg = document.getElementById('aiSnapPreviewImg');
+    if (isLabelMode && previewImg && window.NutritionScanner) {
+        try {
+            const detectedCode = await window.NutritionScanner.detectBarcodeFromImageSource(previewImg);
+            if (detectedCode) {
+                const foundItem = window.NutritionScanner.find7ElevenFoodByBarcode(detectedCode);
+                if (foundItem) {
+                    console.log(`[AI Snap] 7-Eleven Barcode matched: ${detectedCode} -> ${foundItem.foodName}`);
+                    incrementAiScanUsage();
+                    renderAiAnalysisResult(foundItem, false);
+                    if (window.playSound) window.playSound('add');
+                    if (window.showToast) window.showToast(`🎯 สแกนเจอบาร์โค้ด 7-Eleven: "${foundItem.foodName}" แม่นยำ 100%!`);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('[AI Snap] Barcode scan skipped:', e);
+        }
+    }
+
     // If NO API key is entered, use realistic Demo Simulation
     if (!apiKey) {
         setTimeout(() => {
-            let matched = DEMO_AI_FOODS[0];
+            let matched = isLabelMode ? DEMO_AI_LABELS[0] : DEMO_AI_FOODS[0];
             if (note) {
-                const found = DEMO_AI_FOODS.find(f => f.foodName.includes(note) || f.ingredients.some(i => i.includes(note)));
+                const pool = isLabelMode ? DEMO_AI_LABELS : DEMO_AI_FOODS;
+                const found = pool.find(f => f.foodName.includes(note) || f.ingredients.some(i => i.includes(note)));
                 if (found) matched = found;
             }
             incrementAiScanUsage();
             renderAiAnalysisResult(matched, true);
-        }, 1200);
+        }, 900);
         return;
     }
 
     // Call Real Gemini Vision API with Multi-Model Fallback Chain
-    // (gemini-3.5-flash-lite ~1.1s -> gemini-3.1-flash-lite ~1.7s -> gemini-flash-lite-latest ~2.6s -> gemini-3.8-flash)
     const candidateModels = [
         'gemini-3.5-flash-lite',
         'gemini-3.1-flash-lite',
@@ -431,7 +491,24 @@ async function analyzeAiPhoto() {
         'gemini-3.8-flash'
     ];
 
-    const promptText = `
+    const promptText = isLabelMode ? `
+คุณคือผู้เชี่ยวชาญการอ่านฉลากโภชนาการ (Nutrition Facts OCR) โปรดอ่านตัวเลขจากกรอบข้อมูลโภชนาการหรือซองสินค้าในรูปภาพนี้ให้แม่นยำตรงตามฉลาก 100% (ต่อ 1 หน่วยบริโภค) และตอบกลับเป็น JSON เท่านั้น:
+{
+  "foodName": "ชื่อสินค้าหรืออาหารภาษาไทย (ถ้าเห็นชื่อแบรนด์ให้ระบุด้วย)",
+  "servingSize": "ขนาดหนึ่งหน่วยบริโภค และจำนวนหน่วยบริโภคต่อซอง เช่น 1 ซอง (50g • มี 2 หน่วยบริโภคต่อซอง)",
+  "cal": ตัวเลขพลังงานทั้งหมดต่อ 1 หน่วยบริโภค (kcal),
+  "p": ตัวเลขโปรตีนต่อ 1 หน่วยบริโภค (กรัม),
+  "c": ตัวเลขคาร์โบไฮเดรตทั้งหมดต่อ 1 หน่วยบริโภค (กรัม),
+  "f": ตัวเลขไขมันทั้งหมดต่อ 1 หน่วยบริโภค (กรัม),
+  "sugar": ตัวเลขน้ำตาลต่อ 1 หน่วยบริโภค (กรัม ถ้ามี),
+  "sodium": ตัวเลขโซเดียมต่อ 1 หน่วยบริโภค (มิลลิกรัม ถ้ามี),
+  "servingsPerContainer": ตัวเลขจำนวนหน่วยบริโภคต่อภาชนะบรรจุ (ค่าเริ่มต้น 1),
+  "ingredients": ["พลังงาน X kcal/หน่วย", "น้ำตาล X g", "โซเดียม X mg", "จำนวนหน่วยบริโภคต่อซอง: X"],
+  "confidence": "high",
+  "healthyTip": "สรุปความเหมาะสมของน้ำตาล โซเดียม และโปรตีนจากฉลากนี้ 1 ประโยค"
+}
+ข้อมูลเพิ่มเติมจากผู้ใช้: ${note || "อ่านค่าต่อ 1 หน่วยบริโภคตามฉลาก"}
+` : `
 คุณคือนักกำหนดอาหารและผู้เชี่ยวชาญด้านโภชนาการไทย โปรดวิเคราะห์รูปภาพอาหารนี้อย่างละเอียด และตอบกลับเป็น JSON เท่านั้น โดยมีโครงสร้างดังนี้:
 {
   "foodName": "ชื่ออาหารภาษาไทย",
@@ -562,7 +639,9 @@ async function analyzeAiPhoto() {
 
 // Render Analysis Results into UI Card
 function renderAiAnalysisResult(result, isDemo = false) {
+    _currentAiBaseAnalyzedData = JSON.parse(JSON.stringify(result));
     _currentAiAnalyzedData = result;
+    _currentAiPortionMultiplier = 1;
 
     document.getElementById('aiSnapLoadingState')?.classList.add('hidden');
     document.getElementById('aiSnapResultState')?.classList.remove('hidden');
@@ -583,6 +662,21 @@ function renderAiAnalysisResult(result, isDemo = false) {
     if (inC) inC.value = Math.round(Number(result.c) || 0);
     if (inF) inF.value = Math.round(Number(result.f) || 0);
     if (txtServing) txtServing.textContent = result.servingSize || '1 ที่';
+    renderAiPortionMultiplierButtons();
+
+    const microRow = document.getElementById('aiResMicroNutrientsRow');
+    const txtSugar = document.getElementById('aiResSugar');
+    const txtSodium = document.getElementById('aiResSodium');
+    const hasSugarOrSodium = (result.sugar !== undefined && result.sugar !== null) || (result.sodium !== undefined && result.sodium !== null);
+    if (microRow) {
+        microRow.classList.toggle('hidden', !hasSugarOrSodium);
+    }
+    if (txtSugar) {
+        txtSugar.textContent = result.sugar !== undefined ? result.sugar : '0';
+    }
+    if (txtSodium) {
+        txtSodium.textContent = result.sodium !== undefined ? result.sodium : '0';
+    }
 
     if (demoBadge) {
         demoBadge.classList.toggle('hidden', !isDemo);
@@ -656,7 +750,8 @@ function saveAiAnalyzedMeal() {
     if (!window.state.logsByDate) window.state.logsByDate = {};
     if (!window.state.logsByDate[dStr]) window.state.logsByDate[dStr] = [];
 
-    const uniqueId = 'ai_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    const isLabel = _currentAiPhotoSubMode === 'label';
+    const uniqueId = (isLabel ? 'label_' : 'ai_') + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
     const newLogItem = {
         id: uniqueId,
         name,
@@ -664,16 +759,18 @@ function saveAiAnalyzedMeal() {
         p,
         c,
         f,
-        portion: 1,
-        baseCal: cal,
-        baseP: p,
-        baseC: c,
-        baseF: f,
+        sugar: _currentAiAnalyzedData?.sugar !== undefined ? _currentAiAnalyzedData.sugar : undefined,
+        sodium: _currentAiAnalyzedData?.sodium !== undefined ? _currentAiAnalyzedData.sodium : undefined,
+        portion: _currentAiPortionMultiplier || 1,
+        baseCal: _currentAiBaseAnalyzedData?.cal || cal,
+        baseP: _currentAiBaseAnalyzedData?.p || p,
+        baseC: _currentAiBaseAnalyzedData?.c || c,
+        baseF: _currentAiBaseAnalyzedData?.f || f,
         time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
         meal,
         servingSize: _currentAiAnalyzedData?.servingSize || '1 ที่',
         timestamp: Date.now(),
-        source: 'ai_snap'
+        source: isLabel ? 'ai_nutrition_label' : 'ai_snap'
     };
 
     window.state.logsByDate[dStr].push(newLogItem);
@@ -696,7 +793,9 @@ function saveAiAnalyzedMeal() {
 
     closeAiSnapModal();
     if (window.showToast) {
-        window.showToast(`📸 บันทึก "${name}" (${cal} kcal) ด้วย AI สำเร็จแล้ว!`);
+        window.showToast(isLabel
+            ? `🏷️ บันทึก "${name}" (${cal} kcal) จากฉลากโภชนาการสำเร็จแล้ว!`
+            : `📸 บันทึก "${name}" (${cal} kcal) ด้วย AI สำเร็จแล้ว!`);
     }
 }
 
@@ -1192,27 +1291,90 @@ let _speechRecognitionInstance = null;
 let _isSpeechRecording = false;
 let _currentAiActiveTab = 'photo';
 
-// Switch between Photo and Voice Tabs
+function setAiResultPortionMultiplier(mult) {
+    const m = Number(mult) || 1;
+    _currentAiPortionMultiplier = m;
+    if (_currentAiBaseAnalyzedData) {
+        const base = _currentAiBaseAnalyzedData;
+        const inCal = document.getElementById('aiResCal');
+        const inP = document.getElementById('aiResP');
+        const inC = document.getElementById('aiResC');
+        const inF = document.getElementById('aiResF');
+        const txtServing = document.getElementById('aiResServing');
+
+        const newCal = Math.round((Number(base.cal) || 0) * m);
+        const newP = Math.round((Number(base.p) || 0) * m * 10) / 10;
+        const newC = Math.round((Number(base.c) || 0) * m * 10) / 10;
+        const newF = Math.round((Number(base.f) || 0) * m * 10) / 10;
+
+        if (inCal) inCal.value = newCal;
+        if (inP) inP.value = Math.round(newP);
+        if (inC) inC.value = Math.round(newC);
+        if (inF) inF.value = Math.round(newF);
+        const txtSugar = document.getElementById('aiResSugar');
+        const txtSodium = document.getElementById('aiResSodium');
+        if (txtSugar && base.sugar !== undefined) {
+            const newSugar = Math.round((Number(base.sugar) || 0) * m * 10) / 10;
+            txtSugar.textContent = newSugar;
+            if (_currentAiAnalyzedData) _currentAiAnalyzedData.sugar = newSugar;
+        }
+        if (txtSodium && base.sodium !== undefined) {
+            const newSodium = Math.round((Number(base.sodium) || 0) * m);
+            txtSodium.textContent = newSodium;
+            if (_currentAiAnalyzedData) _currentAiAnalyzedData.sodium = newSodium;
+        }
+        if (txtServing) {
+            txtServing.textContent = m === 1 ? (base.servingSize || '1 หน่วย') : `${base.servingSize || '1 หน่วย'} (คูณ ${m}x)`;
+        }
+        if (_currentAiAnalyzedData) {
+            _currentAiAnalyzedData.cal = newCal;
+            _currentAiAnalyzedData.p = Math.round(newP);
+            _currentAiAnalyzedData.c = Math.round(newC);
+            _currentAiAnalyzedData.f = Math.round(newF);
+        }
+    }
+    renderAiPortionMultiplierButtons();
+}
+window.setAiResultPortionMultiplier = setAiResultPortionMultiplier;
+
+function renderAiPortionMultiplierButtons() {
+    [0.5, 1, 1.5, 2].forEach(val => {
+        const btn = document.getElementById('btnAiMult_' + String(val).replace('.', '_'));
+        if (!btn) return;
+        const isActive = _currentAiPortionMultiplier === val;
+        btn.className = isActive
+            ? 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-600 text-white shadow-xs transition cursor-pointer'
+            : 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-purple-400 transition cursor-pointer';
+    });
+}
+
+// Switch between Photo (Dish), Label (Nutrition Facts OCR), and Voice Tabs
 function switchAiModalTab(tab = 'photo') {
     _currentAiActiveTab = tab;
     const photoTabBtn = document.getElementById('tabBtnAiPhoto');
+    const labelTabBtn = document.getElementById('tabBtnAiLabel');
     const voiceTabBtn = document.getElementById('tabBtnAiVoice');
     const photoPane = document.getElementById('aiPhotoTabPane');
     const voicePane = document.getElementById('aiVoiceTabPane');
     const headerTitle = document.getElementById('aiModalTitleText');
     const headerSub = document.getElementById('aiModalSubText');
     const modalIcon = document.getElementById('aiModalIcon');
+    const labelBanner = document.getElementById('aiLabelModeBanner');
+
+    const activeCls = ['bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs'];
+    const inactiveCls = ['text-slate-500', 'dark:text-slate-400'];
+
+    [photoTabBtn, labelTabBtn, voiceTabBtn].forEach(btn => {
+        if (!btn) return;
+        btn.classList.remove(...activeCls);
+        btn.classList.add(...inactiveCls);
+    });
 
     if (tab === 'voice') {
-        if (photoTabBtn) {
-            photoTabBtn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
-            photoTabBtn.classList.add('text-slate-500', 'dark:text-slate-400');
-        }
         if (voiceTabBtn) {
-            voiceTabBtn.classList.add('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
-            voiceTabBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+            voiceTabBtn.classList.add(...activeCls);
+            voiceTabBtn.classList.remove(...inactiveCls);
         }
-
         photoPane?.classList.add('hidden');
         voicePane?.classList.remove('hidden');
 
@@ -1220,31 +1382,41 @@ function switchAiModalTab(tab = 'photo') {
         if (headerTitle) headerTitle.textContent = 'AI Smart Text Log';
         if (headerSub) headerSub.textContent = 'พิมพ์สั่งอาหารหลายเมนูพร้อมกัน AI แยกแยะแคลอรีอัตโนมัติ';
 
-        // Auto select suggested meal for current hour
         const mealSelect = document.getElementById('aiVoiceMealSelect');
         if (mealSelect && !_currentAiVoiceResult) {
             mealSelect.value = getSuggestedMealByHour();
         }
-    } else {
+    } else if (tab === 'label') {
         stopAiVoiceRecording();
-
-        if (voiceTabBtn) {
-            voiceTabBtn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
-            voiceTabBtn.classList.add('text-slate-500', 'dark:text-slate-400');
+        _currentAiPhotoSubMode = 'label';
+        if (labelTabBtn) {
+            labelTabBtn.classList.add(...activeCls);
+            labelTabBtn.classList.remove(...inactiveCls);
         }
-        if (photoTabBtn) {
-            photoTabBtn.classList.add('bg-white', 'dark:bg-slate-800', 'text-purple-600', 'dark:text-purple-400', 'shadow-xs');
-            photoTabBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
-        }
-
         voicePane?.classList.add('hidden');
         photoPane?.classList.remove('hidden');
+        if (labelBanner) labelBanner.classList.remove('hidden');
+
+        if (modalIcon) modalIcon.textContent = '🏷️';
+        if (headerTitle) headerTitle.textContent = 'สแกนฉลากโภชนาการ (7-Eleven)';
+        if (headerSub) headerSub.textContent = 'ถ่ายรูปตารางข้อมูลโภชนาการข้างซอง ดึงแคลอรี โปรตีน น้ำตาล โซเดียมแม่นยำ 100%';
+    } else {
+        stopAiVoiceRecording();
+        _currentAiPhotoSubMode = 'dish';
+        if (photoTabBtn) {
+            photoTabBtn.classList.add(...activeCls);
+            photoTabBtn.classList.remove(...inactiveCls);
+        }
+        voicePane?.classList.add('hidden');
+        photoPane?.classList.remove('hidden');
+        if (labelBanner) labelBanner.classList.add('hidden');
 
         if (modalIcon) modalIcon.textContent = '📸';
         if (headerTitle) headerTitle.textContent = 'AI Snap & Log';
         if (headerSub) headerSub.textContent = 'ถ่ายรูปจานอาหาร AI วิเคราะห์แคลทันที';
     }
 }
+window.openAiLabelModal = () => openAiSnapModal('label');
 
 // Clear voice/text textarea
 function clearAiVoiceText() {

@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.29';
+const APP_VERSION = '5.9.30';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -82,6 +82,12 @@ const APP_VERSION = '5.9.29';
             customPresets: [],
             logsByDate: {},
             waterByDate: {},
+            streakFreeze: {
+                month: '',
+                shieldsRemaining: 2,
+                maxShields: 2,
+                frozenDates: []
+            },
             mascotCompanion: {
                 enabled: true,
                 minimized: false,
@@ -412,6 +418,11 @@ const APP_VERSION = '5.9.29';
             if (!state.workoutsByDate || typeof state.workoutsByDate !== 'object') state.workoutsByDate = {};
             if (typeof state.streakDays !== 'number' || state.streakDays < 0) state.streakDays = 0;
             if (!state.prestigeFrame) state.prestigeFrame = 'novice';
+            if (!state.streakFreeze || typeof state.streakFreeze !== 'object') {
+                state.streakFreeze = { month: todayStr.slice(0, 7), shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
+            }
+            if (!Array.isArray(state.streakFreeze.frozenDates)) state.streakFreeze.frozenDates = [];
+            loadCachedCentralFoods();
             verifyAndSanitizeStreak();
         }
 
@@ -499,9 +510,85 @@ const APP_VERSION = '5.9.29';
             }
         };
 
+        // ==========================================
+        // 🧊 STREAK FREEZE SHIELD & RECOVERY ENGINE (v5.9.30)
+        // ==========================================
+        function ensureStreakFreezeIntegrity(logsByDate, todayStr) {
+            if (typeof state === 'undefined' || !state) return;
+            const curMonth = (todayStr || getTodayStr()).slice(0, 7);
+            if (!state.streakFreeze || typeof state.streakFreeze !== 'object') {
+                state.streakFreeze = { month: curMonth, shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
+            }
+            if (!Array.isArray(state.streakFreeze.frozenDates)) {
+                state.streakFreeze.frozenDates = [];
+            }
+            if (state.streakFreeze.month !== curMonth) {
+                state.streakFreeze.month = curMonth;
+                state.streakFreeze.shieldsRemaining = 2;
+                state.streakFreeze.maxShields = 2;
+            }
+
+            const hasMeals = (d) => logsByDate && Array.isArray(logsByDate[d]) && logsByDate[d].filter(m => m && m.name && String(m.name).trim() !== '').length >= 1;
+
+            // 1. Refund shield if user logged a make-up meal on a previously frozen date!
+            const remainingFrozen = [];
+            state.streakFreeze.frozenDates.forEach(d => {
+                if (hasMeals(d)) {
+                    state.streakFreeze.shieldsRemaining = Math.min(state.streakFreeze.maxShields || 2, (Number(state.streakFreeze.shieldsRemaining) || 0) + 1);
+                } else {
+                    remainingFrozen.push(d);
+                }
+            });
+            state.streakFreeze.frozenDates = remainingFrozen;
+
+            // 2. Auto-apply Streak Freeze Shield if user missed yesterday but had an active streak on the day before yesterday
+            const toLocalDateStr = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            const today = new Date((todayStr || getTodayStr()) + 'T00:00:00');
+            const yest = new Date(today);
+            yest.setDate(yest.getDate() - 1);
+            const yestStr = toLocalDateStr(yest);
+
+            const dayBeforeYest = new Date(today);
+            dayBeforeYest.setDate(dayBeforeYest.getDate() - 2);
+            const dayBeforeYestStr = toLocalDateStr(dayBeforeYest);
+
+            if (!hasMeals(yestStr) &&
+                !state.streakFreeze.frozenDates.includes(yestStr) &&
+                hasMeals(dayBeforeYestStr) &&
+                Number(state.streakFreeze.shieldsRemaining) > 0) {
+                state.streakFreeze.shieldsRemaining = Math.max(0, Number(state.streakFreeze.shieldsRemaining) - 1);
+                state.streakFreeze.frozenDates.push(yestStr);
+            }
+        }
+
+        function jumpToYesterdayAndLog() {
+            const today = new Date(getTodayStr() + 'T00:00:00');
+            today.setDate(today.getDate() - 1);
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const yestStr = `${year}-${month}-${day}`;
+
+            state.selectedDate = yestStr;
+            if (typeof closePrestigeWardrobeModal === 'function') closePrestigeWardrobeModal();
+            renderAll();
+            const searchCard = document.getElementById('card_food_search') || document.getElementById('foodSearchInput');
+            if (searchCard) searchCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showToast(`📝 สลับไปเมื่อวาน (${yestStr}) แล้ว! บันทึกอาหาร 1 เมนูเพื่อกู้สตรีคและรับโล่น้ำแข็งคืนได้เลย`);
+        }
+        window.jumpToYesterdayAndLog = jumpToYesterdayAndLog;
+
         function calculateVerifiedStreak(logsByDate, todayStr) {
             if (!logsByDate || typeof logsByDate !== 'object') return 0;
+            ensureStreakFreezeIntegrity(logsByDate, todayStr);
             const hasMeals = (d) => Array.isArray(logsByDate[d]) && logsByDate[d].filter(m => m && m.name && String(m.name).trim() !== '').length >= 1;
+            const frozenSet = new Set((state && state.streakFreeze && Array.isArray(state.streakFreeze.frozenDates)) ? state.streakFreeze.frozenDates : []);
+            const isDayCovered = (d) => hasMeals(d) || frozenSet.has(d);
             
             const toLocalDateStr = (d) => {
                 const year = d.getFullYear();
@@ -513,14 +600,17 @@ const APP_VERSION = '5.9.29';
             const today = new Date(todayStr + 'T00:00:00');
             let current = new Date(today);
             let streak = 0;
+            let realMealDays = 0;
             
             if (hasMeals(todayStr)) {
                 streak = 1;
+                realMealDays = 1;
                 while (true) {
                     current.setDate(current.getDate() - 1);
                     const dStr = toLocalDateStr(current);
-                    if (hasMeals(dStr)) {
+                    if (isDayCovered(dStr)) {
                         streak++;
+                        if (hasMeals(dStr)) realMealDays++;
                     } else {
                         break;
                     }
@@ -528,13 +618,15 @@ const APP_VERSION = '5.9.29';
             } else {
                 current.setDate(current.getDate() - 1);
                 const yestStr = toLocalDateStr(current);
-                if (hasMeals(yestStr)) {
+                if (isDayCovered(yestStr)) {
                     streak = 1;
+                    if (hasMeals(yestStr)) realMealDays++;
                     while (true) {
                         current.setDate(current.getDate() - 1);
                         const dStr = toLocalDateStr(current);
-                        if (hasMeals(dStr)) {
+                        if (isDayCovered(dStr)) {
                             streak++;
+                            if (hasMeals(dStr)) realMealDays++;
                         } else {
                             break;
                         }
@@ -543,7 +635,7 @@ const APP_VERSION = '5.9.29';
                     streak = 0;
                 }
             }
-            return streak;
+            return realMealDays > 0 ? streak : 0;
         }
 
         function isFrameUnlocked(tierId, verifiedStreak, isVip) {
@@ -873,6 +965,21 @@ const APP_VERSION = '5.9.29';
             const streakCount = Number(state.streakDays) || 0;
             const streakEl = document.getElementById('wardrobeCurrentStreakText');
             if (streakEl) streakEl.textContent = `${streakCount} วัน`;
+
+            const sf = state.streakFreeze || { shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
+            const shieldCountEl = document.getElementById('wardrobeStreakFreezeCount');
+            const frozenNoteEl = document.getElementById('wardrobeFrozenDatesNote');
+            if (shieldCountEl) {
+                shieldCountEl.textContent = `🧊 โล่น้ำแข็ง: ${sf.shieldsRemaining ?? 2}/${sf.maxShields || 2}`;
+            }
+            if (frozenNoteEl) {
+                if (Array.isArray(sf.frozenDates) && sf.frozenDates.length > 0) {
+                    frozenNoteEl.classList.remove('hidden');
+                    frozenNoteEl.innerHTML = `🧊 ปกป้องสตรีควันที่ <b>${sf.frozenDates.slice(-2).join(', ')}</b> อัตโนมัติ • บันทึกย้อนหลังเพื่อรับโล่คืนได้!`;
+                } else {
+                    frozenNoteEl.classList.add('hidden');
+                }
+            }
 
             const activeTier = PRESTIGE_TIERS[state.prestigeFrame] || PRESTIGE_TIERS.novice;
             const activeNameEl = document.getElementById('wardrobeActiveFrameName');
@@ -1671,6 +1778,8 @@ const APP_VERSION = '5.9.29';
             const pGram = proteinCapped ? maxPGram : Math.round(pCal / 4);
             const cGram = Math.round(cCal / 4);
             const fGram = Math.round(fCal / 9);
+            const isBelowBmr = targetCal < bmr;
+            const safeGoalDiff = Math.min(0, Math.ceil(((bmr / Math.max(1, tdee)) - 1) * 100));
 
             return {
                 weight,
@@ -1678,6 +1787,8 @@ const APP_VERSION = '5.9.29';
                 bmr,
                 tdee,
                 targetCal,
+                isBelowBmr,
+                safeGoalDiff,
                 dayType,
                 isRestDay: dayType === 'rest',
                 pGram,
@@ -1695,6 +1806,16 @@ const APP_VERSION = '5.9.29';
                 activityBonusMl
             };
         }
+
+        function applyBmrSafetyFloor() {
+            const t = getCalculatedTargets();
+            state.profile.goalDiff = t.safeGoalDiff;
+            saveState();
+            renderAll();
+            const updated = getCalculatedTargets();
+            showToast(`🛡️ ปรับเป้าหมายแคลอรีสู่เกณฑ์ปลอดภัย (${updated.targetCal.toLocaleString()} kcal ≥ BMR) เรียบร้อยแล้ว`);
+        }
+        window.applyBmrSafetyFloor = applyBmrSafetyFloor;
 
         function setDayType(type) {
             const dStr = state.selectedDate;
@@ -1817,6 +1938,27 @@ const APP_VERSION = '5.9.29';
                     dashCapBadge.innerHTML = `<span>🛡️</span> <span><b>Smart Cap (${capLabelStr} g/kg):</b> ล็อกโปรตีนที่ <b>${t.pGram}g</b> • โอนส่วนเกินไปเพิ่มคาร์บ <b>+${t.surplusToCarbGram}g</b> ตามเกณฑ์โภชนาการ</span>`;
                 } else {
                     dashCapBadge.classList.add('hidden');
+                }
+            }
+
+            // Medical BMR Safety Guard Banners (v5.9.30)
+            const dashBmrGuard = document.getElementById('dashboardBmrSafetyBanner');
+            const modalBmrGuard = document.getElementById('modalBmrSafetyBanner');
+            const bmrGuardHtml = `<span>⚠️ <b>คำแนะนำทางการแพทย์:</b> เป้าหมายแคลอรี (${t.targetCal.toLocaleString()} kcal) ต่ำกว่า BMR พื้นฐาน (${t.bmr.toLocaleString()} kcal) เสี่ยงต่อระบบเผาผลาญลดลง</span> <button type="button" onclick="applyBmrSafetyFloor()" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 transition cursor-pointer shadow-xs">🛡️ ปรับคืนค่าปลอดภัย (${t.safeGoalDiff}%)</button>`;
+            if (dashBmrGuard) {
+                if (t.isBelowBmr) {
+                    dashBmrGuard.classList.remove('hidden');
+                    dashBmrGuard.innerHTML = bmrGuardHtml;
+                } else {
+                    dashBmrGuard.classList.add('hidden');
+                }
+            }
+            if (modalBmrGuard) {
+                if (t.isBelowBmr) {
+                    modalBmrGuard.classList.remove('hidden');
+                    modalBmrGuard.innerHTML = bmrGuardHtml;
+                } else {
+                    modalBmrGuard.classList.add('hidden');
                 }
             }
 
@@ -2207,6 +2349,65 @@ const APP_VERSION = '5.9.29';
                     showToast(`✓ ลบ "${name}" ออกจากเมนูส่วนตัวแล้ว`);
                 }
             });
+        }
+
+        // ==========================================
+        // 🗄️ ADMIN CENTRAL FOOD DB LIVE MERGE ENGINE (v5.9.30)
+        // ==========================================
+        const CENTRAL_FOODS_CACHE_KEY = 'novafit_central_foods_cache';
+        function applyCentralFoodsFromCloud(centralItems) {
+            if (!Array.isArray(centralItems)) return;
+            try {
+                localStorage.setItem(CENTRAL_FOODS_CACHE_KEY, JSON.stringify(centralItems));
+            } catch (e) {}
+            if (!FOOD_DATABASE || !Array.isArray(FOOD_DATABASE.categories)) return;
+
+            // Remove previous dynamic central items before re-merging
+            FOOD_DATABASE.categories.forEach(cat => {
+                if (Array.isArray(cat.foods)) {
+                    cat.foods = cat.foods.filter(f => !f._isCentralAdminFood);
+                }
+            });
+
+            centralItems.forEach(item => {
+                if (!item || !item.name) return;
+                const targetCatId = item.category || 'healthy';
+                let catObj = FOOD_DATABASE.categories.find(c => c.id === targetCatId) || FOOD_DATABASE.categories[0];
+                if (catObj && Array.isArray(catObj.foods)) {
+                    const existsIdx = catObj.foods.findIndex(f => f.name === item.name);
+                    const formatted = {
+                        name: item.name,
+                        servingSize: item.servingSize || '1 ที่',
+                        calories: Math.round(Number(item.calories ?? item.cal) || 0),
+                        protein: Number(item.protein ?? item.p) || 0,
+                        carbs: Number(item.carbs ?? item.c) || 0,
+                        fat: Number(item.fat ?? item.f) || 0,
+                        _isCentralAdminFood: true,
+                        _centralId: item.id
+                    };
+                    if (existsIdx >= 0) {
+                        catObj.foods[existsIdx] = formatted;
+                    } else {
+                        catObj.foods.unshift(formatted);
+                    }
+                }
+            });
+            if (typeof renderFoodDatabaseExplorer === 'function') {
+                renderFoodDatabaseExplorer();
+            }
+        }
+        window.applyCentralFoodsFromCloud = applyCentralFoodsFromCloud;
+
+        function loadCachedCentralFoods() {
+            try {
+                const raw = localStorage.getItem(CENTRAL_FOODS_CACHE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        applyCentralFoodsFromCloud(parsed);
+                    }
+                }
+            } catch (e) {}
         }
 
         function renderFoodDatabaseExplorer() {

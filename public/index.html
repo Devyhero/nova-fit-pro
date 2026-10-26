@@ -748,7 +748,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.29)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.30)
                         </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
@@ -932,6 +932,7 @@
                         </div>
                     </div>
                     <div id="dashboardSmartCapBadge" class="hidden col-span-12 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 leading-snug"></div>
+                    <div id="dashboardBmrSafetyBanner" class="hidden col-span-12 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-300 flex flex-wrap items-center justify-between gap-2 leading-snug"></div>
                 </div>
 
                 <!-- Real-time Progress Bars -->
@@ -1174,6 +1175,12 @@
                                     title="สแกนจานอาหารด้วยภาพถ่าย AI">
                                     <span>📸</span>
                                     <span>ถ่ายรูป AI</span>
+                                </button>
+                                <button id="btnNutritionLabelMain" type="button" onclick="openAiLabelModal()"
+                                    class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                                    title="สแกนฉลากโภชนาการ & บาร์โค้ด 7-Eleven">
+                                    <span>🏷️</span>
+                                    <span>สแกนฉลาก 7-11</span>
                                 </button>
                                 <button id="btnAiVoiceMain" type="button" onclick="openAiSnapModal('voice')"
                                     class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-500 hover:from-indigo-700 hover:to-teal-600 text-white font-bold text-xs shadow-xs hover:shadow-md transition flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
@@ -1639,11 +1646,39 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.29!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.30!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.29 -->
+                <!-- Latest Release: v5.9.30 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🏷️</span> v5.9.30 (สแกนฉลากโภชนาการ 7-Eleven, โล่น้ำแข็งกันสตรีคขาด & ระบบป้องกันแคลต่ำกว่า BMR)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">26 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-purple-500">🏷️</span>
+                            <span><b>โหมดสแกนฉลากโภชนาการข้างซอง (AI Nutrition Label Scanner):</b> ถ่ายรูปตารางข้อมูลโภชนาการข้างซอง 7-Eleven หรือขนม ดึงแคลอรี โปรตีน น้ำตาล และโซเดียมแม่นยำ 100% พร้อมปุ่มคูณหน่วยบริโภค (0.5x, 1x, 1.5x, 2x)</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">🧊</span>
+                            <span><b>โล่น้ำแข็งกันสตรีคขาด (Streak Freeze Shield):</b> แจกฟรีเดือนละ 2 ชิ้น ปกป้องสตรีคอัตโนมัติเมื่อเผลอลืมบันทึกอาหาร 1 วัน พร้อมปุ่ม "บันทึกย้อนหลังเมื่อวาน" เพื่อรับโล่คืนได้ทันที</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">🛡️</span>
+                            <span><b>ระบบป้องกันแคลอรีต่ำกว่า BMR (Medical BMR Safety Guard):</b> แจ้งเตือนเมื่อตั้งแคลอรีต่ำกว่าเกณฑ์ปลอดภัยของร่างกาย พร้อมปุ่มปรับคืนค่าปลอดภัยในคลิกเดียว</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🥗</span>
+                            <span><b>คลังอาหารกลางอัปเดตสด (Live Food Sync):</b> รับเมนูอาหารคลีนและเมนูฮิตใหม่ๆ เข้าคลังอาหารอัตโนมัติแบบเรียลไทม์</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.29 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>⚡</span> v5.9.29 (โหมดลีนไขมัน+สร้างกล้ามเนื้อ & ระบบล็อกเพดานโปรตีนอัจฉริยะ 2.2g/kg)
@@ -3140,6 +3175,7 @@
                         <input type="range" id="rangeGoalDiff" min="-35" max="35" step="1" class="w-full"
                             oninput="updateGoalDiff(this.value)">
                         <p id="lblWeightTrend" class="text-xs text-slate-400 mt-1 text-right">แนวโน้มน้ำหนัก: คงที่</p>
+                        <div id="modalBmrSafetyBanner" class="hidden mt-2 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-300 flex flex-wrap items-center justify-between gap-2 leading-snug"></div>
                     </div>
                 </div>
 
@@ -3532,16 +3568,24 @@
                 </div>
             </div>
 
-            <!-- Modal Segmented Tabs (📸 Photo Snap / 🎙️ Smart Text & Voice) - Clean Full-width Row -->
-            <div class="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 text-xs font-bold shrink-0">
+            <!-- Modal Segmented Tabs (📸 Photo Snap / 🏷️ Nutrition Label / 💬 Smart Text & Voice) -->
+            <div class="grid grid-cols-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 text-[11px] sm:text-xs font-bold shrink-0 gap-1">
                 <button type="button" id="tabBtnAiPhoto" onclick="switchAiModalTab('photo')"
-                    class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 cursor-pointer">
-                    <span>📸</span> <span>สแกนรูปภาพ</span>
+                    class="py-2.5 px-2 rounded-xl transition flex items-center justify-center gap-1 shadow-xs bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 cursor-pointer">
+                    <span>📸</span> <span>จานอาหาร</span>
+                </button>
+                <button type="button" id="tabBtnAiLabel" onclick="switchAiModalTab('label')"
+                    class="py-2.5 px-2 rounded-xl transition flex items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
+                    <span>🏷️</span> <span>ฉลากข้างซอง</span>
                 </button>
                 <button type="button" id="tabBtnAiVoice" onclick="switchAiModalTab('voice')"
-                    class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
-                    <span>💬</span> <span>พิมพ์สั่งอาหาร AI</span>
+                    class="py-2.5 px-2 rounded-xl transition flex items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
+                    <span>💬</span> <span>พิมพ์/พูด AI</span>
                 </button>
+            </div>
+            <div id="aiLabelModeBanner" class="hidden px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-2 shrink-0">
+                <span>🏷️</span>
+                <span><b>โหมดสแกนฉลากโภชนาการ (7-Eleven / ข้างซอง):</b> ถ่ายตารางข้อมูลโภชนาการให้ชัดเจน AI จะอ่านค่าต่อ 1 หน่วยบริโภค พร้อมน้ำตาลและโซเดียมให้อัตโนมัติ</span>
             </div>
 
             <!-- Modal Content (Scrollable) -->
@@ -3712,11 +3756,20 @@
                             </span>
                         </div>
 
-                        <!-- Food Name & Serving -->
-                        <div>
-                            <label class="block text-[10px] text-slate-400 font-medium">ชื่อเมนูอาหาร:</label>
+                        <!-- Food Name & Serving + Portion Multiplier (v5.9.30) -->
+                        <div class="space-y-1.5">
+                            <label class="block text-[10px] text-slate-400 font-medium">ชื่อเมนูอาหาร / สินค้า:</label>
                             <input type="text" id="aiResFoodName" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-purple-500">
-                            <div class="text-[11px] text-slate-400 mt-0.5">ขนาดเสิร์ฟ: <span id="aiResServing" class="font-medium text-slate-600 dark:text-slate-300">-</span></div>
+                            <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+                                <div class="text-[11px] text-slate-400">ขนาดเสิร์ฟ: <span id="aiResServing" class="font-medium text-slate-600 dark:text-slate-300">-</span></div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-[10px] text-slate-400 font-semibold">คูณหน่วย:</span>
+                                    <button type="button" id="btnAiMult_0_5" onclick="setAiResultPortionMultiplier(0.5)" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">0.5x</button>
+                                    <button type="button" id="btnAiMult_1" onclick="setAiResultPortionMultiplier(1)" class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-purple-600 text-white cursor-pointer">1x</button>
+                                    <button type="button" id="btnAiMult_1_5" onclick="setAiResultPortionMultiplier(1.5)" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">1.5x</button>
+                                    <button type="button" id="btnAiMult_2" onclick="setAiResultPortionMultiplier(2)" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">2x</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Macro Badges Grid -->
@@ -3740,6 +3793,18 @@
                                 <div class="text-[10px] text-sky-500 font-semibold">ไขมัน</div>
                                 <input type="number" id="aiResF" class="w-full text-center font-bold text-sm text-sky-600 dark:text-sky-400 bg-transparent focus:outline-none">
                                 <div class="text-[9px] text-slate-400">g</div>
+                            </div>
+                        </div>
+
+                        <!-- Micro Nutrients Row (Sugar & Sodium from Nutrition Label OCR) -->
+                        <div id="aiResMicroNutrientsRow" class="hidden grid grid-cols-2 gap-2 text-center">
+                            <div class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/25">
+                                <div class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">น้ำตาล (Sugar)</div>
+                                <div class="font-bold text-xs text-purple-700 dark:text-purple-300"><span id="aiResSugar">0</span> g</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/25">
+                                <div class="text-[10px] text-cyan-600 dark:text-cyan-400 font-semibold">โซเดียม (Sodium)</div>
+                                <div class="font-bold text-xs text-cyan-700 dark:text-cyan-300"><span id="aiResSodium">0</span> mg</div>
                             </div>
                         </div>
 
@@ -4272,16 +4337,20 @@
                         </div>
                     </div>
 
-                    <!-- Current Streak Bar inside Wardrobe -->
-                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-base">🔥</span>
-                            <span class="text-slate-400">สตรีคมีวินัยจริง:</span>
-                            <span id="wardrobeCurrentStreakText" class="font-extrabold text-amber-500">0 วัน</span>
+                    <!-- Current Streak & Streak Freeze Shield Bar inside Wardrobe (v5.9.30) -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-base">🔥</span>
+                                <span class="text-slate-400">สตรีคมีวินัยจริง:</span>
+                                <span id="wardrobeCurrentStreakText" class="font-extrabold text-amber-500">0 วัน</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="wardrobeStreakFreezeCount" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">🧊 โล่น้ำแข็ง: 2/2</span>
+                                <button type="button" id="btnJumpYesterdayStreak" onclick="jumpToYesterdayAndLog()" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition cursor-pointer">📝 บันทึกย้อนหลังเมื่อวาน</button>
+                            </div>
                         </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                            <span>🔒</span> บันทึกอาหารจริง
-                        </span>
+                        <div id="wardrobeFrozenDatesNote" class="hidden text-[11px] px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"></div>
                     </div>
                 </div>
             </div>
@@ -4522,22 +4591,25 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.29"></script>
+    <script src="food-db.js?v=5.9.30"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.29"></script>
+    <script src="health-tips.js?v=5.9.30"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.29"></script>
+    <script src="ai-snap.js?v=5.9.30"></script>
+
+    <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
+    <script src="nutrition-scanner.js?v=5.9.30"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.29"></script>
+    <script src="app.js?v=5.9.30"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.29"></script>
+    <script src="mascot-companion.js?v=5.9.30"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.29"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.30"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>
