@@ -2842,6 +2842,20 @@ server.listen(PORT, async () => {
             throw new Error('Test 51: Visual Share Card Engine verification failed!');
         }
 
+        // Test 52: Meal Combos & Visual Editor Engine Verification (Phase 5 Modularization)
+        console.log('--- Test 52: Meal Combos & Visual Editor Engine ---');
+        await evalJs('openMealComboEditor()');
+        const isComboModalOpen = await evalJs('!document.getElementById("mealComboEditModal").classList.contains("hidden")');
+        const hasSearchFn = await evalJs('typeof window.onComboFoodSearchInput === "function"');
+        const hasApplyFn = await evalJs('typeof window.applyMealCombo === "function"');
+        const hasCopyFn = await evalJs('typeof window.copyMealFromYesterday === "function"');
+        await evalJs('closeMealComboEditor()');
+        const isComboModalClosed = await evalJs('document.getElementById("mealComboEditModal").classList.contains("hidden")');
+        console.log('Meal combo editor verified:', { isComboModalOpen, hasSearchFn, hasApplyFn, hasCopyFn, isComboModalClosed });
+        if (!isComboModalOpen || !hasSearchFn || !hasApplyFn || !hasCopyFn || !isComboModalClosed) {
+            throw new Error('Test 52: Meal Combos Engine verification failed!');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');
