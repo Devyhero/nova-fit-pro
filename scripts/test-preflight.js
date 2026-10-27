@@ -59,6 +59,7 @@ const jsFiles = [
     { path: 'public/app.js', isModule: false },
     { path: 'public/fasting-engine.js', isModule: false },
     { path: 'public/share-card.js', isModule: false },
+    { path: 'public/prestige-wardrobe.js', isModule: false },
     { path: 'public/mascot-companion.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/health-tips.js', isModule: false },
