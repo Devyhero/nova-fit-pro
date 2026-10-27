@@ -194,6 +194,15 @@ Update version strings across all 5 files:
 - Keep `CODEBASE_MAP.md` and `GEMINI.md` synchronized with exact line ranges.
 - Always check the line index before reading code to minimize token consumption.
 
+### 7. Modular Feature Isolation Architecture (Zero Bloat Standard)
+- **Never add large new features directly into `public/app.js`!**
+- Always create a dedicated standalone module file (e.g., `public/<feature-name>.js`).
+- Register the script tag in `public/index.html` (before `app.js`).
+- Precache the new script in `public/sw.js` (`PRECACHE_ASSETS`).
+- Include the new file in `scripts/test-preflight.js` (`jsFiles`).
+- Bind handlers to `window.<functionName>` to ensure 100% backward compatibility with inline HTML `onclick` events.
+- This guarantees `app.js` stays slim, saves 80–90% of tokens in future chats, and isolates regressions.
+
 ---
 
 ## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.30)
