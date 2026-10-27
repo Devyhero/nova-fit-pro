@@ -36,7 +36,7 @@ node scripts/test-preflight.js
 
 ## Step 3: Zero-Token Codebase Reference Protocol
 To prevent wasting tens of thousands of tokens:
-- **DO NOT** read `public/app.js` (7,651 lines) or `public/index.html` (4,596 lines) in full.
+- **DO NOT** read `public/app.js` (modularized down from 7,651 to 4,246 lines) or `public/index.html` (4,635 lines) in full.
 - Instead, read [CODEBASE_MAP.md](file:///Users/benznova/Desktop/fitmacro-web/CODEBASE_MAP.md) to locate exact line ranges and component positions.
 - When inspecting or modifying code, use `read_file` with targeted `StartLine` and `EndLine` ranges.
 
