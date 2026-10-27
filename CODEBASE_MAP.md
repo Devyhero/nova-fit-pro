@@ -9,10 +9,11 @@
 | File | Approximate Size | Responsibility |
 |---|---|---|
 | `public/index.html` | ~420 KB | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~200 KB (3,547 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/app.js` | ~180 KB (3,218 lines) | Core business logic, macro calculation, meals logging, modals |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
 | `public/water-tracker.js` | ~7 KB (152 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |
+| `public/coach-engine.js` | ~23 KB (394 lines) | Smart Coach recommendations, remaining macro heuristics, Gemini AI analysis & food cards |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~50 KB (893 lines) | Living companion empathy nudges, milestone celebration confetti, quotes & timers |
 | `public/prestige-wardrobe.js` | ~45 KB (845 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide & profile customizer |
@@ -120,15 +121,15 @@ state = {
 | **L1787 – L2057**| **Date Tracker & Nutrition Progress Coordinator** | `renderDateTrackerAndRecommendations()` (daily donut, macronutrient progress bars, net calories) |
 | **MODULARIZED** | **Meal Combos & Visual Editor Engine** | Extracted to `public/meal-combos.js` (618 lines) |
 | **MODULARIZED** | **Supplements & Vitamins Engine** | Extracted to `public/supplements.js` (319 lines) |
-| **L2105 – L2434**| **Smart Coach Recommendations & Food Cards** | `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()` |
-| **L2435 – L2790**| **Date Navigation & Daily Meals CRUD** | `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
-| **L2791 – L3001**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
+| **MODULARIZED** | **Smart Coach Recommendations Engine** | Extracted to `public/coach-engine.js` (394 lines): `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()`, `getHeuristicCandidates()` |
+| **L2068 – L2461**| **Date Navigation & Daily Meals CRUD** | `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
+| **L2462 – L2672**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines) |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines) |
-| **L3002 – L3308**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
-| **L3309 – L3505**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
+| **L2673 – L2979**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
+| **L2980 – L3176**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (893 lines) |
-| **L3506 – L3547**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L3177 – L3218**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 

@@ -66,6 +66,7 @@ const jsFiles = [
     { path: 'public/web-push.js', isModule: false },
     { path: 'public/water-tracker.js', isModule: false },
     { path: 'public/body-tracker.js', isModule: false },
+    { path: 'public/coach-engine.js', isModule: false },
     { path: 'public/mascot-companion.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/health-tips.js', isModule: false },
