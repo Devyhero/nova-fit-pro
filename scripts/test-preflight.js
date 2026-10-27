@@ -62,6 +62,7 @@ const jsFiles = [
     { path: 'public/prestige-wardrobe.js', isModule: false },
     { path: 'public/living-companion.js', isModule: false },
     { path: 'public/meal-combos.js', isModule: false },
+    { path: 'public/supplements.js', isModule: false },
     { path: 'public/mascot-companion.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/health-tips.js', isModule: false },

@@ -2856,6 +2856,22 @@ server.listen(PORT, async () => {
             throw new Error('Test 52: Meal Combos Engine verification failed!');
         }
 
+        // Test 53: Supplements & Vitamins Engine Verification (Phase 6 Modularization)
+        console.log('--- Test 53: Supplements & Vitamins Standalone Engine ---');
+        await evalJs('openAddSupplementModal()');
+        const isSuppModalOpen = await evalJs('!document.getElementById("addSupplementModal").classList.contains("hidden")');
+        const hasRenderSupp = await evalJs('typeof window.renderSupplements === "function"');
+        const hasToggleSupp = await evalJs('typeof window.toggleSupplement === "function"');
+        const hasDeleteSupp = await evalJs('typeof window.deleteSupplement === "function"');
+        const hasRestoreSupp = await evalJs('typeof window.restoreDefaultSupplements === "function"');
+        await evalJs('closeAddSupplementModal()');
+        await new Promise(r => setTimeout(r, 450));
+        const isSuppModalClosed = await evalJs('document.getElementById("addSupplementModal").classList.contains("hidden")');
+        console.log('Supplements standalone engine verified:', { isSuppModalOpen, hasRenderSupp, hasToggleSupp, hasDeleteSupp, hasRestoreSupp, isSuppModalClosed });
+        if (!isSuppModalOpen || !hasRenderSupp || !hasToggleSupp || !hasDeleteSupp || !hasRestoreSupp || !isSuppModalClosed) {
+            throw new Error('Test 53: Supplements & Vitamins Engine verification failed!');
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

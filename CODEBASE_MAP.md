@@ -15,6 +15,8 @@
 | `public/prestige-wardrobe.js` | ~45 KB (845 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide & profile customizer |
 | `public/share-card.js` | ~30 KB (612 lines) | High-resolution 1080x1420 HTML5 Canvas daily summary share card generator |
 | `public/fasting-engine.js` | ~20 KB (431 lines) | Intermittent Fasting (IF) timer engine, progress rings, stage notifications |
+| `public/meal-combos.js` | ~30 KB (618 lines) | Meal combos (sets), copy meal from yesterday, visual ingredient portion editor |
+| `public/supplements.js` | ~15 KB (319 lines) | Daily vitamin & supplement checklist, custom supplement modal, restore defaults |
 | `public/food-db.js` | ~50 KB | 280+ food items database, categories, `DEFAULT_SUPPLEMENTS`, meal presets |
 | `public/health-tips.js` | ~88 KB | Daily health tips engine (65+ items), randomized rotator |
 | `public/health-tips.json`| ~75 KB | Raw health and nutrition tips dataset for offline/PWA cache |
@@ -113,16 +115,16 @@ state = {
 | **L1951 – L2682**| **Water Tracker, Body Weight & Workouts** | `renderWaterSection()`, `submitWeightToday()`, `addWorkout()`, `renderBodyAndWorkoutSection()`, `renderWeeklyAnalytics()` |
 | **L2683 – L2738**| **Weekly Weigh-In Nudge & Focus** | `checkWeeklyWeighInNudge()`, `focusWeightInputToday()` |
 | **MODULARIZED** | **Meal Combos & Visual Editor Engine** | Extracted to `public/meal-combos.js` (618 lines): `copyMealFromYesterday()`, `saveMealAsCombo()`, `applyMealCombo()`, `deleteMealCombo()`, `openMealComboEditor()`, `closeMealComboEditor()`, `onComboFoodSearchInput()`, `addFoodObjectToComboEditor()`, `renderComboEditorItems()`, `saveMealComboEditor()` |
-| **L2742 – L3024**| **Supplements & Vitamins CRUD** | `renderSupplements()`, `toggleSupplement()`, `openAddSupplementModal()`, `submitNewSupplement()`, `deleteSupplement()`, `restoreDefaultSupplements()` |
-| **L3025 – L3308**| **Smart Coach Recommendations & Food Cards** | `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()` |
-| **L3309 – L3728**| **Water Adjustments, Date Navigation & Daily Meals CRUD** | `adjustWater()`, `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
-| **L3729 – L3939**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
+| **MODULARIZED** | **Supplements & Vitamins Engine** | Extracted to `public/supplements.js` (319 lines): `renderSupplements()`, `toggleSupplement()`, `openAddSupplementModal()`, `closeAddSupplementModal()`, `submitNewSupplement()`, `deleteSupplement()`, `restoreDefaultSupplements()` |
+| **L2741 – L3070**| **Smart Coach Recommendations & Food Cards** | `forceReshuffleRecommendations()`, `generateHeuristicCoachAdvice()`, `renderSmartRecommendations()`, `renderFoodCards()` |
+| **L3071 – L3490**| **Water Adjustments, Date Navigation & Daily Meals CRUD** | `adjustWater()`, `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
+| **L3491 – L3701**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines): `getFastingPlanTargetHours()`, `setFastingPlan()`, `toggleFastingTimer()`, `openFastingCompleteModal()`, `confirmFinishFasting()`, `renderFastingSection()` |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines): `openShareCardModal()`, `closeShareCardModal()`, `renderShareCard()`, `downloadShareCard()`, `copyShareCardImage()`, `shareCardNative()` |
-| **L3940 – L4246**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
-| **L4247 – L4441**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
+| **L3702 – L4008**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
+| **L4009 – L4203**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (893 lines): `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()`, `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
-| **L4444 – L4491**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L4204 – L4246**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 
@@ -130,14 +132,17 @@ state = {
 
 | Modal DOM ID | Controller | Open / Close Functions | Purpose |
 |---|---|---|---|
-| `profileSettingsModal` | `app.js` (L6554) | `openProfileSettingsModal()` / `closeProfileSettingsModal()` | User profile, biometric targets, macro preferences |
-| `changelogModal` | `app.js` (L5128) | `openChangelogModal()` / `closeChangelogModal()` | User-centric release notes & feature highlights |
-| `dailyReportModal` | `app.js` (L5032) | `openDailyReportModal()` / `closeDailyReportModal()` | Daily nutrition summary table & macro breakdown |
+| `profileSettingsModal` | `app.js` | `openProfileSettingsModal()` / `closeProfileSettingsModal()` | User profile, biometric targets, macro preferences |
+| `changelogModal` | `app.js` | `openChangelogModal()` / `closeChangelogModal()` | User-centric release notes & feature highlights |
+| `dailyReportModal` | `app.js` | `openDailyReportModal()` / `closeDailyReportModal()` | Daily nutrition summary table & macro breakdown |
 | `aiSnapModal`      | `ai-snap.js` / `nutrition-scanner.js` | `openAiSnapModal()` / `openNutritionLabelScanner()` / `closeAiSnapModal()` | Food image & 7-Eleven nutrition label & barcode scanner |
-| `addSupplementModal` | `app.js` (L4164) | `openAddSupplementModal()` / `closeAddSupplementModal()` | Add vitamin/supplement with quick emoji presets |
-| `quickAddModal` | `app.js` (L6644) | `openQuickAddModal()` / `closeQuickAddModal()` | Quick calorie and protein logger |
-| `foodMealPickerModal` | `app.js` (L4723) | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | Food meal slot selector (breakfast/lunch/dinner/snack) |
-| `fastingCompleteModal` | `fasting-engine.js` (L38) | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | Fasting session complete celebration & autophagy report |
+| `addSupplementModal` | `supplements.js` | `openAddSupplementModal()` / `closeAddSupplementModal()` | Add vitamin/supplement with quick emoji presets |
+| `quickAddModal` | `app.js` | `openQuickAddModal()` / `closeQuickAddModal()` | Quick calorie and protein logger |
+| `foodMealPickerModal` | `app.js` | `openFoodMealPicker(...)` / `closeFoodMealPickerModal()` | Food meal slot selector (breakfast/lunch/dinner/snack) |
+| `fastingCompleteModal` | `fasting-engine.js` | `openFastingCompleteModal()` / `closeFastingCompleteModal()` | Fasting session complete celebration & autophagy report |
+| `prestigeWardrobeModal` | `prestige-wardrobe.js` | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak stats |
+| `shareCardModal` | `share-card.js` | `openShareCardModal()` / `closeShareCardModal()` | Visual share card preview & export dialog |
+| `mealComboEditModal` | `meal-combos.js` | `openMealComboEditor()` / `closeMealComboEditor()` | Visual multi-item portion adjustment & combo creator |
 | `userNotificationsModal`| `app.js` | `openUserNotificationsModal()` / `closeUserNotificationsModal()` | In-app notification inbox from coach/admin |
 | `shareCardModal` | `share-card.js` (L38) | `openShareCardModal()` / `closeShareCardModal()` | Canvas graphic daily summary share card |
 | `prestigeWardrobeModal` | `prestige-wardrobe.js` | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak tiers |
