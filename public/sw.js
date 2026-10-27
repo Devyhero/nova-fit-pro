@@ -12,6 +12,7 @@ const PRECACHE_ASSETS = [
     './supplements.js',
     './web-push.js',
     './water-tracker.js',
+    './body-tracker.js',
     './nutrition-scanner.js',
     './mascot-companion.js',
     './food-db.js',
