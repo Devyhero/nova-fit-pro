@@ -9,7 +9,8 @@
 | File | Approximate Size | Responsibility |
 |---|---|---|
 | `public/index.html` | ~420 KB | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~330 KB (5,895 lines) | Core business logic, macro calculation, meals logging, wardrobe, modals |
+| `public/app.js` | ~280 KB (5,023 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/living-companion.js` | ~50 KB (893 lines) | Living companion empathy nudges, milestone celebration confetti, quotes & timers |
 | `public/prestige-wardrobe.js` | ~45 KB (845 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide & profile customizer |
 | `public/share-card.js` | ~30 KB (612 lines) | High-resolution 1080x1420 HTML5 Canvas daily summary share card generator |
 | `public/fasting-engine.js` | ~20 KB (431 lines) | Intermittent Fasting (IF) timer engine, progress rings, stage notifications |
@@ -117,11 +118,10 @@ state = {
 | **L4267 – L4477**| **Daily Report Modal, Changelog, PWA Update Prompt & Version Badges** | `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines): `getFastingPlanTargetHours()`, `setFastingPlan()`, `toggleFastingTimer()`, `openFastingCompleteModal()`, `confirmFinishFasting()`, `renderFastingSection()` |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines): `openShareCardModal()`, `closeShareCardModal()`, `renderShareCard()`, `downloadShareCard()`, `copyShareCardImage()`, `shareCardNative()` |
-| **L4478 – L4784**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
-| **L4785 – L5071**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
-| **L5072 – L5410**| **Living App Companion & Milestone Confetti Cannon** | `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()` |
-| **L5411 – L5835**| **Living Companion Loop & Sandbox Test Modal** | `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
-| **L5836 – L5895**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L4478 – L4778**| **Data Backup / Restore & Firebase Cloud Sync Adapter** | `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()`, `applyCloudState()` |
+| **L4779 – L4973**| **Apple-Grade Modals, Profile Drawer & Quick Add** | `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `saveAndConfirmProfileSettings()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
+| **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (893 lines): `getVariedCompanionMessage()`, `showLivingCompanionNudge()`, `triggerCelebrationConfetti()`, `showMilestoneBeatCard()`, `dismissMilestoneCelebration()`, `checkMilestoneCelebrations()`, `triggerLivingCompanionCheck()`, `checkLivingAppNudges()`, `openCompanionTestModal()`, `triggerTestCompanionNudge()` |
+| **L4976 – L5023**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 
@@ -142,7 +142,7 @@ state = {
 | `prestigeWardrobeModal` | `prestige-wardrobe.js` | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak tiers |
 | `appTourModal` | `prestige-wardrobe.js` | `openAppTourModal()` / `closeAppTourModal()` | 6-slide onboarding and PWA install guide |
 | `mealComboEditorModal` | `app.js` (L3651) | `openMealComboEditor()` / `closeMealComboEditor()` | Visual meal combo builder and item portion editor |
-| `companionTestModal` | `app.js` (L7407) | `openCompanionTestModal()` / `closeCompanionTestModal()` | Sandbox test launcher for Nova companion nudges |
+| `companionTestModal` | `living-companion.js` | `openCompanionTestModal()` / `closeCompanionTestModal()` | Sandbox test launcher for Nova companion nudges |
 | `confirmDialog` | `app.js` (L2279) | `showConfirmDialog()` / `closeConfirmDialog()` | Unified custom alert/confirm dialog |
 | `userInspectModal` | `admin.js` | `inspectUser(uid)` / `closeUserInspectModal()` | User diary inspection modal (Admin only) |
 | `sendMessageModal` | `admin.js` | `openSendMessageModal(...)` / `closeSendMessageModal()` | Push/in-app message composer (Admin only) |

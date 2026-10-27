@@ -7,6 +7,7 @@ const PRECACHE_ASSETS = [
     './fasting-engine.js',
     './share-card.js',
     './prestige-wardrobe.js',
+    './living-companion.js',
     './nutrition-scanner.js',
     './mascot-companion.js',
     './food-db.js',
