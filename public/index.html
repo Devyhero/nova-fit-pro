@@ -750,6 +750,14 @@
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
                             <span>🚀</span> ประวัติอัปเดต (v5.9.30)
                         </button>
+                        <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span>🔄</span>
+                                <span>ล้างแคช & โหลดโค้ดใหม่</span>
+                            </div>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold">FORCE</span>
+                        </button>
 
                         <!-- 4. Admin Only Tools Section (Hidden by default, shown strictly to authorized admins) -->
                         <div id="adminToolsSection" class="hidden border-t border-slate-100 dark:border-slate-700/80 my-1 pt-1.5 space-y-1">
