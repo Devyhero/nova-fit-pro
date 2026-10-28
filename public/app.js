@@ -2344,6 +2344,38 @@ const APP_VERSION = '5.9.30';
             });
         }
 
+        function autoSyncMealByTime() {
+            if (state.selectedDate !== getTodayStr()) return;
+            const currentPeriod = getDefaultMealByTime();
+            if (state._lastAutoMealPeriod && state._lastAutoMealPeriod !== currentPeriod) {
+                console.log(`⏰ Time period shifted from ${state._lastAutoMealPeriod} to ${currentPeriod}, auto-selecting meal`);
+                state.activeMeal = currentPeriod;
+                state._lastAutoMealPeriod = currentPeriod;
+                saveState();
+                renderMealSelector();
+                renderFoodDatabaseExplorer();
+                const targets = getCalculatedTargets();
+                renderDateTrackerAndRecommendations(targets, false);
+            }
+        }
+
+        function checkDayRollover() {
+            const todayStr = getTodayStr();
+            if (state.lastActiveDate && state.lastActiveDate !== todayStr) {
+                console.log('🌅 New day detected! Auto-switching to:', todayStr);
+                state.lastActiveDate = todayStr;
+                state.selectedDate = todayStr;
+                state.activeMeal = getDefaultMealByTime();
+                state._lastAutoMealPeriod = state.activeMeal;
+                saveState();
+                renderAll();
+                const mealName = MEAL_CONFIG[state.activeMeal]?.name || 'มื้อเช้า';
+                showToast(`🌅 อรุณสวัสดิ์วันใหม่! สลับไป${mealName}ให้อัตโนมัติแล้ว`);
+            } else {
+                autoSyncMealByTime();
+            }
+        }
+
         window.addEventListener('resize', syncResponsiveLayout);
 
         loadState();
