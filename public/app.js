@@ -1651,13 +1651,25 @@ const APP_VERSION = '5.9.30';
             const thaiDate = dateObj.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             document.getElementById('lblThaiDate').textContent = dStr === getTodayStr() ? `${thaiDate} (วันนี้)` : thaiDate;
 
-            renderWaterSection(targets);
+            if (typeof renderWaterSection === 'function') {
+                renderWaterSection(targets);
+            } else if (typeof window.renderWaterSection === 'function') {
+                window.renderWaterSection(targets);
+            }
 
             // Render 7-Day Analytics Bar Chart
-            renderWeeklyAnalytics(targets);
+            if (typeof renderWeeklyAnalytics === 'function') {
+                renderWeeklyAnalytics(targets);
+            } else if (typeof window.renderWeeklyAnalytics === 'function') {
+                window.renderWeeklyAnalytics(targets);
+            }
 
             // Render Optional Body Weight & Workout Tracker
-            renderBodyAndWorkoutSection(targets);
+            if (typeof renderBodyAndWorkoutSection === 'function') {
+                renderBodyAndWorkoutSection(targets);
+            } else if (typeof window.renderBodyAndWorkoutSection === 'function') {
+                window.renderBodyAndWorkoutSection(targets);
+            }
 
             // Meals Summary
             const meals = state.logsByDate[dStr] || [];
@@ -2426,6 +2438,7 @@ const APP_VERSION = '5.9.30';
         window.changeMealCategory = changeMealCategory;
 
         // Directly updates lexical state and re-renders UI across all components
+        // Directly updates lexical state and re-renders UI across all components
         window.applyCloudState = function (cloudState, isInitialOrRestore = true) {
             if (!cloudState || typeof cloudState !== 'object') return;
             const currentSelectedDate = state.selectedDate;
@@ -2489,14 +2502,74 @@ const APP_VERSION = '5.9.30';
                 ? { ...state.profile, ...cloudState.profile }
                 : (localWeight > 0 ? state.profile : (cloudState.profile || state.profile));
 
-            // 3. Water: Math.max per date
-            const mergedWater = { ...(cloudState.waterByDate || {}) };
-            const localWater = state.waterByDate || {};
-            Object.keys(localWater).forEach(date => {
-                mergedWater[date] = Math.max(mergedWater[date] || 0, localWater[date] || 0);
-            });
+            // 3. Water (waterByDate):
+            let mergedWater = {};
+            if (isInitialOrRestore) {
+                mergedWater = { ...(cloudState.waterByDate || {}) };
+                const localWater = state.waterByDate || {};
+                Object.keys(localWater).forEach(date => {
+                    mergedWater[date] = Math.max(mergedWater[date] || 0, localWater[date] || 0);
+                });
+            } else {
+                // Live real-time update from another active device: Cloud is authoritative!
+                mergedWater = { ...(cloudState.waterByDate || {}) };
+            }
 
-            // 4. Weight History: Union by date
+            // 4. Workouts (workoutsByDate):
+            let mergedWorkouts = {};
+            if (isInitialOrRestore) {
+                mergedWorkouts = { ...(cloudState.workoutsByDate || {}) };
+                const localWorkouts = state.workoutsByDate || {};
+                Object.keys(localWorkouts).forEach(date => {
+                    if (!mergedWorkouts[date] && Array.isArray(localWorkouts[date]) && localWorkouts[date].length > 0) {
+                        mergedWorkouts[date] = [...localWorkouts[date]];
+                    }
+                });
+            } else {
+                // Live real-time update: Cloud is authoritative
+                mergedWorkouts = { ...(cloudState.workoutsByDate || {}) };
+            }
+
+            // 5. Body Weights (weightsByDate):
+            let mergedWeights = {};
+            if (isInitialOrRestore) {
+                mergedWeights = { ...(state.weightsByDate || {}), ...(cloudState.weightsByDate || {}) };
+            } else {
+                // Live real-time update: Cloud is authoritative
+                mergedWeights = { ...(cloudState.weightsByDate || {}) };
+            }
+
+            // 6. Daily Supplements Checklist (supplementsByDate):
+            let mergedSupplementsByDate = {};
+            if (isInitialOrRestore) {
+                mergedSupplementsByDate = { ...(state.supplementsByDate || {}) };
+                if (cloudState.supplementsByDate && typeof cloudState.supplementsByDate === 'object') {
+                    Object.keys(cloudState.supplementsByDate).forEach(d => {
+                        mergedSupplementsByDate[d] = {
+                            ...(mergedSupplementsByDate[d] || {}),
+                            ...(cloudState.supplementsByDate[d] || {})
+                        };
+                    });
+                }
+            } else {
+                // Live real-time update: Cloud is authoritative
+                mergedSupplementsByDate = { ...(cloudState.supplementsByDate || {}) };
+            }
+
+            // 7. Day Type (Training vs Rest Day):
+            let mergedDayType = {};
+            if (isInitialOrRestore) {
+                mergedDayType = { ...(state.dayTypeByDate || {}), ...(cloudState.dayTypeByDate || {}) };
+            } else {
+                mergedDayType = { ...(cloudState.dayTypeByDate || {}) };
+            }
+
+            // 8. Intermittent Fasting:
+            const mergedFasting = (cloudState.fasting && typeof cloudState.fasting === 'object')
+                ? { ...cloudState.fasting }
+                : state.fasting;
+
+            // 9. Weight History: Union by date
             const weightMap = new Map();
             (Array.isArray(cloudState.weightHistory) ? cloudState.weightHistory : []).forEach(w => {
                 if (w && w.date) weightMap.set(w.date, w);
@@ -2506,12 +2579,12 @@ const APP_VERSION = '5.9.30';
             });
             const mergedWeightHistory = Array.from(weightMap.values()).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-            // 5. Supplements: Cloud wins if non-empty, otherwise local
+            // 10. Supplements Catalog List: Cloud wins if non-empty, otherwise local
             const cloudSupps = Array.isArray(cloudState.supplementList) ? cloudState.supplementList : [];
             const localSupps = Array.isArray(state.supplementList) ? state.supplementList : [];
             const finalSupps = cloudSupps.length > 0 ? cloudSupps : localSupps;
 
-            // 6. Custom Foods: Union by name
+            // 11. Custom Foods: Union by name
             const mergedCustomFoods = [
                 ...(Array.isArray(cloudState.customFoods) ? cloudState.customFoods : [])
             ];
@@ -2520,15 +2593,34 @@ const APP_VERSION = '5.9.30';
                 if (f && f.name && !cloudCustomNames.has(f.name)) mergedCustomFoods.push(f);
             });
 
+            // 12. Favorites & Meal Combos:
+            const finalFavorites = Array.isArray(cloudState.favorites) ? cloudState.favorites : (state.favorites || []);
+            const finalMealCombos = Array.isArray(cloudState.mealCombos) && cloudState.mealCombos.length > 0 ? cloudState.mealCombos : (state.mealCombos || DEFAULT_MEAL_COMBOS);
+
+            // 13. Streaks:
+            const finalStreakDays = (cloudState.streakDays !== undefined && cloudState.streakDays !== null)
+                ? Number(cloudState.streakDays)
+                : (state.streakDays || 0);
+            const finalStreakFreeze = cloudState.streakFreeze || state.streakFreeze;
+
             state = {
                 ...state,
                 ...cloudState,
                 logsByDate: mergedLogs,
                 profile: finalProfile,
                 waterByDate: mergedWater,
+                workoutsByDate: mergedWorkouts,
+                weightsByDate: mergedWeights,
+                supplementsByDate: mergedSupplementsByDate,
+                dayTypeByDate: mergedDayType,
+                fasting: mergedFasting,
                 weightHistory: mergedWeightHistory,
                 supplementList: finalSupps,
                 customFoods: mergedCustomFoods,
+                favorites: finalFavorites,
+                mealCombos: finalMealCombos,
+                streakDays: finalStreakDays,
+                streakFreeze: finalStreakFreeze,
                 selectedDate: currentSelectedDate,
                 activeMeal: currentActiveMeal,
                 version: APP_VERSION
@@ -2540,6 +2632,26 @@ const APP_VERSION = '5.9.30';
             } catch (e) { }
 
             renderAll();
+
+            // Explicitly re-render all modular component sections with latest synced state
+            const t = getCalculatedTargets();
+            if (typeof renderWaterSection === 'function') renderWaterSection(t);
+            else if (typeof window.renderWaterSection === 'function') window.renderWaterSection(t);
+
+            if (typeof renderWeeklyAnalytics === 'function') renderWeeklyAnalytics(t);
+            else if (typeof window.renderWeeklyAnalytics === 'function') window.renderWeeklyAnalytics(t);
+
+            if (typeof renderBodyAndWorkoutSection === 'function') renderBodyAndWorkoutSection(t);
+            else if (typeof window.renderBodyAndWorkoutSection === 'function') window.renderBodyAndWorkoutSection(t);
+
+            if (typeof renderSupplements === 'function') renderSupplements();
+            else if (typeof window.renderSupplements === 'function') window.renderSupplements();
+
+            if (typeof renderFastingSection === 'function') renderFastingSection();
+            else if (typeof window.renderFastingSection === 'function') window.renderFastingSection();
+
+            if (typeof renderCoachAdvice === 'function') renderCoachAdvice(t);
+            else if (typeof window.renderCoachAdvice === 'function') window.renderCoachAdvice(t);
         };
 
         // Check for updates and new day rollover initially and periodically

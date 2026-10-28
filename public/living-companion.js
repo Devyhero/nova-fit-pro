@@ -22,7 +22,7 @@
     }
 
     function getAppStateSafe() {
-        return typeof state !== 'undefined' ? state : window.state;
+        return (typeof window !== 'undefined' && window.state) ? window.state : (typeof state !== 'undefined' ? state : null);
     }
 
     function getTargetsSafe() {
