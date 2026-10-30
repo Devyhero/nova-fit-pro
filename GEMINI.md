@@ -233,4 +233,4 @@ Update version strings across all 5 files:
 - **L2360 – L2760**: Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover (`applyCloudState`, `autoSyncMealByTime`, `checkDayRollover`)
 - **[MODULARIZED]**: Apple-Grade Modals & Profile Drawer ➔ `public/quick-add.js` (242 lines)
 - **[MODULARIZED]**: Living App Companion & Milestone Confetti ➔ `public/living-companion.js` (893 lines)
-- **L2761 – L2780**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)
+- **L2761 – L2789**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)

@@ -986,20 +986,28 @@ const APP_VERSION = '5.9.30';
             }
         }
 
+        let _activeMealDebounceTimer = null;
         function setActiveMeal(mealId) {
-            if (MEAL_CONFIG[mealId]) {
-                state.activeMeal = mealId;
-                saveState();
-                renderMealSelector();
-                renderFoodDatabaseExplorer();
-                const dStr = state.selectedDate;
+            if (!MEAL_CONFIG[mealId]) return;
+            if (state.activeMeal === mealId) return; // Prevent duplicate rapid clicks & DOM thrashing
+
+            state.activeMeal = mealId;
+            saveState();
+            renderMealSelector(); // Immediate 0.5ms UI feedback on 4 buttons
+
+            // Debounce diary header updates to next animation frame without blocking touch gestures
+            if (_activeMealDebounceTimer) cancelAnimationFrame(_activeMealDebounceTimer);
+            _activeMealDebounceTimer = requestAnimationFrame(() => {
                 const targets = getCalculatedTargets();
                 renderDateTrackerAndRecommendations(targets, false);
-            }
+                _activeMealDebounceTimer = null;
+            });
         }
 
         function setSelectedPortion(portion) {
-            state.selectedPortion = Number(portion) || 1;
+            const p = Number(portion) || 1;
+            if (Number(state.selectedPortion) === p) return;
+            state.selectedPortion = p;
             saveState();
             renderMealSelector();
         }
@@ -1038,7 +1046,7 @@ const APP_VERSION = '5.9.30';
                 const isActive = state.activeMeal === m.id;
                 return `
                     <button type="button" onclick="setActiveMeal('${m.id}')"
-                        class="w-full justify-center px-1 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 truncate ${isActive
+                        class="w-full justify-center px-1 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 truncate select-none active:scale-95 touch-action-manipulation ${isActive
                         ? 'bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-400/50 font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/40'
                     }">
@@ -1060,7 +1068,7 @@ const APP_VERSION = '5.9.30';
                 const isActive = Number(state.selectedPortion) === p.val;
                 return `
                     <button type="button" onclick="setSelectedPortion(${p.val})"
-                        class="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition text-center ${isActive
+                        class="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition text-center select-none active:scale-95 touch-action-manipulation ${isActive
                         ? 'bg-teal-500 text-white shadow-sm ring-2 ring-teal-400/50 font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500/40'
                     }">
@@ -1152,6 +1160,7 @@ const APP_VERSION = '5.9.30';
         }
 
         function selectCategory(catId) {
+            if (state.selectedCategory === catId && !state.searchQuery) return;
             state.selectedCategory = catId;
             // If user explicitly clicks a category tab while a search query was active, clear search so they view that category normally
             if (state.searchQuery && catId !== 'all') {
@@ -1853,7 +1862,7 @@ const APP_VERSION = '5.9.30';
                         ? `
                             <div class="flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-400">
                                 <span>ยังไม่ได้บันทึก${group.name}</span>
-                                <button type="button" onclick="setActiveMeal('${key}'); showToast('เลือกมื้อ ${group.name} เรียบร้อย');" class="text-emerald-500 hover:underline font-semibold flex items-center gap-1">
+                                <button type="button" onclick="if(state.activeMeal !== '${key}'){ setActiveMeal('${key}'); showToast('เลือกมื้อ ${group.name} เรียบร้อย'); }" class="text-emerald-500 hover:underline font-semibold flex items-center gap-1 select-none touch-action-manipulation">
                                     + เพิ่มเข้ามื้อนี้
                                 </button>
                             </div>
@@ -1938,8 +1947,8 @@ const APP_VERSION = '5.9.30';
                                             📦 เซฟเซ็ต
                                         </button>
                                     ` : ''}
-                                    <button type="button" onclick="setActiveMeal('${key}'); showToast('เลือกมื้อ ${group.name} สำหรับบันทึกแล้ว');"
-                                        class="text-xs px-2.5 py-1 rounded-lg border font-medium transition whitespace-nowrap active:scale-95 ${isActive
+                                    <button type="button" onclick="if(state.activeMeal !== '${key}'){ setActiveMeal('${key}'); showToast('เลือกมื้อ ${group.name} สำหรับบันทึกแล้ว'); }"
+                                        class="text-xs px-2.5 py-1 rounded-lg border font-medium transition whitespace-nowrap select-none touch-action-manipulation active:scale-95 ${isActive
                             ? 'bg-emerald-500 text-white border-emerald-500 font-bold shadow-xs'
                             : 'bg-white dark:bg-slate-800 text-slate-500 hover:border-emerald-500/40'
                         }">

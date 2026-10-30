@@ -8,8 +8,8 @@
 
 | File | Approximate Size | Responsibility |
 |---|---|---|
-| `public/index.html` | ~420 KB (4,667 lines) | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~165 KB (2,780 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/index.html` | ~420 KB (4,674 lines) | User interface, section accordions, all modal templates, SW bootstrap |
+| `public/app.js` | ~165 KB (2,789 lines) | Core business logic, macro calculation, meals logging, modals |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
 | `public/water-tracker.js` | ~7 KB (152 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |
@@ -136,7 +136,7 @@ state = {
 | **L2360 – L2760**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
 | **MODULARIZED** | **Apple-Grade Modals & Profile Drawer** | Extracted to `public/quick-add.js` (242 lines): `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (893 lines) |
-| **L2761 – L2780**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L2761 – L2789**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 

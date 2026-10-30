@@ -37,6 +37,11 @@
     <style>
         * {
             font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
         }
         /* Mobile-First: Prevent iOS Safari Auto-Zoom on Form Inputs */
         @media screen and (max-width: 768px) {
@@ -106,12 +111,11 @@
             }
         }
 
-        /* 60fps Native-Feel Spring Accordions (Exact-Pixel GPU FLIP Transition for Mobile iOS/Android) */
+        /* 60fps Native-Feel Spring Accordions (Exact-Pixel FLIP Transition for Mobile iOS/Android) */
         .accordion-section {
             display: block;
             max-width: 100%;
             opacity: 1;
-            transform: translateY(0) translateZ(0);
             overflow: hidden;
             transition: max-height 0.32s cubic-bezier(0.32, 0.72, 0, 1),
                         opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
@@ -119,7 +123,10 @@
                         padding-bottom 0.30s cubic-bezier(0.32, 0.72, 0, 1),
                         margin-top 0.30s cubic-bezier(0.32, 0.72, 0, 1),
                         transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .accordion-section.accordion-animating {
             will-change: max-height, opacity, transform;
+            transform: translateY(0) translateZ(0);
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
         }
@@ -129,7 +136,7 @@
             padding-top: 0px !important;
             padding-bottom: 0px !important;
             margin-top: 0px !important;
-            transform: translateY(-6px) translateZ(0) !important;
+            transform: translateY(-6px) !important;
             pointer-events: none !important;
             border-top-width: 0px !important;
         }
@@ -1132,12 +1139,12 @@
                     <!-- Active Meal & Portion Selector Toolbar -->
                     <div
                         class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-slate-50/50 dark:to-slate-900/40 border border-emerald-500/20 space-y-2.5 shadow-xs">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 shrink-0">
+                        <div class="flex items-center justify-between gap-2 select-none">
+                            <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 shrink-0 select-none cursor-default pointer-events-none">
                                 🍱 เลือกมื้อที่บันทึก:
                             </span>
                             <button type="button" onclick="selectCategory('combos')"
-                                class="text-xs px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition flex items-center gap-1 shadow-xs shrink-0"
+                                class="text-xs px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 font-bold transition flex items-center gap-1 shadow-xs shrink-0 select-none active:scale-95 touch-action-manipulation"
                                 title="เปิดดูเซ็ตอาหารประจำ">
                                 📦 เซ็ตประจำ
                             </button>
@@ -1147,11 +1154,11 @@
         <!-- Quick Action Toolbar: Quick Add, Copy Yesterday, Combos (v5.3.0) -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
             <button type="button" onclick="openQuickAddModal()"
-                class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-xs hover:opacity-95 transition flex items-center gap-1.5 shrink-0 active:scale-95">
+                class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-xs hover:opacity-95 transition flex items-center gap-1.5 shrink-0 select-none active:scale-95 touch-action-manipulation">
                 <span>⚡</span> แคลด่วน (Quick Add)
             </button>
             <button type="button" onclick="copyYesterdayActiveMeal()"
-                class="px-3 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 font-bold transition flex items-center gap-1.5 shrink-0 active:scale-95"
+                class="px-3 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 font-bold transition flex items-center gap-1.5 shrink-0 select-none active:scale-95 touch-action-manipulation"
                 title="คัดลอกรายการของมื้อนี้จากเมื่อวาน">
                 <span>🔁</span> ดึงมื้อเมื่อวาน
             </button>
@@ -1159,8 +1166,8 @@
     
 <div id="activeMealSelectorBar" class="grid grid-cols-4 gap-1 sm:gap-1.5 w-full"></div>
 
-                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                            <span class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0">
+                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 select-none">
+                            <span class="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0 select-none cursor-default">
                                 ⚖️ ขนาดเสิร์ฟ:
                             </span>
                             <div id="portionSelectorBar" class="grid grid-cols-4 gap-1 shrink-0"></div>
