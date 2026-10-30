@@ -93,7 +93,18 @@
     function renderFoodCardsToContainer(container, foodItems) {
         if (!container) return;
         container.innerHTML = foodItems.map(item => {
-            const safeName = item.name.replace(/'/g, "\\'");
+            const safeName = String(item.name || '')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '&quot;');
+            const displayName = String(item.name || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            const itemP = Number(item.protein) || 0;
+            const itemC = Number(item.carbs) || 0;
+            const itemF = Number(item.fat) || 0;
+            const itemCal = Number(item.calories) || 0;
             const whyHtml = item.why
                 ? `<span class="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/15 dark:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-medium border border-purple-500/30 dark:border-purple-500/40">${item.why}</span>`
                 : '';
@@ -101,24 +112,24 @@
                 <div class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/80 gap-3 transition shadow-2xs hover:border-purple-500/40">
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
+                            <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${displayName}</span>
                             <span class="text-[11px] text-slate-400 dark:text-slate-400 font-normal">(${item.servingSize || '1 เสิร์ฟ'})</span>
                             ${whyHtml}
                         </div>
                         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-2.5">
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">${item.calories} kcal</span>
-                            <span class="text-blue-600 dark:text-blue-400 font-semibold">โปรตีน ${item.protein}g</span>
-                            <span class="text-amber-600 dark:text-amber-400 font-medium">คาร์บ ${item.carbs}g</span>
-                            <span class="text-rose-600 dark:text-rose-400 font-medium">ไขมัน ${item.fat}g</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">${itemCal} kcal</span>
+                            <span class="text-blue-600 dark:text-blue-400 font-semibold">โปรตีน ${itemP}g</span>
+                            <span class="text-amber-600 dark:text-amber-400 font-medium">คาร์บ ${itemC}g</span>
+                            <span class="text-rose-600 dark:text-rose-400 font-medium">ไขมัน ${itemF}g</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <button type="button" onclick="openFoodMealPicker('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories}, event)"
+                        <button type="button" onclick="openFoodMealPicker('${safeName}', ${itemP}, ${itemC}, ${itemF}, ${itemCal}, event)"
                             title="เลือกมื้ออาหารที่จะบันทึก"
                             class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 border border-slate-200 dark:border-slate-600">
                             📋
                         </button>
-                        <button type="button" onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${item.calories})"
+                        <button type="button" onclick="addFoodItem('${safeName}', ${itemP}, ${itemC}, ${itemF}, ${itemCal})"
                             class="text-xs px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold transition shadow-xs flex items-center gap-1">
                             <span>+</span> <span>กินเมนูนี้</span>
                         </button>

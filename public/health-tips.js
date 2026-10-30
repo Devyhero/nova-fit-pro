@@ -1053,11 +1053,11 @@ window.checkDailyTipNotification = function () {
     const todayStr = new Date().toISOString().split('T')[0];
     const seenDate = localStorage.getItem('novafit_tip_seen_date');
     if (seenDate !== todayStr) {
+        localStorage.setItem('novafit_tip_seen_date', todayStr);
         const tip = window._sessionHealthTip || (window.healthTipsEngine && window.healthTipsEngine.getRandomTip());
         if (tip && typeof showToast === 'function') {
             setTimeout(() => {
                 showToast(`💡 เกร็ดความรู้สุขภาพ: ${tip.title}`);
-                localStorage.setItem('novafit_tip_seen_date', todayStr);
             }, 2500);
         }
     }

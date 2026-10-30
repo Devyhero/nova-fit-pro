@@ -301,11 +301,31 @@ const APP_VERSION = '5.9.30';
 
         function showToast(msg) {
             const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            // Cap simultaneous toasts to 2 to prevent mobile screen clogging
+            while (container.children.length >= 2) {
+                container.firstElementChild.remove();
+            }
+
             const el = document.createElement('div');
-            el.className = 'bg-slate-900 dark:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-emerald-400/30 animate-pop';
+            el.className = 'bg-slate-900/95 dark:bg-emerald-600/95 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-emerald-400/30 animate-pop cursor-pointer select-none pointer-events-auto transition-all duration-200';
             el.textContent = msg;
+            el.title = 'แตะเพื่อปิด';
+            el.onclick = () => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(8px) scale(0.95)';
+                setTimeout(() => el.remove(), 180);
+            };
+
             container.appendChild(el);
-            setTimeout(() => { el.remove(); }, 2200);
+            setTimeout(() => {
+                if (el.parentElement) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(8px) scale(0.95)';
+                    setTimeout(() => el.remove(), 200);
+                }
+            }, 2200);
         }
 
         function showMiniLoader(message = 'กำลังประมวลผล...') {
@@ -1570,10 +1590,21 @@ const APP_VERSION = '5.9.30';
             listContainer.innerHTML = items.map(item => {
                 const cal = item.calories || Math.round(item.protein * 4 + item.carbs * 4 + item.fat * 9);
                 const serving = item.servingSize ? `<span class="text-xs text-slate-400 font-normal">(${item.servingSize})</span>` : '';
-                const safeName = item.name.replace(/'/g, "\\'");
+                const safeName = String(item.name || '')
+                    .replace(/\\/g, '\\\\')
+                    .replace(/'/g, "\\'")
+                    .replace(/"/g, '&quot;');
+                const displayName = String(item.name || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
                 const count = selectedCounts[item.name] || 0;
                 const isJustAdded = state.lastAddedFoodName === item.name;
                 const isFav = Array.isArray(state.favorites) && state.favorites.includes(item.name);
+                const itemP = Number(item.protein) || 0;
+                const itemC = Number(item.carbs) || 0;
+                const itemF = Number(item.fat) || 0;
+                const itemCal = Number(cal) || 0;
 
                 const cardClass = count > 0
                     ? `bg-emerald-500/15 dark:bg-emerald-500/20 border-2 border-emerald-500 shadow-sm ${isJustAdded ? 'ring-2 ring-emerald-400' : ''}`
@@ -1601,7 +1632,7 @@ const APP_VERSION = '5.9.30';
 
                 // Quick Meal Picker Button (+มื้อ)
                 const mealPickerBtn = `
-                    <button type="button" onclick="openFoodMealPicker('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${cal}, event)"
+                    <button type="button" onclick="openFoodMealPicker('${safeName}', ${itemP}, ${itemC}, ${itemF}, ${itemCal}, event)"
                         class="p-1.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-700/80 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 text-slate-600 dark:text-slate-300 transition text-xs font-bold flex items-center gap-1 border border-slate-200/80 dark:border-slate-600 shadow-xs active:scale-95 shrink-0"
                         title="เลือกว่าจะหยอดเมนูนี้ลงมื้อไหน (เช้า/เที่ยง/เย็น/ของว่าง)">
                         <span>🍱</span>
@@ -1610,18 +1641,18 @@ const APP_VERSION = '5.9.30';
                 `;
 
                 return `
-                    <div onclick="addFoodItem('${safeName}', ${item.protein}, ${item.carbs}, ${item.fat}, ${cal})"
+                    <div onclick="addFoodItem('${safeName}', ${itemP}, ${itemC}, ${itemF}, ${itemCal})"
                         class="cursor-pointer text-left p-3 rounded-2xl transition flex items-center justify-between gap-2.5 group ${cardClass}">
                         <div class="min-w-0 flex items-center gap-2 flex-1">
                             ${starBtn}
                             <div class="min-w-0 flex-1">
                                 <div class="text-sm font-semibold truncate group-hover:text-emerald-500 transition flex items-center flex-wrap gap-1.5">
-                                    <span>+ ${item.name}</span> ${serving} ${countBadge}
+                                    <span>+ ${displayName}</span> ${serving} ${countBadge}
                                 </div>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
-                                    <span class="text-blue-500 dark:text-blue-400 font-semibold">P:${item.protein}g</span>
-                                    <span class="text-amber-500 dark:text-amber-400 font-semibold">C:${item.carbs}g</span>
-                                    <span class="text-rose-500 dark:text-rose-400 font-semibold">F:${item.fat}g</span>
+                                    <span class="text-blue-500 dark:text-blue-400 font-semibold">P:${itemP}g</span>
+                                    <span class="text-amber-500 dark:text-amber-400 font-semibold">C:${itemC}g</span>
+                                    <span class="text-rose-500 dark:text-rose-400 font-semibold">F:${itemF}g</span>
                                     ${item.isAiCache ? '<span class="px-1.5 py-0.2 rounded-md font-bold text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400">⚡ AI</span>' : ''}
                                     ${item.catName ? `<span class="opacity-70 text-[11px]">• ${item.catName}</span>` : ''}
                                 </div>
@@ -1629,7 +1660,7 @@ const APP_VERSION = '5.9.30';
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
                             <span class="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1.5 rounded-xl">
-                                ${cal} kcal
+                                ${itemCal} kcal
                             </span>
                             ${mealPickerBtn}
                             ${deleteBtn}
@@ -1975,6 +2006,16 @@ const APP_VERSION = '5.9.30';
         }
 
         function addFoodItem(name, p, c, f, explicitCal, targetMeal, targetPortion) {
+            // Dismiss mobile keyboard & blur active input immediately (Prevents iOS Safari viewport lock)
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+
+            // Rapid-tap debounce lock (Prevents multiple parallel executions)
+            if (window._isAddingFoodLock) return;
+            window._isAddingFoodLock = true;
+            setTimeout(() => { window._isAddingFoodLock = false; }, 320);
+
             const dStr = state.selectedDate;
             if (!state.logsByDate[dStr]) state.logsByDate[dStr] = [];
 
@@ -2069,8 +2110,8 @@ const APP_VERSION = '5.9.30';
             if (!window._pendingFoodPickerItem) return;
             const { name, p, c, f, explicitCal } = window._pendingFoodPickerItem;
             const portion = window._pendingFoodPickerPortion || 1;
-            addFoodItem(name, p, c, f, explicitCal, targetMeal, portion);
             closeFoodMealPickerModal();
+            addFoodItem(name, p, c, f, explicitCal, targetMeal, portion);
         }
 
         function closeFoodMealPickerModal() {
