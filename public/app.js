@@ -1,4 +1,5 @@
 const APP_VERSION = '5.9.31';
+window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -2400,6 +2401,21 @@ const APP_VERSION = '5.9.31';
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then((reg) => {
                     console.log('NovaFit Pro SW registered:', reg.scope);
+                    if (reg.waiting && typeof showNewVersionBanner === 'function') {
+                        showNewVersionBanner(window.APP_VERSION || 'ใหม่');
+                    }
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    if (typeof showNewVersionBanner === 'function') {
+                                        showNewVersionBanner(window.APP_VERSION || 'ใหม่');
+                                    }
+                                }
+                            });
+                        }
+                    });
                 }).catch((err) => {
                     console.warn('NovaFit Pro SW registration failed:', err);
                 });
