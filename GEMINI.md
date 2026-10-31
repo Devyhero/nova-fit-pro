@@ -205,7 +205,7 @@ Update version strings across all 5 files:
 
 ---
 
-## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.30)
+## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.31)
 
 > Check line ranges here before reading code. Use targeted line ranges with `read_file` to save 80–90% of tokens.
 
@@ -219,7 +219,7 @@ Update version strings across all 5 files:
 - **L665 – L1093**: Profile Targets & Clinical Macro Calculator (`getCalculatedTargets`, `applyBmrSafetyFloor`, `setDayType`, `renderAll`)
 - **L1094 – L1213**: Macro Presets & Universal Food Search (`setMacroPreset`, `setProtein2gPerKg`, `adjustMacros`, `selectCategory`, `onSearchFood`)
 - **L1214 – L1675**: Custom Confirm Dialog & Cloud Food DB Sync (`showConfirmDialog`, `applyCentralFoodsFromCloud`, `renderFoodDatabaseExplorer`)
-- **[MODULARIZED]**: Water Tracker & Hydration Engine ➔ `public/water-tracker.js` (152 lines)
+- **[MODULARIZED]**: Water Tracker & Hydration Engine ➔ `public/water-tracker.js` (165 lines)
 - **[MODULARIZED]**: Body Weight, Workouts & Weekly Analytics Engine ➔ `public/body-tracker.js` (606 lines)
 - **L1680 – L1950**: Date Tracker & Nutrition Progress Coordinator (`renderDateTrackerAndRecommendations`)
 - **[MODULARIZED]**: Meal Combos & Visual Editor Engine ➔ `public/meal-combos.js` (618 lines)
@@ -230,7 +230,8 @@ Update version strings across all 5 files:
 - **[MODULARIZED]**: Intermittent Fasting (IF) Engine ➔ `public/fasting-engine.js` (431 lines)
 - **[MODULARIZED]**: Visual Share Card (HTML5 Canvas) ➔ `public/share-card.js` (612 lines)
 - **[MODULARIZED]**: Data Backup, Restore & PWA Engine ➔ `public/data-backup.js` (158 lines)
-- **L2360 – L2760**: Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover (`applyCloudState`, `autoSyncMealByTime`, `checkDayRollover`)
+- **L2360 – L2765**: Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover (`applyCloudState`, `autoSyncMealByTime`, `checkDayRollover`)
 - **[MODULARIZED]**: Apple-Grade Modals & Profile Drawer ➔ `public/quick-add.js` (242 lines)
-- **[MODULARIZED]**: Living App Companion & Milestone Confetti ➔ `public/living-companion.js` (893 lines)
-- **L2761 – L2789**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)
+- **[MODULARIZED]**: Living App Companion & Milestone Confetti ➔ `public/living-companion.js` (918 lines)
+- **[MODULARIZED]**: MeowNova Mascot Companion & AI Health Coach ➔ `public/mascot-companion.js` (1,239 lines)
+- **L2766 – L2796**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)

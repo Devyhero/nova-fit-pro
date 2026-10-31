@@ -8,10 +8,10 @@
 
 | File | Approximate Size | Responsibility |
 |---|---|---|
-| `public/index.html` | ~420 KB (4,674 lines) | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~165 KB (2,789 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/index.html` | ~420 KB (4,702 lines) | User interface, section accordions, all modal templates, SW bootstrap |
+| `public/app.js` | ~165 KB (2,796 lines) | Core business logic, macro calculation, meals logging, modals |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
-| `public/water-tracker.js` | ~7 KB (152 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
+| `public/water-tracker.js` | ~8 KB (165 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |
 | `public/coach-engine.js` | ~24 KB (405 lines) | Smart Coach recommendations, remaining macro heuristics, Gemini AI analysis & food cards |
 | `public/sound-effects.js` | ~8 KB (171 lines) | Procedural Web Audio synthesizer, sound effects (pop, water, celebrate, nudge, delete), mute/unmute state & buttons |
@@ -19,7 +19,8 @@
 | `public/data-backup.js` | ~7 KB (158 lines) | JSON data backup export, backup file restore, factory reset & PWA install prompts |
 | `public/quick-add.js` | ~10 KB (242 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt & quick meal logger |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
-| `public/living-companion.js` | ~50 KB (893 lines) | Living companion empathy nudges, milestone celebration confetti, quotes & timers |
+| `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
+| `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |
 | `public/prestige-wardrobe.js` | ~45 KB (845 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide & profile customizer |
 | `public/share-card.js` | ~30 KB (612 lines) | High-resolution 1080x1420 HTML5 Canvas daily summary share card generator |
 | `public/fasting-engine.js` | ~20 KB (431 lines) | Intermittent Fasting (IF) timer engine, progress rings, stage notifications |
@@ -122,7 +123,7 @@ state = {
 | **L665 – L1093**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
 | **L1094 – L1213**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()` |
 | **L1214 – L1675**| **Custom Confirm Dialog & Cloud Food DB Sync** | `showConfirmDialog()`, `deleteCustomPreset()`, `applyCentralFoodsFromCloud()`, `renderFoodDatabaseExplorer()` |
-| **MODULARIZED** | **Water Tracker & Hydration Engine** | Extracted to `public/water-tracker.js` (152 lines) |
+| **MODULARIZED** | **Water Tracker & Hydration Engine** | Extracted to `public/water-tracker.js` (165 lines) |
 | **MODULARIZED** | **Body Weight, Workouts & Weekly Analytics Engine** | Extracted to `public/body-tracker.js` (606 lines) |
 | **L1680 – L1950**| **Date Tracker & Nutrition Progress Coordinator** | `renderDateTrackerAndRecommendations()` (daily donut, macronutrient progress bars, net calories) |
 | **MODULARIZED** | **Meal Combos & Visual Editor Engine** | Extracted to `public/meal-combos.js` (618 lines) |
@@ -133,10 +134,10 @@ state = {
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines) |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines) |
 | **MODULARIZED** | **Data Backup, Restore & PWA Engine** | Extracted to `public/data-backup.js` (158 lines): `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()` |
-| **L2360 – L2760**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
+| **L2360 – L2765**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
 | **MODULARIZED** | **Apple-Grade Modals & Profile Drawer** | Extracted to `public/quick-add.js` (242 lines): `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
-| **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (893 lines) |
-| **L2761 – L2789**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (918 lines) |
+| **L2766 – L2796**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 

@@ -128,6 +128,12 @@
         const t = getCalculatedTargetsSafe();
         renderDateTrackerAndRecommendationsSafe(t, false);
         triggerLivingCompanionCheckSafe(600, true);
+        if (typeof window.renderNovaMascot === 'function') {
+            window.renderNovaMascot();
+        }
+        if (typeof window.updateNovaSpeechBubbleIfActive === 'function') {
+            window.updateNovaSpeechBubbleIfActive();
+        }
     }
 
     function setWaterDirect(glasses) {
@@ -143,10 +149,17 @@
         const t = getCalculatedTargetsSafe();
         renderDateTrackerAndRecommendationsSafe(t, false);
         triggerLivingCompanionCheckSafe(600, true);
+        if (typeof window.renderNovaMascot === 'function') {
+            window.renderNovaMascot();
+        }
+        if (typeof window.updateNovaSpeechBubbleIfActive === 'function') {
+            window.updateNovaSpeechBubbleIfActive();
+        }
     }
 
     // Attach to window for global access and backward compatibility
     window.renderWaterSection = renderWaterSection;
     window.adjustWater = adjustWater;
+    window.addWater = adjustWater;
     window.setWaterDirect = setWaterDirect;
 })();

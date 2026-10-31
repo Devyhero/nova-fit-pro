@@ -755,7 +755,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.30)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.31)
                         </button>
                         <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
@@ -1661,11 +1661,39 @@
                 <div id="whatsNewAlert"
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-2">
                     <span class="text-base">🎉</span>
-                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.30!</b> สรุปการอัปเดตล่าสุด:</span>
+                    <span><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.31!</b> สรุปการอัปเดตล่าสุด:</span>
                 </div>
 
-                <!-- Latest Release: v5.9.30 -->
-                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                <!-- Latest Release: v5.9.31 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>💧</span> v5.9.31 (โค้ชเหมียวโนวาจำค่าน้ำดื่มเรียลไทม์ & สุ่มคำพูดคู่คิดสุขภาพหลากหลาย)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">31 ต.ค. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">💧</span>
+                            <span><b>โค้ชเหมียวโนวาตรวจจับและนับแก้วน้ำดื่มแม่นยำ 100%:</b> อัปเดตจำนวนแก้วน้ำดื่มแบบเรียลไทม์ทันที ไม่จำค่าค้าง พร้อมระบบคำนวณเป้าหมายน้ำดื่มจริงตามสรีระและกิจกรรม</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">✨</span>
+                            <span><b>คลังคำพูดให้กำลังใจหลากหลายไม่ซ้ำเดิม (Smart Speech Diversity):</b> อัปเกรดระบบสุ่มคำพูดของน้องเหมียวโนวาและเพื่อนคู่คิด หมุนเวียนข้อความห่วงใยสุขภาพและคำแนะนำดีๆ สลับเปลี่ยนทุกวันไม่ซ้ำซาก</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">🥑</span>
+                            <span><b>ปุ่มลัดจิบน้ำทันใจเชื่อมต่อสมบูรณ์:</b> แตะที่น้องเหมียวเพื่อจิบน้ำ +1 แก้ว บันทึกผลลัพธ์ลงการ์ดน้ำดื่มและอัปเดตหน้าจอทันทีแบบไร้รอยต่อ</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">⚡</span>
+                            <span><b>ประสิทธิภาพการซิงค์ข้ามอุปกรณ์ราบรื่น:</b> อัปเดตค่าน้ำและเป้าหมายสุขภาพระหว่างมือถือและคอมพิวเตอร์อย่างรวดเร็วและถูกต้องสูงสุด</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.30 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <span>🏷️</span> v5.9.30 (สแกนฉลากโภชนาการ 7-Eleven, โล่น้ำแข็งกันสตรีคขาด & ระบบป้องกันแคลต่ำกว่า BMR)
@@ -4606,67 +4634,67 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.30"></script>
+    <script src="food-db.js?v=5.9.31"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.30"></script>
+    <script src="health-tips.js?v=5.9.31"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.30"></script>
+    <script src="ai-snap.js?v=5.9.31"></script>
 
     <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
-    <script src="nutrition-scanner.js?v=5.9.30"></script>
+    <script src="nutrition-scanner.js?v=5.9.31"></script>
 
     <!-- Intermittent Fasting (IF) Timer Engine (v5.9.30) -->
-    <script src="fasting-engine.js?v=5.9.30"></script>
+    <script src="fasting-engine.js?v=5.9.31"></script>
 
     <!-- Visual Share Card Engine (v5.9.30) -->
-    <script src="share-card.js?v=5.9.30"></script>
+    <script src="share-card.js?v=5.9.31"></script>
 
     <!-- Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide Engine (v5.9.30) -->
-    <script src="prestige-wardrobe.js?v=5.9.30"></script>
+    <script src="prestige-wardrobe.js?v=5.9.31"></script>
 
     <!-- Living App Companion & Milestone Celebration Engine (v5.9.30) -->
-    <script src="living-companion.js?v=5.9.30"></script>
+    <script src="living-companion.js?v=5.9.31"></script>
 
     <!-- Meal Combos & Visual Editor Engine (v5.9.30) -->
-    <script src="meal-combos.js?v=5.9.30"></script>
+    <script src="meal-combos.js?v=5.9.31"></script>
 
     <!-- Supplements & Vitamins Engine (v5.9.30) -->
-    <script src="supplements.js?v=5.9.30"></script>
+    <script src="supplements.js?v=5.9.31"></script>
 
     <!-- Web Push Notifications & FCM Engine (v5.9.30) -->
-    <script src="web-push.js?v=5.9.30"></script>
+    <script src="web-push.js?v=5.9.31"></script>
 
     <!-- Water Tracker & Hydration Engine (v5.9.30) -->
-    <script src="water-tracker.js?v=5.9.30"></script>
+    <script src="water-tracker.js?v=5.9.31"></script>
 
     <!-- Body Weight, Workouts & Weekly Analytics Engine (v5.9.30) -->
-    <script src="body-tracker.js?v=5.9.30"></script>
+    <script src="body-tracker.js?v=5.9.31"></script>
 
     <!-- Smart Coach Recommendations Engine (v5.9.30) -->
-    <script src="coach-engine.js?v=5.9.30"></script>
+    <script src="coach-engine.js?v=5.9.31"></script>
 
     <!-- Sound Effects & Web Audio Synthesizer (v5.9.30) -->
-    <script src="sound-effects.js?v=5.9.30"></script>
+    <script src="sound-effects.js?v=5.9.31"></script>
 
     <!-- Daily Report & Changelog Engine (v5.9.30) -->
-    <script src="daily-report.js?v=5.9.30"></script>
+    <script src="daily-report.js?v=5.9.31"></script>
 
     <!-- Data Backup, Restore & PWA Engine (v5.9.30) -->
-    <script src="data-backup.js?v=5.9.30"></script>
+    <script src="data-backup.js?v=5.9.31"></script>
 
     <!-- Modal Controller, Profile Drawer & Quick Add Engine (v5.9.30) -->
-    <script src="quick-add.js?v=5.9.30"></script>
+    <script src="quick-add.js?v=5.9.31"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.30"></script>
+    <script src="app.js?v=5.9.31"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.30"></script>
+    <script src="mascot-companion.js?v=5.9.31"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.30"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.31"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

@@ -114,6 +114,156 @@
     // ROLE 1: SMART REACTIVE MOOD & SPEECH ENGINE
     // ==========================================
 
+    const NOVA_MOOD_SPEECH_POOLS = {
+        thirsty: [
+            'บ่ายแล้ว ดื่มน้ำไปแค่ {waterGlasses} แก้วเองนะเมี้ยว 💧 แตะที่น้องเพื่อ +1 แก้วได้เลย!',
+            'ร่างกายต้องการน้ำเพิ่มแล้วน้าเมี้ยว ตอนนี้ดื่มไป {waterGlasses}/{targetGlasses} แก้วเอง แวะจิบสักนิดนะ 🧊',
+            'ช่วงบ่ายแบบนี้จิบน้ำเย็นๆ สักแก้วไหมเมี้ยว? ตอนนี้ได้ {waterGlasses} แก้วแล้ว มาเติมความสดชื่นกัน 💧🥑',
+            'สมองแล่น ผิวชุ่มชื้น เริ่มต้นที่น้ำเปล่านะเมี้ยว! วันนี้เพิ่งได้ {waterGlasses} แก้ว จิบเพิ่มอีกแก้วกันเถอะ ✨',
+            'คอแห้งหรือยังเอ่ยเมี้ยว? วันนี้ดื่มไป {waterGlasses} แก้วเอง แตะตัวน้องเหมียวเพื่อบันทึก +1 แก้วทันใจได้เลยนะ 🚰'
+        ],
+        proud_protein: [
+            'โปรตีนวันนี้ทะลุ {totalP}g ครบเป้าหมายแล้ว สุดยอดมากเมี้ยว! 🏆✨',
+            'กล้ามเนื้อแฮปปี้สุดๆ! วันนี้เติมโปรตีนไป {totalP}g/{targetP}g ครบถ้วน ร่างกายซ่อมแซมเต็มที่แน่นอนเมี้ยว 💪🥩',
+            'วินัยดีเยี่ยมมากเมี้ยว! โปรตีนแตะ {totalP}g เรียบร้อยแล้ว ขอปรบมือให้คนเก่งเลย 👏🌟',
+            'พลังโปรตีนเต็มร้อย! {totalP}g ตามเป้าหมายเป๊ะ วันนี้สุดยอดไปเลยเมี้ยว 🥑🔥'
+        ],
+        proud_calorie: [
+            'แคลอรีวันนี้ {totalCal} kcal ตรงเป้าหมายเป๊ะเลย มีวินัยมากเมี้ยว! 🌟',
+            'จัดสรรแคลอรีได้ยอดเยี่ยมมาก วันนี้ทานไป {totalCal}/{goalCal} kcal สมดุลเป๊ะเลยเมี้ยว 🎯👏',
+            'ควบคุมพลังงานได้เซียนสุดๆ! {totalCal} kcal พอดิบพอดี เหมียวโนวาภูมิใจในตัวคุณมากเมี้ยว 🏆✨',
+            'บาลานซ์อาหารวันนี้ดีเยี่ยม! รักษาระดับวินัยแบบนี้ไว้ หุ่นในฝันอยู่ไม่ไกลแน่นอนเมี้ยว 🥑⭐'
+        ],
+        sleepy_late: [
+            'ดึกแล้วนะเมี้ยว เข้านอนพักผ่อนให้เพียงพอนะ ร่างกายจะได้ฟื้นฟูเต็มที่ 🌙',
+            'อย่านอนดึกเกินไปน้าเมี้ยว การนอนหลับที่ดีช่วยเผาผลาญไขมันและสร้างกล้ามเนื้อได้ดีที่สุดเลย 😴💤',
+            'คืนนี้พักผ่อนให้เต็มอิ่ม พรุ่งนี้ค่อยตื่นมาลุยเป้าหมายสุขภาพกันต่อนะเมี้ยว ฝันดีนะ 🌟🛌',
+            'วางมือถือแล้วพักสายตากันเถอะเมี้ยว ร่างกายต้องการการซ่อมแซม ราตรีสวัสดิ์นะ 🌙🥑'
+        ],
+        sleepy_fasting: [
+            'คุณอดอาหาร IF มาแล้ว {elapsedHours} ชม. อดทนเก่งมาก ร่างกายเริ่มเผาผลาญไขมันแล้วเมี้ยว ⏳',
+            'เข้าสู่โหมดเผาผลาญไขมันลึกแล้วเมี้ยว! ผ่านไป {elapsedHours} ชม. แล้ว จิบน้ำเปล่าหรือชาอุ่นๆ สู้ๆ นะ 💧✨',
+            'ช่วงเวลาแห่งการฟื้นฟูเซลล์! อดอาหารมาได้ {elapsedHours} ชม. แล้ว วินัยยอดเยี่ยมมากเมี้ยว 🥑🔥'
+        ],
+        workout_done: [
+            'ออกกำลังกายสำเร็จไปแล้ว! เบิร์นไขมันกระจุยเลย เก่งที่สุดเมี้ยว 🔥',
+            'ฟิตเปรี๊ยะ! วันนี้เบิร์นเหงื่อสำเร็จไปแล้ว ร่างกายหลั่งสารความสุขฟินสุดๆ เมี้ยว 🏃‍♂️✨',
+            'วินัยสายออกกำลังกายอันดับหนึ่ง! วันนี้ซ้อมเสร็จเรียบร้อย อย่าลืมจิบน้ำและเติมโปรตีนน้าเมี้ยว 🏋️‍♀️💧',
+            'สุดยอดมากเมี้ยว! กิจกรรมวันนี้พิชิตสำเร็จแล้ว สุขภาพหัวใจและกล้ามเนื้อแข็งแรงขึ้นอีกขั้น 🌟🥑'
+        ],
+        workout_evening: [
+            'ช่วงเย็นเหมาะกับการขยับร่างกาย เผาผลาญแคลอรีสุดๆ ไปลุยกันเมี้ยว! 💪🔥',
+            'เย็นนี้ไปยืดเส้นยืดสายหรือขยับเบาๆ สัก 20-30 นาทีกันไหมเมี้ยว ร่างกายจะสดชื่นมากเลย 🏃‍♀️✨',
+            'แวะเปลี่ยนชุดไปเบิร์นแคลอรีกันเถอะเมี้ยว เหงื่อออกวันละนิด จิตแจ่มใส ร่างกายฟิตเฟิร์ม 🥑💥',
+            'เวลาทองของการเผาผลาญไขมันยามเย็น! ขยับร่างวันละหน่อย สุขภาพดีขึ้นแน่นอนเมี้ยว 🏋️‍♂️🌟'
+        ],
+        morning: [
+            'อรุณสวัสดิ์เมี้ยว! เช้านี้อย่าลืมบันทึกมื้อเช้าเพิ่มพลังงานนะ 🥑✨',
+            'ตื่นมารับวันใหม่ที่สดใสกันเมี้ยว! เริ่มต้นวันด้วยน้ำเปล่า 1 แก้ว ปลุกระบบเผาผลาญกันเถอะ 💧🌅',
+            'เช้าวันใหม่ วันนี้ลุยเป้าหมายสุขภาพไปด้วยกันนะเมี้ยว ทานมื้อเช้าที่มีประโยชน์ด้วยน้า 🍳🥗',
+            'มอร์นิ่งเมี้ยว! วันนี้พร้อมพิชิตเป้าหมายแคลอรีและโปรตีนหรือยัง เหมียวโนวาอยู่ข้างๆ เสมอนะ 🌟🥑'
+        ],
+        default_ready: [
+            'โค้ชเหมียวโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑',
+            'วันนี้เป็นวันที่ดีในการรักตัวเองนะเมี้ยว มีอะไรให้น้องเหมียวช่วยแนะนำ แตะมาคุยกันได้เลย ✨',
+            'จิบน้ำสม่ำเสมอ ทานอาหารคุณภาพดี เหมียวโนวาพร้อมเป็นคู่คิดสุขภาพของคุณทุกวันเมี้ยว 💧🥑',
+            'แตะที่ตัวน้องเพื่อจิบน้ำ +1 แก้วทันใจ หรือเปิดแชตถามเรื่องสุขภาพได้ตลอดเลยนะเมี้ยว 💬🌟'
+        ]
+    };
+
+    // Helper: Select varied speech from pool with persistent LRU queue to avoid repeating same phrases
+    function getVariedMascotMessage(categoryKey, vars = {}) {
+        const pool = NOVA_MOOD_SPEECH_POOLS[categoryKey];
+        if (!pool || pool.length === 0) return '';
+
+        const STORAGE_KEY = 'novafit_mascot_msg_history';
+        let history = {};
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) history = JSON.parse(raw);
+        } catch(e) {}
+
+        let seenList = Array.isArray(history[categoryKey]) ? history[categoryKey] : [];
+        let available = [];
+        for (let i = 0; i < pool.length; i++) {
+            if (!seenList.includes(i)) available.push(i);
+        }
+
+        if (available.length === 0) {
+            seenList = seenList.slice(-1);
+            available = [];
+            for (let i = 0; i < pool.length; i++) {
+                if (!seenList.includes(i)) available.push(i);
+            }
+            if (available.length === 0) available = [0];
+        }
+
+        const chosenIdx = available[Math.floor(Math.random() * available.length)];
+        seenList.push(chosenIdx);
+        if (seenList.length >= pool.length) {
+            seenList = seenList.slice(-(pool.length - 1));
+        }
+        history[categoryKey] = seenList;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+        } catch(e) {}
+
+        let text = pool[chosenIdx];
+        Object.keys(vars).forEach(k => {
+            text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(vars[k]));
+        });
+        return text;
+    }
+
+    // Helper: Synchronized context metrics calculation across active date and clinical targets
+    function getNovaContextMetrics() {
+        const st = window.state || {};
+        const todayStr = (typeof window.getTodayStr === 'function' ? window.getTodayStr() : getTodayIso());
+        const activeDate = st.selectedDate || todayStr;
+        const logs = (st.logsByDate && st.logsByDate[activeDate]) || [];
+        const totalCal = logs.reduce((a, c) => a + (Number(c.cal) || 0), 0);
+        const totalP = Math.round(logs.reduce((a, c) => a + (Number(c.p) || 0), 0) * 10) / 10;
+        const totalC = Math.round(logs.reduce((a, c) => a + (Number(c.c) || 0), 0) * 10) / 10;
+        const totalF = Math.round(logs.reduce((a, c) => a + (Number(c.f) || 0), 0) * 10) / 10;
+
+        let targets = null;
+        if (typeof window.getCalculatedTargets === 'function') {
+            try { targets = window.getCalculatedTargets(activeDate); } catch(e) {}
+        } else if (typeof getCalculatedTargets === 'function') {
+            try { targets = getCalculatedTargets(activeDate); } catch(e) {}
+        }
+
+        const weight = Number(targets?.weight || st.profile?.weight || st.weight || 65);
+        const targetGlasses = Number(targets?.waterTargetGlasses || Math.max(6, Math.round((weight * 35) / 250)));
+        const targetWaterMl = Number(targets?.waterTargetMl || (targetGlasses * 250));
+        const goalCal = Number(targets?.totalCal || st.profile?.targetCalories || st.calorieGoal || 2000);
+        const targetP = Number(targets?.pGram || (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6));
+
+        const waterGlasses = (st.waterByDate && st.waterByDate[activeDate]) || 0;
+        const waterMl = waterGlasses * 250;
+        const remainCal = Math.max(0, goalCal - totalCal);
+        const waterRatio = targetGlasses > 0 ? (waterGlasses / targetGlasses) : 0;
+
+        return {
+            todayStr,
+            activeDate,
+            logs,
+            totalCal,
+            totalP,
+            totalC,
+            totalF,
+            weight,
+            goalCal,
+            targetP,
+            targetGlasses,
+            targetWaterMl,
+            waterGlasses,
+            waterMl,
+            waterRatio,
+            remainCal
+        };
+    }
+
     function evaluateNovaMood() {
         ensureCompanionState();
 
@@ -128,42 +278,36 @@
 
         const now = new Date();
         const hour = now.getHours();
-        const todayStr = getTodayIso();
+        const metrics = getNovaContextMetrics();
+        const {
+            todayStr, activeDate, totalCal, totalP, goalCal, targetP,
+            targetGlasses, waterGlasses, waterRatio
+        } = metrics;
         const st = window.state || {};
 
         // 1. Water Intake Check (13:00 - 18:30)
-        const waterGlasses = (st.waterByDate && st.waterByDate[todayStr]) || 0;
-        const weight = Number(st.weight) || 65;
-        const targetGlasses = Math.max(6, Math.round((weight * 35) / 250));
-        const waterRatio = targetGlasses > 0 ? (waterGlasses / targetGlasses) : 0;
-
+        // Trigger thirsty mood only if afternoon and water consumption is below 50%
         if (hour >= 13 && hour < 19 && waterRatio < 0.5) {
             return {
                 mood: 'thirsty',
-                text: `บ่ายแล้ว ดื่มน้ำไปแค่ ${waterGlasses} แก้วเองนะเมี้ยว 💧 แตะที่น้องเพื่อ +1 แก้วได้เลย!`,
+                text: getVariedMascotMessage('thirsty', { waterGlasses, targetGlasses }),
                 actionHint: 'water'
             };
         }
 
         // 2. Goal Met / Proud Check
-        const todayLogs = (st.logsByDate && st.logsByDate[todayStr]) || [];
-        const totalCal = todayLogs.reduce((acc, cur) => acc + (Number(cur.cal) || 0), 0);
-        const totalP = todayLogs.reduce((acc, cur) => acc + (Number(cur.p) || 0), 0);
-        const calorieGoal = Number(st.calorieGoal) || 2000;
-        const proteinTarget = (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6);
-
-        if (totalP >= proteinTarget && proteinTarget > 0) {
+        if (totalP >= targetP && targetP > 0) {
             return {
                 mood: 'proud',
-                text: `โปรตีนวันนี้ทะลุ ${totalP}g ครบเป้าหมายแล้ว สุดยอดมากเมี้ยว! 🏆✨`,
+                text: getVariedMascotMessage('proud_protein', { totalP, targetP }),
                 actionHint: 'proud'
             };
         }
 
-        if (totalCal >= calorieGoal * 0.9 && totalCal <= calorieGoal * 1.1) {
+        if (totalCal >= goalCal * 0.9 && totalCal <= goalCal * 1.1) {
             return {
                 mood: 'proud',
-                text: `แคลอรีวันนี้ ${totalCal.toLocaleString()} kcal ตรงเป้าหมายเป๊ะเลย มีวินัยมากเมี้ยว! 🌟`,
+                text: getVariedMascotMessage('proud_calorie', { totalCal: totalCal.toLocaleString(), goalCal }),
                 actionHint: 'proud'
             };
         }
@@ -173,7 +317,7 @@
         if (hour >= 21 || hour < 6) {
             return {
                 mood: 'sleepy',
-                text: `ดึกแล้วนะเมี้ยว เข้านอนพักผ่อนให้เพียงพอนะ ร่างกายจะได้ฟื้นฟูเต็มที่ 🌙`,
+                text: getVariedMascotMessage('sleepy_late'),
                 actionHint: 'sleep'
             };
         }
@@ -183,18 +327,18 @@
             if (elapsedHours >= 12) {
                 return {
                     mood: 'sleepy',
-                    text: `คุณอดอาหาร IF มาแล้ว ${Math.floor(elapsedHours)} ชม. อดทนเก่งมาก ร่างกายเริ่มเผาผลาญไขมันแล้วเมี้ยว ⏳`,
+                    text: getVariedMascotMessage('sleepy_fasting', { elapsedHours: Math.floor(elapsedHours) }),
                     actionHint: 'fasting'
                 };
             }
         }
 
         // 4. Workout Hours Check (16:30 - 19:30)
-        const workoutsToday = (st.workoutLogsByDate && st.workoutLogsByDate[todayStr]) || [];
+        const workoutsToday = (st.workoutLogsByDate && (st.workoutLogsByDate[activeDate] || st.workoutLogsByDate[todayStr])) || [];
         if (workoutsToday.length > 0) {
             return {
                 mood: 'workout',
-                text: `ออกกำลังกายสำเร็จไปแล้ว! เบิร์นไขมันกระจุยเลย เก่งที่สุดเมี้ยว 🔥`,
+                text: getVariedMascotMessage('workout_done'),
                 actionHint: 'workout'
             };
         }
@@ -202,7 +346,7 @@
         if (hour >= 16 && hour <= 19) {
             return {
                 mood: 'workout',
-                text: `ช่วงเย็นเหมาะกับการขยับร่างกาย เผาผลาญแคลอรีสุดๆ ไปลุยกันเมี้ยว! 💪🔥`,
+                text: getVariedMascotMessage('workout_evening'),
                 actionHint: 'workout'
             };
         }
@@ -211,14 +355,14 @@
         if (hour >= 6 && hour < 12) {
             return {
                 mood: 'happy',
-                text: `อรุณสวัสดิ์เมี้ยว! เช้านี้อย่าลืมบันทึกมื้อเช้าเพิ่มพลังงานนะ 🥑✨`,
+                text: getVariedMascotMessage('morning'),
                 actionHint: 'happy'
             };
         }
 
         return {
             mood: 'happy',
-            text: `โค้ชเหมียวโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑`,
+            text: getVariedMascotMessage('default_ready'),
             actionHint: 'happy'
         };
     }
@@ -326,6 +470,14 @@
                 bubble.classList.add('hidden');
             }
         }, 300);
+    }
+
+    // Live refresh speech bubble content if currently open
+    function updateNovaSpeechBubbleIfActive() {
+        const bubble = document.getElementById('novaSpeechBubble');
+        if (bubble && !bubble.classList.contains('hidden') && !bubble.classList.contains('opacity-0')) {
+            showNovaSpeechBubble();
+        }
     }
 
     // Toggle Mascot Floating Quick Menu
@@ -477,12 +629,15 @@
 
     function quickAddWaterFromMascot() {
         toggleNovaQuickMenu(true);
-        if (typeof window.addWater === 'function') {
+        if (typeof window.adjustWater === 'function') {
+            window.adjustWater(1);
+        } else if (typeof window.addWater === 'function') {
             window.addWater(1);
         } else {
-            const today = getTodayIso();
+            const metrics = getNovaContextMetrics();
+            const targetDate = metrics.activeDate;
             if (!window.state.waterByDate) window.state.waterByDate = {};
-            window.state.waterByDate[today] = (window.state.waterByDate[today] || 0) + 1;
+            window.state.waterByDate[targetDate] = (window.state.waterByDate[targetDate] || 0) + 1;
             if (typeof window.saveState === 'function') window.saveState();
             if (typeof window.renderAll === 'function') window.renderAll();
         }
@@ -710,7 +865,10 @@
         // 3. Water Intake
         if (/น้ำ|ดื่ม|กี่แก้ว|กี่ลิตร|กระหาย|hydration/i.test(q)) {
             const wGap = Math.max(0, targetGlasses - waterGlasses);
-            return `การดื่มน้ำวันละ 2-3 ลิตรช่วยเร่งการเผาผลาญไขมัน ลดอาการหิวปลอม และช่วยให้ระบบขับถ่ายคล่องตัวเมี้ยว! วันนี้ดื่มไปแล้ว ${waterGlasses} แก้ว (${waterGlasses * 250} ml) จิบเพิ่มอีก ${wGap > 0 ? wGap + ' แก้ว' : 'เรื่อยๆ'} เพื่อความสดชื่นนะเมี้ยว 💧✨`;
+            if (wGap === 0) {
+                return `ยอดเยี่ยมมากเมี้ยว! วันนี้ดื่มน้ำครบเป้าหมาย ${waterGlasses}/${targetGlasses} แก้ว (${waterGlasses * 250} ml) เรียบร้อยแล้ว ร่างกายสดชื่น ระบบเผาผลาญและไตทำงานเต็มสูบ จิบน้ำต่อได้เรื่อยๆ เลยนะเมี้ยว 💧🎉`;
+            }
+            return `การดื่มน้ำวันละ 2-3 ลิตรช่วยเร่งการเผาผลาญไขมัน ลดอาการหิวปลอม และช่วยให้ระบบขับถ่ายคล่องตัวเมี้ยว! วันนี้ดื่มไปแล้ว ${waterGlasses}/${targetGlasses} แก้ว (${waterGlasses * 250} ml) จิบเพิ่มอีก ${wGap} แก้ว เพื่อพิชิตเป้าหมายนะเมี้ยว 💧✨`;
         }
 
         // 4. Workout / Exercise Timing
@@ -784,19 +942,11 @@
         // ==========================================
         // TIER 4: BUILD PERSONALIZED CONTEXT
         // ==========================================
-        const st = window.state || {};
-        const todayStr = getTodayIso();
-        const logs = (st.logsByDate && st.logsByDate[todayStr]) || [];
-        const totalCal = logs.reduce((a, c) => a + (Number(c.cal) || 0), 0);
-        const totalP = logs.reduce((a, c) => a + (Number(c.p) || 0), 0);
-        const totalC = logs.reduce((a, c) => a + (Number(c.c) || 0), 0);
-        const totalF = logs.reduce((a, c) => a + (Number(c.f) || 0), 0);
-        const goalCal = Number(st.calorieGoal) || 2000;
-        const remainCal = Math.max(0, goalCal - totalCal);
-        const waterGlasses = (st.waterByDate && st.waterByDate[todayStr]) || 0;
-        const weight = st.weight || 65;
-        const targetP = (st.macroTargets && st.macroTargets.p) || Math.round(weight * 1.6);
-        const targetGlasses = Math.max(6, Math.round((weight * 35) / 250));
+        const metrics = getNovaContextMetrics();
+        const {
+            totalCal, totalP, totalC, totalF, goalCal, remainCal,
+            waterGlasses, waterMl, targetGlasses, weight, targetP
+        } = metrics;
         const userStats = { remainCal, totalP, targetP, waterGlasses, targetGlasses };
 
         // Zero-Token Admin Policy: Force Local Heuristics (system_config/mascot) - v5.9.22
@@ -812,7 +962,7 @@
 - น้ำหนัก: ${weight} กก.
 - เป้าหมายแคลอรี: ${goalCal} kcal | ทานแล้ว: ${totalCal} kcal (เหลือ ${remainCal} kcal)
 - โปรตีน: ${totalP}g / คาร์บ: ${totalC}g / ไขมัน: ${totalF}g
-- ดื่มน้ำ: ${waterGlasses} แก้ว (${waterGlasses * 250} ml)`;
+- ดื่มน้ำ: ${waterGlasses} / ${targetGlasses} แก้ว (${waterMl} ml)`;
 
         // Show typing indicator
         _isAiChatLoading = true;
@@ -1059,6 +1209,8 @@
     window.renderNovaMascot = renderNovaMascot;
     window.showNovaSpeechBubble = showNovaSpeechBubble;
     window.hideNovaSpeechBubble = hideNovaSpeechBubble;
+    window.updateNovaSpeechBubbleIfActive = updateNovaSpeechBubbleIfActive;
+    window.getNovaContextMetrics = getNovaContextMetrics;
     window.toggleNovaQuickMenu = toggleNovaQuickMenu;
     window.minimizeNovaMascot = minimizeNovaMascot;
     window.restoreNovaMascot = restoreNovaMascot;

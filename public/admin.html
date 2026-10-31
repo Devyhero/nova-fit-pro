@@ -650,14 +650,29 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.30
+                            Current Version: v5.9.31
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.31 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-indigo-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🚀 v5.9.31 (MeowNova Real-Time Hydration Sync, Unified Context Metrics & Persistent LRU Speech Diversity)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">31 ต.ค. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>💧 Real-Time MeowNova & Water Tracker Inter-Module Synchronization:</b> แก้ปัญหาโค้ชเหมียวโนวาจำค่าน้ำค้าง (เช่น ดื่ม 6 แก้วแต่บอกว่า 3 แก้ว) โดยเชื่อมโยง <code>adjustWater()</code> และ <code>setWaterDirect()</code> ใน <code>public/water-tracker.js</code> ให้เรียก <code>renderNovaMascot()</code> และ <code>updateNovaSpeechBubbleIfActive()</code> ทันทีที่มีการเปลี่ยนแปลงปริมาณน้ำดื่ม พร้อมส่ง <code>window.addWater = adjustWater</code> รองรับ Backward Compatibility</li>
+                                <li><b>🥑 Unified Context Metrics & Target Calculation (<code>getNovaContextMetrics()</code>):</b> ปรับปรุง <code>public/mascot-companion.js</code> ให้คำนวณเป้าหมายน้ำดื่มจาก <code>getCalculatedTargets(activeDate)</code> จริงตามสรีระและกิจกรรม พร้อมดึง <code>waterGlasses</code> ตาม <code>activeDate</code> (<code>st.selectedDate || todayStr</code>) ขจัดปัญหาตัวเลขค้างหรือคำนวณน้ำหนักตัวคลาดเคลื่อน</li>
+                                <li><b>✨ Persistent LRU Message Diversity Engine (Smart Anti-Repeat):</b> ออกแบบระบบสุ่มคำพูดแบบ LRU (Least Recently Used) บันทึกคิวประวัติข้อความลง <code>localStorage</code> (<code>novafit_mascot_msg_history</code> และ <code>novafit_companion_lru_history</code>) ทั้งใน <code>public/mascot-companion.js</code> และ <code>public/living-companion.js</code> การันตีว่าจะไม่มีการแสดงข้อความซ้ำจนกว่าจะหมุนเวียนแสดงครบทุกข้อความใน Pool และไม่สูญหายเมื่อรีโหลดหรือเปิดปิด PWA</li>
+                                <li><b>☁️ Cross-Device Real-Time Cloud Sync Signal:</b> เพิ่มคำสั่งเรียก <code>renderNovaMascot()</code> ใน <code>applyCloudState()</code> ของ <code>public/app.js</code> ให้อัปเดตสถานะของน้องเหมียวบนหน้าจอทันทีที่มีการเปลี่ยนแปลงข้อมูลน้ำดื่มหรือสารอาหารมาจากอีกอุปกรณ์</li>
+                                <li><b>⚡ Node.js 22 Runtime Upgrade & Test 54 Automation:</b> อัปเกรด Cloud Functions runtime สู่ Node.js 22 ตามมาตรฐานล่าสุดของ Google Cloud และเพิ่มเคสทดสอบอัตโนมัติ Test 54 ใน <code>scripts/test-browser-cdp.js</code> ตรวจสอบความถูกต้อง 100%</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.31 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.30 -->
-                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-amber-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🚀 v5.9.30 (AI Nutrition Label OCR, Streak Freeze Shield, Medical BMR Safety Guard & Admin Central Food CRUD)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">26 ต.ค. 2026</span>
@@ -2166,7 +2181,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.30"></script>
+    <script type="module" src="admin.js?v=5.9.31"></script>
 
 </body>
 

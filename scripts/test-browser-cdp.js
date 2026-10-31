@@ -2872,6 +2872,59 @@ server.listen(PORT, async () => {
             throw new Error('Test 53: Supplements & Vitamins Engine verification failed!');
         }
 
+        // Test 54: Nova Mascot & Living Companion Water Sync & Speech Diversity Engine
+        console.log('--- Test 54: MeowNova Water Sync & Speech Diversity Engine ---');
+        const diversityTest = await evalJs(`(() => {
+            const today = typeof getTodayStr === 'function' ? getTodayStr() : (window.getTodayStr ? window.getTodayStr() : '2026-10-31');
+            
+            // 1. Set water to 3 glasses directly
+            window.state.waterByDate[today] = 3;
+            if (typeof window.renderNovaMascot === 'function') window.renderNovaMascot();
+            const metricsAt3 = typeof window.getNovaContextMetrics === 'function' ? window.getNovaContextMetrics() : null;
+            
+            // 2. Adjust water +3 glasses via window.adjustWater
+            if (typeof window.adjustWater === 'function') {
+                window.adjustWater(3);
+            }
+            const metricsAt6 = typeof window.getNovaContextMetrics === 'function' ? window.getNovaContextMetrics() : null;
+            
+            // 3. Test backward-compatibility window.addWater
+            const waterBeforeAdd = window.state.waterByDate[today];
+            if (typeof window.addWater === 'function') {
+                window.addWater(1);
+            }
+            const waterAfterAdd = window.state.waterByDate[today];
+
+            // 4. Test Living Companion Speech Diversity with LRU (no immediate repeat)
+            const msgs = [];
+            for (let i = 0; i < 5; i++) {
+                msgs.push(window.getVariedCompanionMessage('water_near_target', {
+                    currentGlasses: 6, targetGlasses: 8, currentWaterMl: 1500, remainingGlasses: 2
+                }));
+            }
+            const allDifferentInFive = new Set(msgs).size >= 3;
+
+            // 5. Test Cheerful Quotes LRU Diversity
+            const quotes = [];
+            for (let i = 0; i < 5; i++) {
+                quotes.push(window.getVariedCheerfulQuote().msg);
+            }
+            const quotesDiverse = new Set(quotes).size >= 3;
+
+            return {
+                waterAt3: metricsAt3?.waterGlasses === 3,
+                waterAt6: metricsAt6?.waterGlasses === 6,
+                addWaterWorks: waterAfterAdd === waterBeforeAdd + 1,
+                hasMetrics: !!metricsAt6,
+                allDifferentInFive,
+                quotesDiverse
+            };
+        })()`);
+        console.log('MeowNova Water Sync & Speech Diversity verified:', diversityTest);
+        if (!diversityTest.waterAt3 || !diversityTest.waterAt6 || !diversityTest.addWaterWorks || !diversityTest.allDifferentInFive || !diversityTest.quotesDiverse) {
+            throw new Error('Test 54: MeowNova Water Sync & Speech Diversity verification failed: ' + JSON.stringify(diversityTest));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

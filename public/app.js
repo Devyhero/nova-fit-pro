@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.30';
+const APP_VERSION = '5.9.31';
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
@@ -2702,6 +2702,12 @@ const APP_VERSION = '5.9.30';
 
             if (typeof renderCoachAdvice === 'function') renderCoachAdvice(t);
             else if (typeof window.renderCoachAdvice === 'function') window.renderCoachAdvice(t);
+
+            if (typeof renderNovaMascot === 'function') renderNovaMascot();
+            else if (typeof window.renderNovaMascot === 'function') window.renderNovaMascot();
+
+            if (typeof updateNovaSpeechBubbleIfActive === 'function') updateNovaSpeechBubbleIfActive();
+            else if (typeof window.updateNovaSpeechBubbleIfActive === 'function') window.updateNovaSpeechBubbleIfActive();
         };
 
         // Check for updates and new day rollover initially and periodically
@@ -2787,3 +2793,4 @@ window.testLocalNotification = testLocalNotification;
 window.togglePushNotificationPermission = togglePushNotificationPermission;
 window.getDefaultMealByTime = getDefaultMealByTime;
 window.autoSyncMealByTime = autoSyncMealByTime;
+window.getTodayStr = getTodayStr;

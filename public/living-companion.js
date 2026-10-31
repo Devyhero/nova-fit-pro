@@ -133,32 +133,56 @@
         ]
     };
 
+    // LRU-based Message Diversity Selector with Persistent LocalStorage
+    function pickFromPoolWithLru(pool, storageKey, categoryKey) {
+        if (!pool || pool.length === 0) return { item: null, index: -1 };
+        if (pool.length === 1) return { item: pool[0], index: 0 };
+
+        let history = {};
+        try {
+            const raw = localStorage.getItem(storageKey);
+            if (raw) history = JSON.parse(raw);
+        } catch(e) {}
+
+        let seen = Array.isArray(history[categoryKey]) ? history[categoryKey] : [];
+        let available = [];
+        for (let i = 0; i < pool.length; i++) {
+            if (!seen.includes(i)) available.push(i);
+        }
+
+        if (available.length === 0) {
+            seen = seen.slice(-1);
+            available = [];
+            for (let i = 0; i < pool.length; i++) {
+                if (!seen.includes(i)) available.push(i);
+            }
+            if (available.length === 0) available = [0];
+        }
+
+        const chosenIdx = available[Math.floor(Math.random() * available.length)];
+        seen.push(chosenIdx);
+        if (seen.length >= pool.length) {
+            seen = seen.slice(-(pool.length - 1));
+        }
+        history[categoryKey] = seen;
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(history));
+        } catch(e) {}
+
+        return { item: pool[chosenIdx], index: chosenIdx };
+    }
+
+    function getVariedCheerfulQuote() {
+        const { item } = pickFromPoolWithLru(CHEERFUL_DAILY_QUOTES, 'novafit_companion_lru_history', 'cheerful_quotes');
+        return item || CHEERFUL_DAILY_QUOTES[0];
+    }
+
     function getVariedCompanionMessage(categoryKey, vars = {}) {
         const pool = COMPANION_MESSAGE_TEMPLATES[categoryKey];
         if (!pool || pool.length === 0) return '';
         
-        let history = {};
-        try {
-            const raw = sessionStorage.getItem('novafit_companion_msg_history');
-            if (raw) history = JSON.parse(raw);
-        } catch(e) {}
-        
-        const lastUsed = history[categoryKey] !== undefined ? history[categoryKey] : -1;
-        let availableIndices = [];
-        for (let i = 0; i < pool.length; i++) {
-            if (i !== lastUsed) availableIndices.push(i);
-        }
-        if (availableIndices.length === 0) {
-            availableIndices = [0];
-        }
-        
-        const chosenIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-        history[categoryKey] = chosenIdx;
-        try {
-            sessionStorage.setItem('novafit_companion_msg_history', JSON.stringify(history));
-        } catch(e) {}
-        
-        let text = pool[chosenIdx];
+        const { item } = pickFromPoolWithLru(pool, 'novafit_companion_lru_history', categoryKey);
+        let text = item || pool[0];
         Object.keys(vars).forEach(k => {
             text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(vars[k]));
         });
@@ -255,7 +279,7 @@
             if (_currentCompanionConfig.categoryKey) {
                 newMsg = getVariedCompanionMessage(_currentCompanionConfig.categoryKey, _currentCompanionConfig.vars || {});
             } else {
-                const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+                const q = getVariedCheerfulQuote();
                 newMsg = q.msg;
             }
             msgEl.textContent = newMsg;
@@ -698,7 +722,7 @@
 
         // ── TRIGGER 10: Random Cheerful Quote (Once per day on opening) ──
         if (!shownList.includes('daily_cheerful_quote')) {
-            const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+            const q = getVariedCheerfulQuote();
             showLivingCompanionNudge({
                 id: 'daily_cheerful_quote',
                 icon: q.icon,
@@ -862,7 +886,7 @@
                 break;
             case 'cheerful':
             default:
-                const q = CHEERFUL_DAILY_QUOTES[Math.floor(Math.random() * CHEERFUL_DAILY_QUOTES.length)];
+                const q = getVariedCheerfulQuote();
                 showLivingCompanionNudge({
                     id: 'test_cheerful_' + Date.now(),
                     icon: q.icon,
@@ -876,6 +900,7 @@
 
     // Window Global Exports
     window.CHEERFUL_DAILY_QUOTES = CHEERFUL_DAILY_QUOTES;
+    window.getVariedCheerfulQuote = getVariedCheerfulQuote;
     window.COMPANION_MESSAGE_TEMPLATES = COMPANION_MESSAGE_TEMPLATES;
     window.getVariedCompanionMessage = getVariedCompanionMessage;
     window.showLivingCompanionNudge = showLivingCompanionNudge;
