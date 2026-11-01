@@ -755,7 +755,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.31)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.32)
                         </button>
                         <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
@@ -1213,10 +1213,9 @@
                                 class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-11 py-2 text-base sm:text-sm focus:outline-none focus:border-emerald-500 shadow-inner">
                             <button type="button" id="btnClearSearch"
                                 onclick="clearFoodSearch()"
-                                onpointerdown="event.preventDefault();"
                                 onmousedown="event.preventDefault();"
                                 title="ล้างการค้นหา"
-                                class="hidden absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer z-10">
+                                class="hidden absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer z-10 touch-manipulation">
                                 <span class="w-5 h-5 rounded-full bg-slate-200/90 dark:bg-slate-700/90 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold leading-none select-none shadow-xs">✕</span>
                             </button>
                         </div>
@@ -1669,7 +1668,7 @@
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-base shrink-0">🎉</span>
-                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.31!</b> สรุปการอัปเดตล่าสุด:</span>
+                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.32!</b> สรุปการอัปเดตล่าสุด:</span>
                     </div>
                     <button type="button" onclick="applyAppUpdate()"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition shrink-0 flex items-center gap-1 cursor-pointer">
@@ -1677,10 +1676,38 @@
                     </button>
                 </div>
 
-                <!-- Latest Release: v5.9.31 -->
+                <!-- Latest Release: v5.9.32 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🍏</span> v5.9.32 (ค้นหาและบันทึกอาหารลื่นไหลบน iPhone & ป๊อบอัพแจ้งเตือนอัจฉริยะ)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">1 พ.ย. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🔍</span>
+                            <span><b>ค้นหาและบันทึกอาหารลื่นไหลบน iPhone (iOS Safari):</b> แก้ไขอาการแจ้งเตือนเพิ่มอาหารค้างและหน้าจอสะดุดบน iPhone 15 Pro Max / 16 Pro Max ให้สามารถค้นหา แตะเพิ่ม และพิมพ์ต่อได้ทันทีอย่างราบรื่น</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-cyan-500">⚡</span>
+                            <span><b>ระบบแจ้งเตือนอัจฉริยะแบบไร้รอยต่อ (Self-Dismissing Toast Watchdog):</b> ปรับปรุงป๊อบอัพแจ้งเตือนให้หายเองอัตโนมัติ 100% พร้อมระบบแตะปิดทันที ไม่บดบังปุ่มหรือขัดจังหวะการใช้งาน</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">✕</span>
+                            <span><b>ปุ่มเคลียร์ช่องค้นหา 1-Tap ทันใจ:</b> แตะปุ่มกากบาทเพื่อล้างคำค้นหาเดิมและพร้อมพิมพ์เมนูถัดไปได้ทันทีในการแตะเพียงครั้งเดียว</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">🚀</span>
+                            <span><b>ปรับปรุงการตอบสนองระดับแอนิเมชันเฟรม (RAF UI Pipeline):</b> แยกการประมวลผลการบันทึกอาหารและการเรนเดอร์หน้าจออย่างนุ่มนวล ป้องกันอาการหน่วงขณะใช้งานต่อเนื่อง</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.31 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                             <span>💧</span> v5.9.31 (โค้ชเหมียวโนวาจำค่าน้ำดื่มเรียลไทม์ & สุ่มคำพูดคู่คิดสุขภาพหลากหลาย)
                         </span>
                         <span class="text-xs text-slate-400 font-mono">31 ต.ค. 2026</span>
@@ -3575,7 +3602,7 @@
             <!-- Search input -->
             <div class="relative shrink-0">
                 <input type="text" id="healthTipsSearchInput" oninput="renderHealthTipsModalList(this.value)" placeholder="🔍 ค้นหา เช่น มะเขือเทศ, โปรตีน, นอนหลับ, น้ำดื่ม..." class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-amber-500 shadow-xs font-medium">
-                <button type="button" onpointerdown="event.preventDefault();" onmousedown="event.preventDefault();" onclick="document.getElementById('healthTipsSearchInput').value=''; renderHealthTipsModalList('');" title="ล้างการค้นหา" class="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10">
+                <button type="button" onmousedown="event.preventDefault();" onclick="document.getElementById('healthTipsSearchInput').value=''; renderHealthTipsModalList('');" title="ล้างการค้นหา" class="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10 touch-manipulation">
                     <span class="w-5 h-5 rounded-full bg-slate-200/80 dark:bg-slate-600/80 flex items-center justify-center text-xs font-bold leading-none select-none">✕</span>
                 </button>
             </div>
@@ -4262,8 +4289,8 @@
                                 oninput="onComboFoodSearchInput(this.value)"
                                 class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500 pr-10">
                             <button type="button" id="comboFoodSearchClearBtn" onclick="clearComboFoodSearch()"
-                                onpointerdown="event.preventDefault();" onmousedown="event.preventDefault();" title="ล้างการค้นหา"
-                                class="hidden absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10">
+                                onmousedown="event.preventDefault();" title="ล้างการค้นหา"
+                                class="hidden absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer z-10 touch-manipulation">
                                 <span class="w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200">✕</span>
                             </button>
                         </div>
@@ -4647,67 +4674,67 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.31"></script>
+    <script src="food-db.js?v=5.9.32"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.31"></script>
+    <script src="health-tips.js?v=5.9.32"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.31"></script>
+    <script src="ai-snap.js?v=5.9.32"></script>
 
     <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
-    <script src="nutrition-scanner.js?v=5.9.31"></script>
+    <script src="nutrition-scanner.js?v=5.9.32"></script>
 
     <!-- Intermittent Fasting (IF) Timer Engine (v5.9.30) -->
-    <script src="fasting-engine.js?v=5.9.31"></script>
+    <script src="fasting-engine.js?v=5.9.32"></script>
 
     <!-- Visual Share Card Engine (v5.9.30) -->
-    <script src="share-card.js?v=5.9.31"></script>
+    <script src="share-card.js?v=5.9.32"></script>
 
     <!-- Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide Engine (v5.9.30) -->
-    <script src="prestige-wardrobe.js?v=5.9.31"></script>
+    <script src="prestige-wardrobe.js?v=5.9.32"></script>
 
     <!-- Living App Companion & Milestone Celebration Engine (v5.9.30) -->
-    <script src="living-companion.js?v=5.9.31"></script>
+    <script src="living-companion.js?v=5.9.32"></script>
 
     <!-- Meal Combos & Visual Editor Engine (v5.9.30) -->
-    <script src="meal-combos.js?v=5.9.31"></script>
+    <script src="meal-combos.js?v=5.9.32"></script>
 
     <!-- Supplements & Vitamins Engine (v5.9.30) -->
-    <script src="supplements.js?v=5.9.31"></script>
+    <script src="supplements.js?v=5.9.32"></script>
 
     <!-- Web Push Notifications & FCM Engine (v5.9.30) -->
-    <script src="web-push.js?v=5.9.31"></script>
+    <script src="web-push.js?v=5.9.32"></script>
 
     <!-- Water Tracker & Hydration Engine (v5.9.30) -->
-    <script src="water-tracker.js?v=5.9.31"></script>
+    <script src="water-tracker.js?v=5.9.32"></script>
 
     <!-- Body Weight, Workouts & Weekly Analytics Engine (v5.9.30) -->
-    <script src="body-tracker.js?v=5.9.31"></script>
+    <script src="body-tracker.js?v=5.9.32"></script>
 
     <!-- Smart Coach Recommendations Engine (v5.9.30) -->
-    <script src="coach-engine.js?v=5.9.31"></script>
+    <script src="coach-engine.js?v=5.9.32"></script>
 
     <!-- Sound Effects & Web Audio Synthesizer (v5.9.30) -->
-    <script src="sound-effects.js?v=5.9.31"></script>
+    <script src="sound-effects.js?v=5.9.32"></script>
 
     <!-- Daily Report & Changelog Engine (v5.9.30) -->
-    <script src="daily-report.js?v=5.9.31"></script>
+    <script src="daily-report.js?v=5.9.32"></script>
 
     <!-- Data Backup, Restore & PWA Engine (v5.9.30) -->
-    <script src="data-backup.js?v=5.9.31"></script>
+    <script src="data-backup.js?v=5.9.32"></script>
 
     <!-- Modal Controller, Profile Drawer & Quick Add Engine (v5.9.30) -->
-    <script src="quick-add.js?v=5.9.31"></script>
+    <script src="quick-add.js?v=5.9.32"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.31"></script>
+    <script src="app.js?v=5.9.32"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.31"></script>
+    <script src="mascot-companion.js?v=5.9.32"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.31"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.32"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

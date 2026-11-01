@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.31';
+const APP_VERSION = '5.9.32';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
@@ -300,9 +300,19 @@ window.APP_VERSION = APP_VERSION;
 
         // [MODULARIZED]: Prestige Avatar Frames, Anti-Cheat & App Tour Guide ➔ public/prestige-wardrobe.js
 
-        function showToast(msg) {
+        // Quad-Layer Watchdog Toast Notification Engine (v5.9.32 - iOS Safari Lockout Immunity)
+        function showToast(msg, duration = 2200) {
             const container = document.getElementById('toastContainer');
             if (!container) return;
+
+            // Immediately prune stale or lingering toasts (> 3s old)
+            const now = Date.now();
+            Array.from(container.children).forEach(child => {
+                const birth = Number(child.getAttribute('data-born')) || 0;
+                if (!birth || (now - birth > 3000)) {
+                    child.remove();
+                }
+            });
 
             // Cap simultaneous toasts to 2 to prevent mobile screen clogging
             while (container.children.length >= 2) {
@@ -310,23 +320,56 @@ window.APP_VERSION = APP_VERSION;
             }
 
             const el = document.createElement('div');
-            el.className = 'bg-slate-900/95 dark:bg-emerald-600/95 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-emerald-400/30 animate-pop cursor-pointer select-none pointer-events-auto transition-all duration-200';
+            el.setAttribute('data-born', now.toString());
+            el.className = 'bg-slate-900/95 dark:bg-emerald-600/95 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-emerald-400/30 animate-pop cursor-pointer select-none pointer-events-auto transition-all duration-200 touch-manipulation';
             el.textContent = msg;
             el.title = 'แตะเพื่อปิด';
-            el.onclick = () => {
+
+            let isDismissed = false;
+            const dismiss = () => {
+                if (isDismissed) return;
+                isDismissed = true;
+                el.style.pointerEvents = 'none'; // Instantly release touch events
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(8px) scale(0.95)';
-                setTimeout(() => el.remove(), 180);
+                setTimeout(() => {
+                    if (el.parentElement) el.remove();
+                }, 180);
+            };
+
+            // Immediate tap to dismiss
+            el.onclick = (e) => {
+                if (e) e.stopPropagation();
+                if (el.parentElement) el.remove();
             };
 
             container.appendChild(el);
+
+            const dismissTimeout = Math.max(1200, Number(duration) || 2200);
             setTimeout(() => {
-                if (el.parentElement) {
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(8px) scale(0.95)';
-                    setTimeout(() => el.remove(), 200);
-                }
-            }, 2200);
+                dismiss();
+            }, dismissTimeout);
+
+            // Hard safety fallback: Absolute removal after timeout + 400ms even if animations stall
+            setTimeout(() => {
+                if (el.parentElement) el.remove();
+            }, dismissTimeout + 400);
+        }
+
+        // Periodic Toast Watchdog: Ensure no toast element can ever stay stuck in DOM
+        if (!window._toastWatchdogStarted) {
+            window._toastWatchdogStarted = true;
+            setInterval(() => {
+                const container = document.getElementById('toastContainer');
+                if (!container || !container.children.length) return;
+                const now = Date.now();
+                Array.from(container.children).forEach(child => {
+                    const birth = Number(child.getAttribute('data-born')) || 0;
+                    if (!birth || (now - birth > 3500)) {
+                        child.remove();
+                    }
+                });
+            }, 3000);
         }
 
         function showMiniLoader(message = 'กำลังประมวลผล...') {
@@ -1195,12 +1238,9 @@ window.APP_VERSION = APP_VERSION;
         function clearFoodSearch() {
             state.searchQuery = '';
             const input = document.getElementById('foodSearchInput');
-            const wasFocused = input && document.activeElement === input;
             if (input) {
                 input.value = '';
-                if (wasFocused) {
-                    input.focus();
-                }
+                input.focus();
             }
             const btnClear = document.getElementById('btnClearSearch');
             if (btnClear) btnClear.classList.add('hidden');
@@ -2016,15 +2056,10 @@ window.APP_VERSION = APP_VERSION;
         }
 
         function addFoodItem(name, p, c, f, explicitCal, targetMeal, targetPortion) {
-            // Dismiss mobile keyboard & blur active input immediately (Prevents iOS Safari viewport lock)
-            if (document.activeElement && typeof document.activeElement.blur === 'function') {
-                document.activeElement.blur();
-            }
-
-            // Rapid-tap debounce lock (Prevents multiple parallel executions)
-            if (window._isAddingFoodLock) return;
-            window._isAddingFoodLock = true;
-            setTimeout(() => { window._isAddingFoodLock = false; }, 320);
+            // Rapid-tap timestamp debounce (immune to iOS Safari timer throttling)
+            const now = Date.now();
+            if (window._lastAddFoodTime && (now - window._lastAddFoodTime < 280)) return;
+            window._lastAddFoodTime = now;
 
             const dStr = state.selectedDate;
             if (!state.logsByDate[dStr]) state.logsByDate[dStr] = [];
@@ -2060,7 +2095,12 @@ window.APP_VERSION = APP_VERSION;
             state.lastAddedFoodName = name;
             saveState();
             playSound('pop');
-            renderAll();
+
+            // Defer DOM re-render to next animation frame so tap event finishes cleanly on iOS Safari
+            requestAnimationFrame(() => {
+                renderAll();
+            });
+
             const mealName = MEAL_CONFIG[meal]?.name || 'มื้ออาหาร';
             const portionStr = portion !== 1 ? ` (x${portion})` : '';
             showToast(`✅ เพิ่ม "${name}"${portionStr} ลงใน ${mealName} (${finalCal} kcal) แล้ว`);

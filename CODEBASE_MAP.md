@@ -117,27 +117,31 @@ state = {
 | **MODULARIZED** | **Sound Effects & Web Audio Synthesizer** | Extracted to `public/sound-effects.js` (171 lines): `getAudioContext()`, `playSound()`, `renderSoundButton()`, `toggleSound()` |
 | **L98 – L299** | **Storage Engine & Core State** | `loadState()`, `saveState()` |
 | **MODULARIZED** | **Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide** | Extracted to `public/prestige-wardrobe.js` (845 lines) |
-| **L301 – L400** | **Toast, UI Preloader & Mini Loader** | `showToast()`, `showMiniLoader()`, `hideMiniLoader()`, `initAppPreloader()`, `dismissAppPreloader()` |
+| **L1 – L134**   | **State Definition & Bootstrap** | `APP_VERSION`, default `state`, `cleanDuplicateMealLogs` |
+| **MODULARIZED** | **Sound Effects & Web Audio Synthesizer** | Extracted to `public/sound-effects.js` (171 lines) |
+| **L135 – L303** | **Storage Engine & Core State** | `loadState()`, `saveState()` |
+| **MODULARIZED** | **Prestige Avatar Frames & Wardrobe** | Extracted to `public/prestige-wardrobe.js` (845 lines) |
+| **L304 – L457** | **Toast Watchdog, UI Preloader & Mini Loader** | `showToast()`, `showMiniLoader()`, `hideMiniLoader()`, `initAppPreloader()`, `dismissAppPreloader()` |
 | **MODULARIZED** | **Web Push Notifications & FCM Engine** | Extracted to `public/web-push.js` (198 lines) |
-| **L402 – L664** | **Theme & FLIP Smooth Accordion Engine** | `applyTheme()`, `toggleTheme()`, `toggleAllSettings()`, `animateSmoothAccordion()`, `toggleCardSection()`, `renderAllSectionCollapses()` |
-| **L665 – L1093**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
-| **L1094 – L1213**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()` |
-| **L1214 – L1675**| **Custom Confirm Dialog & Cloud Food DB Sync** | `showConfirmDialog()`, `deleteCustomPreset()`, `applyCentralFoodsFromCloud()`, `renderFoodDatabaseExplorer()` |
+| **L458 – L708** | **Theme & FLIP Smooth Accordion Engine** | `applyTheme()`, `toggleTheme()`, `toggleAllSettings()`, `animateSmoothAccordion()`, `toggleCardSection()`, `renderAllSectionCollapses()` |
+| **L709 – L1165**| **Profile Targets & Clinical Macro Calculator** | `getEffectiveWeight()`, `getCalculatedTargets()`, `applyBmrSafetyFloor()`, `setDayType()`, `renderAll()` |
+| **L1166 – L1268**| **Macro Presets & Universal Food Search** | `setActiveMeal()`, `setSelectedPortion()`, `setMacroPreset()`, `setProtein2gPerKg()`, `adjustMacros()`, `selectCategory()`, `onSearchFood()`, `clearFoodSearch()` |
+| **L1269 – L1726**| **Custom Confirm Dialog & Cloud Food DB Sync** | `showConfirmDialog()`, `deleteCustomPreset()`, `applyCentralFoodsFromCloud()`, `renderFoodDatabaseExplorer()` |
 | **MODULARIZED** | **Water Tracker & Hydration Engine** | Extracted to `public/water-tracker.js` (165 lines) |
 | **MODULARIZED** | **Body Weight, Workouts & Weekly Analytics Engine** | Extracted to `public/body-tracker.js` (606 lines) |
-| **L1680 – L1950**| **Date Tracker & Nutrition Progress Coordinator** | `renderDateTrackerAndRecommendations()` (daily donut, macronutrient progress bars, net calories) |
+| **L1727 – L2019**| **Date Tracker & Nutrition Progress Coordinator** | `renderDateTrackerAndRecommendations()` (daily donut, macronutrient progress bars, net calories) |
 | **MODULARIZED** | **Meal Combos & Visual Editor Engine** | Extracted to `public/meal-combos.js` (618 lines) |
 | **MODULARIZED** | **Supplements & Vitamins Engine** | Extracted to `public/supplements.js` (319 lines) |
 | **MODULARIZED** | **Smart Coach Recommendations Engine** | Extracted to `public/coach-engine.js` (405 lines) |
-| **L1995 – L2355**| **Date Navigation & Daily Meals CRUD** | `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
+| **L2020 – L2400**| **Date Navigation & Daily Meals CRUD** | `onDateChange()`, `shiftDate()`, `goToToday()`, `addFoodItem()`, `openFoodMealPicker()`, `removeFoodItem()`, `copyDailySummaryToClipboard()` |
 | **MODULARIZED** | **Daily Report, Changelog & App Updates Engine** | Extracted to `public/daily-report.js` (266 lines): `openDailyReportModal()`, `openChangelogModal()`, `showNewVersionBanner()`, `checkForAppUpdates()`, `updateVersionBadges()` |
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines) |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines) |
 | **MODULARIZED** | **Data Backup, Restore & PWA Engine** | Extracted to `public/data-backup.js` (158 lines): `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()` |
-| **L2360 – L2780**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
+| **L2401 – L2819**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
 | **MODULARIZED** | **Apple-Grade Modals & Profile Drawer** | Extracted to `public/quick-add.js` (242 lines): `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (918 lines) |
-| **L2781 – L2812**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L2820 – L2852**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 

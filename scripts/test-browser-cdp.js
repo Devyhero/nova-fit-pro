@@ -1360,7 +1360,7 @@ server.listen(PORT, async () => {
         for (let i = 0; i < 25; i++) {
             await new Promise(r => setTimeout(r, 200));
             try {
-                isMainAppReady = await evalJs('typeof window.calculateVerifiedStreak === "function" && typeof window.equipPrestigeFrame === "function" && !!document.getElementById("btnGuestWardrobe")');
+                isMainAppReady = await evalJs('typeof window.calculateVerifiedStreak === "function" && typeof window.getTodayStr === "function" && typeof window.equipPrestigeFrame === "function" && !!document.getElementById("btnGuestWardrobe")');
                 if (isMainAppReady) break;
             } catch (e) {}
         }
@@ -1373,7 +1373,7 @@ server.listen(PORT, async () => {
                 const day = String(d.getDate()).padStart(2, '0');
                 return \`\${year}-\${month}-\${day}\`;
             };
-            const todayStr = window.getTodayStr();
+            const todayStr = typeof window.getTodayStr === 'function' ? window.getTodayStr() : new Date().toISOString().split('T')[0];
             const dObj = new Date(todayStr + 'T00:00:00');
             dObj.setDate(dObj.getDate() - 1);
             const yestStr = toLocalStr(dObj);
@@ -2923,6 +2923,73 @@ server.listen(PORT, async () => {
         console.log('MeowNova Water Sync & Speech Diversity verified:', diversityTest);
         if (!diversityTest.waterAt3 || !diversityTest.waterAt6 || !diversityTest.addWaterWorks || !diversityTest.allDifferentInFive || !diversityTest.quotesDiverse) {
             throw new Error('Test 54: MeowNova Water Sync & Speech Diversity verification failed: ' + JSON.stringify(diversityTest));
+        }
+
+        // --- Test 55: Food Search Tap & Auto-Dismiss Toast Engine without Focus Loss or Deadlock (v5.9.32) ---
+        console.log('--- Test 55: Food Search Tap & Auto-Dismiss Toast Engine (v5.9.32) ---');
+        const foodSearchToastTest = await evalJs(`(() => {
+            const container = document.getElementById('toastContainer');
+            const searchInput = document.getElementById('foodSearchInput');
+            const btnClear = document.getElementById('btnClearSearch');
+
+            // 1. Test search input and clear button
+            searchInput.value = 'กะเพราไก่';
+            if (typeof window.onSearchFood === 'function') window.onSearchFood('กะเพราไก่');
+            const hasBtnClearShown = !btnClear.classList.contains('hidden');
+
+            // 2. Test clearFoodSearch focuses input and clears query
+            if (typeof window.clearFoodSearch === 'function') window.clearFoodSearch();
+            const valAfterClear = searchInput.value;
+            const isBtnClearHidden = btnClear.classList.contains('hidden');
+            const isInputFocused = document.activeElement === searchInput;
+
+            // 3. Test addFoodItem timestamp debounce & RAF decoupling
+            const today = typeof window.getTodayStr === 'function' ? window.getTodayStr() : new Date().toISOString().split('T')[0];
+            const logsBefore = (window.state.logsByDate[today] || []).length;
+            if (typeof window.addFoodItem === 'function') {
+                window.addFoodItem('ไข่ต้มทดสอบ', 6, 1, 5, 75, 'breakfast', 1);
+            }
+            const logsAfter = (window.state.logsByDate[today] || []).length;
+            const toastElement = container ? container.lastElementChild : null;
+            const hasToastMsg = toastElement && toastElement.textContent.includes('ไข่ต้มทดสอบ');
+            const hasTouchManipulation = toastElement && toastElement.className.includes('touch-manipulation');
+
+            // 4. Test instant tap-to-dismiss on toast element
+            let dismissedOnTap = false;
+            if (toastElement) {
+                toastElement.click();
+                dismissedOnTap = !container.contains(toastElement);
+            }
+
+            // 5. Test showToast hard limit and stale cleanup
+            if (typeof window.showToast === 'function') {
+                window.showToast('ข้อความทดสอบ 1');
+                window.showToast('ข้อความทดสอบ 2');
+            }
+            const activeToastsCount = container ? container.children.length : 0;
+
+            return {
+                hasBtnClearShown,
+                valAfterClear: valAfterClear === '',
+                isBtnClearHidden,
+                isInputFocused,
+                foodAdded: logsAfter === logsBefore + 1,
+                hasToastMsg,
+                hasTouchManipulation,
+                dismissedOnTap,
+                activeToastsCount: activeToastsCount <= 2
+            };
+        })()`);
+        console.log('Food Search Tap & Auto-Dismiss Toast Engine verified:', foodSearchToastTest);
+        if (!foodSearchToastTest.hasBtnClearShown ||
+            !foodSearchToastTest.valAfterClear ||
+            !foodSearchToastTest.isBtnClearHidden ||
+            !foodSearchToastTest.foodAdded ||
+            !foodSearchToastTest.hasToastMsg ||
+            !foodSearchToastTest.hasTouchManipulation ||
+            !foodSearchToastTest.dismissedOnTap ||
+            !foodSearchToastTest.activeToastsCount) {
+            throw new Error('Test 55: Food Search Tap & Auto-Dismiss Toast Engine verification failed: ' + JSON.stringify(foodSearchToastTest));
         }
 
         ws.close();

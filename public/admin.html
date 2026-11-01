@@ -650,16 +650,30 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.31
+                            Current Version: v5.9.32
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.31 -->
+                        <!-- Release: v5.9.32 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-indigo-500/10 border border-emerald-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🚀 v5.9.31 (MeowNova Real-Time Hydration Sync, Unified Context Metrics & Persistent LRU Speech Diversity)</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">🍏 v5.9.32 (iOS Safari Touch Target & Virtual Keyboard Viewport Optimization, RAF Decoupled Render Pipeline & Quad-Layer Watchdog Toast)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">1 พ.ย. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🍏 iOS Safari Touch Target & Virtual Keyboard Viewport Optimization:</b> ปลดล็อกปัญหา WebKit Compositor Deadlock บน iOS 17/18 (iPhone 15/16 Pro Max) โดยนำ Synchronous <code>document.activeElement.blur()</code> ออกจาก <code>addFoodItem()</code> ป้องกันอาการจอกระตุกและหน้าจอไม่ตอบสนอง พร้อมเปลี่ยน Rapid-tap Lock จาก bare <code>setTimeout()</code> มาเป็น High-precision Timestamp Throttle (<code>Date.now() - _lastAddFoodTime &lt; 280ms</code>) ซึ่งปลอดภัยจากการถูกระงับ Timer โดย WebKit 100%</li>
+                                <li><b>⚡ RequestAnimationFrame Decoupled Render Pipeline:</b> ย้ายการทำงานของ <code>renderAll()</code> ใน <code>addFoodItem()</code> เข้าสู่ <code>requestAnimationFrame()</code> เพื่อให้ User Tap Event บน DOM Node ที่คลิกเสร็จสิ้นสมบูรณ์ก่อนที่หน้าจอจะทำการ Re-render ป้องกันการสูญหายของ Gesture State ในเบราว์เซอร์</li>
+                                <li><b>🛡️ Quad-Layer Watchdog Toast Notification Engine:</b> ออกแบบ <code>showToast()</code> ใหม่ พร้อมระบบล้าง Stale Toasts เก่า (&gt; 3.0s) อัตโนมัติ, Hard Fallback Removal Timer, แตะปิดทันที (Instant Tap Dismiss), และ Periodic Watchdog Interval (3,000ms) การันตีว่าไม่มีป๊อบอัพใดค้างบนหน้าจอ</li>
+                                <li><b>🎯 1-Tap iOS Clear Search Event Normalization:</b> นำ <code>onpointerdown="event.preventDefault()"</code> ออกจากปุ่มเคลียร์ค้นหา (<code>#btnClearSearch</code>, <code>#comboFoodSearchClearBtn</code>, <code>#healthTipsSearchInput</code>) ป้องกัน WebKit Abort Gesture บนอุปกรณ์สัมผัส พร้อมอัปเกรด <code>clearFoodSearch()</code> ให้ Auto-focus กลับสู่ Input ทันที 100%</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.32 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.31 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">🚀 v5.9.31 (MeowNova Real-Time Hydration Sync, Unified Context Metrics & Persistent LRU Speech Diversity)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">31 ต.ค. 2026</span>
                             </div>
                             <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
@@ -2181,7 +2195,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.31"></script>
+    <script type="module" src="admin.js?v=5.9.32"></script>
 
 </body>
 

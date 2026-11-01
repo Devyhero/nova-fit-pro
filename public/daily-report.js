@@ -27,7 +27,7 @@
     function getAppVersionSafe() {
         if (typeof APP_VERSION !== 'undefined') return APP_VERSION;
         if (typeof window.APP_VERSION !== 'undefined') return window.APP_VERSION;
-        return '5.9.30';
+        return '5.9.32';
     }
 
     // ==========================================

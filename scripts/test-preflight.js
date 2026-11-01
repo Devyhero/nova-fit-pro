@@ -253,7 +253,10 @@ if (!hasCommand('firebase')) {
 } else {
     try {
         const bin = process.platform === 'win32' ? 'firebase.cmd' : 'firebase';
-        const env = Object.assign({}, process.env, { NODE_TLS_REJECT_UNAUTHORIZED: '0' });
+        const env = Object.assign({}, process.env, { 
+            NODE_TLS_REJECT_UNAUTHORIZED: '0',
+            PATH: '/usr/local/bin:' + (process.env.PATH || '')
+        });
         execSync(`${bin} deploy --dry-run`, { stdio: 'pipe', cwd: ROOT_DIR, env });
         logPass('Firebase deployment dry-run passed (rules & hosting validated)');
     } catch (err) {
