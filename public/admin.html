@@ -225,6 +225,90 @@
 
             <!-- VIEW 1: USERS DIRECTORY -->
             <div id="tabView_users" class="space-y-4">
+                <!-- Fitness Pet Companion Stats Overview (v5.9.33) -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-teal-500/10 border border-amber-500/30 space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🐾</span>
+                            <div>
+                                <h3 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <span>สถิติสัตว์เลี้ยงคู่หูฟิตเนส (Fitness Pet Companion Analytics)</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/30">v5.9.33</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                    สรุปการเลือกสายสัตว์เลี้ยงและระดับการวิวัฒนาการของผู้ใช้งานทั้งหมดในระบบ
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                            <span>ผู้ใช้มีคู่หูแล้ว:</span>
+                            <span id="petStatTotalWithPet" class="text-base font-extrabold font-mono text-emerald-500">0</span>
+                            <span class="text-slate-400">/ <span id="petStatTotalUsers">0</span> คน</span>
+                        </div>
+                    </div>
+
+                    <!-- 3 Pet Breakdown Counters & Unselected -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                        <!-- Sparky Blaze -->
+                        <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-between">
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">🔥 Sparky (Blaze)</div>
+                                <div class="text-[10px] text-slate-400">สายเบิร์น & คาร์ดิโอ</div>
+                            </div>
+                            <span id="petStatBlaze" class="text-lg font-extrabold text-orange-600 dark:text-orange-400 font-mono">0</span>
+                        </div>
+
+                        <!-- Rocky Titan -->
+                        <div class="p-3 rounded-xl bg-amber-600/10 border border-amber-600/25 flex items-center justify-between">
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">🪨 Rocky (Titan)</div>
+                                <div class="text-[10px] text-slate-400">สายพลัง & กล้ามเนื้อ</div>
+                            </div>
+                            <span id="petStatTitan" class="text-lg font-extrabold text-amber-700 dark:text-amber-400 font-mono">0</span>
+                        </div>
+
+                        <!-- Dewy Zen -->
+                        <div class="p-3 rounded-xl bg-teal-500/10 border border-teal-500/25 flex items-center justify-between">
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide">💧 Dewy (Zen)</div>
+                                <div class="text-[10px] text-slate-400">สายสมดุล & น้ำดื่ม</div>
+                            </div>
+                            <span id="petStatZen" class="text-lg font-extrabold text-teal-600 dark:text-teal-400 font-mono">0</span>
+                        </div>
+
+                        <!-- Unselected -->
+                        <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">🥚 ยังไม่เลือก</div>
+                                <div class="text-[10px] text-slate-400">รอฟักไข่</div>
+                            </div>
+                            <span id="petStatNone" class="text-lg font-extrabold text-slate-500 dark:text-slate-400 font-mono">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Evolution Stage Distribution Bar -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">📊 การกระจายระดับร่าง (Stages):</span>
+                        <div class="flex items-center gap-3 text-[11px] flex-wrap">
+                            <span class="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                                <span>🥚 ร่าง 1 (ไข่):</span> <b id="petStatStage1" class="font-mono text-emerald-500">0</b>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                                <span>🐣 ร่าง 2 (แรกเกิด):</span> <b id="petStatStage2" class="font-mono text-emerald-500">0</b>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                                <span>🦊 ร่าง 3 (วัยซน):</span> <b id="petStatStage3" class="font-mono text-emerald-500">0</b>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                                <span>🐺 ร่าง 4 (โตเต็มวัย):</span> <b id="petStatStage4" class="font-mono text-emerald-500">0</b>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-semibold text-amber-500">
+                                <span>👑 ร่าง 5 (ตำนาน):</span> <b id="petStatStage5" class="font-mono text-amber-500">0</b>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Search & Filters -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full flex-1">
@@ -237,6 +321,14 @@
                                 <button type="button" onclick="document.getElementById('adminUserSearch').value=''; filterUsersList('');" class="text-xs text-slate-400 hover:text-slate-600 px-1">✕</button>
                             </div>
                         </div>
+                        <!-- Pet Species Filter Dropdown (NEW v5.9.33) -->
+                        <select id="selFilterPet" onchange="applyUserFilters()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-purple-500 font-semibold shadow-xs shrink-0">
+                            <option value="all">🐾 สัตว์เลี้ยง: ทั้งหมด</option>
+                            <option value="blaze">🔥 Sparky (Blaze)</option>
+                            <option value="titan">🪨 Rocky (Titan)</option>
+                            <option value="zen">💧 Dewy (Zen)</option>
+                            <option value="unselected">🥚 ยังไม่เลือก</option>
+                        </select>
                         <!-- User Type Segment Filter (Phase 1) -->
                         <div class="flex items-center justify-between sm:justify-start gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs overflow-x-auto no-scrollbar shrink-0">
                             <button type="button" id="btnFilterUserAll" onclick="setUserTypeFilter('all')" class="flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg font-bold bg-white dark:bg-slate-700 shadow-xs text-purple-600 dark:text-purple-400 transition cursor-pointer whitespace-nowrap">
@@ -270,6 +362,7 @@
                             <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase font-bold text-[11px]">
                                 <tr>
                                     <th class="py-3 px-4">ผู้ใช้งาน</th>
+                                    <th class="py-3 px-3">สัตว์เลี้ยง (Pet)</th>
                                     <th class="py-3 px-3">น้ำหนัก / เป้าหมาย</th>
                                     <th class="py-3 px-3">ความคืบหน้าวันนี้</th>
                                     <th class="py-3 px-3">ใช้งานล่าสุด</th>
@@ -278,7 +371,7 @@
                             </thead>
                             <tbody id="usersTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/60">
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400">กำลังโหลดข้อมูลผู้ใช้...</td>
+                                    <td colspan="6" class="py-8 text-center text-slate-400">กำลังโหลดข้อมูลผู้ใช้...</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -434,6 +434,55 @@ function renderAdminOverview() {
     document.getElementById('statTotalWater').textContent = totalWaterToday.toLocaleString();
     document.getElementById('userCountBadge').textContent = totalUsers;
 
+    // Tally Pet Companion statistics (v5.9.33)
+    let petStatTotalWithPet = 0;
+    let petStatBlaze = 0;
+    let petStatTitan = 0;
+    let petStatZen = 0;
+    let petStatNone = 0;
+    const petStagesCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    allUsersData.forEach(u => {
+        const state = u.state || {};
+        const pet = state.pet || {};
+        const petId = pet.selectedPetId;
+        const days = Number(pet.activeDays) || 1;
+        if (petId === 'blaze' || petId === 'titan' || petId === 'zen') {
+            petStatTotalWithPet++;
+            if (petId === 'blaze') petStatBlaze++;
+            else if (petId === 'titan') petStatTitan++;
+            else if (petId === 'zen') petStatZen++;
+            const st = days >= 60 ? 5 : (days >= 21 ? 4 : (days >= 7 ? 3 : (days >= 3 ? 2 : 1)));
+            petStagesCount[st]++;
+        } else {
+            petStatNone++;
+        }
+    });
+
+    const elTotalPet = document.getElementById('petStatTotalWithPet');
+    const elTotalUsers = document.getElementById('petStatTotalUsers');
+    const elBlaze = document.getElementById('petStatBlaze');
+    const elTitan = document.getElementById('petStatTitan');
+    const elZen = document.getElementById('petStatZen');
+    const elNone = document.getElementById('petStatNone');
+    const elS1 = document.getElementById('petStatStage1');
+    const elS2 = document.getElementById('petStatStage2');
+    const elS3 = document.getElementById('petStatStage3');
+    const elS4 = document.getElementById('petStatStage4');
+    const elS5 = document.getElementById('petStatStage5');
+
+    if (elTotalPet) elTotalPet.textContent = petStatTotalWithPet;
+    if (elTotalUsers) elTotalUsers.textContent = totalUsers;
+    if (elBlaze) elBlaze.textContent = petStatBlaze;
+    if (elTitan) elTitan.textContent = petStatTitan;
+    if (elZen) elZen.textContent = petStatZen;
+    if (elNone) elNone.textContent = petStatNone;
+    if (elS1) elS1.textContent = petStagesCount[1];
+    if (elS2) elS2.textContent = petStagesCount[2];
+    if (elS3) elS3.textContent = petStagesCount[3];
+    if (elS4) elS4.textContent = petStagesCount[4];
+    if (elS5) elS5.textContent = petStagesCount[5];
+
     // Filter count badges
     const cntAll = document.getElementById('countFilterAll');
     if (cntAll) cntAll.textContent = totalUsers;
@@ -932,6 +981,69 @@ function renderUsersTableSlice() {
             ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold">⚪ Guest</span>`
             : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-bold">🔵 Google</span>`;
 
+        // Pet Companion Badge & Stage (v5.9.33)
+        const pet = state.pet || {};
+        const petId = pet.selectedPetId;
+        const petDays = Number(pet.activeDays) || 1;
+        let petCellHtml = '';
+
+        if (petId === 'blaze') {
+            const stNum = petDays >= 60 ? 5 : (petDays >= 21 ? 4 : (petDays >= 7 ? 3 : (petDays >= 3 ? 2 : 1)));
+            const stNames = ['Ember Egg', 'Cinderpaw', 'Blazerunner', 'Ignifox', 'Solareon Phoenix'];
+            const gifFiles = ['1_Ember Egg_Blaze.gif', '2_Cinderpaw_ Blaze.gif', '3_Blazerunner_ Blaze.gif', '4_Ignifox_ Blaze.gif', '5_Solareon Phoenix_ Blaze.gif'];
+            petCellHtml = `
+                <div class="flex items-center gap-2">
+                    <img src="pets/Blaze/Gif/${gifFiles[stNum - 1]}" alt="Sparky" class="w-8 h-8 object-contain shrink-0 drop-shadow">
+                    <div class="min-w-0">
+                        <div class="font-bold text-orange-600 dark:text-orange-400 text-xs flex items-center gap-1">
+                            <span>🔥 Sparky</span>
+                            <span class="text-[10px] px-1 rounded bg-orange-500/20 font-mono">R.${stNum}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 truncate">${stNames[stNum - 1]} (${petDays}วัน)</div>
+                    </div>
+                </div>
+            `;
+        } else if (petId === 'titan') {
+            const stNum = petDays >= 60 ? 5 : (petDays >= 21 ? 4 : (petDays >= 7 ? 3 : (petDays >= 3 ? 2 : 1)));
+            const stNames = ['Geode Egg', 'Pebblecub', 'Bouldergrip', 'Goliath Titan', 'Aegis Colossus'];
+            const gifFiles = ['1_Geode Egg_Titan.gif', '2_Pebblecub_Titan.gif', '3_Bouldergrip_Titan.gif', '4_Goliath Titan.gif', '5_Aegis Colossus_Titan.gif'];
+            petCellHtml = `
+                <div class="flex items-center gap-2">
+                    <img src="pets/Titan/Gif/${gifFiles[stNum - 1]}" alt="Rocky" class="w-8 h-8 object-contain shrink-0 drop-shadow">
+                    <div class="min-w-0">
+                        <div class="font-bold text-amber-700 dark:text-amber-400 text-xs flex items-center gap-1">
+                            <span>🪨 Rocky</span>
+                            <span class="text-[10px] px-1 rounded bg-amber-600/20 font-mono">R.${stNum}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 truncate">${stNames[stNum - 1]} (${petDays}วัน)</div>
+                    </div>
+                </div>
+            `;
+        } else if (petId === 'zen') {
+            const stNum = petDays >= 60 ? 5 : (petDays >= 21 ? 4 : (petDays >= 7 ? 3 : (petDays >= 3 ? 2 : 1)));
+            const stNames = ['Sprout Egg', 'Pipdew', 'Zenquin', 'Lotoswimmer', 'Celestial Seraph'];
+            const gifFiles = ['1_Sprout Egg_Zen.gif', '2_Pipdew_Zen.gif', '3_Zenquin_Zen.gif', '4_Lotoswimmer_Zen.gif', '5_Celestial Seraph_Zen.gif'];
+            petCellHtml = `
+                <div class="flex items-center gap-2">
+                    <img src="pets/Zen/Gif/${gifFiles[stNum - 1]}" alt="Dewy" class="w-8 h-8 object-contain shrink-0 drop-shadow">
+                    <div class="min-w-0">
+                        <div class="font-bold text-teal-600 dark:text-teal-400 text-xs flex items-center gap-1">
+                            <span>💧 Dewy</span>
+                            <span class="text-[10px] px-1 rounded bg-teal-500/20 font-mono">R.${stNum}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 truncate">${stNames[stNum - 1]} (${petDays}วัน)</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            petCellHtml = `
+                <div class="flex items-center gap-1.5 text-slate-400 text-xs">
+                    <span>🥚</span>
+                    <span class="text-[11px]">ยังไม่เลือก</span>
+                </div>
+            `;
+        }
+
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                 <td class="py-3 px-4">
@@ -945,6 +1057,9 @@ function renderUsersTableSlice() {
                             <div class="text-[11px] text-slate-400 font-mono">${email}</div>
                         </div>
                     </div>
+                </td>
+                <td class="py-3 px-3">
+                    ${petCellHtml}
                 </td>
                 <td class="py-3 px-3">
                     <div class="font-semibold text-slate-700 dark:text-slate-200">${weight}</div>
@@ -1143,6 +1258,19 @@ function applyUserFilters() {
         filtered = filtered.filter(u => !!u.isGuest);
     } else if (_currentUserTypeFilter === 'active') {
         filtered = filtered.filter(u => !!u.isRealActive);
+    }
+
+    // Filter by Pet Species (v5.9.33)
+    const petFilter = document.getElementById('selFilterPet')?.value || 'all';
+    if (petFilter !== 'all') {
+        if (petFilter === 'unselected') {
+            filtered = filtered.filter(u => {
+                const pId = u.state?.pet?.selectedPetId;
+                return !pId || !['blaze', 'titan', 'zen'].includes(pId);
+            });
+        } else {
+            filtered = filtered.filter(u => u.state?.pet?.selectedPetId === petFilter);
+        }
     }
 
     if (q) {
@@ -1403,6 +1531,53 @@ window.inspectUser = function (uid) {
     };
     const tierInfo = tierMap[prestigeFrame] || { name: prestigeFrame, emoji: '🏆' };
 
+    // Pet Companion Details for User Inspection (v5.9.33)
+    const pet = state.pet || {};
+    const petId = pet.selectedPetId;
+    const petDays = Number(pet.activeDays) || 1;
+    let petInspectionHtml = '';
+    if (petId && ['blaze', 'titan', 'zen'].includes(petId)) {
+        const petInfo = {
+            blaze: { name: 'Sparky', nameTh: 'สปาร์กี้', icon: '🔥', title: 'สายเบิร์น & คาร์ดิโอ', color: 'orange', stages: ['Ember Egg', 'Cinderpaw', 'Blazerunner', 'Ignifox', 'Solareon Phoenix'], gifs: ['1_Ember Egg_Blaze.gif', '2_Cinderpaw_ Blaze.gif', '3_Blazerunner_ Blaze.gif', '4_Ignifox_ Blaze.gif', '5_Solareon Phoenix_ Blaze.gif'], folder: 'Blaze' },
+            titan: { name: 'Rocky', nameTh: 'ร็อคกี้', icon: '🪨', title: 'สายพลัง & กล้ามเนื้อ', color: 'amber', stages: ['Geode Egg', 'Pebblecub', 'Bouldergrip', 'Goliath Titan', 'Aegis Colossus'], gifs: ['1_Geode Egg_Titan.gif', '2_Pebblecub_Titan.gif', '3_Bouldergrip_Titan.gif', '4_Goliath Titan.gif', '5_Aegis Colossus_Titan.gif'], folder: 'Titan' },
+            zen: { name: 'Dewy', nameTh: 'ดิวอี้', icon: '💧🌿', title: 'สายสมดุล & โภชนาการ', color: 'teal', stages: ['Sprout Egg', 'Pipdew', 'Zenquin', 'Lotoswimmer', 'Celestial Seraph'], gifs: ['1_Sprout Egg_Zen.gif', '2_Pipdew_Zen.gif', '3_Zenquin_Zen.gif', '4_Lotoswimmer_Zen.gif', '5_Celestial Seraph_Zen.gif'], folder: 'Zen' }
+        }[petId];
+
+        const stNum = petDays >= 60 ? 5 : (petDays >= 21 ? 4 : (petDays >= 7 ? 3 : (petDays >= 3 ? 2 : 1)));
+        const stName = petInfo.stages[stNum - 1];
+        const nextReq = stNum === 1 ? 3 : (stNum === 2 ? 7 : (stNum === 3 ? 21 : 60));
+        const daysLeft = Math.max(0, nextReq - petDays);
+        const stageLabels = ['ไข่ปริศนา (Stage 1)', 'แรกเกิด (Stage 2)', 'วัยซน (Stage 3)', 'โตเต็มวัย (Stage 4)', 'ร่างตำนาน (Stage 5)'];
+
+        petInspectionHtml = `
+            <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-teal-500/10 border border-amber-500/30 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-slate-900/60 p-1 flex items-center justify-center shrink-0 border border-amber-500/30">
+                        <img src="pets/${petInfo.folder}/Gif/${petInfo.gifs[stNum - 1]}" alt="${stName}" class="w-full h-full object-contain drop-shadow">
+                    </div>
+                    <div>
+                        <div class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <span>${petInfo.nameTh} (${petInfo.name})</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                ${stageLabels[stNum - 1]}: ${stName}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            ${petInfo.title} • สะสม <b>${petDays} วัน</b> ${stNum < 5 ? `(อีก ${daysLeft} วันสู่ร่างถัดไป)` : '👑 ร่างสูงสุด'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        petInspectionHtml = `
+            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-700/40 text-slate-500 text-xs flex items-center gap-2">
+                <span class="text-base">🥚</span>
+                <span>ผู้ใช้นี้ยังไม่ได้เลือกสัตว์เลี้ยงคู่หู (อยู่ในสถานะเริ่มต้น)</span>
+            </div>
+        `;
+    }
+
     bodyEl.innerHTML = `
         <div class="flex items-center gap-2">
             <button type="button" onclick="openSendMessageModal('${user.uid}', '${safeName}', '${safeEmail}')" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95">
@@ -1420,6 +1595,8 @@ window.inspectUser = function (uid) {
                 <span class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 shadow-xs font-bold text-[11px]">${tierInfo.emoji} ${tierInfo.name}</span>
             </div>
         </div>
+
+        ${petInspectionHtml}
 
         <div class="grid grid-cols-3 gap-2 text-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/40">
             <div>

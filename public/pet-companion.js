@@ -335,6 +335,113 @@
         }
     }
 
+    // Admin Detection Helper & Sandbox Engine
+    function isPetAdmin() {
+        if (window._forceAdminPetSandbox) return true;
+        if (sessionStorage.getItem('novafit_admin_authed') === 'true' || localStorage.getItem('novafit_admin_authed') === 'true') return true;
+        const email = (window.currentUser && window.currentUser.email) ||
+                      (window.auth && window.auth.currentUser && window.auth.currentUser.email) || '';
+        if (email && ['benznova01@gmail.com', 'parinya6969@gmail.com'].includes(email.toLowerCase())) return true;
+        if (typeof window.isUserAdmin === 'function' && window.isUserAdmin !== isPetAdmin) {
+            return window.isUserAdmin();
+        }
+        return false;
+    }
+
+    function isAdminPetSandboxActive() {
+        return sessionStorage.getItem('novafit_pet_admin_real_backup') !== null;
+    }
+
+    function backupRealPetState() {
+        if (!isAdminPetSandboxActive() && window.state && window.state.pet) {
+            sessionStorage.setItem('novafit_pet_admin_real_backup', JSON.stringify(window.state.pet));
+        }
+    }
+
+    function adminSetTestPet(petId, stageNum) {
+        if (!PET_DATA[petId]) return;
+        backupRealPetState();
+
+        const pet = PET_DATA[petId];
+        const s = Math.max(1, Math.min(5, Number(stageNum) || 1));
+        const dayReqMap = { 1: 1, 2: 3, 3: 7, 4: 21, 5: 60 };
+        const activeDays = dayReqMap[s];
+
+        const petState = getSafePetState();
+        if (petState) {
+            petState.selectedPetId = petId;
+            petState.activeDays = activeDays;
+            petState.lastStageNotified = s;
+            if (s === 5 && !petState.unlockedPets.includes(petId)) {
+                petState.unlockedPets.push(petId);
+            }
+        }
+
+        if (typeof window.saveState === 'function') {
+            window.saveState();
+        }
+
+        renderPetCompanionWidget();
+        openPetCodexModal();
+
+        if (typeof window.playSound === 'function') {
+            window.playSound('pop');
+        }
+        if (typeof window.showToast === 'function') {
+            window.showToast(`🛠️ [Admin Sandbox] สลับเป็น ${pet.nicknameTh} ร่าง ${s} (${pet.stages[s - 1].title}) จำลอง: ${activeDays} วัน`);
+        }
+    }
+
+    function adminRestoreRealPet() {
+        const raw = sessionStorage.getItem('novafit_pet_admin_real_backup');
+        if (!raw) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('ℹ️ ปัจจุบันอยู่ในสถานะจริงอยู่แล้ว (ไม่มีข้อมูลทดสอบที่ค้างอยู่)');
+            }
+            return;
+        }
+
+        try {
+            const realPet = JSON.parse(raw);
+            sessionStorage.removeItem('novafit_pet_admin_real_backup');
+            if (window.state) {
+                window.state.pet = realPet;
+            }
+            if (typeof window.saveState === 'function') {
+                window.saveState();
+            }
+            renderPetCompanionWidget();
+            openPetCodexModal();
+
+            if (typeof window.playSound === 'function') {
+                window.playSound('celebrate');
+            }
+            if (typeof window.showToast === 'function') {
+                window.showToast('✓ คืนค่าสัตว์เลี้ยงและวันที่สะสมจริงของแอดมินเรียบร้อยแล้ว!');
+            }
+        } catch (e) {
+            console.error('Failed to restore real pet state:', e);
+        }
+    }
+
+    function adminTriggerEvolutionTest() {
+        if (typeof window.playSound === 'function') window.playSound('celebrate');
+        if (typeof window.triggerCelebrationConfetti === 'function') window.triggerCelebrationConfetti();
+        if (typeof window.showToast === 'function') {
+            window.showToast('🎉 [Admin Sandbox] จำลองเอฟเฟกต์วิวัฒนาการสำเร็จ! ✨');
+        }
+    }
+
+    function openAdminPetSandbox() {
+        backupRealPetState();
+        const petState = getSafePetState();
+        if (!petState.selectedPetId) {
+            petState.selectedPetId = 'blaze';
+            petState.activeDays = 1;
+        }
+        openPetCodexModal();
+    }
+
     // Render Hero Pet Widget on Dashboard (Position 1: Top of colDesktopLeft)
     function renderPetCompanionWidget() {
         const container = document.getElementById('card_pet_companion');
@@ -786,8 +893,72 @@
                 `;
             }
 
+            const isAdm = isPetAdmin();
+            const isSandboxActive = isAdminPetSandboxActive();
+            let adminSandboxHtml = '';
+            if (isAdm || isSandboxActive) {
+                adminSandboxHtml = `
+                    <div class="rounded-2xl border-2 border-amber-500/50 bg-slate-900/90 p-3.5 space-y-2.5 text-xs shadow-md">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-1.5 font-extrabold text-amber-400">
+                                <span>🛠️ โหมดทดสอบสำหรับแอดมิน (Admin Sandbox)</span>
+                                ${isSandboxActive ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold animate-pulse">กำลังจำลอง</span>' : ''}
+                            </div>
+                            ${isSandboxActive ? `
+                                <button type="button" onclick="adminRestoreRealPet()"
+                                    class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer">
+                                    <span>🔄</span> <span>คืนค่าสถานะจริงของฉัน</span>
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <!-- 1. Quick Switch Pet -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-slate-400 font-semibold text-[11px]">สลับสาย:</span>
+                            <button type="button" onclick="adminSetTestPet('blaze', calculatePetStageIndex(state.pet?.activeDays) + 1)"
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'blaze' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-orange-400 border border-orange-500/30'}">
+                                🔥 Sparky (Blaze)
+                            </button>
+                            <button type="button" onclick="adminSetTestPet('titan', calculatePetStageIndex(state.pet?.activeDays) + 1)"
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'titan' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-amber-400 border border-amber-600/30'}">
+                                🪨 Rocky (Titan)
+                            </button>
+                            <button type="button" onclick="adminSetTestPet('zen', calculatePetStageIndex(state.pet?.activeDays) + 1)"
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'zen' ? 'bg-teal-600 text-white' : 'bg-slate-800 text-teal-400 border border-teal-500/30'}">
+                                💧 Dewy (Zen)
+                            </button>
+                        </div>
+
+                        <!-- 2. Fast Stage Jump -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-slate-400 font-semibold text-[11px]">ข้ามร่าง:</span>
+                            ${[1, 2, 3, 4, 5].map(st => {
+                                const isCur = (stageIdx + 1) === st;
+                                const labels = ['R1: ไข่ (1วัน)', 'R2: แรกเกิด (3วัน)', 'R3: วัยซน (7วัน)', 'R4: โตเต็มวัย (21วัน)', 'R5: ตำนาน (60วัน)'];
+                                return `
+                                    <button type="button" onclick="adminSetTestPet('${pet.id}', ${st})"
+                                        class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${isCur ? 'bg-amber-400 text-slate-950 font-extrabold shadow-xs' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                                        ${labels[st - 1]}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- 3. Test Evolution Celebration -->
+                        <div class="pt-1 flex items-center justify-between border-t border-slate-800 text-[10px] text-slate-400">
+                            <span>*กดเปลี่ยนตัวและดูทุกร่างได้อิสระ เมื่อทดสอบเสร็จกด "คืนค่าสถานะจริง" ได้ทันที</span>
+                            <button type="button" onclick="adminTriggerEvolutionTest()" class="text-amber-400 hover:underline font-bold">
+                                🎉 เทสต์แอนิเมชันวิวัฒนาการ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             container.innerHTML = `
                 <div class="space-y-4">
+                    ${adminSandboxHtml}
+
                     <!-- Current Active Pet Hero Card -->
                     <div class="rounded-2xl border ${pet.borderClass} bg-gradient-to-br ${pet.gradient} p-4 sm:p-5 text-white shadow-md relative overflow-hidden">
                         <div class="flex flex-col sm:flex-row items-center gap-4">
@@ -906,6 +1077,7 @@
     window.calculatePetStageIndex = calculateStageIndex;
     window.getSafePetState = getSafePetState;
     window.trackPetActiveDay = trackPetActiveDay;
+    window.calculateStageIndex = calculateStageIndex;
     window.renderPetCompanionWidget = renderPetCompanionWidget;
     window.interactWithPet = interactWithPet;
     window.openPetStarterModal = openPetStarterModal;
@@ -916,5 +1088,11 @@
     window.closePetCodexModal = closePetCodexModal;
     window.openPetCardViewer = openPetCardViewer;
     window.closePetCardViewer = closePetCardViewer;
+    window.isPetAdmin = isPetAdmin;
+    window.isAdminPetSandboxActive = isAdminPetSandboxActive;
+    window.adminSetTestPet = adminSetTestPet;
+    window.adminRestoreRealPet = adminRestoreRealPet;
+    window.adminTriggerEvolutionTest = adminTriggerEvolutionTest;
+    window.openAdminPetSandbox = openAdminPetSandbox;
 
 })();

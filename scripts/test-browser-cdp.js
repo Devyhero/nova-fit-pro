@@ -2069,7 +2069,14 @@ server.listen(PORT, async () => {
         console.log('--- Test 43: v5.9.19 PWA Home Screen, Clean Profile & Preferences Reorganization ---');
         // Navigate back to index.html
         await sendCdp('Page.navigate', { url: 'http://localhost:8195/' });
-        await new Promise(r => setTimeout(r, 600));
+        for (let i = 0; i < 30; i++) {
+            try {
+                const ready = await evalJs('document.readyState === "complete" && typeof window.evaluateNovaMood === "function"');
+                if (ready) break;
+            } catch (e) {}
+            await new Promise(r => setTimeout(r, 200));
+        }
+        await new Promise(r => setTimeout(r, 400));
         const v5919Test = await evalJs(`(() => {
             // 1. Tour slides length is 6 and slide 2 is Home Screen
             const slidesCount = Array.isArray(window.TOUR_SLIDES) ? window.TOUR_SLIDES.length : 0;
@@ -3048,6 +3055,29 @@ server.listen(PORT, async () => {
             window.renderPetCompanionWidget();
             const gifStage5 = document.getElementById('petWidgetGif')?.src.includes('5_Solareon');
 
+            // 8. Test Admin Pet Sandbox (Instant Pet Switch, Stage Jump & 1-Click Genuine State Restore)
+            window._forceAdminPetSandbox = true;
+            window.state.pet.selectedPetId = 'blaze';
+            window.state.pet.activeDays = 5;
+            window.state.pet.stage = 2;
+            const sandboxInactiveInitially = !window.isAdminPetSandboxActive();
+
+            // Admin switches to Titan
+            window.adminSetTestPet('titan');
+            const sandboxSwitchedToTitan = window.state.pet.selectedPetId === 'titan';
+            const sandboxActiveAfterAction = window.isAdminPetSandboxActive();
+
+            // Admin stage jump to Legendary (Stage 5)
+            window.adminSetTestPet('titan', 5);
+            const sandboxStageJumped = window.state.pet.activeDays === 60 && window.calculateStageIndex(window.state.pet.activeDays) === 4;
+
+            // Admin restores genuine pet state
+            window.adminRestoreRealPet();
+            const genuinePetRestored = window.state.pet.selectedPetId === 'blaze' &&
+                                       window.state.pet.activeDays === 5;
+            const sandboxInactiveAfterRestore = !window.isAdminPetSandboxActive();
+            delete window._forceAdminPetSandbox;
+
             return {
                 hasWidget,
                 hasStarterModal,
@@ -3066,7 +3096,13 @@ server.listen(PORT, async () => {
                 hasSilhouette,
                 codexModalClosed,
                 gifStage3,
-                gifStage5
+                gifStage5,
+                sandboxInactiveInitially,
+                sandboxSwitchedToTitan,
+                sandboxActiveAfterAction,
+                sandboxStageJumped,
+                genuinePetRestored,
+                sandboxInactiveAfterRestore
             };
         })()`);
         console.log('Fitness Pet Companion & Evolution Engine verified:', petCompanionTest);
@@ -3087,7 +3123,13 @@ server.listen(PORT, async () => {
             !petCompanionTest.hasSilhouette ||
             !petCompanionTest.codexModalClosed ||
             !petCompanionTest.gifStage3 ||
-            !petCompanionTest.gifStage5) {
+            !petCompanionTest.gifStage5 ||
+            !petCompanionTest.sandboxInactiveInitially ||
+            !petCompanionTest.sandboxSwitchedToTitan ||
+            !petCompanionTest.sandboxActiveAfterAction ||
+            !petCompanionTest.sandboxStageJumped ||
+            !petCompanionTest.genuinePetRestored ||
+            !petCompanionTest.sandboxInactiveAfterRestore) {
             throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 
