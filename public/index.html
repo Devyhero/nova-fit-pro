@@ -873,8 +873,8 @@
             </div>
         </section>
 
-        <!-- FITNESS PET COMPANION HERO WIDGET (v5.9.32) -->
-        <section id="card_pet_companion" class="w-full">
+        <!-- FITNESS PET COMPANION HERO WIDGET (v5.9.33) -->
+        <section id="card_pet_companion" class="w-full overflow-hidden">
             <!-- Dynamic rendering by pet-companion.js -->
         </section>
 
@@ -4636,13 +4636,13 @@
 
     <!-- MODAL: Pet Starter Selection (v5.9.33) -->
     <div id="petStarterModal" onclick="if(event.target.id === 'petStarterModal') closePetStarterModal();"
-        class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
-        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 modal-backdrop-smooth overflow-x-hidden">
+        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-3.5 sm:p-6 shadow-2xl space-y-3.5 max-h-[88vh] overflow-y-auto overscroll-contain overflow-x-hidden">
             <button type="button" onclick="closePetStarterModal()"
-                class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
+                class="sticky top-0 float-right -mt-1 -mr-1 z-20 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-slate-100/90 dark:bg-slate-700/90 backdrop-blur-xs flex items-center justify-center text-base font-bold transition active:scale-95 cursor-pointer shadow-xs">
                 ✕
             </button>
-            <div id="petStarterModalContent">
+            <div id="petStarterModalContent" class="overflow-x-hidden">
                 <!-- Dynamically rendered by pet-companion.js -->
             </div>
         </div>
@@ -4650,19 +4650,19 @@
 
     <!-- MODAL: Pet Codex & Mystery Evolution (v5.9.33) -->
     <div id="petCodexModal" onclick="if(event.target.id === 'petCodexModal') closePetCodexModal();"
-        class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
-        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 modal-backdrop-smooth overflow-x-hidden">
+        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl sm:rounded-3xl max-w-xl w-full p-3.5 sm:p-6 shadow-2xl space-y-3.5 max-h-[88vh] overflow-y-auto overscroll-contain overflow-x-hidden">
             <button type="button" onclick="closePetCodexModal()"
-                class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
+                class="sticky top-0 float-right -mt-1 -mr-1 z-20 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 min-w-[44px] min-h-[44px] w-10 h-10 rounded-full bg-slate-100/90 dark:bg-slate-700/90 backdrop-blur-xs flex items-center justify-center text-base font-bold transition active:scale-95 cursor-pointer shadow-xs">
                 ✕
             </button>
-            <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2.5 pr-10">
                 <span class="text-xl">🐾</span>
-                <h3 class="font-extrabold text-base text-slate-800 dark:text-slate-100">
+                <h3 class="font-extrabold text-base text-slate-800 dark:text-slate-100 truncate">
                     คู่หูฟิตเนส & การ์ดวิวัฒนาการ
                 </h3>
             </div>
-            <div id="petCodexModalContent">
+            <div id="petCodexModalContent" class="overflow-x-hidden">
                 <!-- Dynamically rendered by pet-companion.js -->
             </div>
         </div>

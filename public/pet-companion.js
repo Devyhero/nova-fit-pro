@@ -453,30 +453,30 @@
         // 1. Unselected State: Show Starter Call to Action
         if (!petState || !petState.selectedPetId || !PET_DATA[petState.selectedPetId]) {
             container.innerHTML = `
-                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-teal-500/10 border border-amber-500/30 p-4 sm:p-5 shadow-sm transition hover:shadow-md">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-3.5 text-center sm:text-left">
-                            <div class="relative flex -space-x-3 shrink-0">
-                                <img src="pets/Blaze/Gif/1_Ember Egg_Blaze.gif" alt="Blaze Egg" class="w-12 h-12 object-contain drop-shadow animate-bounce">
-                                <img src="pets/Titan/Gif/1_Geode Egg_Titan.gif" alt="Titan Egg" class="w-12 h-12 object-contain drop-shadow animate-bounce" style="animation-delay: 0.2s">
-                                <img src="pets/Zen/Gif/1_Sprout Egg_Zen.gif" alt="Zen Egg" class="w-12 h-12 object-contain drop-shadow animate-bounce" style="animation-delay: 0.4s">
+                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-teal-500/10 border border-amber-500/30 p-3.5 sm:p-5 shadow-sm transition hover:shadow-md">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3.5 sm:gap-4">
+                        <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-3.5 text-center sm:text-left w-full min-w-0">
+                            <div class="relative flex -space-x-2.5 shrink-0 mx-auto sm:mx-0">
+                                <img src="pets/Blaze/Gif/1_Ember Egg_Blaze.gif" alt="Blaze Egg" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow animate-bounce">
+                                <img src="pets/Titan/Gif/1_Geode Egg_Titan.gif" alt="Titan Egg" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow animate-bounce" style="animation-delay: 0.2s">
+                                <img src="pets/Zen/Gif/1_Sprout Egg_Zen.gif" alt="Zen Egg" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow animate-bounce" style="animation-delay: 0.4s">
                             </div>
-                            <div>
-                                <div class="flex items-center justify-center sm:justify-start gap-1.5">
-                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+                                    <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                                         ✨ ฟีเจอร์ใหม่
                                     </span>
                                     <h3 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100">
                                         สัตว์เลี้ยงคู่หูฟิตเนส (Pet Companion)
                                     </h3>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+                                <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto sm:mx-0 break-words">
                                     เลือกคู่หู 1 ใน 3 ธาตุ (Sparky 🔥 / Rocky 🪨 / Dewy 💧🌿) เพื่อร่วมเดินทางและวิวัฒนาการ 5 ร่างไปพร้อมกับคุณ!
                                 </p>
                             </div>
                         </div>
                         <button type="button" onclick="openPetStarterModal()"
-                            class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer">
+                            class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer min-h-[44px] shrink-0">
                             <span>🥚 ฟักไข่เลือกคู่หู</span>
                             <span>➔</span>
                         </button>
@@ -510,15 +510,15 @@
         }
 
         container.innerHTML = `
-            <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border ${pet.borderClass} p-4 sm:p-5 shadow-sm">
-                <!-- Background Subtle Gradient Aura -->
-                <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br ${pet.gradient} opacity-15 blur-2xl pointer-events-none"></div>
+            <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border ${pet.borderClass} p-3.5 sm:p-5 shadow-sm">
+                <!-- Background Subtle Gradient Aura (Contained) -->
+                <div class="absolute -top-6 -right-6 w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br ${pet.gradient} opacity-15 blur-2xl pointer-events-none"></div>
 
-                <div class="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
+                <div class="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3.5 sm:gap-4">
                     <!-- Left: Interactive Animated Pet Avatar -->
-                    <div class="flex items-center gap-3.5 w-full sm:w-auto">
+                    <div class="flex items-center gap-3 w-full sm:w-auto min-w-0">
                         <div class="relative group cursor-pointer shrink-0" onclick="interactWithPet()" title="แตะเพื่อเล่นกับน้อง ${pet.nicknameTh}">
-                            <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border ${pet.borderClass} p-1.5 flex items-center justify-center shadow-inner relative overflow-hidden transition-transform duration-300 group-hover:scale-105 active:scale-95">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border ${pet.borderClass} p-1.5 flex items-center justify-center shadow-inner relative overflow-hidden transition-transform duration-300 group-hover:scale-105 active:scale-95">
                                 <img id="petWidgetGif" src="${currentStage.gif}" alt="${currentStage.title}" class="w-full h-full object-contain select-none drop-shadow-md">
                                 <div class="absolute bottom-1 right-1 text-xs">
                                     ${pet.elementIcon}
@@ -531,19 +531,19 @@
 
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <h3 class="font-extrabold text-base text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                <h3 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                                     <span>${pet.nicknameTh}</span>
                                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">(${pet.nickname})</span>
                                 </h3>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${pet.badgeBg}">
+                                <span class="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold ${pet.badgeBg} truncate max-w-full">
                                     ${currentStage.stageNameTh}: ${currentStage.title}
                                 </span>
                             </div>
                             <!-- Mini Speech Bubble / Cheerful Quote -->
-                            <p id="petWidgetQuote" class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-2 italic">
+                            <p id="petWidgetQuote" class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-2 italic break-words">
                                 "${pet.quotes[0]}"
                             </p>
-                            <div class="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                            <div class="flex items-center gap-2 sm:gap-3 mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
                                 <span class="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
                                     🗓️ สะสม: <b>${activeDays} วัน</b>
                                 </span>
@@ -556,20 +556,20 @@
                     <!-- Right: Quick Action Buttons -->
                     <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                         <button type="button" onclick="openPetCodexModal()"
-                            class="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer">
+                            class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer min-h-[44px]">
                             <span>🃏 ดูการ์ด & ลุ้นร่างถัดไป</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Next Evolution Countdown Progress Bar -->
-                <div class="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700/80">
-                    <div class="flex items-center justify-between text-xs mb-1.5">
-                        <span class="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
-                            <span>🧬 ความคืบหน้าวิวัฒนาการ:</span>
-                            <span class="text-slate-700 dark:text-slate-200 font-bold">${daysRemainingText}</span>
+                <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700/80">
+                    <div class="flex items-center justify-between text-xs mb-1.5 flex-wrap gap-1">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 flex-wrap min-w-0">
+                            <span>🧬 ความคืบหน้า:</span>
+                            <span class="text-slate-700 dark:text-slate-200 font-bold break-words">${daysRemainingText}</span>
                         </span>
-                        <span class="text-xs font-extrabold ${pet.theme?.primary || 'text-emerald-500'}">
+                        <span class="text-xs font-extrabold ${pet.theme?.primary || 'text-emerald-500'} shrink-0 ml-auto">
                             ${progressPercent}%
                         </span>
                     </div>
@@ -864,7 +864,7 @@
                         </div>
 
                         <!-- Card Silhouette with Dark Filter and Elemental Glow -->
-                        <div class="relative w-48 sm:w-56 mx-auto aspect-[3/4] rounded-xl overflow-hidden my-3 border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.25)] flex items-center justify-center bg-black">
+                        <div class="relative w-40 sm:w-52 mx-auto aspect-[3/4] rounded-xl overflow-hidden my-3 border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.25)] flex items-center justify-center bg-black">
                             <!-- Silhouette Image (Pure Black Shadow with Aura) -->
                             <img src="${nextStage.card}" alt="Mystery Evolution"
                                 class="w-full h-full object-cover select-none pointer-events-none"
@@ -872,7 +872,7 @@
                             
                             <!-- Question Mark & Lock Overlay -->
                             <div class="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white pointer-events-none p-3">
-                                <div class="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-3xl shadow-lg backdrop-blur-xs animate-pulse mb-1">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-2xl sm:text-3xl shadow-lg backdrop-blur-xs animate-pulse mb-1">
                                     ❓
                                 </div>
                                 <span class="text-xs font-bold text-amber-300 drop-shadow">ใครคือร่างถัดไป?</span>
@@ -883,10 +883,10 @@
                             <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                                 <span>💡 คำใบ้ร่างถัดไป:</span>
                             </div>
-                            <p class="text-xs text-slate-300 mt-1 italic">
+                            <p class="text-xs text-slate-300 mt-1 italic break-words">
                                 "${currentStage.hint}"
                             </p>
-                            <div class="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+                            <div class="mt-2 text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-1">
                                 <span>เงื่อนไขวิวัฒนาการ:</span>
                                 <span class="font-bold text-amber-400">เข้าใช้งานสะสมครบ ${nextStage.dayReq} วัน</span>
                             </div>
@@ -900,11 +900,11 @@
                         <h4 class="text-base font-extrabold text-amber-600 dark:text-amber-400">
                             บรรลุร่างในตำนานขั้นสูงสุดแล้ว!
                         </h4>
-                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-sm mx-auto">
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-sm mx-auto break-words">
                             น้อง ${pet.nicknameTh} วิวัฒนาการสู่ร่าง "${currentStage.title}" อย่างสมบูรณ์แบบ คุณสามารถเลือกฟักไข่ตัวใหม่ได้แล้ว!
                         </p>
                         <button type="button" onclick="openPetStarterModal()"
-                            class="mt-3.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition cursor-pointer">
+                            class="mt-3.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition cursor-pointer min-h-[44px]">
                             ✨ ปลดล็อคฟักไข่ตัวใหม่
                         </button>
                     </div>
@@ -916,7 +916,7 @@
             let adminSandboxHtml = '';
             if (isAdm || isSandboxActive) {
                 adminSandboxHtml = `
-                    <div class="rounded-2xl border-2 border-amber-500/50 bg-slate-900/90 p-3.5 space-y-2.5 text-xs shadow-md">
+                    <div class="rounded-2xl border-2 border-amber-500/50 bg-slate-900/90 p-3 sm:p-3.5 space-y-2.5 text-xs shadow-md">
                         <div class="flex items-center justify-between flex-wrap gap-2">
                             <div class="flex items-center gap-1.5 font-extrabold text-amber-400">
                                 <span>🛠️ โหมดทดสอบสำหรับแอดมิน (Admin Sandbox)</span>
@@ -924,7 +924,7 @@
                             </div>
                             ${isSandboxActive ? `
                                 <button type="button" onclick="adminRestoreRealPet()"
-                                    class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer">
+                                    class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer min-h-[36px]">
                                     <span>🔄</span> <span>คืนค่าสถานะจริงของฉัน</span>
                                 </button>
                             ` : ''}
@@ -934,16 +934,16 @@
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="text-slate-400 font-semibold text-[11px]">สลับสาย:</span>
                             <button type="button" onclick="adminSetTestPet('blaze', calculatePetStageIndex(state.pet?.activeDays) + 1)"
-                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'blaze' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-orange-400 border border-orange-500/30'}">
-                                🔥 Sparky (Blaze)
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer min-h-[32px] ${pet.id === 'blaze' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-orange-400 border border-orange-500/30'}">
+                                🔥 Sparky
                             </button>
                             <button type="button" onclick="adminSetTestPet('titan', calculatePetStageIndex(state.pet?.activeDays) + 1)"
-                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'titan' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-amber-400 border border-amber-600/30'}">
-                                🪨 Rocky (Titan)
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer min-h-[32px] ${pet.id === 'titan' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-amber-400 border border-amber-600/30'}">
+                                🪨 Rocky
                             </button>
                             <button type="button" onclick="adminSetTestPet('zen', calculatePetStageIndex(state.pet?.activeDays) + 1)"
-                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${pet.id === 'zen' ? 'bg-teal-600 text-white' : 'bg-slate-800 text-teal-400 border border-teal-500/30'}">
-                                💧 Dewy (Zen)
+                                class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer min-h-[32px] ${pet.id === 'zen' ? 'bg-teal-600 text-white' : 'bg-slate-800 text-teal-400 border border-teal-500/30'}">
+                                💧 Dewy
                             </button>
                         </div>
 
@@ -955,7 +955,7 @@
                                 const labels = ['R1: ไข่ (1วัน)', 'R2: แรกเกิด (3วัน)', 'R3: วัยซน (7วัน)', 'R4: โตเต็มวัย (21วัน)', 'R5: ตำนาน (60วัน)'];
                                 return `
                                     <button type="button" onclick="adminSetTestPet('${pet.id}', ${st})"
-                                        class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${isCur ? 'bg-amber-400 text-slate-950 font-extrabold shadow-xs' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                                        class="px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer min-h-[32px] ${isCur ? 'bg-amber-400 text-slate-950 font-extrabold shadow-xs' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
                                         ${labels[st - 1]}
                                     </button>
                                 `;
@@ -963,10 +963,10 @@
                         </div>
 
                         <!-- 3. Test Evolution Celebration -->
-                        <div class="pt-1 flex items-center justify-between border-t border-slate-800 text-[10px] text-slate-400">
-                            <span>*กดเปลี่ยนตัวและดูทุกร่างได้อิสระ เมื่อทดสอบเสร็จกด "คืนค่าสถานะจริง" ได้ทันที</span>
-                            <button type="button" onclick="adminTriggerEvolutionTest()" class="text-amber-400 hover:underline font-bold">
-                                🎉 เทสต์แอนิเมชันวิวัฒนาการ
+                        <div class="pt-1.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 border-t border-slate-800 text-[10px] text-slate-400">
+                            <span class="break-words leading-tight">*กดเปลี่ยนตัวและดูทุกร่างได้อิสระ เมื่อเสร็จกด "คืนค่าสถานะจริง"</span>
+                            <button type="button" onclick="adminTriggerEvolutionTest()" class="text-amber-400 hover:underline font-bold shrink-0 min-h-[32px] flex items-center">
+                                🎉 เทสต์วิวัฒนาการ
                             </button>
                         </div>
                     </div>
@@ -978,10 +978,10 @@
                     ${adminSandboxHtml}
 
                     <!-- Current Active Pet Hero Card -->
-                    <div class="rounded-2xl border ${pet.borderClass} bg-gradient-to-br ${pet.gradient} p-4 sm:p-5 text-white shadow-md relative overflow-hidden">
-                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="rounded-2xl border ${pet.borderClass} bg-gradient-to-br ${pet.gradient} p-3.5 sm:p-5 text-white shadow-md relative overflow-hidden">
+                        <div class="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4">
                             <!-- Clickable Card Image -->
-                            <div class="w-32 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border-2 border-white/60 shrink-0 cursor-pointer group relative hover:scale-105 transition"
+                            <div class="w-28 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border-2 border-white/60 shrink-0 cursor-pointer group relative hover:scale-105 transition"
                                 onclick="openPetCardViewer('${currentStage.card}', '${pet.nicknameTh} - ${currentStage.title}', '${currentStage.stageNameTh}', '${currentStage.desc}')">
                                 <img src="${currentStage.card}" alt="${currentStage.title}" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition flex items-end p-1.5">
@@ -991,21 +991,21 @@
                                 </div>
                             </div>
 
-                            <div class="flex-1 text-center sm:text-left min-w-0">
+                            <div class="flex-1 text-center sm:text-left min-w-0 w-full">
                                 <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-xs font-bold mb-1.5">
                                     <span>${pet.elementIcon}</span>
                                     <span>${pet.title.split('(')[0]}</span>
                                 </div>
-                                <h3 class="text-xl font-extrabold tracking-tight">
+                                <h3 class="text-lg sm:text-xl font-extrabold tracking-tight truncate">
                                     ${pet.nicknameTh} (${pet.nickname})
                                 </h3>
-                                <div class="text-sm font-semibold opacity-90 mt-0.5">
+                                <div class="text-xs sm:text-sm font-semibold opacity-90 mt-0.5">
                                     ${currentStage.stageNameTh}: ${currentStage.title}
                                 </div>
-                                <p class="text-xs opacity-90 mt-2 line-clamp-3">
+                                <p class="text-xs opacity-90 mt-2 line-clamp-3 break-words">
                                     ${currentStage.desc}
                                 </p>
-                                <div class="mt-3 inline-flex items-center gap-2 bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-xl text-xs font-bold">
+                                <div class="mt-3 inline-flex items-center gap-2 bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-xl text-xs font-bold flex-wrap">
                                     <span>🗓️ เข้าใช้งานสะสม:</span>
                                     <span class="text-amber-300 font-extrabold">${activeDays} วัน</span>
                                 </div>
@@ -1021,7 +1021,7 @@
                         <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
                             <span>📚 บันทึกสายวิวัฒนาการทั้ง 5 ร่าง (Evolution Codex):</span>
                         </h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             ${stagesGalleryHtml}
                         </div>
                     </div>
@@ -1042,20 +1042,22 @@
         if (!viewerModal) {
             viewerModal = document.createElement('div');
             viewerModal.id = 'petCardViewerModal';
-            viewerModal.className = 'fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300 select-none';
+            viewerModal.className = 'fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 transition-all duration-300 select-none overflow-y-auto overscroll-contain';
             viewerModal.innerHTML = `
-                <div class="relative max-w-sm w-full flex flex-col items-center">
-                    <button type="button" onclick="closePetCardViewer()"
-                        class="absolute -top-11 right-0 text-white/80 hover:text-white p-2 text-2xl font-bold cursor-pointer transition">
-                        ✕
-                    </button>
-                    <div id="petCardViewerFrame" class="w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-2 border-white/40 relative">
+                <!-- Floating iOS Close Button (44x44px Touch Target) -->
+                <button type="button" onclick="closePetCardViewer()"
+                    class="fixed top-3 right-3 sm:top-5 sm:right-5 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border-2 border-white/30 shadow-2xl flex items-center justify-center text-xl font-bold transition hover:scale-110 active:scale-95 cursor-pointer ring-4 ring-black/20"
+                    title="ปิดการ์ด (✕ ปิด)">
+                    ✕
+                </button>
+                <div class="relative max-w-xs sm:max-w-sm w-full flex flex-col items-center my-auto">
+                    <div id="petCardViewerFrame" class="w-full max-h-[62vh] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-2 border-white/40 relative">
                         <img id="petCardViewerImg" src="" alt="Pet Card" class="w-full h-full object-cover">
                     </div>
-                    <div class="mt-4 text-center text-white space-y-1">
-                        <h3 id="petCardViewerTitle" class="text-lg font-extrabold tracking-tight"></h3>
+                    <div class="mt-3.5 text-center text-white space-y-1 px-2">
+                        <h3 id="petCardViewerTitle" class="text-base sm:text-lg font-extrabold tracking-tight"></h3>
                         <p id="petCardViewerStage" class="text-xs font-semibold text-emerald-400"></p>
-                        <p id="petCardViewerDesc" class="text-xs text-slate-300 max-w-xs mx-auto line-clamp-3"></p>
+                        <p id="petCardViewerDesc" class="text-xs text-slate-300 max-w-xs mx-auto line-clamp-3 break-words"></p>
                     </div>
                 </div>
             `;
