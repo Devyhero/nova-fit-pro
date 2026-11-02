@@ -3023,11 +3023,12 @@ server.listen(PORT, async () => {
 
             // 2. Test Starter Selection Modal
             window.openPetStarterModal();
-            const starterModalOpen = !document.getElementById('petStarterModal').classList.contains('hidden');
+            const starterModalEl = document.getElementById('petStarterModal');
+            const starterModalOpen = !starterModalEl.classList.contains('hidden') && starterModalEl.classList.contains('modal-open');
 
             // 3. Select Sparky (Blaze)
             window.selectStarterPet('blaze');
-            const starterModalClosed = document.getElementById('petStarterModal').classList.contains('hidden');
+            const starterModalClosed = document.getElementById('petStarterModal').classList.contains('hidden') && !document.getElementById('petStarterModal').classList.contains('modal-open');
             const isBlazeSelected = window.state.pet.selectedPetId === 'blaze';
 
             // 4. Check Widget Rendered with Sparky Egg
@@ -3041,10 +3042,11 @@ server.listen(PORT, async () => {
 
             // 6. Test Pet Codex & Silhouette Mystery Card
             window.openPetCodexModal();
-            const codexModalOpen = !document.getElementById('petCodexModal').classList.contains('hidden');
+            const codexModalEl = document.getElementById('petCodexModal');
+            const codexModalOpen = !codexModalEl.classList.contains('hidden') && codexModalEl.classList.contains('modal-open');
             const hasSilhouette = !!document.querySelector('#petCodexModalContent img[style*="filter: brightness(0)"]');
             window.closePetCodexModal();
-            const codexModalClosed = document.getElementById('petCodexModal').classList.contains('hidden');
+            const codexModalClosed = document.getElementById('petCodexModal').classList.contains('hidden') && !document.getElementById('petCodexModal').classList.contains('modal-open');
 
             // 7. Test Evolution Progression (Stage 3: Day 7, Stage 5: Day 60)
             window.state.pet.activeDays = 7;

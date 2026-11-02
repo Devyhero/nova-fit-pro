@@ -18,7 +18,7 @@
 | `public/daily-report.js` | ~12 KB (266 lines) | Daily nutrition & deficit report modal, release changelog modal, PWA update prompt & version badges |
 | `public/data-backup.js` | ~7 KB (158 lines) | JSON data backup export, backup file restore, factory reset & PWA install prompts |
 | `public/quick-add.js` | ~10 KB (242 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt & quick meal logger |
-| `public/pet-companion.js` | ~42 KB (1,097 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, mystery silhouette cards, active days tracking & Admin Sandbox Engine |
+| `public/pet-companion.js` | ~43 KB (1,112 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, mystery silhouette cards, active days tracking & Admin Sandbox Engine |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
 | `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |

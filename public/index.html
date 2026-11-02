@@ -4634,10 +4634,10 @@
         <span>🥑</span> <span>เหมียวโนวา</span>
     </button>
 
-    <!-- MODAL: Pet Starter Selection (v5.9.32) -->
+    <!-- MODAL: Pet Starter Selection (v5.9.33) -->
     <div id="petStarterModal" onclick="if(event.target.id === 'petStarterModal') closePetStarterModal();"
         class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
-        <div class="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button type="button" onclick="closePetStarterModal()"
                 class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
                 ✕
@@ -4648,10 +4648,10 @@
         </div>
     </div>
 
-    <!-- MODAL: Pet Codex & Mystery Evolution (v5.9.32) -->
+    <!-- MODAL: Pet Codex & Mystery Evolution (v5.9.33) -->
     <div id="petCodexModal" onclick="if(event.target.id === 'petCodexModal') closePetCodexModal();"
         class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
-        <div class="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+        <div onclick="event.stopPropagation()" class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button type="button" onclick="closePetCodexModal()"
                 class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
                 ✕

@@ -608,6 +608,28 @@
         }
     }
 
+    // Modal Animation & Display Helpers (Ensures 100% visibility with .modal-open & Apple smooth backdrop)
+    function openPetModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('modal-open');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        if (typeof window.playSound === 'function') {
+            window.playSound('pop');
+        }
+    }
+
+    function closePetModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('modal-open');
+        modal.classList.add('hidden');
+        modal.style.display = '';
+        document.body.style.overflow = '';
+    }
+
     // Starter Pet Selection Modal
     function openPetStarterModal() {
         const modal = document.getElementById('petStarterModal');
@@ -716,15 +738,11 @@
             `;
         }
 
-        modal.classList.remove('hidden');
-        if (typeof window.playSound === 'function') {
-            window.playSound('pop');
-        }
+        openPetModal('petStarterModal');
     }
 
     function closePetStarterModal() {
-        const modal = document.getElementById('petStarterModal');
-        if (modal) modal.classList.add('hidden');
+        closePetModal('petStarterModal');
     }
 
     // Select Starter Pet Action
@@ -1011,15 +1029,11 @@
             `;
         }
 
-        modal.classList.remove('hidden');
-        if (typeof window.playSound === 'function') {
-            window.playSound('pop');
-        }
+        openPetModal('petCodexModal');
     }
 
     function closePetCodexModal() {
-        const modal = document.getElementById('petCodexModal');
-        if (modal) modal.classList.add('hidden');
+        closePetModal('petCodexModal');
     }
 
     // Full High-Res Card Viewer Modal
