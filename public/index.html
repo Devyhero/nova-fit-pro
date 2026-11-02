@@ -703,6 +703,14 @@
                                 <div class="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">สตรีคมีวินัย & สลับกรอบโปรไฟล์ 5 ลำดับขั้น</div>
                             </div>
                         </button>
+                        <button type="button" onclick="openPetCodexModal(); toggleToolsMenu();"
+                            class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2.5 transition cursor-pointer">
+                            <span class="text-base p-1.5 rounded-lg bg-orange-500/20 text-orange-600 dark:text-orange-400 shrink-0">🐾</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="leading-tight font-bold text-xs truncate">สัตว์เลี้ยงคู่หู (Pet Companion)</div>
+                                <div class="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">3 สาย 5 ร่าง & การ์ดวิวัฒนาการตามวันสะสม</div>
+                            </div>
+                        </button>
 
                         <!-- 2. ตั้งค่าแอป & การแจ้งเตือน (Preferences & Notifications) -->
                         <div class="border-t border-slate-100 dark:border-slate-700/80 my-1 pt-1.5 px-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
@@ -755,7 +763,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.32)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.33)
                         </button>
                         <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
@@ -863,6 +871,11 @@
                     <span>⚡ กลับสู่วันปัจจุบัน (วันนี้)</span>
                 </button>
             </div>
+        </section>
+
+        <!-- FITNESS PET COMPANION HERO WIDGET (v5.9.32) -->
+        <section id="card_pet_companion" class="w-full">
+            <!-- Dynamic rendering by pet-companion.js -->
         </section>
 
         <!-- MAIN RESPONSIVE DASHBOARD GRID -->
@@ -1668,7 +1681,7 @@
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-base shrink-0">🎉</span>
-                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.32!</b> สรุปการอัปเดตล่าสุด:</span>
+                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.33!</b> สรุปการอัปเดตล่าสุด:</span>
                     </div>
                     <button type="button" onclick="applyAppUpdate()"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition shrink-0 flex items-center gap-1 cursor-pointer">
@@ -1676,10 +1689,42 @@
                     </button>
                 </div>
 
-                <!-- Latest Release: v5.9.32 -->
-                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-emerald-500/30 space-y-2.5">
+                <!-- Latest Release: v5.9.33 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-teal-500/10 border border-amber-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                            <span>🐣</span> v5.9.33 (ระบบสัตว์เลี้ยงคู่หูฟิตเนส 3 สาย 5 ร่าง & การ์ดวิวัฒนาการลุ้นร่างถัดไป)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">2 พ.ย. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-orange-500">🔥</span>
+                            <span><b>สัตว์เลี้ยงคู่หู 3 สายธาตุ:</b> เลือกคู่หูตัวโปรด Sparky (Blaze 🔥 สายเบิร์น & คาร์ดิโอ), Rocky (Titan 🪨 สายพลัง & สร้างกล้ามเนื้อ) หรือ Dewy (Zen 💧🌿 สายสมดุล & โภชนาการ)</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🧬</span>
+                            <span><b>ระบบวิวัฒนาการ 5 ลำดับขั้น:</b> พัฒนาร่างตามวันเข้าใช้งานสะสม (Active Days) ตั้งแต่ไข่ปริศนา (Day 1), แรกเกิด (Day 3), วัยซน (Day 7), โตเต็มวัย (Day 21) สู่ร่างตำนาน (Day 60+)</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-amber-500">🕵️‍♂️</span>
+                            <span><b>ลุ้นร่างถัดไปด้วยเงาดำปริศนา (Mystery Silhouette Card):</b> ลุ้นร่างถัดไปด้วยเงามืดเรืองแสงและคำใบ้พลัง สไตล์เกมเก็บสะสมตัวละคร</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-teal-500">🃏</span>
+                            <span><b>การ์ดสะสมดิจิทัลระดับพรีเมียม (Pet Codex):</b> แตะดูการ์ดขยายเต็มจอความละเอียดสูง คมชัดสวยงามทุกร่าง</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">💬</span>
+                            <span><b>น้องดิ้นดุ๊กดิ๊กและโต้ตอบได้:</b> แตะที่ตัวน้องในหน้าหลักเพื่อฟังเสียงเชียร์ บับเบิ้ลกำลังใจ และเคล็ดลับสุขภาพ</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.32 -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                             <span>🍏</span> v5.9.32 (ค้นหาและบันทึกอาหารลื่นไหลบน iPhone & ป๊อบอัพแจ้งเตือนอัจฉริยะ)
                         </span>
                         <span class="text-xs text-slate-400 font-mono">1 พ.ย. 2026</span>
@@ -4589,6 +4634,40 @@
         <span>🥑</span> <span>เหมียวโนวา</span>
     </button>
 
+    <!-- MODAL: Pet Starter Selection (v5.9.32) -->
+    <div id="petStarterModal" onclick="if(event.target.id === 'petStarterModal') closePetStarterModal();"
+        class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
+        <div class="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+            <button type="button" onclick="closePetStarterModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
+                ✕
+            </button>
+            <div id="petStarterModalContent">
+                <!-- Dynamically rendered by pet-companion.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Pet Codex & Mystery Evolution (v5.9.32) -->
+    <div id="petCodexModal" onclick="if(event.target.id === 'petCodexModal') closePetCodexModal();"
+        class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
+        <div class="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+            <button type="button" onclick="closePetCodexModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700/80 flex items-center justify-center text-sm font-bold transition active:scale-95 cursor-pointer">
+                ✕
+            </button>
+            <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+                <span class="text-xl">🐾</span>
+                <h3 class="font-extrabold text-base text-slate-800 dark:text-slate-100">
+                    คู่หูฟิตเนส & การ์ดวิวัฒนาการ
+                </h3>
+            </div>
+            <div id="petCodexModalContent">
+                <!-- Dynamically rendered by pet-companion.js -->
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: MeowNova AI Health Coach Chat (Role 3 with 4-Tier Guard) -->
     <div id="novaChatModal" onclick="if(event.target.id === 'novaChatModal') closeNovaChatModal();"
         class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth">
@@ -4674,67 +4753,70 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.32"></script>
+    <script src="food-db.js?v=5.9.33"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.32"></script>
+    <script src="health-tips.js?v=5.9.33"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.32"></script>
+    <script src="ai-snap.js?v=5.9.33"></script>
 
     <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
-    <script src="nutrition-scanner.js?v=5.9.32"></script>
+    <script src="nutrition-scanner.js?v=5.9.33"></script>
 
     <!-- Intermittent Fasting (IF) Timer Engine (v5.9.30) -->
-    <script src="fasting-engine.js?v=5.9.32"></script>
+    <script src="fasting-engine.js?v=5.9.33"></script>
 
     <!-- Visual Share Card Engine (v5.9.30) -->
-    <script src="share-card.js?v=5.9.32"></script>
+    <script src="share-card.js?v=5.9.33"></script>
 
     <!-- Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide Engine (v5.9.30) -->
-    <script src="prestige-wardrobe.js?v=5.9.32"></script>
+    <script src="prestige-wardrobe.js?v=5.9.33"></script>
 
     <!-- Living App Companion & Milestone Celebration Engine (v5.9.30) -->
-    <script src="living-companion.js?v=5.9.32"></script>
+    <script src="living-companion.js?v=5.9.33"></script>
 
     <!-- Meal Combos & Visual Editor Engine (v5.9.30) -->
-    <script src="meal-combos.js?v=5.9.32"></script>
+    <script src="meal-combos.js?v=5.9.33"></script>
 
     <!-- Supplements & Vitamins Engine (v5.9.30) -->
-    <script src="supplements.js?v=5.9.32"></script>
+    <script src="supplements.js?v=5.9.33"></script>
 
     <!-- Web Push Notifications & FCM Engine (v5.9.30) -->
-    <script src="web-push.js?v=5.9.32"></script>
+    <script src="web-push.js?v=5.9.33"></script>
 
     <!-- Water Tracker & Hydration Engine (v5.9.30) -->
-    <script src="water-tracker.js?v=5.9.32"></script>
+    <script src="water-tracker.js?v=5.9.33"></script>
 
     <!-- Body Weight, Workouts & Weekly Analytics Engine (v5.9.30) -->
-    <script src="body-tracker.js?v=5.9.32"></script>
+    <script src="body-tracker.js?v=5.9.33"></script>
 
     <!-- Smart Coach Recommendations Engine (v5.9.30) -->
-    <script src="coach-engine.js?v=5.9.32"></script>
+    <script src="coach-engine.js?v=5.9.33"></script>
 
     <!-- Sound Effects & Web Audio Synthesizer (v5.9.30) -->
-    <script src="sound-effects.js?v=5.9.32"></script>
+    <script src="sound-effects.js?v=5.9.33"></script>
 
     <!-- Daily Report & Changelog Engine (v5.9.30) -->
-    <script src="daily-report.js?v=5.9.32"></script>
+    <script src="daily-report.js?v=5.9.33"></script>
 
     <!-- Data Backup, Restore & PWA Engine (v5.9.30) -->
-    <script src="data-backup.js?v=5.9.32"></script>
+    <script src="data-backup.js?v=5.9.33"></script>
+
+    <!-- Fitness Pet Companion & Evolution Engine (NEW v5.9.33) -->
+    <script src="pet-companion.js?v=5.9.33"></script>
 
     <!-- Modal Controller, Profile Drawer & Quick Add Engine (v5.9.30) -->
-    <script src="quick-add.js?v=5.9.32"></script>
+    <script src="quick-add.js?v=5.9.33"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.32"></script>
+    <script src="app.js?v=5.9.33"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.32"></script>
+    <script src="mascot-companion.js?v=5.9.33"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.32"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.33"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

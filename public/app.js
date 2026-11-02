@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.32';
+const APP_VERSION = '5.9.33';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
@@ -82,6 +82,13 @@ window.APP_VERSION = APP_VERSION;
                 shieldsRemaining: 2,
                 maxShields: 2,
                 frozenDates: []
+            },
+            pet: {
+                selectedPetId: null,
+                activeDays: 1,
+                activeDates: [getTodayStr()],
+                unlockedPets: [],
+                lastStageNotified: 1
             },
             mascotCompanion: {
                 enabled: true,
@@ -276,6 +283,21 @@ window.APP_VERSION = APP_VERSION;
                 state.streakFreeze = { month: todayStr.slice(0, 7), shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
             }
             if (!Array.isArray(state.streakFreeze.frozenDates)) state.streakFreeze.frozenDates = [];
+            if (!state.pet || typeof state.pet !== 'object') {
+                state.pet = {
+                    selectedPetId: null,
+                    activeDays: 1,
+                    activeDates: [todayStr],
+                    unlockedPets: [],
+                    lastStageNotified: 1
+                };
+            }
+            if (!Array.isArray(state.pet.activeDates)) {
+                state.pet.activeDates = [todayStr];
+            }
+            if (!Array.isArray(state.pet.unlockedPets)) {
+                state.pet.unlockedPets = [];
+            }
             loadCachedCentralFoods();
             if (window.verifyAndSanitizeStreak) window.verifyAndSanitizeStreak();
         }
@@ -983,6 +1005,9 @@ window.APP_VERSION = APP_VERSION;
             if (typeof renderPrestigeFrames === 'function') renderPrestigeFrames();
             renderAllSectionCollapses();
             syncResponsiveLayout();
+            if (typeof renderPetCompanionWidget === 'function') {
+                renderPetCompanionWidget();
+            }
             if (typeof window.renderNovaMascot === 'function') {
                 window.renderNovaMascot();
             }

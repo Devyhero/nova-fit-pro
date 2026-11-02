@@ -2569,7 +2569,13 @@ server.listen(PORT, async () => {
 
         // Test Main App Preloader & Maintenance Screen Elements
         await sendCdp('Page.navigate', { url: `http://localhost:${PORT}/` });
-        await new Promise(r => setTimeout(r, 600));
+        for (let i = 0; i < 30; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            try {
+                const ready = await evalJs('typeof window.applyMaintenanceConfig === "function"');
+                if (ready) break;
+            } catch (e) {}
+        }
 
         const clientMaintTest = await evalJs(`(() => {
             const preloader = document.getElementById('novaAppPreloader');
@@ -2990,6 +2996,99 @@ server.listen(PORT, async () => {
             !foodSearchToastTest.dismissedOnTap ||
             !foodSearchToastTest.activeToastsCount) {
             throw new Error('Test 55: Food Search Tap & Auto-Dismiss Toast Engine verification failed: ' + JSON.stringify(foodSearchToastTest));
+        }
+
+        // Test 56: Fitness Pet Companion (3 Species, 5 Stages Evolution & Mystery Silhouette Engine)
+        console.log('--- Test 56: Fitness Pet Companion & Evolution Engine ---');
+        const petCompanionTest = await evalJs(`(() => {
+            const hasWidget = !!document.getElementById('card_pet_companion');
+            const hasStarterModal = !!document.getElementById('petStarterModal');
+            const hasCodexModal = !!document.getElementById('petCodexModal');
+
+            // 1. Verify PET_DATA structure
+            const hasData = !!(window.PET_DATA && window.PET_DATA.blaze && window.PET_DATA.titan && window.PET_DATA.zen);
+            const blazeStages = window.PET_DATA?.blaze?.stages?.length === 5;
+            const titanStages = window.PET_DATA?.titan?.stages?.length === 5;
+            const zenStages = window.PET_DATA?.zen?.stages?.length === 5;
+            const hasNicknames = window.PET_DATA?.blaze?.nickname === 'Sparky' &&
+                                window.PET_DATA?.titan?.nickname === 'Rocky' &&
+                                window.PET_DATA?.zen?.nickname === 'Dewy';
+
+            // 2. Test Starter Selection Modal
+            window.openPetStarterModal();
+            const starterModalOpen = !document.getElementById('petStarterModal').classList.contains('hidden');
+
+            // 3. Select Sparky (Blaze)
+            window.selectStarterPet('blaze');
+            const starterModalClosed = document.getElementById('petStarterModal').classList.contains('hidden');
+            const isBlazeSelected = window.state.pet.selectedPetId === 'blaze';
+
+            // 4. Check Widget Rendered with Sparky Egg
+            const widgetGif = document.getElementById('petWidgetGif');
+            const hasEggGif = !!widgetGif && widgetGif.src.includes('1_Ember%20Egg_Blaze.gif');
+
+            // 5. Test Tap Interaction
+            const quoteBefore = document.getElementById('petWidgetQuote')?.textContent;
+            window.interactWithPet();
+            const quoteAfter = document.getElementById('petWidgetQuote')?.textContent;
+
+            // 6. Test Pet Codex & Silhouette Mystery Card
+            window.openPetCodexModal();
+            const codexModalOpen = !document.getElementById('petCodexModal').classList.contains('hidden');
+            const hasSilhouette = !!document.querySelector('#petCodexModalContent img[style*="filter: brightness(0)"]');
+            window.closePetCodexModal();
+            const codexModalClosed = document.getElementById('petCodexModal').classList.contains('hidden');
+
+            // 7. Test Evolution Progression (Stage 3: Day 7, Stage 5: Day 60)
+            window.state.pet.activeDays = 7;
+            window.renderPetCompanionWidget();
+            const gifStage3 = document.getElementById('petWidgetGif')?.src.includes('3_Blazerunner');
+
+            window.state.pet.activeDays = 60;
+            window.renderPetCompanionWidget();
+            const gifStage5 = document.getElementById('petWidgetGif')?.src.includes('5_Solareon');
+
+            return {
+                hasWidget,
+                hasStarterModal,
+                hasCodexModal,
+                hasData,
+                blazeStages,
+                titanStages,
+                zenStages,
+                hasNicknames,
+                starterModalOpen,
+                starterModalClosed,
+                isBlazeSelected,
+                hasEggGif,
+                interactOk: quoteBefore !== quoteAfter,
+                codexModalOpen,
+                hasSilhouette,
+                codexModalClosed,
+                gifStage3,
+                gifStage5
+            };
+        })()`);
+        console.log('Fitness Pet Companion & Evolution Engine verified:', petCompanionTest);
+        if (!petCompanionTest.hasWidget ||
+            !petCompanionTest.hasStarterModal ||
+            !petCompanionTest.hasCodexModal ||
+            !petCompanionTest.hasData ||
+            !petCompanionTest.blazeStages ||
+            !petCompanionTest.titanStages ||
+            !petCompanionTest.zenStages ||
+            !petCompanionTest.hasNicknames ||
+            !petCompanionTest.starterModalOpen ||
+            !petCompanionTest.starterModalClosed ||
+            !petCompanionTest.isBlazeSelected ||
+            !petCompanionTest.hasEggGif ||
+            !petCompanionTest.interactOk ||
+            !petCompanionTest.codexModalOpen ||
+            !petCompanionTest.hasSilhouette ||
+            !petCompanionTest.codexModalClosed ||
+            !petCompanionTest.gifStage3 ||
+            !petCompanionTest.gifStage5) {
+            throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 
         ws.close();

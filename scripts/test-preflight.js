@@ -71,6 +71,7 @@ const jsFiles = [
     { path: 'public/daily-report.js', isModule: false },
     { path: 'public/data-backup.js', isModule: false },
     { path: 'public/quick-add.js', isModule: false },
+    { path: 'public/pet-companion.js', isModule: false },
     { path: 'public/mascot-companion.js', isModule: false },
     { path: 'public/food-db.js', isModule: false },
     { path: 'public/health-tips.js', isModule: false },
