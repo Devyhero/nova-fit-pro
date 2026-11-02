@@ -3080,6 +3080,20 @@ server.listen(PORT, async () => {
             const sandboxInactiveAfterRestore = !window.isAdminPetSandboxActive();
             delete window._forceAdminPetSandbox;
 
+            // 9. Test TCG Collectible Card Frames & Mythic Foil Effects (v5.9.33)
+            window.openPetCardViewer('pets/Blaze/Card/1_Ember Egg_Blaze_Card.jpg', 'Sparky - Ember Egg', 'ไข่ปริศนา (Stage 1)', 'Egg desc', 1, 'blaze');
+            const viewerEl = document.getElementById('petCardViewerModal');
+            const viewerIsOpen = viewerEl && !viewerEl.classList.contains('hidden');
+            const hasCommonFrame = !!viewerEl?.querySelector('.tcg-corner-ornament');
+            const hasCommonRarity = viewerEl?.textContent.includes('COMMON');
+
+            // Open Stage 5 Mythic Legendary Card
+            window.openPetCardViewer('pets/Blaze/Card/5_Solareon Phoenix_ Blaze_Card.jpg', 'Sparky - Solareon Phoenix', 'ร่างตำนาน (Stage 5)', 'Mythic desc', 5, 'blaze');
+            const hasLegendaryFoil = !!viewerEl?.querySelector('.tcg-holo-rainbow');
+            const hasLegendaryRarity = viewerEl?.textContent.includes('MYTHIC LEGENDARY');
+            window.closePetCardViewer();
+            const viewerIsClosed = viewerEl?.classList.contains('hidden');
+
             return {
                 hasWidget,
                 hasStarterModal,
@@ -3104,7 +3118,13 @@ server.listen(PORT, async () => {
                 sandboxActiveAfterAction,
                 sandboxStageJumped,
                 genuinePetRestored,
-                sandboxInactiveAfterRestore
+                sandboxInactiveAfterRestore,
+                viewerIsOpen,
+                hasCommonFrame,
+                hasCommonRarity,
+                hasLegendaryFoil,
+                hasLegendaryRarity,
+                viewerIsClosed
             };
         })()`);
         console.log('Fitness Pet Companion & Evolution Engine verified:', petCompanionTest);
@@ -3131,7 +3151,13 @@ server.listen(PORT, async () => {
             !petCompanionTest.sandboxActiveAfterAction ||
             !petCompanionTest.sandboxStageJumped ||
             !petCompanionTest.genuinePetRestored ||
-            !petCompanionTest.sandboxInactiveAfterRestore) {
+            !petCompanionTest.sandboxInactiveAfterRestore ||
+            !petCompanionTest.viewerIsOpen ||
+            !petCompanionTest.hasCommonFrame ||
+            !petCompanionTest.hasCommonRarity ||
+            !petCompanionTest.hasLegendaryFoil ||
+            !petCompanionTest.hasLegendaryRarity ||
+            !petCompanionTest.viewerIsClosed) {
             throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 

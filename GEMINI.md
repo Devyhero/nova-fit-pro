@@ -217,7 +217,7 @@ Update version strings across all 5 files:
 - **[MODULARIZED]**: Web Push Notifications & FCM Engine ➔ `public/web-push.js` (198 lines)
 - **L473 – L723**: Theme & Smooth Accordions (`toggleTheme`, `animateSmoothAccordion`, `toggleCardSection`, `renderAllSectionCollapses`)
 - **L724 – L1185**: Profile Targets & Clinical Macro Calculator (`getCalculatedTargets`, `applyBmrSafetyFloor`, `setDayType`, `renderAll`, `renderPetCompanionWidget`)
-- **[MODULARIZED]**: Fitness Pet Companion & Evolution Engine ➔ `public/pet-companion.js` (1,114 lines, includes Admin Sandbox Engine)
+- **[MODULARIZED]**: Fitness Pet Companion & Evolution Engine ➔ `public/pet-companion.js` (1,331 lines, includes TCG Collectible Rarity Frames, Mythic Foil Effects & Admin Sandbox Engine)
 - **L1186 – L1288**: Macro Presets & Universal Food Search (`setMacroPreset`, `setProtein2gPerKg`, `adjustMacros`, `selectCategory`, `onSearchFood`, `clearFoodSearch`)
 - **L1289 – L1746**: Custom Confirm Dialog & Cloud Food DB Sync (`showConfirmDialog`, `applyCentralFoodsFromCloud`, `renderFoodDatabaseExplorer`)
 - **[MODULARIZED]**: Water Tracker & Hydration Engine ➔ `public/water-tracker.js` (165 lines)

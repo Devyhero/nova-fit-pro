@@ -20,6 +20,120 @@
 (function () {
     'use strict';
 
+    // Collectible TCG Rarity Tiers Configuration (5 Evolution Stages)
+    const RARITY_TIERS = {
+        1: {
+            stage: 1,
+            dayReq: 1,
+            tierKey: 'common',
+            nameEn: 'COMMON',
+            nameTh: 'ระดับทั่วไป (Common)',
+            stars: '★☆☆☆☆',
+            starsCount: 1,
+            symbol: '✦',
+            badgeBg: 'bg-stone-700/90 text-stone-200 border-stone-500/70',
+            badgeColor: 'text-stone-300',
+            borderClass: 'border-stone-500/70',
+            cardBorder: 'border-2 border-stone-400/80 ring-1 ring-stone-600/50',
+            glowStyle: 'box-shadow: 0 0 15px rgba(120, 113, 108, 0.35);',
+            cornerColor: 'text-stone-300',
+            accentGradient: 'from-stone-500 to-stone-700',
+            frameClass: 'tcg-frame-common',
+            foilClass: '',
+            perkTh: '✦ EXP คู่หู +5% • สมาธิเริ่มต้น',
+            collectorCode: 'COM-01',
+            ribbonGradient: 'from-stone-600 via-stone-500 to-stone-700'
+        },
+        2: {
+            stage: 2,
+            dayReq: 3,
+            tierKey: 'uncommon',
+            nameEn: 'UNCOMMON',
+            nameTh: 'ระดับพิเศษ (Uncommon)',
+            stars: '★★☆☆☆',
+            starsCount: 2,
+            symbol: '✦✦',
+            badgeBg: 'bg-emerald-800/90 text-emerald-100 border-emerald-400/70',
+            badgeColor: 'text-emerald-300',
+            borderClass: 'border-emerald-500/70',
+            cardBorder: 'border-2 border-slate-300 ring-2 ring-emerald-400/40',
+            glowStyle: 'box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);',
+            cornerColor: 'text-emerald-300',
+            accentGradient: 'from-emerald-500 to-teal-700',
+            frameClass: 'tcg-frame-uncommon',
+            foilClass: 'tcg-silver-sheen',
+            perkTh: '✦ ความอดทน +10% • วินัยแรกเกิด',
+            collectorCode: 'UNC-02',
+            ribbonGradient: 'from-teal-600 via-emerald-500 to-teal-700'
+        },
+        3: {
+            stage: 3,
+            dayReq: 7,
+            tierKey: 'rare',
+            nameEn: 'RARE',
+            nameTh: 'ระดับหายาก (Rare)',
+            stars: '★★★☆☆',
+            starsCount: 3,
+            symbol: '✦✦✦',
+            badgeBg: 'bg-amber-600/95 text-amber-100 border-amber-300/90 shadow-xs',
+            badgeColor: 'text-amber-300',
+            borderClass: 'border-amber-400',
+            cardBorder: 'border-2 border-amber-400 ring-2 ring-amber-400/50',
+            glowStyle: 'box-shadow: 0 0 25px rgba(251, 191, 36, 0.55), inset 0 0 15px rgba(251, 191, 36, 0.2);',
+            cornerColor: 'text-amber-300',
+            accentGradient: 'from-amber-400 to-orange-600',
+            frameClass: 'tcg-frame-rare',
+            foilClass: 'tcg-gold-pulse',
+            perkTh: '✦ กำลังใจ +15% • พลังธาตุตื่นรู้',
+            collectorCode: 'RAR-03',
+            ribbonGradient: 'from-amber-500 via-yellow-400 to-amber-600'
+        },
+        4: {
+            stage: 4,
+            dayReq: 21,
+            tierKey: 'epic',
+            nameEn: 'EPIC',
+            nameTh: 'ระดับมหากาพย์ (Epic)',
+            stars: '★★★★☆',
+            starsCount: 4,
+            symbol: '✦✦✦✦',
+            badgeBg: 'bg-purple-800/95 text-purple-100 border-purple-400/90 shadow-md',
+            badgeColor: 'text-purple-300',
+            borderClass: 'border-purple-400',
+            cardBorder: 'border-2 border-purple-400 ring-4 ring-purple-500/40',
+            glowStyle: 'box-shadow: 0 0 30px rgba(168, 85, 247, 0.65), inset 0 0 20px rgba(216, 180, 254, 0.25);',
+            cornerColor: 'text-purple-300',
+            accentGradient: 'from-purple-500 to-indigo-700',
+            frameClass: 'tcg-frame-epic',
+            foilClass: 'tcg-amethyst-prism',
+            perkTh: '✦ ออร่าขั้นสูง +20% • กายาแกร่งกล้า',
+            collectorCode: 'EPC-04',
+            ribbonGradient: 'from-purple-600 via-fuchsia-500 to-indigo-600'
+        },
+        5: {
+            stage: 5,
+            dayReq: 60,
+            tierKey: 'legendary',
+            nameEn: 'MYTHIC LEGENDARY',
+            nameTh: 'ระดับตำนานสูงสุด (Mythic Legendary)',
+            stars: '★★★★★',
+            starsCount: 5,
+            symbol: '★ MYTHIC ★',
+            badgeBg: 'bg-gradient-to-r from-amber-400 via-rose-500 to-purple-600 text-white font-extrabold border-2 border-amber-200 shadow-lg',
+            badgeColor: 'text-amber-300',
+            borderClass: 'border-amber-300',
+            cardBorder: 'border-3 border-amber-300 ring-4 ring-rose-500/50',
+            glowStyle: 'box-shadow: 0 0 35px rgba(245, 158, 11, 0.85), 0 0 65px rgba(244, 63, 94, 0.5);',
+            cornerColor: 'text-amber-300',
+            accentGradient: 'from-amber-400 via-rose-500 to-purple-600',
+            frameClass: 'tcg-frame-legendary',
+            foilClass: 'tcg-holo-rainbow',
+            perkTh: '👑 ร่างจุติสูงสุด • จิตวิญญาณแห่งความฟิตไร้ขีดจำกัด',
+            collectorCode: 'MYTH-05',
+            ribbonGradient: 'from-amber-400 via-rose-500 to-purple-600'
+        }
+    };
+
     // Pet Codex Configuration & Master Database
     const PET_DATA = {
         blaze: {
@@ -670,8 +784,9 @@
                                 กระต่าย/จิ้งจอกไฟ เปี่ยมพลังงาน ว่องไว จุดประกายการขยับร่างกาย
                             </p>
                             <div class="w-full mt-3.5 pt-3 border-t border-orange-500/20 flex flex-col gap-1.5">
-                                <button type="button" onclick="previewEggCard('blaze')" class="text-[11px] text-orange-600 dark:text-orange-400 font-bold hover:underline">
-                                    🔍 ดูรูปการ์ดใบแรก (Card)
+                                <button type="button" onclick="previewEggCard('blaze')" class="text-[11px] text-orange-600 dark:text-orange-400 font-bold hover:underline inline-flex items-center justify-center gap-1">
+                                    <span>🔍 ดูการ์ดกรอบสะสม</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-stone-700/80 text-stone-200 border border-stone-500/60 uppercase">COMMON</span>
                                 </button>
                                 <button type="button" onclick="selectStarterPet('blaze')"
                                     class="w-full py-2 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer">
@@ -697,8 +812,9 @@
                                 หมีศิลาเกราะหิน หนักแน่น มั่นคง ตัวแทนของวินัยและพลังกาย
                             </p>
                             <div class="w-full mt-3.5 pt-3 border-t border-stone-500/20 flex flex-col gap-1.5">
-                                <button type="button" onclick="previewEggCard('titan')" class="text-[11px] text-amber-700 dark:text-amber-400 font-bold hover:underline">
-                                    🔍 ดูรูปการ์ดใบแรก (Card)
+                                <button type="button" onclick="previewEggCard('titan')" class="text-[11px] text-amber-700 dark:text-amber-400 font-bold hover:underline inline-flex items-center justify-center gap-1">
+                                    <span>🔍 ดูการ์ดกรอบสะสม</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-stone-700/80 text-stone-200 border border-stone-500/60 uppercase">COMMON</span>
                                 </button>
                                 <button type="button" onclick="selectStarterPet('titan')"
                                     class="w-full py-2 rounded-xl bg-amber-700 hover:bg-amber-800 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer">
@@ -724,8 +840,9 @@
                                 เพนกวินพฤกษาผสานสายน้ำ นุ่มนวล สดชื่น เตือนดื่มน้ำและคุมอาหาร
                             </p>
                             <div class="w-full mt-3.5 pt-3 border-t border-teal-500/20 flex flex-col gap-1.5">
-                                <button type="button" onclick="previewEggCard('zen')" class="text-[11px] text-teal-600 dark:text-teal-400 font-bold hover:underline">
-                                    🔍 ดูรูปการ์ดใบแรก (Card)
+                                <button type="button" onclick="previewEggCard('zen')" class="text-[11px] text-teal-600 dark:text-teal-400 font-bold hover:underline inline-flex items-center justify-center gap-1">
+                                    <span>🔍 ดูการ์ดกรอบสะสม</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-stone-700/80 text-stone-200 border border-stone-500/60 uppercase">COMMON</span>
                                 </button>
                                 <button type="button" onclick="selectStarterPet('zen')"
                                     class="w-full py-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer">
@@ -783,7 +900,7 @@
         const pet = PET_DATA[petId];
         if (!pet) return;
         const eggStage = pet.stages[0];
-        openPetCardViewer(eggStage.card, `${pet.nicknameTh} - ${eggStage.title}`, eggStage.stageNameTh, eggStage.desc);
+        openPetCardViewer(eggStage.card, `${pet.nicknameTh} - ${eggStage.title}`, eggStage.stageNameTh, eggStage.desc, 1, pet.id);
     }
 
     // Pet Codex & Mystery Silhouette Card Modal
@@ -802,6 +919,7 @@
         const stageIdx = calculateStageIndex(activeDays);
         const currentStage = pet.stages[stageIdx];
         const nextStage = stageIdx < 4 ? pet.stages[stageIdx + 1] : null;
+        const curRarity = RARITY_TIERS[stageIdx + 1] || RARITY_TIERS[1];
 
         const container = document.getElementById('petCodexModalContent');
         if (container) {
@@ -810,15 +928,22 @@
                 const isUnlocked = idx <= stageIdx;
                 const isCurrent = idx === stageIdx;
                 const isNext = idx === stageIdx + 1;
+                const stRarity = RARITY_TIERS[st.stage] || RARITY_TIERS[1];
 
                 if (isUnlocked) {
                     return `
-                        <button type="button" onclick="openPetCardViewer('${st.card}', '${pet.nicknameTh} - ${st.title}', '${st.stageNameTh}', '${st.desc}')"
-                            class="p-2.5 rounded-xl border ${isCurrent ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60'} text-left transition hover:scale-102 cursor-pointer flex items-center gap-2.5">
-                            <img src="${st.gif}" alt="${st.title}" class="w-10 h-10 object-contain shrink-0">
+                        <button type="button" onclick="openPetCardViewer('${st.card}', '${pet.nicknameTh} - ${st.title}', '${st.stageNameTh}', '${st.desc}', ${st.stage}, '${pet.id}')"
+                            class="p-2.5 rounded-xl border ${isCurrent ? 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/30' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60'} text-left transition hover:scale-102 cursor-pointer flex items-center gap-2.5 relative group">
+                            <img src="${st.gif}" alt="${st.title}" class="w-10 h-10 object-contain shrink-0 group-hover:scale-110 transition">
                             <div class="min-w-0 flex-1">
-                                <div class="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">${st.title}</div>
-                                <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">${st.stageNameTh} ✓</div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">${st.title}</span>
+                                    <span class="text-[8px] px-1.5 py-0.2 rounded font-black ${stRarity.badgeBg} shrink-0 uppercase">${stRarity.starsCount === 5 ? '👑 ' : ''}${stRarity.nameEn}</span>
+                                </div>
+                                <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5 flex items-center gap-1">
+                                    <span>${st.stageNameTh} ✓</span>
+                                    <span class="text-[8px] text-slate-400 font-normal">| 🔍 ดูการ์ด</span>
+                                </div>
                             </div>
                         </button>
                     `;
@@ -830,7 +955,10 @@
                                 🔒
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate">??? (ร่างถัดไป)</div>
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    <span class="text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate">??? (ร่างถัดไป)</span>
+                                    <span class="text-[8px] px-1.5 py-0.2 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 uppercase">${stRarity.nameEn}</span>
+                                </div>
                                 <div class="text-[9px] text-slate-500 dark:text-slate-400 truncate">สะสมครบ ${st.dayReq} วัน (อีก ${daysLeft} วัน)</div>
                             </div>
                         </div>
@@ -843,7 +971,7 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="text-[11px] font-bold text-slate-400 truncate">ร่างลับ (ยังไม่เปิดเผย)</div>
-                                <div class="text-[9px] text-slate-400 truncate">Stage ${st.stage} (Day ${st.dayReq})</div>
+                                <div class="text-[9px] text-slate-400 truncate">Stage ${st.stage} (${stRarity.nameEn}) • Day ${st.dayReq}</div>
                             </div>
                         </div>
                     `;
@@ -854,6 +982,7 @@
             let nextStageHtml = '';
             if (nextStage) {
                 const daysLeft = Math.max(1, nextStage.dayReq - activeDays);
+                const nextRarity = RARITY_TIERS[nextStage.stage] || RARITY_TIERS[1];
                 nextStageHtml = `
                     <div class="relative rounded-2xl overflow-hidden border-2 border-amber-500/40 bg-gradient-to-b from-slate-900 via-slate-900 to-black p-4 text-center shadow-lg">
                         <div class="flex items-center justify-between mb-2">
@@ -863,8 +992,14 @@
                             <span class="text-xs text-amber-300 font-bold">🔒 อีก ${daysLeft} วัน</span>
                         </div>
 
-                        <!-- Card Silhouette with Dark Filter and Elemental Glow -->
-                        <div class="relative w-40 sm:w-52 mx-auto aspect-[3/4] rounded-xl overflow-hidden my-3 border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.25)] flex items-center justify-center bg-black">
+                        <!-- Card Silhouette with Dark Filter, Elemental Glow & Mystery Corner Ornaments -->
+                        <div class="relative w-40 sm:w-52 mx-auto aspect-[3/4] rounded-xl overflow-hidden my-3 border border-amber-500/40 shadow-[0_0_25px_rgba(245,158,11,0.25)] flex items-center justify-center bg-black">
+                            <!-- Mystery Corner Ornaments -->
+                            <div class="tcg-corner-ornament tcg-corner-tl text-amber-400"></div>
+                            <div class="tcg-corner-ornament tcg-corner-tr text-amber-400"></div>
+                            <div class="tcg-corner-ornament tcg-corner-bl text-amber-400"></div>
+                            <div class="tcg-corner-ornament tcg-corner-br text-amber-400"></div>
+
                             <!-- Silhouette Image (Pure Black Shadow with Aura) -->
                             <img src="${nextStage.card}" alt="Mystery Evolution"
                                 class="w-full h-full object-cover select-none pointer-events-none"
@@ -876,6 +1011,9 @@
                                     ❓
                                 </div>
                                 <span class="text-xs font-bold text-amber-300 drop-shadow">ใครคือร่างถัดไป?</span>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/30 text-amber-200 border border-amber-400/50 mt-1">
+                                    เป้าหมาย: ${nextRarity.nameEn} (${nextRarity.stars})
+                                </span>
                             </div>
                         </div>
 
@@ -977,16 +1115,32 @@
                 <div class="space-y-4">
                     ${adminSandboxHtml}
 
-                    <!-- Current Active Pet Hero Card -->
+                    <!-- Current Active Pet Hero Card with TCG Frame -->
                     <div class="rounded-2xl border ${pet.borderClass} bg-gradient-to-br ${pet.gradient} p-3.5 sm:p-5 text-white shadow-md relative overflow-hidden">
                         <div class="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4">
-                            <!-- Clickable Card Image -->
-                            <div class="w-28 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border-2 border-white/60 shrink-0 cursor-pointer group relative hover:scale-105 transition"
-                                onclick="openPetCardViewer('${currentStage.card}', '${pet.nicknameTh} - ${currentStage.title}', '${currentStage.stageNameTh}', '${currentStage.desc}')">
+                            <!-- Clickable Card Image with TCG Frame -->
+                            <div class="w-28 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl shrink-0 cursor-pointer group relative hover:scale-105 transition ${curRarity.cardBorder} ${stageIdx === 4 ? 'tcg-legendary-border-anim' : ''}"
+                                style="${curRarity.glowStyle}"
+                                onclick="openPetCardViewer('${currentStage.card}', '${pet.nicknameTh} - ${currentStage.title}', '${currentStage.stageNameTh}', '${currentStage.desc}', ${currentStage.stage}, '${pet.id}')">
+                                
+                                <!-- Corner Ornaments -->
+                                <div class="tcg-corner-ornament tcg-corner-tl ${curRarity.cornerColor}"></div>
+                                <div class="tcg-corner-ornament tcg-corner-tr ${curRarity.cornerColor}"></div>
+                                <div class="tcg-corner-ornament tcg-corner-bl ${curRarity.cornerColor}"></div>
+                                <div class="tcg-corner-ornament tcg-corner-br ${curRarity.cornerColor}"></div>
+
                                 <img src="${currentStage.card}" alt="${currentStage.title}" class="w-full h-full object-cover">
+                                
+                                ${curRarity.foilClass ? `<div class="absolute inset-0 pointer-events-none ${curRarity.foilClass}"></div>` : ''}
+
+                                <div class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${curRarity.badgeBg} shadow-xs z-10 flex items-center gap-0.5">
+                                    <span>${curRarity.symbol}</span>
+                                    <span>${curRarity.nameEn}</span>
+                                </div>
+
                                 <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition flex items-end p-1.5">
-                                    <span class="text-[9px] bg-black/70 backdrop-blur-xs text-white px-1.5 py-0.5 rounded font-bold">
-                                        🔍 แตะดูเต็มจอ
+                                    <span class="text-[9px] bg-black/75 backdrop-blur-xs text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/40">
+                                        🔍 กรอบการ์ด ${curRarity.collectorCode}
                                     </span>
                                 </div>
                             </div>
@@ -1002,10 +1156,13 @@
                                 <div class="text-xs sm:text-sm font-semibold opacity-90 mt-0.5">
                                     ${currentStage.stageNameTh}: ${currentStage.title}
                                 </div>
-                                <p class="text-xs opacity-90 mt-2 line-clamp-3 break-words">
+                                <div class="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/30 text-[11px] font-semibold text-amber-200">
+                                    <span>${curRarity.perkTh}</span>
+                                </div>
+                                <p class="text-xs opacity-90 mt-1.5 line-clamp-2 break-words">
                                     ${currentStage.desc}
                                 </p>
-                                <div class="mt-3 inline-flex items-center gap-2 bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-xl text-xs font-bold flex-wrap">
+                                <div class="mt-2.5 inline-flex items-center gap-2 bg-black/40 backdrop-blur-xs px-3 py-1.5 rounded-xl text-xs font-bold flex-wrap">
                                     <span>🗓️ เข้าใช้งานสะสม:</span>
                                     <span class="text-amber-300 font-extrabold">${activeDays} วัน</span>
                                 </div>
@@ -1036,46 +1193,105 @@
         closePetModal('petCodexModal');
     }
 
-    // Full High-Res Card Viewer Modal
-    function openPetCardViewer(cardUrl, title, stageTitle, desc) {
+    // Full High-Res Card Viewer Modal with TCG Collectible Rarity Frames
+    function openPetCardViewer(cardUrl, title, stageTitle, desc, stageNum, petId) {
+        let resolvedStage = Number(stageNum);
+        if (!resolvedStage || isNaN(resolvedStage) || resolvedStage < 1 || resolvedStage > 5) {
+            const urlMatch = cardUrl ? cardUrl.match(/\/([1-5])_/) : null;
+            const titleMatch = stageTitle ? stageTitle.match(/Stage\s*([1-5])/i) : null;
+            if (urlMatch) {
+                resolvedStage = parseInt(urlMatch[1], 10);
+            } else if (titleMatch) {
+                resolvedStage = parseInt(titleMatch[1], 10);
+            } else {
+                resolvedStage = 1;
+            }
+        }
+        const rarity = RARITY_TIERS[resolvedStage] || RARITY_TIERS[1];
+
+        let resolvedPet = null;
+        if (petId && PET_DATA[petId]) {
+            resolvedPet = PET_DATA[petId];
+        } else {
+            for (const key of Object.keys(PET_DATA)) {
+                if ((cardUrl && cardUrl.toLowerCase().includes(key)) || (title && title.includes(PET_DATA[key].nicknameTh))) {
+                    resolvedPet = PET_DATA[key];
+                    break;
+                }
+            }
+        }
+
         let viewerModal = document.getElementById('petCardViewerModal');
         if (!viewerModal) {
             viewerModal = document.createElement('div');
             viewerModal.id = 'petCardViewerModal';
             viewerModal.className = 'fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 transition-all duration-300 select-none overflow-y-auto overscroll-contain';
-            viewerModal.innerHTML = `
-                <!-- Floating iOS Close Button (44x44px Touch Target) -->
-                <button type="button" onclick="closePetCardViewer()"
-                    class="fixed top-3 right-3 sm:top-5 sm:right-5 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border-2 border-white/30 shadow-2xl flex items-center justify-center text-xl font-bold transition hover:scale-110 active:scale-95 cursor-pointer ring-4 ring-black/20"
-                    title="ปิดการ์ด (✕ ปิด)">
-                    ✕
-                </button>
-                <div class="relative max-w-xs sm:max-w-sm w-full flex flex-col items-center my-auto">
-                    <div id="petCardViewerFrame" class="w-full max-h-[62vh] aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-2 border-white/40 relative">
-                        <img id="petCardViewerImg" src="" alt="Pet Card" class="w-full h-full object-cover">
-                    </div>
-                    <div class="mt-3.5 text-center text-white space-y-1 px-2">
-                        <h3 id="petCardViewerTitle" class="text-base sm:text-lg font-extrabold tracking-tight"></h3>
-                        <p id="petCardViewerStage" class="text-xs font-semibold text-emerald-400"></p>
-                        <p id="petCardViewerDesc" class="text-xs text-slate-300 max-w-xs mx-auto line-clamp-3 break-words"></p>
-                    </div>
-                </div>
-            `;
             document.body.appendChild(viewerModal);
             viewerModal.addEventListener('click', (e) => {
                 if (e.target === viewerModal) closePetCardViewer();
             });
         }
 
-        const imgEl = document.getElementById('petCardViewerImg');
-        const titleEl = document.getElementById('petCardViewerTitle');
-        const stageEl = document.getElementById('petCardViewerStage');
-        const descEl = document.getElementById('petCardViewerDesc');
+        const elementIcon = resolvedPet ? resolvedPet.elementIcon : '✨';
 
-        if (imgEl) imgEl.src = cardUrl;
-        if (titleEl) titleEl.textContent = title;
-        if (stageEl) stageEl.textContent = stageTitle;
-        if (descEl) descEl.textContent = desc;
+        viewerModal.innerHTML = `
+            <!-- Floating iOS Close Button (44x44px Touch Target) -->
+            <button type="button" onclick="closePetCardViewer()"
+                class="fixed top-3 right-3 sm:top-5 sm:right-5 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white border-2 border-white/30 shadow-2xl flex items-center justify-center text-xl font-bold transition hover:scale-110 active:scale-95 cursor-pointer ring-4 ring-black/20"
+                title="ปิดการ์ด (✕ ปิด)">
+                ✕
+            </button>
+            <div class="relative max-w-xs sm:max-w-sm w-full flex flex-col items-center my-auto py-3">
+                <!-- Top Collector Ribbon -->
+                <div class="flex items-center justify-between w-full mb-2.5 px-1 gap-2">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black tracking-wide ${rarity.badgeBg} shadow-md border">
+                        <span>${rarity.symbol}</span>
+                        <span>${rarity.nameEn}</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800/90 text-[11px] font-bold text-slate-300 border border-slate-700">
+                        <span>${elementIcon}</span>
+                        <span>DAY ${rarity.dayReq}+</span>
+                    </div>
+                </div>
+
+                <!-- TCG Collectible Card Frame -->
+                <div id="petCardViewerFrame" class="w-full max-h-[58vh] aspect-[3/4] rounded-2xl overflow-hidden relative ${rarity.cardBorder} ${resolvedStage === 5 ? 'tcg-legendary-border-anim' : ''}" style="${rarity.glowStyle}">
+                    <!-- Corner Ornaments -->
+                    <div class="tcg-corner-ornament tcg-corner-tl ${rarity.cornerColor}"></div>
+                    <div class="tcg-corner-ornament tcg-corner-tr ${rarity.cornerColor}"></div>
+                    <div class="tcg-corner-ornament tcg-corner-bl ${rarity.cornerColor}"></div>
+                    <div class="tcg-corner-ornament tcg-corner-br ${rarity.cornerColor}"></div>
+
+                    <!-- High-Res Card Artwork -->
+                    <img id="petCardViewerImg" src="${cardUrl}" alt="${title}" class="w-full h-full object-cover select-none">
+
+                    <!-- Foil Reflection Sheen -->
+                    ${rarity.foilClass ? `<div class="absolute inset-0 pointer-events-none ${rarity.foilClass}"></div>` : ''}
+
+                    <!-- Collector Stamp Badge -->
+                    <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-xs text-[10px] font-black tracking-wider text-amber-300 border border-amber-500/40">
+                        STAGE ${resolvedStage} • ${rarity.collectorCode}
+                    </div>
+                </div>
+
+                <!-- Collector Plaque & Metadata -->
+                <div class="mt-3 w-full rounded-2xl bg-slate-900/95 border border-slate-800 p-3 sm:p-3.5 text-center space-y-1.5 shadow-2xl">
+                    <h3 id="petCardViewerTitle" class="text-base sm:text-lg font-extrabold tracking-tight text-white">${title}</h3>
+                    <div class="text-xs font-semibold text-emerald-400 flex items-center justify-center gap-1.5 flex-wrap">
+                        <span id="petCardViewerStage">${stageTitle}</span>
+                        <span>•</span>
+                        <span class="${rarity.badgeColor} font-bold">${rarity.nameTh}</span>
+                    </div>
+                    <!-- Passive Perk Banner -->
+                    <div class="text-[11px] py-1 px-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-amber-300 font-medium inline-block max-w-full truncate">
+                        ${rarity.perkTh}
+                    </div>
+                    <p id="petCardViewerDesc" class="text-xs text-slate-300 line-clamp-2 break-words leading-relaxed">
+                        "${desc}"
+                    </p>
+                </div>
+            </div>
+        `;
 
         viewerModal.classList.remove('hidden');
         if (typeof window.playSound === 'function') {
@@ -1110,5 +1326,6 @@
     window.adminRestoreRealPet = adminRestoreRealPet;
     window.adminTriggerEvolutionTest = adminTriggerEvolutionTest;
     window.openAdminPetSandbox = openAdminPetSandbox;
+    window.PET_RARITY_TIERS = RARITY_TIERS;
 
 })();

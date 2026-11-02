@@ -49,12 +49,11 @@
             modal._closeTimer = null;
         }
         modal.classList.remove('hidden');
+        modal.classList.add('modal-open');
         modal.style.display = 'flex';
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                modal.classList.add('modal-open');
-                if (typeof onOpened === 'function') onOpened();
-            });
+            modal.classList.add('modal-open');
+            if (typeof onOpened === 'function') onOpened();
         });
         document.body.style.overflow = 'hidden';
     }
