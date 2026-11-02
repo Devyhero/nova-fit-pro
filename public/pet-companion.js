@@ -368,13 +368,14 @@
     function getSafePetState() {
         if (!window.state) return null;
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
-        if (!window.state.pet || typeof window.state.pet !== 'object') {
+        if (!window.state.pet || typeof window.state.pet !== 'object' || !window.state.pet.v5933) {
             window.state.pet = {
                 selectedPetId: null,
                 activeDays: 1,
                 activeDates: [today],
                 unlockedPets: [],
-                lastStageNotified: 1
+                lastStageNotified: 1,
+                v5933: true
             };
         }
         if (!Array.isArray(window.state.pet.activeDates)) {
@@ -383,6 +384,7 @@
         if (!Array.isArray(window.state.pet.unlockedPets)) {
             window.state.pet.unlockedPets = [];
         }
+        window.state.pet.v5933 = true;
         return window.state.pet;
     }
 
@@ -536,6 +538,36 @@
         } catch (e) {
             console.error('Failed to restore real pet state:', e);
         }
+    }
+
+    // Admin / User Reset Pet State to Fresh Starter
+    function adminResetPetToFresh() {
+        sessionStorage.removeItem('novafit_pet_admin_real_backup');
+        if (window.state) {
+            const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
+            window.state.pet = {
+                selectedPetId: null,
+                activeDays: 1,
+                activeDates: [today],
+                unlockedPets: [],
+                lastStageNotified: 1,
+                v5933: true
+            };
+        }
+        if (typeof window.saveState === 'function') {
+            window.saveState();
+        }
+        if (typeof window.triggerCloudSync === 'function') {
+            window.triggerCloudSync(true);
+        }
+        closePetCodexModal();
+        renderPetCompanionWidget();
+        if (typeof window.showToast === 'function') {
+            window.showToast('🗑️ ลบสถานะสัตว์เลี้ยงแล้ว! กลับสู่หน้าเลือกฟักไข่เริ่มต้น');
+        }
+        setTimeout(() => {
+            openPetStarterModal();
+        }, 250);
     }
 
     function adminTriggerEvolutionTest() {
@@ -870,6 +902,7 @@
 
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
         petState.selectedPetId = petId;
+        petState.v5933 = true;
         if (!petState.activeDates.includes(today)) {
             petState.activeDates.push(today);
         }
@@ -878,6 +911,9 @@
 
         if (typeof window.saveState === 'function') {
             window.saveState();
+        }
+        if (typeof window.triggerCloudSync === 'function') {
+            window.triggerCloudSync(true);
         }
 
         closePetStarterModal();
@@ -1060,12 +1096,19 @@
                                 <span>🛠️ โหมดทดสอบสำหรับแอดมิน (Admin Sandbox)</span>
                                 ${isSandboxActive ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold animate-pulse">กำลังจำลอง</span>' : ''}
                             </div>
-                            ${isSandboxActive ? `
-                                <button type="button" onclick="adminRestoreRealPet()"
-                                    class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer min-h-[36px]">
-                                    <span>🔄</span> <span>คืนค่าสถานะจริงของฉัน</span>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                ${isSandboxActive ? `
+                                    <button type="button" onclick="adminRestoreRealPet()"
+                                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer min-h-[36px]">
+                                        <span>🔄</span> <span>คืนค่าสถานะจริงของฉัน</span>
+                                    </button>
+                                ` : ''}
+                                <button type="button" onclick="adminResetPetToFresh()"
+                                    class="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer min-h-[36px]"
+                                    title="ลบสถานะสัตว์เลี้ยงและกลับไปเลือกคู่หูใหม่เริ่มต้น">
+                                    <span>🗑️</span> <span>ลบสถานะ (เริ่มเลือกใหม่)</span>
                                 </button>
-                            ` : ''}
+                            </div>
                         </div>
 
                         <!-- 1. Quick Switch Pet -->
@@ -1324,6 +1367,7 @@
     window.isAdminPetSandboxActive = isAdminPetSandboxActive;
     window.adminSetTestPet = adminSetTestPet;
     window.adminRestoreRealPet = adminRestoreRealPet;
+    window.adminResetPetToFresh = adminResetPetToFresh;
     window.adminTriggerEvolutionTest = adminTriggerEvolutionTest;
     window.openAdminPetSandbox = openAdminPetSandbox;
     window.PET_RARITY_TIERS = RARITY_TIERS;

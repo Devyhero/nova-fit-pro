@@ -18,7 +18,7 @@
 | `public/daily-report.js` | ~12 KB (266 lines) | Daily nutrition & deficit report modal, release changelog modal, PWA update prompt & version badges |
 | `public/data-backup.js` | ~7 KB (158 lines) | JSON data backup export, backup file restore, factory reset & PWA install prompts |
 | `public/quick-add.js` | ~10 KB (242 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt & quick meal logger |
-| `public/pet-companion.js` | ~52 KB (1,331 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, TCG collectible rarity frames, mythic holographic foil effects, mystery silhouette cards, active days tracking & Admin Sandbox Engine |
+| `public/pet-companion.js` | ~54 KB (1,375 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, TCG collectible rarity frames, mythic holographic foil effects, mystery silhouette cards, active days tracking, Admin Sandbox Engine & 1-click fresh reset |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
 | `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |
@@ -147,7 +147,7 @@ state = {
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines) |
 | **MODULARIZED** | **Data Backup, Restore & PWA Engine** | Extracted to `public/data-backup.js` (158 lines): `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()` |
 | **L2401 – L2819**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
-| **MODULARIZED** | **Fitness Pet Companion & Evolution Engine** | Extracted to `public/pet-companion.js` (1,331 lines): `PET_DATA`, `RARITY_TIERS`, `renderPetCompanionWidget()`, `openPetStarterModal()`, `selectStarterPet()`, `openPetCodexModal()`, `openPetCardViewer()` with TCG rarity frames & mythic holographic foil effects, Admin Pet Sandbox Engine (`adminSetTestPet`, `adminRestoreRealPet`, `adminTriggerEvolutionTest`) |
+| **MODULARIZED** | **Fitness Pet Companion & Evolution Engine** | Extracted to `public/pet-companion.js` (1,375 lines): `PET_DATA`, `RARITY_TIERS`, `renderPetCompanionWidget()`, `openPetStarterModal()`, `selectStarterPet()`, `openPetCodexModal()`, `openPetCardViewer()` with TCG rarity frames & mythic holographic foil effects, Admin Pet Sandbox Engine (`adminSetTestPet`, `adminRestoreRealPet`, `adminResetPetToFresh`, `adminTriggerEvolutionTest`) |
 | **MODULARIZED** | **Apple-Grade Modals & Profile Drawer** | Extracted to `public/quick-add.js` (242 lines): `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (918 lines) |
 | **L2820 – L2852**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |

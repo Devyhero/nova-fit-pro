@@ -88,7 +88,8 @@ window.APP_VERSION = APP_VERSION;
                 activeDays: 1,
                 activeDates: [getTodayStr()],
                 unlockedPets: [],
-                lastStageNotified: 1
+                lastStageNotified: 1,
+                v5933: true
             },
             mascotCompanion: {
                 enabled: true,
@@ -283,13 +284,14 @@ window.APP_VERSION = APP_VERSION;
                 state.streakFreeze = { month: todayStr.slice(0, 7), shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
             }
             if (!Array.isArray(state.streakFreeze.frozenDates)) state.streakFreeze.frozenDates = [];
-            if (!state.pet || typeof state.pet !== 'object') {
+            if (!state.pet || typeof state.pet !== 'object' || !state.pet.v5933) {
                 state.pet = {
                     selectedPetId: null,
                     activeDays: 1,
                     activeDates: [todayStr],
                     unlockedPets: [],
-                    lastStageNotified: 1
+                    lastStageNotified: 1,
+                    v5933: true
                 };
             }
             if (!Array.isArray(state.pet.activeDates)) {
@@ -298,6 +300,7 @@ window.APP_VERSION = APP_VERSION;
             if (!Array.isArray(state.pet.unlockedPets)) {
                 state.pet.unlockedPets = [];
             }
+            state.pet.v5933 = true;
             loadCachedCentralFoods();
             if (window.verifyAndSanitizeStreak) window.verifyAndSanitizeStreak();
         }
@@ -2734,6 +2737,26 @@ window.APP_VERSION = APP_VERSION;
                 : (state.streakDays || 0);
             const finalStreakFreeze = cloudState.streakFreeze || state.streakFreeze;
 
+            // 14. Pet Companion: Smart Reset for Pre-release Test Data
+            let finalPet = state.pet;
+            if (cloudState.pet && typeof cloudState.pet === 'object') {
+                if (cloudState.pet.v5933) {
+                    finalPet = { ...(state.pet || {}), ...cloudState.pet };
+                } else {
+                    finalPet = {
+                        selectedPetId: null,
+                        activeDays: 1,
+                        activeDates: [todayStr],
+                        unlockedPets: [],
+                        lastStageNotified: 1,
+                        v5933: true
+                    };
+                    if (typeof window.triggerCloudSync === 'function') {
+                        setTimeout(() => window.triggerCloudSync(true), 1200);
+                    }
+                }
+            }
+
             state = {
                 ...state,
                 ...cloudState,
@@ -2752,6 +2775,7 @@ window.APP_VERSION = APP_VERSION;
                 mealCombos: finalMealCombos,
                 streakDays: finalStreakDays,
                 streakFreeze: finalStreakFreeze,
+                pet: finalPet,
                 selectedDate: currentSelectedDate,
                 activeMeal: currentActiveMeal,
                 version: APP_VERSION

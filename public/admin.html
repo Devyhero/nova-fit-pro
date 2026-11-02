@@ -240,10 +240,17 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                            <span>ผู้ใช้มีคู่หูแล้ว:</span>
-                            <span id="petStatTotalWithPet" class="text-base font-extrabold font-mono text-emerald-500">0</span>
-                            <span class="text-slate-400">/ <span id="petStatTotalUsers">0</span> คน</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                <span>ผู้ใช้มีคู่หูแล้ว:</span>
+                                <span id="petStatTotalWithPet" class="text-base font-extrabold font-mono text-emerald-500">0</span>
+                                <span class="text-slate-400">/ <span id="petStatTotalUsers">0</span> คน</span>
+                            </div>
+                            <button type="button" onclick="adminResetMyPetFromDashboard()"
+                                class="px-2.5 py-1 rounded-lg bg-rose-600/90 hover:bg-rose-500 active:scale-95 text-white font-bold text-[11px] transition shadow-xs flex items-center gap-1 cursor-pointer min-h-[32px]"
+                                title="ลบสถานะสัตว์เลี้ยงของบัญชีแอดมิน เพื่อเริ่มเลือกฟักไข่ใหม่">
+                                <span>🗑️</span> <span>รีเซ็ตสัตว์เลี้ยงของฉัน (เลือกใหม่)</span>
+                            </button>
                         </div>
                     </div>
 

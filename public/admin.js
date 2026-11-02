@@ -3905,3 +3905,49 @@ window.switchAdminTab = function (tabId) {
     }
 };
 
+// Admin Reset Current Pet State to Fresh Starter (v5.9.33)
+window.adminResetMyPetFromDashboard = async function () {
+    if (!confirm('ยืนยันลบสถานะสัตว์เลี้ยงของบัญชีคุณ เพื่อกลับไปเริ่มต้นเลือกฟักไข่ใหม่ใช่หรือไม่?')) return;
+    const STORAGE_KEY = 'fitmacro_state';
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+    if (s) {
+        s.pet = {
+            selectedPetId: null,
+            activeDays: 1,
+            activeDates: [new Date().toISOString().split('T')[0]],
+            unlockedPets: [],
+            lastStageNotified: 1,
+            v5933: true
+        };
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    }
+    sessionStorage.removeItem('novafit_pet_admin_real_backup');
+
+    if (currentUser && currentUser.uid && db) {
+        showAdminMiniLoader('กำลังรีเซ็ตสถานะสัตว์เลี้ยงในระบบคลาวด์...');
+        try {
+            await setDoc(doc(db, 'users', currentUser.uid), {
+                pet: {
+                    selectedPetId: null,
+                    activeDays: 1,
+                    activeDates: [new Date().toISOString().split('T')[0]],
+                    unlockedPets: [],
+                    lastStageNotified: 1,
+                    v5933: true
+                }
+            }, { merge: true });
+            hideAdminMiniLoader();
+            showAdminToast('✓ ลบสถานะสัตว์เลี้ยงเรียบร้อย! กำลังนำกลับสู่หน้าหลัก...');
+            setTimeout(() => { window.location.href = 'index.html'; }, 600);
+        } catch (err) {
+            hideAdminMiniLoader();
+            showAdminToast('ลบในเครื่องเรียบร้อยแล้ว กำลังกลับสู่หน้าหลัก...');
+            setTimeout(() => { window.location.href = 'index.html'; }, 600);
+        }
+    } else {
+        showAdminToast('✓ ลบสถานะสัตว์เลี้ยงเรียบร้อยแล้ว!');
+        setTimeout(() => { window.location.href = 'index.html'; }, 600);
+    }
+};
+
