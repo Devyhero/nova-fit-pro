@@ -3108,6 +3108,15 @@ server.listen(PORT, async () => {
             // Must preserve user's local selection
             const petPersistedAfterNullCloud = window.state.pet.selectedPetId === 'blaze';
 
+            // Test Zero-Flicker fast path recovery:
+            // Temporarily clear window.state.pet.selectedPetId to simulate cold boot before cloud sync
+            window.state.pet.selectedPetId = null;
+            localStorage.setItem('novafit_selected_pet', 'blaze');
+            window.renderPetCompanionWidget();
+            const widgetHtmlAfterColdBoot = document.getElementById('card_pet_companion')?.innerHTML || '';
+            const noStarterFlashOnBoot = !widgetHtmlAfterColdBoot.includes('ฟักไข่เลือกคู่หู') && !!document.getElementById('petWidgetGif');
+            const recoveredPetId = window.state.pet.selectedPetId === 'blaze';
+
             return {
                 hasWidget,
                 hasStarterModal,
@@ -3140,7 +3149,9 @@ server.listen(PORT, async () => {
                 hasLegendaryRarity,
                 viewerIsClosed,
                 selectedBeforeSync,
-                petPersistedAfterNullCloud
+                petPersistedAfterNullCloud,
+                noStarterFlashOnBoot,
+                recoveredPetId
             };
         })()`);
         console.log('Fitness Pet Companion & Evolution Engine verified:', petCompanionTest);
@@ -3175,7 +3186,9 @@ server.listen(PORT, async () => {
             !petCompanionTest.hasLegendaryRarity ||
             !petCompanionTest.viewerIsClosed ||
             !petCompanionTest.selectedBeforeSync ||
-            !petCompanionTest.petPersistedAfterNullCloud) {
+            !petCompanionTest.petPersistedAfterNullCloud ||
+            !petCompanionTest.noStarterFlashOnBoot ||
+            !petCompanionTest.recoveredPetId) {
             throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 

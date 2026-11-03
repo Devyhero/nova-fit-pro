@@ -364,10 +364,33 @@
         return 0;              // Stage 1 (index 0)
     }
 
-    // Safe State Access & Initializer
+    // Safe State Access & Initializer (Zero-flicker cached resolution)
     function getSafePetState() {
-        if (!window.state) return null;
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
+
+        // 1. Fallback to reading directly from localStorage if window.state is still hydrating
+        if (!window.state) {
+            try {
+                const fastPet = localStorage.getItem('novafit_selected_pet');
+                const raw = localStorage.getItem('fitmacro_pro_v4_state');
+                let parsedPet = null;
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.pet) parsedPet = parsed.pet;
+                }
+                if (parsedPet || fastPet) {
+                    return {
+                        selectedPetId: fastPet || parsedPet?.selectedPetId || null,
+                        activeDays: Math.max(1, Number(parsedPet?.activeDays) || 1),
+                        activeDates: Array.isArray(parsedPet?.activeDates) ? parsedPet.activeDates : [today],
+                        unlockedPets: Array.isArray(parsedPet?.unlockedPets) ? parsedPet.unlockedPets : [],
+                        lastStageNotified: Number(parsedPet?.lastStageNotified) || 1
+                    };
+                }
+            } catch (e) {}
+            return null;
+        }
+
         if (!window.state.pet || typeof window.state.pet !== 'object') {
             window.state.pet = {
                 selectedPetId: null,
@@ -377,6 +400,28 @@
                 lastStageNotified: 1
             };
         }
+
+        // 2. Fast-path recovery: If selectedPetId is null, check fast cache & localStorage
+        if (!window.state.pet.selectedPetId) {
+            try {
+                const fastPet = localStorage.getItem('novafit_selected_pet');
+                if (fastPet && PET_DATA[fastPet]) {
+                    window.state.pet.selectedPetId = fastPet;
+                } else {
+                    const raw = localStorage.getItem('fitmacro_pro_v4_state');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.pet && parsed.pet.selectedPetId && PET_DATA[parsed.pet.selectedPetId]) {
+                            window.state.pet.selectedPetId = parsed.pet.selectedPetId;
+                            if (Array.isArray(parsed.pet.activeDates)) window.state.pet.activeDates = parsed.pet.activeDates;
+                            if (parsed.pet.activeDays) window.state.pet.activeDays = parsed.pet.activeDays;
+                            localStorage.setItem('novafit_selected_pet', parsed.pet.selectedPetId);
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
         if (!Array.isArray(window.state.pet.activeDates)) {
             window.state.pet.activeDates = [today];
         }
@@ -521,6 +566,9 @@
             if (window.state) {
                 window.state.pet = realPet;
             }
+            if (realPet && realPet.selectedPetId) {
+                try { localStorage.setItem('novafit_selected_pet', realPet.selectedPetId); } catch (e) {}
+            }
             if (typeof window.saveState === 'function') {
                 window.saveState();
             }
@@ -541,6 +589,7 @@
     // Admin / User Reset Pet State to Fresh Starter
     function adminResetPetToFresh() {
         sessionStorage.removeItem('novafit_pet_admin_real_backup');
+        try { localStorage.removeItem('novafit_selected_pet'); } catch (e) {}
         if (window.state) {
             const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
             window.state.pet = {
@@ -899,6 +948,9 @@
 
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
         petState.selectedPetId = petId;
+        try {
+            localStorage.setItem('novafit_selected_pet', petId);
+        } catch (e) {}
         if (!petState.activeDates.includes(today)) {
             petState.activeDates.push(today);
         }

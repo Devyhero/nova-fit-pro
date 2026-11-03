@@ -98,6 +98,7 @@ window.APP_VERSION = APP_VERSION;
                 chatDailyUsage: {}
             }
         };
+        window.state = state;
 
         // Cache for recommendations so clicking water or theme doesn't reshuffle
         let cachedRecommendations = [];
@@ -298,8 +299,18 @@ window.APP_VERSION = APP_VERSION;
             if (!Array.isArray(state.pet.unlockedPets)) {
                 state.pet.unlockedPets = [];
             }
+            // Fast-path recovery for pet selection to prevent starter banner flicker on reload
+            try {
+                const fastPet = localStorage.getItem('novafit_selected_pet');
+                if (fastPet && (window.PET_DATA || {})[fastPet]) {
+                    if (!state.pet.selectedPetId) state.pet.selectedPetId = fastPet;
+                } else if (state.pet && state.pet.selectedPetId) {
+                    localStorage.setItem('novafit_selected_pet', state.pet.selectedPetId);
+                }
+            } catch (e) {}
             loadCachedCentralFoods();
             if (window.verifyAndSanitizeStreak) window.verifyAndSanitizeStreak();
+            window.state = state;
         }
 
         function saveState() {
@@ -2522,6 +2533,7 @@ window.APP_VERSION = APP_VERSION;
         window.addEventListener('resize', syncResponsiveLayout);
 
         loadState();
+        window.state = state;
         renderAll();
         checkFirstVisitProfilePrompt();
         checkFirstVisitVersionNotes();
@@ -2753,6 +2765,14 @@ window.APP_VERSION = APP_VERSION;
                     resolvedPetId = cloudState.pet.selectedPetId;
                 } else if (state.pet && state.pet.selectedPetId) {
                     resolvedPetId = state.pet.selectedPetId;
+                } else {
+                    const fastPet = localStorage.getItem('novafit_selected_pet');
+                    if (fastPet && (window.PET_DATA || {})[fastPet]) {
+                        resolvedPetId = fastPet;
+                    }
+                }
+                if (resolvedPetId) {
+                    try { localStorage.setItem('novafit_selected_pet', resolvedPetId); } catch (e) {}
                 }
 
                 const cloudDates = Array.isArray(cloudState.pet.activeDates) ? cloudState.pet.activeDates : [];

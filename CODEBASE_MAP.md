@@ -9,7 +9,7 @@
 | File | Approximate Size | Responsibility |
 |---|---|---|
 | `public/index.html` | ~420 KB (4,715 lines) | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~165 KB (2,812 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/app.js` | ~170 KB (2,944 lines) | Core business logic, macro calculation, meals logging, modals |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
 | `public/water-tracker.js` | ~8 KB (165 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |
@@ -18,7 +18,7 @@
 | `public/daily-report.js` | ~12 KB (266 lines) | Daily nutrition & deficit report modal, release changelog modal, PWA update prompt & version badges |
 | `public/data-backup.js` | ~7 KB (158 lines) | JSON data backup export, backup file restore, factory reset & PWA install prompts |
 | `public/quick-add.js` | ~10 KB (242 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt & quick meal logger |
-| `public/pet-companion.js` | ~54 KB (1,371 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, TCG collectible rarity frames, mythic holographic foil effects, mystery silhouette cards, active days tracking, Admin Sandbox Engine & 1-click fresh reset |
+| `public/pet-companion.js` | ~56 KB (1,423 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, TCG collectible rarity frames, mythic holographic foil effects, mystery silhouette cards, active days tracking, Admin Sandbox Engine & 1-click fresh reset |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
 | `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |
@@ -146,11 +146,11 @@ state = {
 | **MODULARIZED** | **Intermittent Fasting (IF) Engine** | Extracted to `public/fasting-engine.js` (431 lines) |
 | **MODULARIZED** | **Visual Share Card (HTML5 Canvas Drawing)** | Extracted to `public/share-card.js` (612 lines) |
 | **MODULARIZED** | **Data Backup, Restore & PWA Engine** | Extracted to `public/data-backup.js` (158 lines): `exportData()`, `importData()`, `resetAllData()`, `handlePwaInstallClick()` |
-| **L2401 – L2819**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
-| **MODULARIZED** | **Fitness Pet Companion & Evolution Engine** | Extracted to `public/pet-companion.js` (1,371 lines): `PET_DATA`, `RARITY_TIERS`, `renderPetCompanionWidget()`, `openPetStarterModal()`, `selectStarterPet()`, `openPetCodexModal()`, `openPetCardViewer()` with TCG rarity frames & mythic holographic foil effects, Admin Pet Sandbox Engine (`adminSetTestPet`, `adminRestoreRealPet`, `adminResetPetToFresh`, `adminTriggerEvolutionTest`) |
+| **L2421 – L2904**| **Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover** | `applyCloudState()`, `autoSyncMealByTime()`, `checkDayRollover()` |
+| **MODULARIZED** | **Fitness Pet Companion & Evolution Engine** | Extracted to `public/pet-companion.js` (1,423 lines): `PET_DATA`, `RARITY_TIERS`, `renderPetCompanionWidget()`, `openPetStarterModal()`, `selectStarterPet()`, `openPetCodexModal()`, `openPetCardViewer()` with TCG rarity frames & mythic holographic foil effects, Admin Pet Sandbox Engine (`adminSetTestPet`, `adminRestoreRealPet`, `adminResetPetToFresh`, `adminTriggerEvolutionTest`) |
 | **MODULARIZED** | **Apple-Grade Modals & Profile Drawer** | Extracted to `public/quick-add.js` (242 lines): `openModalAnimated()`, `closeModalAnimated()`, `openProfileSettingsModal()`, `openQuickAddModal()`, `submitQuickAddMeal()` |
 | **MODULARIZED** | **Living App Companion & Milestone Confetti Cannon** | Extracted to `public/living-companion.js` (918 lines) |
-| **L2887 – L2924**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
+| **L2905 – L2944**| **Window Global Handlers & Dynamic Exports** | `window.xxx` bindings for inline HTML event handlers |
 
 ---
 
