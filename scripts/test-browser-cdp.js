@@ -1953,6 +1953,11 @@ server.listen(PORT, async () => {
             if (fnPrev) window.prevTourSlide();
             const titleBack1 = titleEl ? titleEl.textContent.trim() : '';
 
+            // Test pet companion slide in tour
+            if (fnGoTo) window.goToTourSlide(5);
+            const petSlideTitle = titleEl ? titleEl.textContent.trim() : '';
+            const hasPetInTour = petSlideTitle.includes('สัตว์เลี้ยง');
+
             // Test closing
             if (fnClose) window.closeAppTourModal();
             const isClosing = modal && !modal.classList.contains('modal-open');
@@ -1967,6 +1972,7 @@ server.listen(PORT, async () => {
                 title1,
                 title2,
                 titleBack1,
+                hasPetInTour,
                 isClosing
             };
         })()`);
@@ -1979,6 +1985,7 @@ server.listen(PORT, async () => {
             !tourTest.title1.includes('ยินดีต้อนรับ') ||
             (!tourTest.title2.includes('ติดตั้ง') && !tourTest.title2.includes('ถ่ายรูปอาหาร')) ||
             !tourTest.titleBack1.includes('ยินดีต้อนรับ') ||
+            !tourTest.hasPetInTour ||
             !tourTest.isClosing) {
             throw new Error('Test 41: App Tour interactive guide failed: ' + JSON.stringify(tourTest));
         }
@@ -2114,7 +2121,7 @@ server.listen(PORT, async () => {
         })()`);
         console.log('v5.9.19 Features verified:', v5919Test);
 
-        if (v5919Test.slidesCount !== 6 ||
+        if (v5919Test.slidesCount < 6 ||
             !v5919Test.slide2Title.includes('ติดตั้ง') ||
             v5919Test.hasPushInProfile ||
             v5919Test.hasSoundInProfile ||

@@ -22,7 +22,7 @@
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
 | `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |
-| `public/prestige-wardrobe.js` | ~45 KB (845 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide & profile customizer |
+| `public/prestige-wardrobe.js` | ~46 KB (853 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide (7 slides including Pet Companion) & profile customizer |
 | `public/share-card.js` | ~30 KB (612 lines) | High-resolution 1080x1420 HTML5 Canvas daily summary share card generator |
 | `public/fasting-engine.js` | ~20 KB (431 lines) | Intermittent Fasting (IF) timer engine, progress rings, stage notifications |
 | `public/meal-combos.js` | ~30 KB (618 lines) | Meal combos (sets), copy meal from yesterday, visual ingredient portion editor |
@@ -124,7 +124,7 @@ state = {
 | **L1 – L96** | **State Definition, Default State & App Bootstrap** | `APP_VERSION`, default `state`, `cleanDuplicateMealLogs()` |
 | **MODULARIZED** | **Sound Effects & Web Audio Synthesizer** | Extracted to `public/sound-effects.js` (171 lines): `getAudioContext()`, `playSound()`, `renderSoundButton()`, `toggleSound()` |
 | **L98 – L299** | **Storage Engine & Core State** | `loadState()`, `saveState()` |
-| **MODULARIZED** | **Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide** | Extracted to `public/prestige-wardrobe.js` (845 lines) |
+| **MODULARIZED** | **Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide** | Extracted to `public/prestige-wardrobe.js` (853 lines) |
 | **L1 – L134**   | **State Definition & Bootstrap** | `APP_VERSION`, default `state`, `cleanDuplicateMealLogs` |
 | **MODULARIZED** | **Sound Effects & Web Audio Synthesizer** | Extracted to `public/sound-effects.js` (171 lines) |
 | **L135 – L303** | **Storage Engine & Core State** | `loadState()`, `saveState()` |
@@ -175,7 +175,7 @@ state = {
 | `userNotificationsModal`| `app.js` | `openUserNotificationsModal()` / `closeUserNotificationsModal()` | In-app notification inbox from coach/admin |
 | `shareCardModal` | `share-card.js` (L38) | `openShareCardModal()` / `closeShareCardModal()` | Canvas graphic daily summary share card |
 | `prestigeWardrobeModal` | `prestige-wardrobe.js` | `openPrestigeWardrobeModal()` / `closePrestigeWardrobeModal()` | Avatar frames wardrobe & verified streak tiers |
-| `appTourModal` | `prestige-wardrobe.js` | `openAppTourModal()` / `closeAppTourModal()` | 6-slide onboarding and PWA install guide |
+| `appTourModal` | `prestige-wardrobe.js` | `openAppTourModal()` / `closeAppTourModal()` | 7-slide onboarding guide (including Pet Companion) and PWA install guide |
 | `mealComboEditorModal` | `meal-combos.js` | `openMealComboEditor()` / `closeMealComboEditor()` | Visual meal combo builder and item portion editor |
 | `companionTestModal` | `living-companion.js` | `openCompanionTestModal()` / `closeCompanionTestModal()` | Sandbox test launcher for Nova companion nudges |
 | `confirmDialog` | `app.js` (L2279) | `showConfirmDialog()` / `closeConfirmDialog()` | Unified custom alert/confirm dialog |

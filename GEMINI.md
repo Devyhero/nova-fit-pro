@@ -212,7 +212,7 @@ Update version strings across all 5 files:
 - **L1 – L141**: State Definition, Default State & App Bootstrap (`APP_VERSION`, default `state`, `pet`, `cleanDuplicateMealLogs`)
 - **[MODULARIZED]**: Sound Effects & Web Audio Synthesizer ➔ `public/sound-effects.js` (171 lines)
 - **L142 – L318**: Storage Engine & Core State (`loadState`, `saveState`, `pet` state sanity check)
-- **[MODULARIZED]**: Prestige Avatar Frames, Anti-Cheat & App Tour Guide ➔ `public/prestige-wardrobe.js` (845 lines)
+- **[MODULARIZED]**: Prestige Avatar Frames, Anti-Cheat & App Tour Guide ➔ `public/prestige-wardrobe.js` (853 lines)
 - **L319 – L472**: Toast Watchdog Engine, UI Preloader & Mini Loader (`showToast`, `showMiniLoader`, `hideMiniLoader`, `initAppPreloader`, `dismissAppPreloader`)
 - **[MODULARIZED]**: Web Push Notifications & FCM Engine ➔ `public/web-push.js` (198 lines)
 - **L473 – L723**: Theme & Smooth Accordions (`toggleTheme`, `animateSmoothAccordion`, `toggleCardSection`, `renderAllSectionCollapses`)
