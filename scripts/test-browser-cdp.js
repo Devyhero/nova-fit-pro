@@ -1958,6 +1958,11 @@ server.listen(PORT, async () => {
             const petSlideTitle = titleEl ? titleEl.textContent.trim() : '';
             const hasPetInTour = petSlideTitle.includes('สัตว์เลี้ยง');
 
+            // Test period tracker slide in tour (Slide 7, index 6)
+            if (fnGoTo) window.goToTourSlide(6);
+            const periodSlideTitle = titleEl ? titleEl.textContent.trim() : '';
+            const hasPeriodInTour = periodSlideTitle.includes('ประจำเดือน');
+
             // Test closing
             if (fnClose) window.closeAppTourModal();
             const isClosing = modal && !modal.classList.contains('modal-open');
@@ -1973,6 +1978,7 @@ server.listen(PORT, async () => {
                 title2,
                 titleBack1,
                 hasPetInTour,
+                hasPeriodInTour,
                 isClosing
             };
         })()`);
@@ -1986,6 +1992,7 @@ server.listen(PORT, async () => {
             (!tourTest.title2.includes('ติดตั้ง') && !tourTest.title2.includes('ถ่ายรูปอาหาร')) ||
             !tourTest.titleBack1.includes('ยินดีต้อนรับ') ||
             !tourTest.hasPetInTour ||
+            !tourTest.hasPeriodInTour ||
             !tourTest.isClosing) {
             throw new Error('Test 41: App Tour interactive guide failed: ' + JSON.stringify(tourTest));
         }
@@ -2085,7 +2092,7 @@ server.listen(PORT, async () => {
         }
         await new Promise(r => setTimeout(r, 400));
         const v5919Test = await evalJs(`(() => {
-            // 1. Tour slides length is 6 and slide 2 is Home Screen
+            // 1. Tour slides length is 8 and slide 2 is Home Screen
             const slidesCount = Array.isArray(window.TOUR_SLIDES) ? window.TOUR_SLIDES.length : 0;
             const slide2Title = window.TOUR_SLIDES && window.TOUR_SLIDES[1] ? window.TOUR_SLIDES[1].title : '';
 
@@ -2121,7 +2128,7 @@ server.listen(PORT, async () => {
         })()`);
         console.log('v5.9.19 Features verified:', v5919Test);
 
-        if (v5919Test.slidesCount < 6 ||
+        if (v5919Test.slidesCount < 8 ||
             !v5919Test.slide2Title.includes('ติดตั้ง') ||
             v5919Test.hasPushInProfile ||
             v5919Test.hasSoundInProfile ||

@@ -18,12 +18,12 @@
 | `public/sound-effects.js` | ~8 KB (171 lines) | Procedural Web Audio synthesizer, sound effects (pop, water, celebrate, nudge, delete), mute/unmute state & buttons |
 | `public/daily-report.js` | ~12 KB (266 lines) | Daily nutrition & deficit report modal, release changelog modal, PWA update prompt & version badges |
 | `public/data-backup.js` | ~7 KB (158 lines) | JSON data backup export, backup file restore, factory reset & PWA install prompts |
-| `public/quick-add.js` | ~10 KB (242 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt & quick meal logger |
+| `public/quick-add.js` | ~10 KB (243 lines) | Apple-grade smooth animated modal controller, profile drawer, onboarding prompt (auto-prompts App Tour on new version) & quick meal logger |
 | `public/pet-companion.js` | ~56 KB (1,423 lines) | Fitness Pet Companion: 3 elemental species (Sparky, Rocky, Dewy), 5 stages evolution, TCG collectible rarity frames, mythic holographic foil effects, mystery silhouette cards, active days tracking, Admin Sandbox Engine & 1-click fresh reset |
 | `public/meal-combos.js` | ~35 KB (618 lines) | Meal combos (sets), yesterday copying & visual portion editor modal |
 | `public/living-companion.js` | ~52 KB (918 lines) | Living companion empathy nudges, LRU speech diversity, milestone celebration confetti, quotes & timers |
 | `public/mascot-companion.js` | ~50 KB (1,239 lines) | MeowNova avocado cat mascot, 5-mood sprite engine, LRU speech diversity, quick action hub & AI health coach |
-| `public/prestige-wardrobe.js` | ~46 KB (853 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide (7 slides including Pet Companion) & profile customizer |
+| `public/prestige-wardrobe.js` | ~47 KB (864 lines) | Prestige avatar frames, anti-cheat streak engine, app tour guide (8 slides including Pet Companion & Period Tracker) & profile customizer |
 | `public/share-card.js` | ~30 KB (612 lines) | High-resolution 1080x1420 HTML5 Canvas daily summary share card generator |
 | `public/fasting-engine.js` | ~20 KB (431 lines) | Intermittent Fasting (IF) timer engine, progress rings, stage notifications |
 | `public/meal-combos.js` | ~30 KB (618 lines) | Meal combos (sets), copy meal from yesterday, visual ingredient portion editor |

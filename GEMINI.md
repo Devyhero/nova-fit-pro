@@ -203,6 +203,12 @@ Update version strings across all 5 files:
 - Bind handlers to `window.<functionName>` to ensure 100% backward compatibility with inline HTML `onclick` events.
 - This guarantees `app.js` stays slim, saves 80–90% of tokens in future chats, and isolates regressions.
 
+### 8. Mandatory App Tour Guide Update & Version Auto-Trigger Protocol
+- **Every time a new feature is developed and released**:
+  1. **Add to App Tour Guide**: You MUST add a dedicated, informative slide into `TOUR_SLIDES` in `public/prestige-wardrobe.js` (with emoji icon, progress tag `สเต็ป X จาก Y`, concise benefit description, and quick-action tip).
+  2. **Automated Guide Display on Update**: Ensure `checkFirstVisitProfilePrompt()` in `public/quick-add.js` verifies `localStorage.getItem('novafit_tour_seen_version') === APP_VERSION`. If version mismatch or not seen, the App Tour Guide modal (`#appTourModal`) MUST be triggered automatically so existing users immediately discover the new features upon opening the app.
+  3. **Synchronize CDP Test**: Update `scripts/test-browser-cdp.js` Test 41 & 43 to verify slide count and slide content.
+
 ---
 
 ## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.35)
@@ -212,7 +218,7 @@ Update version strings across all 5 files:
 - **L1 – L147**: State Definition, Default State & App Bootstrap (`APP_VERSION`, default `state`, `periodTracker`, `pet`, `cleanDuplicateMealLogs`)
 - **[MODULARIZED]**: Sound Effects & Web Audio Synthesizer ➔ `public/sound-effects.js` (171 lines)
 - **L148 – L330**: Storage Engine & Core State (`loadState`, `saveState`, `periodTracker` state sanity check)
-- **[MODULARIZED]**: Prestige Avatar Frames, Anti-Cheat & App Tour Guide ➔ `public/prestige-wardrobe.js` (853 lines)
+- **[MODULARIZED]**: Prestige Avatar Frames, Anti-Cheat & App Tour Guide ➔ `public/prestige-wardrobe.js` (864 lines, includes 8-step Interactive App Tour Guide with Period Tracker slide)
 - **L331 – L484**: Toast Watchdog Engine, UI Preloader & Mini Loader (`showToast`, `showMiniLoader`, `hideMiniLoader`, `initAppPreloader`, `dismissAppPreloader`)
 - **[MODULARIZED]**: Web Push Notifications & FCM Engine ➔ `public/web-push.js` (198 lines)
 - **L485 – L736**: Theme & Smooth Accordions (`toggleTheme`, `animateSmoothAccordion`, `toggleCardSection`, `renderAllSectionCollapses`)
@@ -233,7 +239,7 @@ Update version strings across all 5 files:
 - **[MODULARIZED]**: Visual Share Card (HTML5 Canvas) ➔ `public/share-card.js` (612 lines)
 - **[MODULARIZED]**: Data Backup, Restore & PWA Engine ➔ `public/data-backup.js` (158 lines)
 - **L2436 – L2920**: Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover (`applyCloudState`, `autoSyncMealByTime`, `checkDayRollover`)
-- **[MODULARIZED]**: Apple-Grade Modals & Profile Drawer ➔ `public/quick-add.js` (242 lines)
+- **[MODULARIZED]**: Apple-Grade Modals & Profile Drawer ➔ `public/quick-add.js` (243 lines, auto-prompts App Tour on new version update)
 - **[MODULARIZED]**: Living App Companion & Milestone Confetti ➔ `public/living-companion.js` (918 lines)
 - **[MODULARIZED]**: MeowNova Mascot Companion & AI Health Coach ➔ `public/mascot-companion.js` (1,290 lines)
 - **L2921 – L2966**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)

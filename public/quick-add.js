@@ -115,8 +115,10 @@
 
     function checkFirstVisitProfilePrompt() {
         const tourSeen = localStorage.getItem('novafit_tour_seen');
-        // 1. If brand new visitor hasn't seen the tour, show App Tour first!
-        if (!tourSeen) {
+        const tourSeenVer = localStorage.getItem('novafit_tour_seen_version');
+        const curVer = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : (window.APP_VERSION || '5.9.35');
+        // 1. If brand new visitor hasn't seen the tour or there's a new feature release update, show App Tour first!
+        if (!tourSeen || tourSeenVer !== curVer) {
             setTimeout(() => {
                 if (typeof window.openAppTourModal === 'function') {
                     window.openAppTourModal();
