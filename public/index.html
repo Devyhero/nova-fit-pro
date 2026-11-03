@@ -854,7 +854,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.33)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.34)
                         </button>
                         <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
@@ -1701,6 +1701,87 @@
 
     </main>
 
+    <!-- Dedicated Female Features Holder (Dynamically mounted into dashboard when profile.gender === 'female') -->
+    <div id="femaleFeatureHolder" class="hidden">
+        <!-- Order 4.5: MENSTRUAL & HORMONE CYCLE TRACKER (FEMALE ONLY) -->
+        <section id="card_period_tracker" class="hidden bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-rose-200/80 dark:border-rose-900/40 overflow-hidden">
+            <div role="button" tabindex="0" onclick="toggleCardSection('section_period')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCardSection('section_period');}"
+                class="accordion-header p-4 sm:p-5 flex items-center justify-between select-none bg-gradient-to-r from-rose-50/70 via-pink-50/40 to-slate-50/50 dark:from-rose-950/20 dark:via-pink-950/10 dark:to-slate-800/80 hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm sm:text-base font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+                        🌸 บันทึกประจำเดือน & วงจรรอบเดือน
+                    </h3>
+                    <span id="periodStatusBadge"
+                        class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25">
+                        🌸 รอตั้งค่ารอบเดือน
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="event.stopPropagation(); openPeriodSettingsModal();"
+                        class="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold transition flex items-center gap-1 active:scale-95">
+                        ⚙️ ตั้งค่า
+                    </button>
+                    <span id="icon_section_period" class="accordion-chevron text-xs text-slate-400">▼</span>
+                </div>
+            </div>
+
+            <div id="body_section_period" class="accordion-section p-5 pt-0 space-y-4">
+                <!-- Cycle Prediction / Subtitle -->
+                <div class="flex items-center justify-between pt-2">
+                    <p id="periodCycleSubtitle" class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                        บันทึกวันแรกของรอบเดือนเพื่อคาดการณ์วันถัดไป & ปรับโภชนาการ
+                    </p>
+                </div>
+
+                <!-- Cycle Progress Bar -->
+                <div class="space-y-1">
+                    <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div id="periodCycleProgressBar"
+                            class="h-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 4-Phase Hormonal Insight & Recommendations Box -->
+                <div id="periodPhaseInfoBox"></div>
+
+                <!-- Daily Period Quick Log Button for Active Viewing Date -->
+                <div class="pt-1 space-y-3">
+                    <button type="button" id="btnTogglePeriodDay" onclick="togglePeriodToday()"
+                        class="w-full py-2.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-300 font-bold text-xs sm:text-sm shadow-xs transition active:scale-98 flex items-center justify-center gap-2">
+                        <span>➕</span> <span>บันทึกประจำเดือนสำหรับวันนี้</span>
+                    </button>
+
+                    <!-- Bleeding Flow Level Selector (Shown if isPeriod === true) -->
+                    <div id="periodFlowSection" class="hidden space-y-1.5 p-3 rounded-xl bg-rose-50/50 dark:bg-slate-700/40 border border-rose-100 dark:border-slate-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-rose-700 dark:text-rose-300">🩸 ปริมาณประจำเดือน (Flow Level)</span>
+                            <span class="text-[10px] text-slate-400">เลือกปริมาณของวันนี้</span>
+                        </div>
+                        <div id="periodFlowButtons" class="grid grid-cols-4 gap-1.5"></div>
+                    </div>
+
+                    <!-- Symptoms & Mood Check Chips -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">✨ อาการ & ความรู้สึกวันนี้ (Symptoms & Mood)</span>
+                            <span class="text-[10px] text-slate-400">แตะเพื่อเลือกหลายรายการ</span>
+                        </div>
+                        <div id="periodSymptomsGrid" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+
+                    <!-- Daily Period Notes -->
+                    <div class="pt-1">
+                        <input type="text" id="periodNotesInput" maxlength="100"
+                            placeholder="📝 บันทึกอาการเพิ่มเติม (เช่น รู้สึกเพลียช่วงบ่าย, หิวง่าย)"
+                            oninput="onPeriodNotesInput(this.value)"
+                            class="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-rose-500 transition">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <!-- Hidden compatibility elements for state rendering -->
     <div class="hidden">
         <span id="toggleSettingsIcon">▼</span>
@@ -1772,7 +1853,7 @@
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-base shrink-0">🎉</span>
-                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.33!</b> สรุปการอัปเดตล่าสุด:</span>
+                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.34!</b> สรุปการอัปเดตล่าสุด:</span>
                     </div>
                     <button type="button" onclick="applyAppUpdate()"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition shrink-0 flex items-center gap-1 cursor-pointer">
@@ -1780,7 +1861,39 @@
                     </button>
                 </div>
 
-                <!-- Latest Release: v5.9.33 -->
+                <!-- Latest Release: v5.9.34 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-purple-500/10 border border-rose-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                            <span>🌸</span> v5.9.34 (ระบบบันทึกประจำเดือน & ติดตามวงจรรอบเดือนสำหรับสุภาพสตรี)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">3 พ.ย. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-rose-500">🌸</span>
+                            <span><b>แสดงผลอัจฉริยะตามเพศ:</b> เปิดใช้งานอัตโนมัติทันทีเมื่อเลือกเพศหญิงในข้อมูลร่างกาย และซ่อนเมื่อเป็นผู้ชายเพื่อความเป็นส่วนตัวสูงสุด</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-pink-500">🩸</span>
+                            <span><b>บันทึกอาการและปริมาณรอบเดือน:</b> บันทึกวันมา ปริมาณการไหล (กะปริดกะปรอย, น้อย, ปานกลาง, มาก) และอาการทางร่างกาย (ปวดท้อง, บวมน้ำ, อยากของหวาน, อ่อนเพลีย, อารมณ์แปรปรวน)</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-purple-500">🧬</span>
+                            <span><b>วิเคราะห์ 4 ช่วงฮอร์โมน (4 Cycle Phases):</b> ติดตามระยะรอบเดือน (Menstrual, Follicular, Ovulation, Luteal) พร้อมระบบนับถอยหลังรอบถัดไป</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🥗</span>
+                            <span><b>คำแนะนำโภชนาการและการออกกำลังกายตามฮอร์โมน:</b> เคล็ดลับอาหารและกิจกรรมที่เหมาะกับแต่ละช่วง เช่น ช่วงเพิ่มคาร์โบไฮเดรตสร้างกล้ามเนื้อ และช่วงคุมความอยากของหวาน</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500">⚙️</span>
+                            <span><b>ปรับแต่งความยาวรอบเดือน:</b> รองรับการตั้งค่ารอบเดือน (21-45 วัน) และจำนวนวันมีประจำเดือนเพื่อการพยากรณ์ที่แม่นยำ</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.33 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-teal-500/10 border border-amber-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
@@ -3193,6 +3306,65 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Period & Cycle Settings (v5.9.34) -->
+    <div id="periodSettingsModal"
+        class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 modal-backdrop-smooth"
+        onclick="if(event.target.id==='periodSettingsModal') closePeriodSettingsModal()">
+        <div onclick="event.stopPropagation()"
+            class="modal-sheet-panel relative bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-900/50 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🌸</span>
+                    <div>
+                        <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">ตั้งค่ารอบเดือน & ประจำเดือน</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">คำนวณวงจรฮอร์โมนและระยะเวลาอย่างแม่นยำ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePeriodSettingsModal()"
+                    class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition">✕</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">
+                        📅 วันแรกของประจำเดือนรอบล่าสุด
+                    </label>
+                    <input type="date" id="inputLastPeriodStart"
+                        class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none focus:border-rose-500 transition">
+                    <p class="text-[10px] text-slate-400 mt-1">วันที่ประจำเดือนเริ่มมาวันแรกในรอบที่ผ่านมา</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">
+                            🔄 ความยาวรอบเดือน (วัน)
+                        </label>
+                        <input type="number" id="inputCycleLength" min="21" max="45" value="28"
+                            class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none focus:border-rose-500 transition">
+                        <p class="text-[10px] text-slate-400 mt-1">ปกติ 28 วัน (21-45 วัน)</p>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">
+                            🩸 ระยะมีประจำเดือน (วัน)
+                        </label>
+                        <input type="number" id="inputPeriodDuration" min="2" max="10" value="5"
+                            class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none focus:border-rose-500 transition">
+                        <p class="text-[10px] text-slate-400 mt-1">ปกติ 4-6 วัน (2-10 วัน)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/60">
+                <button type="button" onclick="closePeriodSettingsModal()"
+                    class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-medium">ยกเลิก</button>
+                <button type="button" onclick="savePeriodSettings()"
+                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 active:scale-95 transition">
+                    💾 บันทึกการตั้งค่า
+                </button>
+            </div>
         </div>
     </div>
 
@@ -4844,70 +5016,73 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.33"></script>
+    <script src="food-db.js?v=5.9.34"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.33"></script>
+    <script src="health-tips.js?v=5.9.34"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.33"></script>
+    <script src="ai-snap.js?v=5.9.34"></script>
 
     <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
-    <script src="nutrition-scanner.js?v=5.9.33"></script>
+    <script src="nutrition-scanner.js?v=5.9.34"></script>
 
     <!-- Intermittent Fasting (IF) Timer Engine (v5.9.30) -->
-    <script src="fasting-engine.js?v=5.9.33"></script>
+    <script src="fasting-engine.js?v=5.9.34"></script>
 
     <!-- Visual Share Card Engine (v5.9.30) -->
-    <script src="share-card.js?v=5.9.33"></script>
+    <script src="share-card.js?v=5.9.34"></script>
 
     <!-- Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide Engine (v5.9.30) -->
-    <script src="prestige-wardrobe.js?v=5.9.33"></script>
+    <script src="prestige-wardrobe.js?v=5.9.34"></script>
 
     <!-- Living App Companion & Milestone Celebration Engine (v5.9.30) -->
-    <script src="living-companion.js?v=5.9.33"></script>
+    <script src="living-companion.js?v=5.9.34"></script>
 
     <!-- Meal Combos & Visual Editor Engine (v5.9.30) -->
-    <script src="meal-combos.js?v=5.9.33"></script>
+    <script src="meal-combos.js?v=5.9.34"></script>
 
     <!-- Supplements & Vitamins Engine (v5.9.30) -->
-    <script src="supplements.js?v=5.9.33"></script>
+    <script src="supplements.js?v=5.9.34"></script>
 
     <!-- Web Push Notifications & FCM Engine (v5.9.30) -->
-    <script src="web-push.js?v=5.9.33"></script>
+    <script src="web-push.js?v=5.9.34"></script>
 
     <!-- Water Tracker & Hydration Engine (v5.9.30) -->
-    <script src="water-tracker.js?v=5.9.33"></script>
+    <script src="water-tracker.js?v=5.9.34"></script>
+
+    <!-- Menstrual & Hormone Cycle Tracker Engine (NEW v5.9.34) -->
+    <script src="period-tracker.js?v=5.9.34"></script>
 
     <!-- Body Weight, Workouts & Weekly Analytics Engine (v5.9.30) -->
-    <script src="body-tracker.js?v=5.9.33"></script>
+    <script src="body-tracker.js?v=5.9.34"></script>
 
     <!-- Smart Coach Recommendations Engine (v5.9.30) -->
-    <script src="coach-engine.js?v=5.9.33"></script>
+    <script src="coach-engine.js?v=5.9.34"></script>
 
     <!-- Sound Effects & Web Audio Synthesizer (v5.9.30) -->
-    <script src="sound-effects.js?v=5.9.33"></script>
+    <script src="sound-effects.js?v=5.9.34"></script>
 
     <!-- Daily Report & Changelog Engine (v5.9.30) -->
-    <script src="daily-report.js?v=5.9.33"></script>
+    <script src="daily-report.js?v=5.9.34"></script>
 
     <!-- Data Backup, Restore & PWA Engine (v5.9.30) -->
-    <script src="data-backup.js?v=5.9.33"></script>
+    <script src="data-backup.js?v=5.9.34"></script>
 
     <!-- Fitness Pet Companion & Evolution Engine (NEW v5.9.33) -->
-    <script src="pet-companion.js?v=5.9.33"></script>
+    <script src="pet-companion.js?v=5.9.34"></script>
 
     <!-- Modal Controller, Profile Drawer & Quick Add Engine (v5.9.30) -->
-    <script src="quick-add.js?v=5.9.33"></script>
+    <script src="quick-add.js?v=5.9.34"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.33"></script>
+    <script src="app.js?v=5.9.34"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.33"></script>
+    <script src="mascot-companion.js?v=5.9.34"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.33"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.34"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

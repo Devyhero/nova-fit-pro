@@ -8,8 +8,9 @@
 
 | File | Approximate Size | Responsibility |
 |---|---|---|
-| `public/index.html` | ~420 KB (4,715 lines) | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~170 KB (2,944 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/index.html` | ~430 KB (5,090 lines) | User interface, section accordions, all modal templates, SW bootstrap |
+| `public/app.js` | ~170 KB (2,963 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/period-tracker.js` | ~25 KB (633 lines) | Smart Menstrual & Hormone Cycle Tracker: 4-phase analysis, female-only dynamic mount, bleeding flow & symptoms logger, cycle prediction |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
 | `public/water-tracker.js` | ~8 KB (165 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |
@@ -73,6 +74,12 @@ state = {
     ],
     supplementsByDate: {               // Supplement checkboxes per date
         "YYYY-MM-DD": { "supp_id": true }
+    },
+    periodTracker: {                   // Female menstrual cycle tracking
+        cycleLength: 28, periodDuration: 5, lastPeriodStart: 'YYYY-MM-DD'
+    },
+    periodByDate: {                    // Daily period, flow level, symptoms & notes
+        "YYYY-MM-DD": { isPeriod: true, flow: 'medium', symptoms: ['cramps'], notes: '' }
     },
     waterByDate: { "YYYY-MM-DD": 2500 }, // Water intake in ml
     weightsByDate: { "YYYY-MM-DD": 70 }, // Body weight tracking in kg

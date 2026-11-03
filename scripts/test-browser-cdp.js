@@ -3199,6 +3199,88 @@ server.listen(PORT, async () => {
             throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 
+        // Test 57: Female Period Tracker Dynamic Mount & Hormonal Cycle Engine (v5.9.34)
+        console.log('--- Test 57: Female Period Tracker Dynamic Mount & Hormonal Cycle Engine (v5.9.34) ---');
+        const periodTrackerTest = await evalJs(`(() => {
+            // 1. Initial State as Male
+            setGender('male');
+            const cardPeriod = document.getElementById('card_period_tracker');
+            const colLeft = document.getElementById('colDesktopLeft');
+            const maleCardHidden = !cardPeriod || cardPeriod.classList.contains('hidden') || cardPeriod.parentElement !== colLeft;
+
+            // 2. Switch to Female: Card should dynamically mount and become visible
+            setGender('female');
+            const femaleCardMounted = !!cardPeriod && cardPeriod.parentElement === colLeft && !cardPeriod.classList.contains('hidden');
+
+            // 3. Cycle Calculation Engine
+            const cycleInfoInitial = calculateCycleInfo('2026-11-03');
+            const hasCycleEngine = !!cycleInfoInitial && typeof cycleInfoInitial === 'object';
+
+            // 4. Save Period Settings Modal Simulation
+            const cycleLenInput = document.getElementById('inputCycleLength');
+            const periodDurInput = document.getElementById('inputPeriodDuration');
+            const lastStartInput = document.getElementById('inputLastPeriodStart');
+            if (cycleLenInput) cycleLenInput.value = '28';
+            if (periodDurInput) periodDurInput.value = '5';
+            if (lastStartInput) lastStartInput.value = '2026-11-01';
+            savePeriodSettings();
+
+            const cycleInfoConfigured = calculateCycleInfo('2026-11-03');
+            const isDay3OfCycle = cycleInfoConfigured && cycleInfoConfigured.currentCycleDay === 3;
+            const isMenstrualPhase = cycleInfoConfigured && cycleInfoConfigured.phase === 'menstrual';
+            const hasNutritionAdvice = cycleInfoConfigured && typeof cycleInfoConfigured.nutritionAdvice === 'string' && cycleInfoConfigured.nutritionAdvice.length > 0;
+            const hasWorkoutAdvice = cycleInfoConfigured && typeof cycleInfoConfigured.workoutAdvice === 'string' && cycleInfoConfigured.workoutAdvice.length > 0;
+
+            // 5. Daily Flow & Symptom Logger
+            togglePeriodToday();
+            const dateStr = state.selectedDate || '2026-11-03';
+            const isPeriodMarked = !!state.periodByDate[dateStr]?.isPeriod;
+
+            setPeriodFlow('heavy');
+            const flowRecorded = state.periodByDate[dateStr]?.flow === 'heavy';
+
+            togglePeriodSymptom('cramps');
+            togglePeriodSymptom('bloating');
+            const symptomsRecorded = state.periodByDate[dateStr]?.symptoms?.includes('cramps') && state.periodByDate[dateStr]?.symptoms?.includes('bloating');
+
+            onPeriodNotesInput('รู้สึกปวดเกร็งเล็กน้อย ดื่มน้ำเยอะขึ้น');
+            const notesRecorded = state.periodByDate[dateStr]?.notes?.includes('ปวดเกร็ง');
+
+            // 6. Switch back to Male: Card should disappear immediately from column
+            setGender('male');
+            const maleCardHiddenAfter = !cardPeriod || cardPeriod.classList.contains('hidden') || cardPeriod.parentElement !== colLeft;
+
+            return {
+                maleCardHidden,
+                femaleCardMounted,
+                hasCycleEngine,
+                isDay3OfCycle,
+                isMenstrualPhase,
+                hasNutritionAdvice,
+                hasWorkoutAdvice,
+                isPeriodMarked,
+                flowRecorded,
+                symptomsRecorded,
+                notesRecorded,
+                maleCardHiddenAfter
+            };
+        })()`);
+        console.log('Period Tracker Engine verified:', periodTrackerTest);
+        if (!periodTrackerTest.maleCardHidden ||
+            !periodTrackerTest.femaleCardMounted ||
+            !periodTrackerTest.hasCycleEngine ||
+            !periodTrackerTest.isDay3OfCycle ||
+            !periodTrackerTest.isMenstrualPhase ||
+            !periodTrackerTest.hasNutritionAdvice ||
+            !periodTrackerTest.hasWorkoutAdvice ||
+            !periodTrackerTest.isPeriodMarked ||
+            !periodTrackerTest.flowRecorded ||
+            !periodTrackerTest.symptomsRecorded ||
+            !periodTrackerTest.notesRecorded ||
+            !periodTrackerTest.maleCardHiddenAfter) {
+            throw new Error('Test 57: Female Period Tracker Engine verification failed: ' + JSON.stringify(periodTrackerTest));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

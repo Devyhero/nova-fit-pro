@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.33';
+const APP_VERSION = '5.9.34';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
@@ -56,6 +56,12 @@ window.APP_VERSION = APP_VERSION;
             mealCombos: DEFAULT_MEAL_COMBOS,
             supplementList: JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS)),
             supplementsByDate: {},
+            periodTracker: {
+                cycleLength: 28,
+                periodDuration: 5,
+                lastPeriodStart: ''
+            },
+            periodByDate: {},
             fasting: {
                 isFasting: false,
                 plan: '16:8',
@@ -167,6 +173,16 @@ window.APP_VERSION = APP_VERSION;
                         mealCombos: (Array.isArray(parsed.mealCombos) && parsed.mealCombos.length > 0) ? parsed.mealCombos : DEFAULT_MEAL_COMBOS,
                         supplementList: Array.isArray(parsed.supplementList) ? parsed.supplementList : JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS)),
                         supplementsByDate: (parsed.supplementsByDate && typeof parsed.supplementsByDate === 'object') ? parsed.supplementsByDate : {},
+                        periodTracker: (parsed.periodTracker && typeof parsed.periodTracker === 'object') ? {
+                            cycleLength: Number(parsed.periodTracker.cycleLength) || 28,
+                            periodDuration: Number(parsed.periodTracker.periodDuration) || 5,
+                            lastPeriodStart: parsed.periodTracker.lastPeriodStart || ''
+                        } : {
+                            cycleLength: 28,
+                            periodDuration: 5,
+                            lastPeriodStart: ''
+                        },
+                        periodByDate: (parsed.periodByDate && typeof parsed.periodByDate === 'object') ? parsed.periodByDate : {},
                         fasting: (parsed.fasting && typeof parsed.fasting === 'object') ? {
                             isFasting: !!parsed.fasting.isFasting,
                             plan: parsed.fasting.plan || '16:8',
@@ -647,6 +663,7 @@ window.APP_VERSION = APP_VERSION;
 
             const sections = [
                 'section_water',
+                'section_period',
                 'section_meals',
                 'section_supplements',
                 'section_workout',
@@ -1009,6 +1026,8 @@ window.APP_VERSION = APP_VERSION;
             renderDateTrackerAndRecommendations(t, false);
             renderFoodDatabaseExplorer();
             renderSupplements();
+            if (typeof renderPeriodTracker === 'function') renderPeriodTracker();
+            else if (typeof window.renderPeriodTracker === 'function') window.renderPeriodTracker();
             if (typeof renderFastingSection === 'function') renderFastingSection();
             if (window.renderDailyHealthTip) window.renderDailyHealthTip();
             if (window.checkDailyTipNotification) window.checkDailyTipNotification();

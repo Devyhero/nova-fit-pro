@@ -1,9 +1,10 @@
-// NovaFit Pro Service Worker (v5.9.33)
-const CACHE_NAME = 'novafit-pro-v5.9.33-cache';
+// NovaFit Pro Service Worker (v5.9.34)
+const CACHE_NAME = 'novafit-pro-v5.9.34-cache';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
     './app.js',
+    './period-tracker.js',
     './fasting-engine.js',
     './share-card.js',
     './prestige-wardrobe.js',

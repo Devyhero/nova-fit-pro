@@ -57,6 +57,7 @@ for (const relPath of jsonFiles) {
 const jsFiles = [
     { path: 'public/sw.js', isModule: false },
     { path: 'public/app.js', isModule: false },
+    { path: 'public/period-tracker.js', isModule: false },
     { path: 'public/fasting-engine.js', isModule: false },
     { path: 'public/share-card.js', isModule: false },
     { path: 'public/prestige-wardrobe.js', isModule: false },

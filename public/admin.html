@@ -750,12 +750,28 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.33
+                            Current Version: v5.9.34
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.34 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-purple-500/10 border border-rose-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-rose-600 dark:text-rose-400 text-sm">🌸 v5.9.34 (Smart Menstrual & Hormone Cycle Tracker Engine: 4-Phase Hormonal Analysis, Female-Only Dynamic Mount & Nutritional Sync)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">3 พ.ย. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🌸 Modular Feature Isolation Architecture (public/period-tracker.js):</b> พัฒนาระบบบันทึกประจำเดือนแยกเป็นโมดูลอิสระ (Zero Bloat Standard) โดยเชื่อมต่อแบบ Safe Inter-module Helpers ไม่สร้างภาระให้ <code>public/app.js</code></li>
+                                <li><b>♀️ Female-Only Dynamic DOM Mount & Clutter-Free Male Architecture:</b> ตรวจจับ <code>state.profile.gender</code> แบบเรียลไทม์ หากเป็นเพศหญิงจะ Mount การ์ด <code>#card_period_tracker</code> เข้าสู่คอลัมน์แดชบอร์ดหลัก หากเปลี่ยนเป็นเพศชายจะ Unmount เข้าสู่ Holding Area โดยทันที เพื่อการแสดงผลที่สะอาดและเป็นส่วนตัว 100%</li>
+                                <li><b>🧬 4-Phase Hormonal Cycle Analysis Pipeline:</b> คำนวณระยะรอบเดือนตามวันแรกของรอบล่าสุด (Menstrual Day 1-5, Follicular Day 6-13, Ovulation Day 14-16, Luteal/PMS Day 17-28) พร้อมคำนวณวันถัดไปอัตโนมัติ</li>
+                                <li><b>🥗 Hormonal Macro & Training Synchronization:</b> มอบคำแนะนำโภชนาการและการฝึกซ้อมที่สอดคล้องกับสรีระ เช่น ช่วงเร่งความเข้มข้นสร้างกล้ามเนื้อใน Follicular Window และช่วงจัดการความอยากแป้ง/น้ำตาลด้วยไฟเบอร์และแมกนีเซียมใน Luteal Window</li>
+                                <li><b>🩸 Multi-Level Daily Flow & Symptom Logger:</b> รองรับการบันทึกปริมาณรอบเดือน 4 ระดับ (Spotting, Light, Medium, Heavy) พร้อมชิปเลือกอาการ 8 ชนิด (ปวดท้อง, บวมน้ำ, อยากหวาน, เพลีย, อารมณ์อ่อนไหว, ปวดศีรษะ, สดชื่น, ปวดหลัง) และช่องบันทึกความรู้สึก</li>
+                                <li><b>⚙️ Configurable Cycle Length & Period Duration:</b> หน้าต่างตั้งค่าแบบ Apple-grade Modal สำหรับปรับแต่งความยาวรอบเดือน (21-45 วัน) และระยะเวลาประจำเดือน (2-10 วัน)</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.34 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.33 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-teal-500/10 border border-amber-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -2312,7 +2328,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.33"></script>
+    <script type="module" src="admin.js?v=5.9.34"></script>
 
 </body>
 
