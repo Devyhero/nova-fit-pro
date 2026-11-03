@@ -461,6 +461,9 @@ function setupRealtimeCloudListener(user) {
             // CRITICAL FIX: ALWAYS apply and merge cloud data into local state!
             // Never skip based on myDeviceId, because a computer that opens without login has empty state.
             if (cloudData.state && window.applyCloudState) {
+                if (cloudData.pet && (!cloudData.state.pet || !cloudData.state.pet.selectedPetId)) {
+                    cloudData.state.pet = { ...(cloudData.state.pet || {}), ...cloudData.pet };
+                }
                 window.applyCloudState(cloudData.state, true);
             }
 
@@ -478,6 +481,9 @@ function setupRealtimeCloudListener(user) {
 
         // Live real-time update arriving from another active device while running
         if (cloudData.state && window.applyCloudState) {
+            if (cloudData.pet && (!cloudData.state.pet || !cloudData.state.pet.selectedPetId)) {
+                cloudData.state.pet = { ...(cloudData.state.pet || {}), ...cloudData.pet };
+            }
             window.applyCloudState(cloudData.state, false);
             const badge = document.getElementById('cloudStatusBadge');
             if (badge) {
@@ -647,7 +653,7 @@ window.recordSecurityAuditLog = async function (logData) {
     }
 };
 
-window.triggerCloudSync = function (showSuccessToast = false) {
+window.triggerCloudSync = function (showSuccessToast = false, forceImmediate = false) {
     if (!currentUser) {
         syncGuestSession();
         return;
@@ -657,7 +663,8 @@ window.triggerCloudSync = function (showSuccessToast = false) {
         return;
     }
     clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(async () => {
+
+    const performSync = async () => {
         if (!currentUser || isCloudSyncLocked) return;
         const badge = document.getElementById('cloudStatusBadge');
         if (!navigator.onLine) {
@@ -703,7 +710,13 @@ window.triggerCloudSync = function (showSuccessToast = false) {
                 badge.textContent = !navigator.onLine ? '📶 ออฟไลน์ (บันทึกในเครื่องแล้ว)' : '⚠️ รอซิงค์ใหม่';
             }
         }
-    }, 250);
+    };
+
+    if (forceImmediate) {
+        performSync();
+    } else {
+        cloudSyncTimer = setTimeout(performSync, 250);
+    }
 };
 
 window.saveProfileConfiguredToCloud = async function () {

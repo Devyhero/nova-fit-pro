@@ -3094,6 +3094,20 @@ server.listen(PORT, async () => {
             window.closePetCardViewer();
             const viewerIsClosed = viewerEl?.classList.contains('hidden');
 
+            // 10. Test Pet State Persistence across Stale Cloud Sync & Reloads
+            window.selectStarterPet('blaze');
+            const selectedBeforeSync = window.state.pet.selectedPetId === 'blaze';
+            // Simulate incoming stale cloud state where pet selection was null
+            window.applyCloudState({
+                pet: {
+                    selectedPetId: null,
+                    activeDays: 1,
+                    activeDates: [new Date().toISOString().split('T')[0]]
+                }
+            }, false);
+            // Must preserve user's local selection
+            const petPersistedAfterNullCloud = window.state.pet.selectedPetId === 'blaze';
+
             return {
                 hasWidget,
                 hasStarterModal,
@@ -3124,7 +3138,9 @@ server.listen(PORT, async () => {
                 hasCommonRarity,
                 hasLegendaryFoil,
                 hasLegendaryRarity,
-                viewerIsClosed
+                viewerIsClosed,
+                selectedBeforeSync,
+                petPersistedAfterNullCloud
             };
         })()`);
         console.log('Fitness Pet Companion & Evolution Engine verified:', petCompanionTest);
@@ -3157,7 +3173,9 @@ server.listen(PORT, async () => {
             !petCompanionTest.hasCommonRarity ||
             !petCompanionTest.hasLegendaryFoil ||
             !petCompanionTest.hasLegendaryRarity ||
-            !petCompanionTest.viewerIsClosed) {
+            !petCompanionTest.viewerIsClosed ||
+            !petCompanionTest.selectedBeforeSync ||
+            !petCompanionTest.petPersistedAfterNullCloud) {
             throw new Error('Test 56: Fitness Pet Companion verification failed: ' + JSON.stringify(petCompanionTest));
         }
 

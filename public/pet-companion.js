@@ -368,14 +368,13 @@
     function getSafePetState() {
         if (!window.state) return null;
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
-        if (!window.state.pet || typeof window.state.pet !== 'object' || !window.state.pet.v5933) {
+        if (!window.state.pet || typeof window.state.pet !== 'object') {
             window.state.pet = {
                 selectedPetId: null,
                 activeDays: 1,
                 activeDates: [today],
                 unlockedPets: [],
-                lastStageNotified: 1,
-                v5933: true
+                lastStageNotified: 1
             };
         }
         if (!Array.isArray(window.state.pet.activeDates)) {
@@ -384,7 +383,6 @@
         if (!Array.isArray(window.state.pet.unlockedPets)) {
             window.state.pet.unlockedPets = [];
         }
-        window.state.pet.v5933 = true;
         return window.state.pet;
     }
 
@@ -550,15 +548,14 @@
                 activeDays: 1,
                 activeDates: [today],
                 unlockedPets: [],
-                lastStageNotified: 1,
-                v5933: true
+                lastStageNotified: 1
             };
         }
         if (typeof window.saveState === 'function') {
             window.saveState();
         }
         if (typeof window.triggerCloudSync === 'function') {
-            window.triggerCloudSync(true);
+            window.triggerCloudSync(true, true);
         }
         closePetCodexModal();
         renderPetCompanionWidget();
@@ -902,7 +899,6 @@
 
         const today = (typeof window.getTodayStr === 'function') ? window.getTodayStr() : new Date().toISOString().split('T')[0];
         petState.selectedPetId = petId;
-        petState.v5933 = true;
         if (!petState.activeDates.includes(today)) {
             petState.activeDates.push(today);
         }
@@ -913,7 +909,7 @@
             window.saveState();
         }
         if (typeof window.triggerCloudSync === 'function') {
-            window.triggerCloudSync(true);
+            window.triggerCloudSync(true, true);
         }
 
         closePetStarterModal();

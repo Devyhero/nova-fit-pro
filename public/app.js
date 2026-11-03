@@ -88,8 +88,7 @@ window.APP_VERSION = APP_VERSION;
                 activeDays: 1,
                 activeDates: [getTodayStr()],
                 unlockedPets: [],
-                lastStageNotified: 1,
-                v5933: true
+                lastStageNotified: 1
             },
             mascotCompanion: {
                 enabled: true,
@@ -284,14 +283,13 @@ window.APP_VERSION = APP_VERSION;
                 state.streakFreeze = { month: todayStr.slice(0, 7), shieldsRemaining: 2, maxShields: 2, frozenDates: [] };
             }
             if (!Array.isArray(state.streakFreeze.frozenDates)) state.streakFreeze.frozenDates = [];
-            if (!state.pet || typeof state.pet !== 'object' || !state.pet.v5933) {
+            if (!state.pet || typeof state.pet !== 'object') {
                 state.pet = {
                     selectedPetId: null,
                     activeDays: 1,
                     activeDates: [todayStr],
                     unlockedPets: [],
-                    lastStageNotified: 1,
-                    v5933: true
+                    lastStageNotified: 1
                 };
             }
             if (!Array.isArray(state.pet.activeDates)) {
@@ -300,7 +298,6 @@ window.APP_VERSION = APP_VERSION;
             if (!Array.isArray(state.pet.unlockedPets)) {
                 state.pet.unlockedPets = [];
             }
-            state.pet.v5933 = true;
             loadCachedCentralFoods();
             if (window.verifyAndSanitizeStreak) window.verifyAndSanitizeStreak();
         }
@@ -2737,24 +2734,47 @@ window.APP_VERSION = APP_VERSION;
                 : (state.streakDays || 0);
             const finalStreakFreeze = cloudState.streakFreeze || state.streakFreeze;
 
-            // 14. Pet Companion: Smart Reset for Pre-release Test Data
-            let finalPet = state.pet;
+            // 14. Pet Companion: Seamless Merge of Local and Cloud Pet Data
+            let finalPet = state.pet || {
+                selectedPetId: null,
+                activeDays: 1,
+                activeDates: [todayStr],
+                unlockedPets: [],
+                lastStageNotified: 1
+            };
+
             if (cloudState.pet && typeof cloudState.pet === 'object') {
-                if (cloudState.pet.v5933) {
-                    finalPet = { ...(state.pet || {}), ...cloudState.pet };
-                } else {
-                    finalPet = {
-                        selectedPetId: null,
-                        activeDays: 1,
-                        activeDates: [todayStr],
-                        unlockedPets: [],
-                        lastStageNotified: 1,
-                        v5933: true
-                    };
-                    if (typeof window.triggerCloudSync === 'function') {
-                        setTimeout(() => window.triggerCloudSync(true), 1200);
-                    }
+                // Persistent Pet Merge:
+                // If cloud has a valid selected pet, that takes priority (multi-device sync).
+                // If cloud has null (e.g. from an older snapshot or fresh account) but local
+                // ALREADY has a chosen pet, PRESERVE local pet so it never gets wiped!
+                let resolvedPetId = null;
+                if (cloudState.pet.selectedPetId) {
+                    resolvedPetId = cloudState.pet.selectedPetId;
+                } else if (state.pet && state.pet.selectedPetId) {
+                    resolvedPetId = state.pet.selectedPetId;
                 }
+
+                const cloudDates = Array.isArray(cloudState.pet.activeDates) ? cloudState.pet.activeDates : [];
+                const localDates = Array.isArray(state.pet?.activeDates) ? state.pet.activeDates : [todayStr];
+                const mergedDates = Array.from(new Set([...localDates, ...cloudDates]));
+                const mergedDays = Math.max(mergedDates.length, Number(cloudState.pet.activeDays) || 1, Number(state.pet?.activeDays) || 1);
+
+                const cloudUnlocked = Array.isArray(cloudState.pet.unlockedPets) ? cloudState.pet.unlockedPets : [];
+                const localUnlocked = Array.isArray(state.pet?.unlockedPets) ? state.pet.unlockedPets : [];
+                const mergedUnlocked = Array.from(new Set([...localUnlocked, ...cloudUnlocked]));
+
+                const lastNotified = Math.max(Number(cloudState.pet.lastStageNotified) || 1, Number(state.pet?.lastStageNotified) || 1);
+
+                finalPet = {
+                    ...(state.pet || {}),
+                    ...cloudState.pet,
+                    selectedPetId: resolvedPetId,
+                    activeDays: mergedDays,
+                    activeDates: mergedDates,
+                    unlockedPets: mergedUnlocked,
+                    lastStageNotified: lastNotified
+                };
             }
 
             state = {
@@ -2813,6 +2833,9 @@ window.APP_VERSION = APP_VERSION;
 
             if (typeof updateNovaSpeechBubbleIfActive === 'function') updateNovaSpeechBubbleIfActive();
             else if (typeof window.updateNovaSpeechBubbleIfActive === 'function') window.updateNovaSpeechBubbleIfActive();
+
+            if (typeof renderPetCompanionWidget === 'function') renderPetCompanionWidget();
+            else if (typeof window.renderPetCompanionWidget === 'function') window.renderPetCompanionWidget();
         };
 
         // Check for updates and new day rollover initially and periodically

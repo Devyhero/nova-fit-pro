@@ -3917,8 +3917,7 @@ window.adminResetMyPetFromDashboard = async function () {
             activeDays: 1,
             activeDates: [new Date().toISOString().split('T')[0]],
             unlockedPets: [],
-            lastStageNotified: 1,
-            v5933: true
+            lastStageNotified: 1
         };
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
     }
@@ -3927,14 +3926,18 @@ window.adminResetMyPetFromDashboard = async function () {
     if (currentUser && currentUser.uid && db) {
         showAdminMiniLoader('กำลังรีเซ็ตสถานะสัตว์เลี้ยงในระบบคลาวด์...');
         try {
+            const freshPet = {
+                selectedPetId: null,
+                activeDays: 1,
+                activeDates: [new Date().toISOString().split('T')[0]],
+                unlockedPets: [],
+                lastStageNotified: 1
+            };
             await setDoc(doc(db, 'users', currentUser.uid), {
-                pet: {
-                    selectedPetId: null,
-                    activeDays: 1,
-                    activeDates: [new Date().toISOString().split('T')[0]],
-                    unlockedPets: [],
-                    lastStageNotified: 1,
-                    v5933: true
+                pet: freshPet,
+                state: {
+                    ...(s || {}),
+                    pet: freshPet
                 }
             }, { merge: true });
             hideAdminMiniLoader();
