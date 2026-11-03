@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.34';
+const APP_VERSION = '5.9.35';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
@@ -59,7 +59,8 @@ window.APP_VERSION = APP_VERSION;
             periodTracker: {
                 cycleLength: 28,
                 periodDuration: 5,
-                lastPeriodStart: ''
+                lastPeriodStart: '',
+                notificationsEnabled: true
             },
             periodByDate: {},
             fasting: {
@@ -176,11 +177,13 @@ window.APP_VERSION = APP_VERSION;
                         periodTracker: (parsed.periodTracker && typeof parsed.periodTracker === 'object') ? {
                             cycleLength: Number(parsed.periodTracker.cycleLength) || 28,
                             periodDuration: Number(parsed.periodTracker.periodDuration) || 5,
-                            lastPeriodStart: parsed.periodTracker.lastPeriodStart || ''
+                            lastPeriodStart: parsed.periodTracker.lastPeriodStart || '',
+                            notificationsEnabled: parsed.periodTracker.notificationsEnabled !== false
                         } : {
                             cycleLength: 28,
                             periodDuration: 5,
-                            lastPeriodStart: ''
+                            lastPeriodStart: '',
+                            notificationsEnabled: true
                         },
                         periodByDate: (parsed.periodByDate && typeof parsed.periodByDate === 'object') ? parsed.periodByDate : {},
                         fasting: (parsed.fasting && typeof parsed.fasting === 'object') ? {

@@ -426,6 +426,12 @@
         if (notesInput && document.activeElement !== notesInput) {
             notesInput.value = dayData.notes || '';
         }
+
+        // Check Web Push notifications and update Notification Bell badge
+        if (typeof window.updateNotificationBadge === 'function') {
+            window.updateNotificationBadge();
+        }
+        checkAndDispatchPeriodPushNotification(false);
     }
 
     /**
@@ -556,20 +562,272 @@
     }
 
     /**
+     * Get active period notification for today (if female and configured)
+     */
+    function getPeriodNotificationForToday() {
+        const appState = getAppStateSafe();
+        if (!appState || !appState.profile || appState.profile.gender !== 'female') return null;
+
+        const tracker = appState.periodTracker;
+        if (!tracker || !tracker.lastPeriodStart) return null;
+        if (tracker.notificationsEnabled === false) return null;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const cycleInfo = calculateCycleInfo(todayStr);
+        if (!cycleInfo || !cycleInfo.isConfigured) return null;
+
+        const dayData = (appState.periodByDate && appState.periodByDate[todayStr]) || {};
+
+        // 1. Approaching Period (2 Days Before)
+        if (cycleInfo.daysUntilNext === 2) {
+            return {
+                id: 'period_approaching_2_' + cycleInfo.nextPeriodDate,
+                type: 'approaching',
+                icon: '🌸',
+                title: '🌸 อีก 2 วัน ประจำเดือนอาจจะมานะคะ',
+                message: `ประจำเดือนรอบถัดไปคาดว่าจะมาประมาณ ${formatThaiShortDate(cycleInfo.nextPeriodDate)} อย่าลืมเตรียมพกผ้าอนามัยติดตัว และดื่มน้ำอุ่นเยอะๆ นะคะ`,
+                badge: 'อีก 2 วัน'
+            };
+        }
+
+        // 2. Approaching Period (1 Day Before)
+        if (cycleInfo.daysUntilNext === 1) {
+            return {
+                id: 'period_approaching_1_' + cycleInfo.nextPeriodDate,
+                type: 'approaching',
+                icon: '🌸',
+                title: '🌸 ประจำเดือนคาดว่าจะมาพรุ่งนี้ค่ะ',
+                message: `พรุ่งนี้ประจำเดือนอาจจะมา เตรียมพกผ้าอนามัยติดตัว และหลีกเลี่ยงความเครียด พักผ่อนให้เพียงพอนะคะ`,
+                badge: 'พรุ่งนี้'
+            };
+        }
+
+        // 3. Period Day (Active Bleeding or Cycle Day 1)
+        if (dayData.isPeriod || cycleInfo.currentCycleDay === 1) {
+            return {
+                id: 'period_active_' + todayStr,
+                type: 'menstrual',
+                icon: '🩸',
+                title: `🩸 ดูแลตัวเองช่วงมีประจำเดือน (วันที่ ${cycleInfo.currentCycleDay})`,
+                message: `ช่วงนี้หากน้ำหนักขึ้น 1-2 กก. เป็นเรื่องธรรมชาติจากอาการบวมน้ำ (Water Retention) อย่ากังวลตัวเลขบนตาชั่งนะคะ ดื่มน้ำสะอาด 2.5-3 ลิตร และลดโซเดียมค่ะ`,
+                badge: `Day ${cycleInfo.currentCycleDay}`
+            };
+        }
+
+        // 4. Ovulation Day (Day 14)
+        if (cycleInfo.currentCycleDay === 14) {
+            return {
+                id: 'period_ovulation_' + todayStr,
+                type: 'ovulation',
+                icon: '✨',
+                title: '✨ วันนี้คาดว่าเป็นวันไข่ตก (พลังงานสูงสุด)',
+                message: 'ระดับฮอร์โมนและพลังงานสดชื่นเต็มร้อย เป็นช่วงเวลาทองของการเวทเทรนนิ่งฝึกกล้ามเนื้อหรือทำสถิติใหม่ (PR) ค่ะ',
+                badge: 'ไข่ตก'
+            };
+        }
+
+        // 5. Late Period Alert
+        const daysSinceLast = diffInDays(tracker.lastPeriodStart, todayStr);
+        if (daysSinceLast > cycleInfo.cycleLength + 2 && !dayData.isPeriod) {
+            const daysLate = daysSinceLast - cycleInfo.cycleLength;
+            return {
+                id: 'period_late_' + todayStr,
+                type: 'late',
+                icon: '📅',
+                title: `📅 ประจำเดือนเลยกำหนดรอบมา ${daysLate} วัน`,
+                message: 'รอบเดือนเลยกำหนดที่คาดการณ์ไว้ หากประจำเดือนมาแล้วอย่าลืมแตะบันทึก หรือพักผ่อนคลายความเครียดนะคะ',
+                badge: `เลยกำหนด ${daysLate} วัน`
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Get count of unread period notifications for today (0 or 1)
+     */
+    function getPeriodUnreadCount() {
+        const notif = getPeriodNotificationForToday();
+        if (!notif) return 0;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isRead = localStorage.getItem('novafit_period_notif_read_' + todayStr + '_' + notif.id) === 'true';
+        return isRead ? 0 : 1;
+    }
+
+    /**
+     * Mark period notification as read
+     */
+    function markPeriodNotificationAsRead(notifId) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        localStorage.setItem('novafit_period_notif_read_' + todayStr + '_' + notifId, 'true');
+        if (typeof window.updateNotificationBadge === 'function') {
+            window.updateNotificationBadge();
+        }
+        if (typeof window.renderNotificationsModalList === 'function') {
+            window.renderNotificationsModalList();
+        }
+    }
+
+    /**
+     * Scroll smoothly to period tracker card
+     */
+    function scrollToPeriodCard() {
+        if (typeof window.closeUserNotificationsModal === 'function') {
+            window.closeUserNotificationsModal();
+        }
+        const card = document.getElementById('card_period_tracker');
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('ring-2', 'ring-rose-500', 'ring-offset-2');
+            setTimeout(() => {
+                card.classList.remove('ring-2', 'ring-rose-500', 'ring-offset-2');
+            }, 2000);
+        }
+    }
+
+    /**
+     * Render period notification card item for user notifications modal
+     */
+    function renderPeriodNotificationItem() {
+        const notif = getPeriodNotificationForToday();
+        if (!notif) return '';
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isRead = localStorage.getItem('novafit_period_notif_read_' + todayStr + '_' + notif.id) === 'true';
+
+        return `
+            <div class="p-3.5 rounded-2xl ${isRead ? 'bg-rose-500/5 border-rose-500/20 dark:bg-rose-950/20' : 'bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-purple-500/10 border-rose-500/40'} border space-y-2 transition mb-2 shadow-xs">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">${notif.icon}</span>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                                <span>${notif.title}</span>
+                                ${!isRead ? '<span class="text-[9px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full">รอบเดือน</span>' : ''}
+                            </h4>
+                            <span class="text-[10px] text-slate-400">ระบบติดตามวงจรรอบเดือนอัจฉริยะ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="scrollToPeriodCard()"
+                            class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-700 border border-rose-300 dark:border-rose-600 text-rose-600 dark:text-rose-300 text-xs font-bold transition hover:bg-rose-50">
+                            ดูบันทึก
+                        </button>
+                        ${!isRead ? `
+                            <button type="button" onclick="markPeriodNotificationAsRead('${notif.id}')"
+                                class="px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 text-white text-xs font-bold transition shadow-xs">
+                                ✓ รับทราบ
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">${notif.message}</p>
+            </div>
+        `;
+    }
+
+    /**
+     * Dispatch Web Push Notification (supports ServiceWorker and Apple Watch)
+     */
+    async function checkAndDispatchPeriodPushNotification(forceTest = false) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+
+        const notif = getPeriodNotificationForToday();
+        if (!notif && !forceTest) return false;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const pushKey = 'novafit_period_push_sent_' + todayStr + '_' + (notif ? notif.id : 'test');
+
+        if (!forceTest && localStorage.getItem(pushKey) === 'true') {
+            return false; // Already pushed today
+        }
+
+        const title = forceTest
+            ? '🌸 แจ้งเตือนรอบเดือน (ทดสอบระบบ • NovaFit Pro)'
+            : notif.title;
+        const body = forceTest
+            ? '🔔 อีก 2 วัน ประจำเดือนอาจจะมานะคะ เตรียมพกผ้าอนามัยติดตัว และดื่มน้ำอุ่นเยอะๆ น้า (สั่นเตือนบน Apple Watch สำเร็จ!)'
+            : notif.message;
+
+        const options = {
+            body: body,
+            icon: 'icon-192.png',
+            badge: 'favicon-32x32.png',
+            vibrate: [150, 80, 150],
+            tag: 'novafit-period-' + Date.now(),
+            renotify: true,
+            data: { url: './' }
+        };
+
+        let delivered = false;
+
+        // Priority 1: ServiceWorker Registration showNotification
+        if ('serviceWorker' in navigator) {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                if (reg && reg.showNotification) {
+                    await reg.showNotification(title, options);
+                    delivered = true;
+                }
+            } catch (err) {
+                console.warn('Period SW push failed:', err);
+            }
+        }
+
+        // Priority 2: Fallback Desktop Notification
+        if (!delivered && 'Notification' in window && Notification.permission === 'granted') {
+            try {
+                new Notification(title, { body: body, icon: 'icon-192.png' });
+                delivered = true;
+            } catch (err) { }
+        }
+
+        if (delivered && !forceTest) {
+            localStorage.setItem(pushKey, 'true');
+        }
+
+        return delivered;
+    }
+
+    /**
+     * Test Period Web Push notification on device
+     */
+    async function testPeriodWebPush() {
+        if (!('Notification' in window)) {
+            alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน Web Push ค่ะ');
+            return;
+        }
+
+        if (Notification.permission !== 'granted') {
+            const granted = await Notification.requestPermission();
+            if (granted !== 'granted') {
+                alert('กรุณากดอนุญาตการแจ้งเตือน (Allow Notification) เพื่อรับข้อความเตือนรอบเดือนและสั่นเตือนบน Apple Watch นะคะ');
+                return;
+            }
+        }
+
+        showToastSafe('⏱️ กำลังส่งการแจ้งเตือนรอบเดือน... สั่นเตือน Apple Watch!');
+        await checkAndDispatchPeriodPushNotification(true);
+        playSoundSafe('celebrate');
+    }
+
+    /**
      * Open Period Settings Modal
      */
     function openPeriodSettingsModal() {
         const appState = getAppStateSafe();
         if (!appState) return;
 
-        const tracker = appState.periodTracker || { cycleLength: 28, periodDuration: 5, lastPeriodStart: '' };
+        const tracker = appState.periodTracker || { cycleLength: 28, periodDuration: 5, lastPeriodStart: '', notificationsEnabled: true };
         const cycleLenEl = document.getElementById('inputCycleLength');
         const periodDurEl = document.getElementById('inputPeriodDuration');
         const lastStartEl = document.getElementById('inputLastPeriodStart');
+        const notifToggleEl = document.getElementById('chkPeriodNotif');
 
         if (cycleLenEl) cycleLenEl.value = tracker.cycleLength || 28;
         if (periodDurEl) periodDurEl.value = tracker.periodDuration || 5;
         if (lastStartEl) lastStartEl.value = tracker.lastPeriodStart || appState.selectedDate || '';
+        if (notifToggleEl) notifToggleEl.checked = tracker.notificationsEnabled !== false;
 
         openModalAnimatedSafe('periodSettingsModal');
     }
@@ -591,15 +849,18 @@
         const cycleLenEl = document.getElementById('inputCycleLength');
         const periodDurEl = document.getElementById('inputPeriodDuration');
         const lastStartEl = document.getElementById('inputLastPeriodStart');
+        const notifToggleEl = document.getElementById('chkPeriodNotif');
 
         const cycleLength = Math.max(21, Math.min(45, parseInt(cycleLenEl?.value, 10) || 28));
         const periodDuration = Math.max(2, Math.min(10, parseInt(periodDurEl?.value, 10) || 5));
         const lastPeriodStart = lastStartEl?.value ? lastStartEl.value.trim() : '';
+        const notificationsEnabled = notifToggleEl ? notifToggleEl.checked : true;
 
         appState.periodTracker = {
             cycleLength,
             periodDuration,
-            lastPeriodStart
+            lastPeriodStart,
+            notificationsEnabled
         };
 
         if (lastPeriodStart && appState.periodByDate) {
@@ -628,6 +889,13 @@
         window.openPeriodSettingsModal = openPeriodSettingsModal;
         window.closePeriodSettingsModal = closePeriodSettingsModal;
         window.savePeriodSettings = savePeriodSettings;
+        window.getPeriodNotificationForToday = getPeriodNotificationForToday;
+        window.getPeriodUnreadCount = getPeriodUnreadCount;
+        window.markPeriodNotificationAsRead = markPeriodNotificationAsRead;
+        window.renderPeriodNotificationItem = renderPeriodNotificationItem;
+        window.scrollToPeriodCard = scrollToPeriodCard;
+        window.checkAndDispatchPeriodPushNotification = checkAndDispatchPeriodPushNotification;
+        window.testPeriodWebPush = testPeriodWebPush;
     }
 
 })();

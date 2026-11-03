@@ -948,10 +948,15 @@ function setupRealtimeNotificationsListener(user) {
 }
 
 function updateNotificationBadge(unreadCount) {
+    if (typeof unreadCount !== 'number') {
+        unreadCount = userNotifications.filter(n => !n.read).length;
+    }
+    const periodUnread = (typeof window.getPeriodUnreadCount === 'function') ? window.getPeriodUnreadCount() : 0;
+    const totalUnread = unreadCount + periodUnread;
     const badge = document.getElementById('unreadNotifBadge');
     if (badge) {
-        if (unreadCount > 0) {
-            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        if (totalUnread > 0) {
+            badge.textContent = totalUnread > 9 ? '9+' : totalUnread;
             badge.classList.remove('hidden');
         } else {
             badge.classList.add('hidden');
@@ -959,14 +964,15 @@ function updateNotificationBadge(unreadCount) {
     }
     const toolsBadge = document.getElementById('toolsUnreadNotifBadge');
     if (toolsBadge) {
-        if (unreadCount > 0) {
-            toolsBadge.textContent = `${unreadCount} ใหม่`;
+        if (totalUnread > 0) {
+            toolsBadge.textContent = `${totalUnread} ใหม่`;
             toolsBadge.classList.remove('hidden');
         } else {
             toolsBadge.classList.add('hidden');
         }
     }
 }
+window.updateNotificationBadge = updateNotificationBadge;
 
 function showAdminMessagePopup(notif) {
     const modal = document.getElementById('adminMessagePopupModal');
@@ -1017,7 +1023,21 @@ function renderNotificationsModalList() {
     const container = document.getElementById('userNotificationsListContainer');
     if (!container) return;
 
+    let periodHtml = '';
+    if (typeof window.renderPeriodNotificationItem === 'function') {
+        periodHtml = window.renderPeriodNotificationItem() || '';
+    }
+
     if (!currentUser) {
+        if (periodHtml) {
+            container.innerHTML = periodHtml + `
+                <div class="py-6 text-center text-slate-400 space-y-1.5 border-t border-slate-200 dark:border-slate-700 mt-2">
+                    <span class="text-2xl block">🔐</span>
+                    <p class="text-xs">เข้าสู่ระบบด้วย Google เพื่อรับการแจ้งเตือนจากผู้ดูแลระบบ</p>
+                </div>
+            `;
+            return;
+        }
         container.innerHTML = `
             <div class="py-10 text-center text-slate-400 space-y-2">
                 <span class="text-3xl block">🔐</span>
@@ -1028,6 +1048,10 @@ function renderNotificationsModalList() {
     }
 
     if (userNotifications.length === 0) {
+        if (periodHtml) {
+            container.innerHTML = periodHtml;
+            return;
+        }
         container.innerHTML = `
             <div class="py-10 text-center text-slate-400 space-y-2">
                 <span class="text-3xl block">📭</span>
@@ -1037,7 +1061,7 @@ function renderNotificationsModalList() {
         return;
     }
 
-    container.innerHTML = userNotifications.map(n => {
+    container.innerHTML = periodHtml + userNotifications.map(n => {
         const d = n.createdAt ? new Date(n.createdAt) : new Date();
         const dateStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
         const isUnread = !n.read;

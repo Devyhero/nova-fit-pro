@@ -163,6 +163,21 @@
             'เช้าวันใหม่ วันนี้ลุยเป้าหมายสุขภาพไปด้วยกันนะเมี้ยว ทานมื้อเช้าที่มีประโยชน์ด้วยน้า 🍳🥗',
             'มอร์นิ่งเมี้ยว! วันนี้พร้อมพิชิตเป้าหมายแคลอรีและโปรตีนหรือยัง เหมียวโนวาอยู่ข้างๆ เสมอนะ 🌟🥑'
         ],
+        period_menstrual: [
+            'ช่วงมีประจำเดือนน้ำหนักขึ้น 1-2 กิโลเป็นเรื่องธรรมชาติมากๆ นะคะ ร่างกายแค่บวมน้ำชั่วคราว ดื่มน้ำอุ่นแล้วพักผ่อนเยอะๆ น้าเมี้ยว 🌸💧',
+            'วันนี้ถ้ารู้สึกปวดเกร็ง ผ่อนคลายด้วยการยืดเหยียดหรือจิบน้ำอุ่น ไม่ต้องฝืนออกกำลังกายหนักน้าเมี้ยว เหมียวโนวาเป็นห่วงนะ 💖🐱',
+            'เติมธาตุเหล็กด้วยเนื้อไม่ติดมัน ไข่ หรือผักใบเขียว และดื่มน้ำอุ่นเยอะๆ นะคะคนเก่งเมี้ยว 🥩🥬✨',
+            'อย่าวิตกกับตัวเลขบนตาชั่งช่วงนี้นะคะ ร่างกายกำลังปรับสมดุลฮอร์โมน ทำใจให้สบายแล้วดื่มน้ำเยอะๆ น้าเมี้ยว 🥑💖'
+        ],
+        period_approaching: [
+            '🌸 อีก {days} วันประจำเดือนอาจจะมานะคะ พกผ้าอนามัยติดกระเป๋าไว้ล่วงหน้า และดื่มน้ำอุ่นเยอะๆ น้าเมี้ยว ✨',
+            'ช่วงนี้ฮอร์โมน PMS อาจทำให้โหยของหวาน แนะนำดาร์กช็อกโกแลตหรือผลไม้สดแทนขนมหวานนะเมี้ยว 🍫🍓',
+            'ถ้าช่วงนี้รู้สึกอารมณ์อ่อนไหวหรือตัวบวมน้ำ เป็นเพราะฮอร์โมนกำลังปรับตัวนะคะ ยิ้มเข้าไว้แล้วรักตัวเองเยอะๆ น้าเมี้ยว 🥑💖'
+        ],
+        period_ovulation: [
+            '✨ ช่วงไข่ตกแล้วเมี้ยว! เอสโตรเจนสูงสุด พลังกายเต็มร้อย วันนี้จัดเต็มเวทเทรนนิ่งหรือพิชิต PR ได้เลยนะ! 🔥💪',
+            'วันนี้เป็นช่วงที่ร่างกายฟื้นตัวไวและมีแรงดีที่สุดของเดือนเลยนะเมี้ยว ลุยให้สุดแล้วกินโปรตีนให้ถึงเป้าหมายกัน! 🏆🥑'
+        ],
         default_ready: [
             'โค้ชเหมียวโนวาพร้อมดูแลสุขภาพคุณแล้วเมี้ยว แตะที่น้องเพื่อสั่งการด่วนได้เลย 🥑',
             'วันนี้เป็นวันที่ดีในการรักตัวเองนะเมี้ยว มีอะไรให้น้องเหมียวช่วยแนะนำ แตะมาคุยกันได้เลย ✨',
@@ -293,6 +308,42 @@
                 text: getVariedMascotMessage('thirsty', { waterGlasses, targetGlasses }),
                 actionHint: 'water'
             };
+        }
+
+        // 1.5. Female Menstrual & Hormonal Care Empathy Check (v5.9.35)
+        if (st.profile?.gender === 'female' && typeof window.calculateCycleInfo === 'function') {
+            try {
+                const cycle = window.calculateCycleInfo(activeDate || todayStr);
+                const dayData = st.periodByDate && st.periodByDate[activeDate || todayStr];
+                const isPeriod = dayData?.isPeriod || (cycle?.isConfigured && cycle.currentCycleDay <= cycle.periodDuration);
+
+                // Priority A: Currently experiencing period
+                if (isPeriod) {
+                    return {
+                        mood: 'happy',
+                        text: getVariedMascotMessage('period_menstrual'),
+                        actionHint: 'period'
+                    };
+                }
+
+                // Priority B: Period approaching in 1-2 days
+                if (cycle?.isConfigured && cycle.daysUntilNext <= 2 && cycle.daysUntilNext >= 1) {
+                    return {
+                        mood: 'happy',
+                        text: getVariedMascotMessage('period_approaching', { days: cycle.daysUntilNext }),
+                        actionHint: 'period'
+                    };
+                }
+
+                // Priority C: Ovulation window (Day 14-16)
+                if (cycle?.isConfigured && cycle.phase === 'ovulation') {
+                    return {
+                        mood: 'proud',
+                        text: getVariedMascotMessage('period_ovulation'),
+                        actionHint: 'period'
+                    };
+                }
+            } catch (e) { }
         }
 
         // 2. Goal Met / Proud Check

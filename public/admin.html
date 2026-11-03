@@ -750,14 +750,28 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.34
+                            Current Version: v5.9.35
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
-                        <!-- Release: v5.9.34 -->
+                        <!-- Release: v5.9.35 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-purple-500/10 border border-rose-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-rose-600 dark:text-rose-400 text-sm">🔔 v5.9.35 (Triple-Channel Menstrual Alert Pipeline: In-App Notification Bell, Web Push ServiceWorker Dispatch & MeowNova Empathy Speeches)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">3 พ.ย. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>🔔 In-App User Notification Bell Integration:</b> เชื่อมโยงระบบแจ้งเตือนรอบเดือนเข้ากับกระดิ่งบนแถบ Header แสดงป้ายจุดสีแดงนับจำนวนเตือนที่ยังไม่ได้อ่าน พร้อมการ์ดแจ้งเตือนล่วงหน้า 2 วันในกล่องข้อความและปุ่มรับทราบ</li>
+                                <li><b>📲 Web Push Notification Dispatcher (Apple Watch & Mobile):</b> ระบบส่ง Web Push อัตโนมัติผ่าน ServiceWorker <code>reg.showNotification</code> พร้อมระบบสั่นเตือน [150, 80, 150] สั่นบนข้อมือ Apple Watch และสมาร์ตโฟน พร้อมปุ่มทดสอบระบบในหน้าตั้งค่า</li>
+                                <li><b>🐱 MeowNova Mood & Speech Engine Synchronization:</b> เพิ่มคลังคำพูด <code>period_menstrual</code>, <code>period_approaching</code> และ <code>period_ovulation</code> ใน <code>public/mascot-companion.js</code> ตรวจจับสรีระสุภาพสตรีอัตโนมัติ เพื่อส่งมอบคำพูดห่วงใยและคำแนะนำโภชนาการแบบเรียลไทม์</li>
+                                <li><b>🛡️ Duplicate Push Prevention Guard:</b> ป้องกันการส่งแจ้งเตือนซ้ำซ้อนในวันเดียวกันด้วยคีย์ <code>localStorage</code> ประจำวัน</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.35 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
+                        <!-- Release: v5.9.34 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <span class="font-bold text-rose-600 dark:text-rose-400 text-sm">🌸 v5.9.34 (Smart Menstrual & Hormone Cycle Tracker Engine: 4-Phase Hormonal Analysis, Female-Only Dynamic Mount & Nutritional Sync)</span>
                                 <span class="text-slate-400 font-mono text-[11px]">3 พ.ย. 2026</span>
@@ -2328,7 +2342,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.34"></script>
+    <script type="module" src="admin.js?v=5.9.35"></script>
 
 </body>
 

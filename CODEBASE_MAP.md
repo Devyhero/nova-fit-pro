@@ -8,9 +8,9 @@
 
 | File | Approximate Size | Responsibility |
 |---|---|---|
-| `public/index.html` | ~430 KB (5,090 lines) | User interface, section accordions, all modal templates, SW bootstrap |
-| `public/app.js` | ~170 KB (2,963 lines) | Core business logic, macro calculation, meals logging, modals |
-| `public/period-tracker.js` | ~25 KB (633 lines) | Smart Menstrual & Hormone Cycle Tracker: 4-phase analysis, female-only dynamic mount, bleeding flow & symptoms logger, cycle prediction |
+| `public/index.html` | ~435 KB (5,134 lines) | User interface, section accordions, all modal templates, SW bootstrap |
+| `public/app.js` | ~170 KB (2,966 lines) | Core business logic, macro calculation, meals logging, modals |
+| `public/period-tracker.js` | ~35 KB (901 lines) | Smart Menstrual & Hormone Cycle Tracker: 4-phase analysis, triple-channel alert engine (Bell, Web Push & MeowNova), daily flow/symptom logger |
 | `public/web-push.js` | ~8 KB (198 lines) | Web push notifications permission, FCM integration, status UI & local watch tests |
 | `public/water-tracker.js` | ~8 KB (165 lines) | Water intake calculator, targets, clickable glass icons, progress bar & hydration advice |
 | `public/body-tracker.js` | ~30 KB (606 lines) | Body weight tracking, workout logging, burned cal deduction & 7-day weekly analytics chart |

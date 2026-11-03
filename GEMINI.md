@@ -205,7 +205,7 @@ Update version strings across all 5 files:
 
 ---
 
-## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.34)
+## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.35)
 
 > Check line ranges here before reading code. Use targeted line ranges with `read_file` to save 80–90% of tokens.
 
@@ -218,7 +218,7 @@ Update version strings across all 5 files:
 - **L485 – L736**: Theme & Smooth Accordions (`toggleTheme`, `animateSmoothAccordion`, `toggleCardSection`, `renderAllSectionCollapses`)
 - **L737 – L1200**: Profile Targets & Clinical Macro Calculator (`getCalculatedTargets`, `applyBmrSafetyFloor`, `setDayType`, `renderAll`, `renderPeriodTracker`, `renderPetCompanionWidget`)
 - **[MODULARIZED]**: Fitness Pet Companion & Evolution Engine ➔ `public/pet-companion.js` (1,423 lines, includes TCG Collectible Rarity Frames, Mythic Foil Effects & Admin Sandbox Engine)
-- **[MODULARIZED]**: Smart Menstrual & Hormone Cycle Tracker Engine ➔ `public/period-tracker.js` (633 lines, female-only dynamic mount, 4-phase cycle calculation, flow & symptom logger, cycle predictions)
+- **[MODULARIZED]**: Smart Menstrual & Hormone Cycle Tracker Engine ➔ `public/period-tracker.js` (901 lines, female-only dynamic mount, 4-phase cycle calculation, triple-channel alert engine: Bell, Web Push & MeowNova empathy)
 - **L1201 – L1303**: Macro Presets & Universal Food Search (`setMacroPreset`, `setProtein2gPerKg`, `adjustMacros`, `selectCategory`, `onSearchFood`, `clearFoodSearch`)
 - **L1304 – L1761**: Custom Confirm Dialog & Cloud Food DB Sync (`showConfirmDialog`, `applyCentralFoodsFromCloud`, `renderFoodDatabaseExplorer`)
 - **[MODULARIZED]**: Water Tracker & Hydration Engine ➔ `public/water-tracker.js` (165 lines)
@@ -235,5 +235,5 @@ Update version strings across all 5 files:
 - **L2436 – L2920**: Service Worker Bootstrap, Cloud State Merge Adapter & Day Rollover (`applyCloudState`, `autoSyncMealByTime`, `checkDayRollover`)
 - **[MODULARIZED]**: Apple-Grade Modals & Profile Drawer ➔ `public/quick-add.js` (242 lines)
 - **[MODULARIZED]**: Living App Companion & Milestone Confetti ➔ `public/living-companion.js` (918 lines)
-- **[MODULARIZED]**: MeowNova Mascot Companion & AI Health Coach ➔ `public/mascot-companion.js` (1,239 lines)
-- **L2921 – L2963**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)
+- **[MODULARIZED]**: MeowNova Mascot Companion & AI Health Coach ➔ `public/mascot-companion.js` (1,290 lines)
+- **L2921 – L2966**: Window Global Handlers & Dynamic Exports (Global `window.xxx` bindings)

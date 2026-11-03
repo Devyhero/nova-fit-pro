@@ -3246,7 +3246,21 @@ server.listen(PORT, async () => {
             onPeriodNotesInput('รู้สึกปวดเกร็งเล็กน้อย ดื่มน้ำเยอะขึ้น');
             const notesRecorded = state.periodByDate[dateStr]?.notes?.includes('ปวดเกร็ง');
 
-            // 6. Switch back to Male: Card should disappear immediately from column
+            // 6. Triple-Channel Notifications Verification (v5.9.35)
+            // Channel A: Notification Bell
+            const notifItemHtml = typeof renderPeriodNotificationItem === 'function' ? renderPeriodNotificationItem() : '';
+            const hasBellNotif = typeof getPeriodNotificationForToday === 'function' && typeof renderPeriodNotificationItem === 'function';
+            const bellHtmlRendered = typeof notifItemHtml === 'string' && notifItemHtml.length > 0;
+
+            // Channel B: Web Push
+            const hasPushFn = typeof checkAndDispatchPeriodPushNotification === 'function';
+            const hasTestPushFn = typeof testPeriodWebPush === 'function';
+
+            // Channel C: Mascot MeowNova Empathy Speech
+            const mascotMood = typeof evaluateNovaMood === 'function' ? evaluateNovaMood() : null;
+            const hasMascotEmpathy = mascotMood && typeof mascotMood.text === 'string' && (mascotMood.text.includes('ประจำเดือน') || mascotMood.text.includes('บวมน้ำ') || mascotMood.text.includes('ฮอร์โมน') || mascotMood.text.includes('น้ำอุ่น'));
+
+            // 7. Switch back to Male: Card should disappear immediately from column
             setGender('male');
             const maleCardHiddenAfter = !cardPeriod || cardPeriod.classList.contains('hidden') || cardPeriod.parentElement !== colLeft;
 
@@ -3262,6 +3276,11 @@ server.listen(PORT, async () => {
                 flowRecorded,
                 symptomsRecorded,
                 notesRecorded,
+                hasBellNotif,
+                bellHtmlRendered,
+                hasPushFn,
+                hasTestPushFn,
+                hasMascotEmpathy,
                 maleCardHiddenAfter
             };
         })()`);
@@ -3277,6 +3296,11 @@ server.listen(PORT, async () => {
             !periodTrackerTest.flowRecorded ||
             !periodTrackerTest.symptomsRecorded ||
             !periodTrackerTest.notesRecorded ||
+            !periodTrackerTest.hasBellNotif ||
+            !periodTrackerTest.bellHtmlRendered ||
+            !periodTrackerTest.hasPushFn ||
+            !periodTrackerTest.hasTestPushFn ||
+            !periodTrackerTest.hasMascotEmpathy ||
             !periodTrackerTest.maleCardHiddenAfter) {
             throw new Error('Test 57: Female Period Tracker Engine verification failed: ' + JSON.stringify(periodTrackerTest));
         }
