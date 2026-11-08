@@ -211,7 +211,7 @@ Update version strings across all 5 files:
 
 ---
 
-## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.36)
+## 📍 Token-Saving Code Index (`public/app.js` - Updated v5.9.37)
 
 > Check line ranges here before reading code. Use targeted line ranges with `read_file` to save 80–90% of tokens.
 

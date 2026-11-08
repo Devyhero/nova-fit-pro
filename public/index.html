@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NovaFit Pro - ระบบคำนวณและบันทึกสารอาหารอัจฉริยะ (Smart Macros)</title>
     <!-- Web App Manifest & Mobile/Desktop Favicons -->
     <link rel="manifest" href="manifest.json">
@@ -13,7 +13,6 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <meta name="theme-color" content="#10b981">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NovaFit Pro">
@@ -855,7 +854,7 @@
                         </button>
                         <button type="button" id="toolsVersionBadge" onclick="openChangelogModal(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-2 transition cursor-pointer">
-                            <span>🚀</span> ประวัติอัปเดต (v5.9.36)
+                            <span>🚀</span> ประวัติอัปเดต (v5.9.37)
                         </button>
                         <button type="button" onclick="applyAppUpdate(); toggleToolsMenu();"
                             class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between transition cursor-pointer">
@@ -1854,7 +1853,7 @@
                     class="hidden p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-indigo-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-base shrink-0">🎉</span>
-                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.36!</b> สรุปการอัปเดตล่าสุด:</span>
+                        <span class="truncate sm:whitespace-normal"><b id="whatsNewAlertText">ยินดีต้อนรับสู่ NovaFit Pro v5.9.37!</b> สรุปการอัปเดตล่าสุด:</span>
                     </div>
                     <button type="button" onclick="applyAppUpdate()"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition shrink-0 flex items-center gap-1 cursor-pointer">
@@ -1862,7 +1861,27 @@
                     </button>
                 </div>
 
-                <!-- Latest Release: v5.9.36 -->
+                <!-- Latest Release: v5.9.37 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>🍏</span> v5.9.37 (คืนค่า Viewport เดิมสำหรับ iOS หน้าจอโฮม & ปลดล็อกแถบเมนูหัวเว็บ)
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">8 พ.ย. 2026</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-1">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-emerald-500">🍏</span>
+                            <span><b>แก้ไขแถบเมนูบน iOS Home Screen:</b> คืนค่า Viewport มาตรฐาน ป้องกันขอบจอบนของ iPhone บดบังแถบเมนูและปุ่มควบคุมด้านบน</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-teal-500">⚖️</span>
+                            <span><b>ระบบประเมิน BMI & น้ำหนักสมดุล:</b> คำนวณสถานะสมส่วน/อ้วน/ผอม พร้อมช่วงน้ำหนักที่แนะนำอย่างต่อเนื่อง</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Release: v5.9.36 -->
                 <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -5101,73 +5120,73 @@
     </div>
 
     <!-- Core Food Database -->
-    <script src="food-db.js?v=5.9.36"></script>
+    <script src="food-db.js?v=5.9.37"></script>
 
     <!-- Daily Health & Nutrition Tips Engine (v5.7.2) -->
-    <script src="health-tips.js?v=5.9.36"></script>
+    <script src="health-tips.js?v=5.9.37"></script>
 
     <!-- AI Snap & Log Engine (NEW v5.7.2) -->
-    <script src="ai-snap.js?v=5.9.36"></script>
+    <script src="ai-snap.js?v=5.9.37"></script>
 
     <!-- AI Nutrition Label & Barcode Scanner Engine (NEW v5.9.30) -->
-    <script src="nutrition-scanner.js?v=5.9.36"></script>
+    <script src="nutrition-scanner.js?v=5.9.37"></script>
 
     <!-- Intermittent Fasting (IF) Timer Engine (v5.9.30) -->
-    <script src="fasting-engine.js?v=5.9.36"></script>
+    <script src="fasting-engine.js?v=5.9.37"></script>
 
     <!-- Visual Share Card Engine (v5.9.30) -->
-    <script src="share-card.js?v=5.9.36"></script>
+    <script src="share-card.js?v=5.9.37"></script>
 
     <!-- Prestige Wardrobe, Anti-Cheat Streak & App Tour Guide Engine (v5.9.30) -->
-    <script src="prestige-wardrobe.js?v=5.9.36"></script>
+    <script src="prestige-wardrobe.js?v=5.9.37"></script>
 
     <!-- Living App Companion & Milestone Celebration Engine (v5.9.30) -->
-    <script src="living-companion.js?v=5.9.36"></script>
+    <script src="living-companion.js?v=5.9.37"></script>
 
     <!-- Meal Combos & Visual Editor Engine (v5.9.30) -->
-    <script src="meal-combos.js?v=5.9.36"></script>
+    <script src="meal-combos.js?v=5.9.37"></script>
 
     <!-- Supplements & Vitamins Engine (v5.9.30) -->
-    <script src="supplements.js?v=5.9.36"></script>
+    <script src="supplements.js?v=5.9.37"></script>
 
     <!-- Web Push Notifications & FCM Engine (v5.9.30) -->
-    <script src="web-push.js?v=5.9.36"></script>
+    <script src="web-push.js?v=5.9.37"></script>
 
     <!-- Water Tracker & Hydration Engine (v5.9.30) -->
-    <script src="water-tracker.js?v=5.9.36"></script>
+    <script src="water-tracker.js?v=5.9.37"></script>
 
     <!-- Menstrual & Hormone Cycle Tracker Engine (NEW v5.9.34) -->
-    <script src="period-tracker.js?v=5.9.36"></script>
+    <script src="period-tracker.js?v=5.9.37"></script>
 
     <!-- Body Weight, Workouts & Weekly Analytics Engine (v5.9.30) -->
-    <script src="body-tracker.js?v=5.9.36"></script>
+    <script src="body-tracker.js?v=5.9.37"></script>
 
     <!-- Smart Coach Recommendations Engine (v5.9.30) -->
-    <script src="coach-engine.js?v=5.9.36"></script>
+    <script src="coach-engine.js?v=5.9.37"></script>
 
     <!-- Sound Effects & Web Audio Synthesizer (v5.9.30) -->
-    <script src="sound-effects.js?v=5.9.36"></script>
+    <script src="sound-effects.js?v=5.9.37"></script>
 
     <!-- Daily Report & Changelog Engine (v5.9.30) -->
-    <script src="daily-report.js?v=5.9.36"></script>
+    <script src="daily-report.js?v=5.9.37"></script>
 
     <!-- Data Backup, Restore & PWA Engine (v5.9.30) -->
-    <script src="data-backup.js?v=5.9.36"></script>
+    <script src="data-backup.js?v=5.9.37"></script>
 
     <!-- Fitness Pet Companion & Evolution Engine (NEW v5.9.33) -->
-    <script src="pet-companion.js?v=5.9.36"></script>
+    <script src="pet-companion.js?v=5.9.37"></script>
 
     <!-- Modal Controller, Profile Drawer & Quick Add Engine (v5.9.30) -->
-    <script src="quick-add.js?v=5.9.36"></script>
+    <script src="quick-add.js?v=5.9.37"></script>
 
     <!-- Modularized Core Application Logic (v5.7.2 - High Performance) -->
-    <script src="app.js?v=5.9.36"></script>
+    <script src="app.js?v=5.9.37"></script>
 
     <!-- Mascot Companion Engine (NEW v5.9.20) -->
-    <script src="mascot-companion.js?v=5.9.36"></script>
+    <script src="mascot-companion.js?v=5.9.37"></script>
 
     <!-- Cloud Firestore Real-time Multi-Device Sync -->
-    <script type="module" src="firebase-sync.js?v=5.9.36"></script>
+    <script type="module" src="firebase-sync.js?v=5.9.37"></script>
 
     <input type="file" id="importBackupFileInput" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => restoreUserDataBackup(e.target.result); r.readAsText(f); this.value=''; }" />
 </body>

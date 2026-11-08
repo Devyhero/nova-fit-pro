@@ -121,7 +121,7 @@ state = {
 
 ---
 
-## 📍 3. Code Index by Line Range in `public/app.js` (Updated v5.9.36)
+## 📍 3. Code Index by Line Range in `public/app.js` (Updated v5.9.37)
 
 > [!TIP]
 > Before modifying or reading any code, check this index and use `read_file` with specific line ranges to minimize token consumption.

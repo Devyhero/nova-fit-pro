@@ -1,4 +1,4 @@
-const APP_VERSION = '5.9.36';
+const APP_VERSION = '5.9.37';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
 
