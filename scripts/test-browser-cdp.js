@@ -3312,6 +3312,49 @@ server.listen(PORT, async () => {
             throw new Error('Test 57: Female Period Tracker Engine verification failed: ' + JSON.stringify(periodTrackerTest));
         }
 
+        // Test 58: Asian BMI Health Classification & Healthy Weight Range Engine (v5.9.36)
+        console.log('--- Test 58: Asian BMI Health Classification & Healthy Weight Range Engine (v5.9.36) ---');
+        const bmiEngineTest = await evalJs(`(() => {
+            const hasBmiFn = typeof window.getBmiDetails === 'function';
+            if (!hasBmiFn) return { hasBmiFn: false };
+
+            const under = window.getBmiDetails(45, 170);
+            const normal = window.getBmiDetails(60, 170);
+            const over = window.getBmiDetails(70, 170);
+            const obese1 = window.getBmiDetails(80, 170);
+            const obese2 = window.getBmiDetails(95, 170);
+
+            // Check DOM rendering
+            const badgeEl = document.getElementById('bmiBadge');
+            const catEl = document.getElementById('bmiCategoryText');
+            const idealEl = document.getElementById('bmiIdealWeightText');
+            const hasDomBanner = !!catEl && !!idealEl && !!badgeEl;
+
+            return {
+                hasBmiFn: true,
+                underCheck: under.shortStatus === 'ผอมกว่าเกณฑ์' && under.bmi === '15.6',
+                normalCheck: normal.shortStatus === 'สมส่วนสมดุล' && normal.bmi === '20.8',
+                overCheck: over.shortStatus === 'เริ่มท้วม' && over.bmi === '24.2',
+                obese1Check: obese1.shortStatus === 'อ้วนระดับ 1' && obese1.bmi === '27.7',
+                obese2Check: obese2.shortStatus === 'อ้วนระดับ 2' && obese2.bmi === '32.9',
+                idealRangeCheck: normal.minIdealWeight === 53.5 && normal.maxIdealWeight === 66.2,
+                hasDomBanner,
+                badgeText: badgeEl ? badgeEl.textContent : '',
+                bannerText: catEl ? catEl.textContent : ''
+            };
+        })()`);
+        console.log('BMI Health Engine verified:', bmiEngineTest);
+        if (!bmiEngineTest.hasBmiFn ||
+            !bmiEngineTest.underCheck ||
+            !bmiEngineTest.normalCheck ||
+            !bmiEngineTest.overCheck ||
+            !bmiEngineTest.obese1Check ||
+            !bmiEngineTest.obese2Check ||
+            !bmiEngineTest.idealRangeCheck ||
+            !bmiEngineTest.hasDomBanner) {
+            throw new Error('Test 58: BMI Health Engine verification failed: ' + JSON.stringify(bmiEngineTest));
+        }
+
         ws.close();
         console.log('========================================');
         console.log('🎉 ALL BROWSER CDP INTEGRATION TESTS PASSED 100%!');

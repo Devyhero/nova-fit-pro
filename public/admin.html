@@ -750,12 +750,25 @@
                             <p class="text-xs text-slate-400">บันทึกประวัติการพัฒนาสถาปัตยกรรมระบบ, ฟังก์ชันแอดมิน, ความปลอดภัย และโครงสร้างฐานข้อมูล</p>
                         </div>
                         <span class="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-                            Current Version: v5.9.35
+                            Current Version: v5.9.36
                         </span>
                     </div>
 
                     <!-- Changelog Entries List -->
                     <div class="space-y-3.5 text-xs">
+                        <!-- Release: v5.9.36 -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">⚖️ v5.9.36 (Asian BMI Health Classification Engine, Ideal Weight Calculation & Android PWA Edge-to-Edge Fullscreen Viewport)</span>
+                                <span class="text-slate-400 font-mono text-[11px]">8 พ.ย. 2026</span>
+                            </div>
+                            <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+                                <li><b>⚖️ Asian BMI Criteria & Health Classification Engine:</b> เพิ่มระบบคำนวณ <code>getBmiDetails(weight, height)</code> ตามเกณฑ์มาตรฐานเอเชีย (WHO / MOPH) แบ่งระดับชัดเจน (ผอมกว่าเกณฑ์ &lt; 18.5, สมส่วน 18.5–22.9, เริ่มท้วม 23.0–24.9, อ้วนระดับ 1 25.0–29.9, อ้วนระดับ 2 ≥ 30.0) พร้อม Badge สีและอิโมจิบ髮งสถานะ</li>
+                                <li><b>🎯 Dynamic Healthy Ideal Weight Range:</b> คำนวณช่วงน้ำหนักสมดุลในอุดมคติสำหรับส่วนสูงจริงของผู้ใช้ โดยคำนวณจากเกณฑ์ดัชนี 18.5 - 22.9 แสดงผลแบบเรียลไทม์ใน Profile Drawer และ Weight Tracker</li>
+                                <li><b>📱 Android PWA Edge-to-Edge Viewport & WebAPK Architecture:</b> อัปเกรด Meta Tags ด้วย <code>viewport-fit=cover</code> และ <code>mobile-web-app-capable</code> รองรับหน้าจอ Android รุ่นใหม่ที่มีรูกล้องหน้าและแถบ Gesture ป้องกันอาการ Letterbox หรือแถบดำคาดหัวท้าย พร้อมปรับปรุงคำแนะนำการติดตั้งแบบ WebAPK ใน Tour Slide 2 และ Alert Dialog</li>
+                                <li><b>🔄 5-File Version Alignment:</b> ปรับปรุงเวอร์ชันสู่ v5.9.36 สอดคล้องสมบูรณ์แบบทั้ง 5 ไฟล์ (<code>version.json</code>, <code>sw.js</code>, <code>app.js</code>, <code>index.html</code>, <code>admin.html</code>)</li>
+                            </ul>
+                        </div>
                         <!-- Release: v5.9.35 -->
                         <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-purple-500/10 border border-rose-500/30 space-y-2">
                             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -2342,7 +2355,7 @@
     <div id="toastContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100001] flex flex-col items-center sm:items-end gap-2 pointer-events-none max-w-[92vw] w-auto"></div>
 
     <!-- Admin Logic Script -->
-    <script type="module" src="admin.js?v=5.9.35"></script>
+    <script type="module" src="admin.js?v=5.9.36"></script>
 
 </body>
 

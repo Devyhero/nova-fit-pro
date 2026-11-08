@@ -1,6 +1,81 @@
-const APP_VERSION = '5.9.35';
+const APP_VERSION = '5.9.36';
 window.APP_VERSION = APP_VERSION;
         const STORAGE_KEY = 'fitmacro_pro_v4_state';
+
+        // Asian BMI Criteria & Ideal Weight Range Calculator (WHO / MOPH Standard)
+        function getBmiDetails(weight, height) {
+            const w = parseFloat(weight);
+            const h = parseFloat(height);
+            if (!w || !h || w <= 0 || h <= 0) {
+                return {
+                    bmi: '0.0',
+                    numericBmi: 0,
+                    category: 'ไม่ระบุ',
+                    shortStatus: 'ไม่ระบุ',
+                    badgeClass: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600',
+                    textColor: 'text-slate-500',
+                    dotEmoji: '⚪',
+                    minIdealWeight: 0,
+                    maxIdealWeight: 0
+                };
+            }
+            const hMeter = h / 100;
+            const bmiVal = w / (hMeter * hMeter);
+            const bmiNum = Math.round(bmiVal * 10) / 10;
+            const minIdeal = Math.round(18.5 * (hMeter * hMeter) * 10) / 10;
+            const maxIdeal = Math.round(22.9 * (hMeter * hMeter) * 10) / 10;
+
+            let category = '';
+            let shortStatus = '';
+            let badgeClass = '';
+            let textColor = '';
+            let dotEmoji = '🟢';
+
+            if (bmiNum < 18.5) {
+                category = 'น้ำหนักน้อย / ผอมกว่าเกณฑ์';
+                shortStatus = 'ผอมกว่าเกณฑ์';
+                badgeClass = 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30';
+                textColor = 'text-sky-500';
+                dotEmoji = '🔵';
+            } else if (bmiNum <= 22.9) {
+                category = 'สมส่วน / น้ำหนักสมดุล';
+                shortStatus = 'สมส่วนสมดุล';
+                badgeClass = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
+                textColor = 'text-emerald-500';
+                dotEmoji = '🟢';
+            } else if (bmiNum <= 24.9) {
+                category = 'น้ำหนักเกิน / เริ่มท้วม';
+                shortStatus = 'เริ่มท้วม';
+                badgeClass = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+                textColor = 'text-amber-500';
+                dotEmoji = '🟡';
+            } else if (bmiNum <= 29.9) {
+                category = 'อ้วนระดับ 1 / มีไขมันสะสม';
+                shortStatus = 'อ้วนระดับ 1';
+                badgeClass = 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30';
+                textColor = 'text-orange-500';
+                dotEmoji = '🟠';
+            } else {
+                category = 'อ้วนระดับ 2 / อันตรายต่อสุขภาพ';
+                shortStatus = 'อ้วนระดับ 2';
+                badgeClass = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+                textColor = 'text-rose-500';
+                dotEmoji = '🔴';
+            }
+
+            return {
+                bmi: bmiNum.toFixed(1),
+                numericBmi: bmiNum,
+                category,
+                shortStatus,
+                badgeClass,
+                textColor,
+                dotEmoji,
+                minIdealWeight: minIdeal,
+                maxIdealWeight: maxIdeal
+            };
+        }
+        window.getBmiDetails = getBmiDetails;
         // Note: MEAL_CONFIG, WORKOUT_PRESETS, DEFAULT_MEAL_COMBOS, DEFAULT_SUPPLEMENTS, FOOD_DATABASE are loaded from food-db.js
 
         function getTodayStr() {
@@ -529,14 +604,14 @@ window.APP_VERSION = APP_VERSION;
             const icon = document.getElementById('toggleSettingsIcon');
             const text = document.getElementById('toggleSettingsText');
             const p = state.profile;
-            const bmi = (p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
+            const bmiInfo = getBmiDetails(p.weight, p.height);
             const goalLabel = p.goalDiff === -12 ? 'ลีน+สร้างกล้าม (-12%)' : p.goalDiff < 0 ? `ลดไขมัน (${p.goalDiff}%)` : p.goalDiff > 0 ? `เพิ่มกล้าม (+${p.goalDiff}%)` : 'รักษาน้ำหนัก (0%)';
 
             const compactPills = document.getElementById('compactProfilePills');
             if (compactPills) {
                 compactPills.innerHTML = `
                     <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">${p.gender === 'male' ? '♂ ชาย' : '♀ หญิง'} ${p.age} ปี</span>
-                    <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">นน. ${p.weight} กก. / สูง ${p.height} ซม. (BMI ${bmi})</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-200/70 dark:bg-slate-700 font-medium">นน. ${p.weight} กก. / สูง ${p.height} ซม. (BMI ${bmiInfo.bmi} ${bmiInfo.dotEmoji} ${bmiInfo.shortStatus})</span>
                     <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">${goalLabel}</span>
                     <span class="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold">Macro ${p.macros.p}/${p.macros.c}/${p.macros.f}%</span>
                 `;
@@ -903,8 +978,21 @@ window.APP_VERSION = APP_VERSION;
 
             const t = getCalculatedTargets();
             const curWeight = t.weight;
-            const bmi = (curWeight / Math.pow(p.height / 100, 2)).toFixed(1);
-            document.getElementById('bmiBadge').textContent = `BMI: ${bmi}`;
+            const bmiInfo = getBmiDetails(curWeight, p.height);
+            const bmiBadge = document.getElementById('bmiBadge');
+            if (bmiBadge) {
+                bmiBadge.className = `text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full transition-all ${bmiInfo.badgeClass}`;
+                bmiBadge.textContent = `BMI: ${bmiInfo.bmi} • ${bmiInfo.shortStatus} ${bmiInfo.dotEmoji}`;
+            }
+            const bmiCatText = document.getElementById('bmiCategoryText');
+            if (bmiCatText) {
+                bmiCatText.className = `font-bold ${bmiInfo.textColor}`;
+                bmiCatText.textContent = `${bmiInfo.category} ${bmiInfo.dotEmoji}`;
+            }
+            const bmiIdealText = document.getElementById('bmiIdealWeightText');
+            if (bmiIdealText) {
+                bmiIdealText.textContent = `${bmiInfo.minIdealWeight} – ${bmiInfo.maxIdealWeight} กก. (เกณฑ์สมดุล 18.5 – 22.9)`;
+            }
 
             document.getElementById('rangeGoalDiff').value = p.goalDiff;
             const sign = p.goalDiff > 0 ? `+${p.goalDiff}%` : `${p.goalDiff}%`;

@@ -224,7 +224,9 @@
                         diffStr = ` (เท่ากับวันที่ ${prevDate})`;
                     }
                 }
-                statusText.innerHTML = `<span class="text-emerald-500 font-semibold">✓ บันทึกแล้ว ${directWeight} กก.${diffStr}</span> <span class="text-slate-400 block text-[10px]">ระบบใช้คำนวณ BMR/น้ำดื่มของวันนี้แม่นยำขึ้น</span>`;
+                const bmiInfo = typeof window.getBmiDetails === 'function' ? window.getBmiDetails(directWeight, appState.profile.height) : null;
+                const bmiStr = bmiInfo ? ` • BMI ${bmiInfo.bmi} (${bmiInfo.shortStatus} ${bmiInfo.dotEmoji})` : '';
+                statusText.innerHTML = `<span class="text-emerald-500 font-semibold">✓ บันทึกแล้ว ${directWeight} กก.${diffStr}${bmiStr}</span> <span class="text-slate-400 block text-[10px]">ระบบใช้คำนวณ BMR/น้ำดื่มของวันนี้แม่นยำขึ้น</span>`;
             } else {
                 const effective = getEffectiveWeightSafe(dStr);
                 inDailyWeight.value = '';
@@ -232,7 +234,9 @@
                 const fromMsg = effective.sourceDate === 'profile'
                     ? `ตั้งต้นจากข้อมูลส่วนตัว (${effective.weight} กก.)`
                     : `อ้างอิงล่าสุดจากวันที่ ${effective.sourceDate} (${effective.weight} กก.)`;
-                statusText.innerHTML = `<span class="text-slate-400">ยังไม่ได้บันทึกของวันนี้ (${fromMsg}) ไม่บังคับบันทึกครับ</span>`;
+                const bmiInfo = typeof window.getBmiDetails === 'function' ? window.getBmiDetails(effective.weight, appState.profile.height) : null;
+                const bmiStr = bmiInfo ? ` • BMI ${bmiInfo.bmi} (${bmiInfo.shortStatus} ${bmiInfo.dotEmoji})` : '';
+                statusText.innerHTML = `<span class="text-slate-400">ยังไม่ได้บันทึกของวันนี้ (${fromMsg}${bmiStr}) ไม่บังคับบันทึกครับ</span>`;
             }
         }
 
